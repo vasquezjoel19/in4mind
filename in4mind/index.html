@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="IN4MIND — Mantente al día con las últimas tendencias tecnológicas. Tutoriales expertos en programación, ciberseguridad y más.">
+  <title>IN4MIND — Plataforma educativa de tecnología</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script src="src/js/controllers/ThemeController.js?v=20260617"></script>
+  <script>ThemeController.initEarly();</script>
+
+  <link rel="stylesheet" href="src/css/tokens.css?v=20260706">
+  <link rel="stylesheet" href="src/css/landing.css?v=20260706">
+  <link rel="stylesheet" href="src/css/theme.css?v=20260706">
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='20' font-size='20'>💡</text></svg>">
+</head>
+<body class="landing-body">
+
+<!-- ══════════════════════════════════════
+     HEADER
+══════════════════════════════════════ -->
+<header class="lp-header">
+  <div class="lp-container lp-header__inner">
+    <a class="lp-logo" href="index.html" aria-label="IN4MIND inicio">
+      <svg class="lp-logo__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="9" y1="18" x2="15" y2="18"/>
+        <line x1="10" y1="22" x2="14" y2="22"/>
+        <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0018 8 6 6 0 006 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 018.91 14"/>
+      </svg>
+      IN4MIND
+    </a>
+
+    <nav class="lp-nav" id="lp-nav" aria-label="Navegación principal">
+      <a href="#home" class="is-active">Inicio</a>
+      <a href="#topics">Temas</a>
+      <a href="#guides">Guías</a>
+      <a href="#testimonials">Testimonios</a>
+      <a href="#contact">Contacto</a>
+    </nav>
+
+    <div class="lp-header__actions">
+      <button type="button" class="lp-menu-toggle" id="lp-menu-toggle" aria-label="Abrir menú" aria-expanded="false">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+      <button type="button" class="lp-icon-btn" aria-label="Buscar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </button>
+      <button type="button" class="lp-icon-btn" aria-label="Notificaciones">
+        <span class="lp-icon-btn__badge" aria-hidden="true"></span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
+        </svg>
+      </button>
+      <a class="lp-btn lp-btn--primary" href="login.html">Comenzar</a>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════
+     HERO
+══════════════════════════════════════ -->
+<section class="lp-hero" id="home">
+  <svg class="lp-hero__clouds" viewBox="0 0 1440 400" preserveAspectRatio="none" aria-hidden="true">
+    <ellipse cx="200" cy="320" rx="280" ry="80" fill="rgba(255,255,255,0.5)"/>
+    <ellipse cx="700" cy="350" rx="400" ry="90" fill="rgba(255,255,255,0.35)"/>
+    <ellipse cx="1200" cy="300" rx="300" ry="70" fill="rgba(255,255,255,0.4)"/>
+  </svg>
+
+  <div class="lp-container lp-hero__inner">
+    <div class="lp-hero__content">
+      <h1 class="lp-hero__title">Mantente al día con las últimas tendencias tecnológicas</h1>
+      <p class="lp-hero__sub">Tutoriales y guías expertas en programación, ciberseguridad y mucho más.</p>
+      <div class="lp-hero__actions">
+        <a class="lp-btn lp-btn--primary" href="login.html">Explorar temas</a>
+        <button type="button" class="lp-btn lp-btn--ghost" id="btn-watch-intro">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+            <polygon points="10 8 16 12 10 16 10 8"/>
+          </svg>
+          Ver introducción
+        </button>
+      </div>
+    </div>
+
+    <div class="lp-hero__visual" aria-hidden="true">
+      <div class="lp-hero-illustration">
+        <div class="lp-hero-illustration__glow"></div>
+
+        <div class="lp-float-card lp-float-card--py" title="Python">
+          <span class="lp-float-card__icon" aria-hidden="true">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+              <path d="M9 2h6v4H9V2zm0 18h6v4H9v-4z" fill="#3776AB"/>
+              <path d="M12 6c-3 0-4 1.5-4 4v2h8v-2c0-2.5-1-4-4-4zm-4 8v2c0 2.5 1 4 4 4s4-1.5 4-4v-2H8z" fill="#FFD43B"/>
+            </svg>
+          </span>
+          <span class="lp-float-card__label">Python</span>
+        </div>
+        <div class="lp-float-card lp-float-card--shield" title="Ciberseguridad">
+          <span class="lp-float-card__icon" aria-hidden="true">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#4a76b2" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <polyline points="9 12 11 14 15 10"/>
+            </svg>
+          </span>
+          <span class="lp-float-card__label">Seguridad</span>
+        </div>
+        <div class="lp-float-card lp-float-card--code" title="Desarrollo Web">
+          <span class="lp-float-card__icon" aria-hidden="true">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#4a76b2" stroke-width="2">
+              <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+            </svg>
+          </span>
+          <span class="lp-float-card__label">Web Dev</span>
+        </div>
+        <div class="lp-float-card lp-float-card--ai" title="Inteligencia Artificial">
+          <span class="lp-float-card__icon" aria-hidden="true">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2">
+              <path d="M12 2a4 4 0 014 4v1a3 3 0 013 3v1a3 3 0 01-3 3h-1a3 3 0 01-3-3V9a3 3 0 013-3V6a4 4 0 014-4z"/>
+              <path d="M8 14H6a3 3 0 00-3 3v1a3 3 0 003 3h2"/>
+              <path d="M16 14h2a3 3 0 013 3v1a3 3 0 01-3 3h-2"/>
+              <circle cx="9" cy="9" r="1" fill="#6366f1"/><circle cx="15" cy="9" r="1" fill="#6366f1"/>
+            </svg>
+          </span>
+          <span class="lp-float-card__label">IA</span>
+        </div>
+        <div class="lp-float-card lp-float-card--quiz" title="Quizzes interactivos">
+          <span class="lp-float-card__icon" aria-hidden="true">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2">
+              <path d="M9 11l3 3L22 4"/>
+              <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+            </svg>
+          </span>
+          <span class="lp-float-card__label">Quizzes</span>
+        </div>
+        <div class="lp-float-card lp-float-card--data" title="Ciencia de Datos">
+          <span class="lp-float-card__icon" aria-hidden="true">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2">
+              <ellipse cx="12" cy="5" rx="9" ry="3"/>
+              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+            </svg>
+          </span>
+          <span class="lp-float-card__label">Datos</span>
+        </div>
+
+        <svg class="lp-hero-illustration__bulb" viewBox="0 0 320 320" fill="none">
+          <defs>
+            <linearGradient id="bulbGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#6b93c9"/>
+              <stop offset="50%" stop-color="#4a76b2"/>
+              <stop offset="100%" stop-color="#3d6499"/>
+            </linearGradient>
+            <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="8" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <circle cx="160" cy="130" r="90" fill="url(#bulbGrad)" opacity="0.15" filter="url(#glow)"/>
+          <path d="M160 40c-44 0-80 36-80 80 0 28 14 52 36 66v14h88v-14c22-14 36-38 36-66 0-44-36-80-80-80z" fill="url(#bulbGrad)" stroke="#3d6499" stroke-width="2"/>
+          <path d="M120 210h80v12c0 8-6 14-14 14h-52c-8 0-14-6-14-14v-12z" fill="#3d6499"/>
+          <rect x="136" y="236" width="48" height="10" rx="4" fill="#2b4566"/>
+          <rect x="144" y="250" width="32" height="8" rx="3" fill="#1a2b48"/>
+          <circle cx="130" cy="100" r="4" fill="rgba(255,255,255,0.6)"/>
+          <circle cx="160" cy="85" r="3" fill="rgba(255,255,255,0.5)"/>
+          <circle cx="190" cy="105" r="3.5" fill="rgba(255,255,255,0.55)"/>
+          <path d="M140 130h40M150 145h20M145 160h30" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-linecap="round"/>
+          <path d="M155 115l10 8-10 8" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" fill="none"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <svg class="lp-hero__wave" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0,40 C360,80 720,0 1080,40 C1260,60 1380,50 1440,45 L1440,80 L0,80 Z" fill="#ffffff"/>
+  </svg>
+</section>
+
+<!-- ══════════════════════════════════════
+     FEATURES
+══════════════════════════════════════ -->
+<section class="lp-features lp-reveal" id="topics">
+  <div class="lp-container">
+    <h2 class="lp-section-title lp-reveal lp-reveal--delay-1">Todo lo que necesitas para potenciar tus habilidades tecnológicas</h2>
+    <div class="lp-features__grid">
+      <a class="lp-feature-card lp-feature-card--link lp-reveal lp-reveal--delay-2" href="login.html" data-open-course="python">
+        <svg class="lp-feature-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/>
+          <path d="M12 8l-4 4 4 4M16 12H8"/>
+        </svg>
+        <h3 class="lp-feature-card__title">Programación</h3>
+        <p class="lp-feature-card__desc">Aprende lenguajes como Python, JavaScript y más.</p>
+      </a>
+      <a class="lp-feature-card lp-feature-card--link lp-reveal lp-reveal--delay-3" href="login.html" data-open-course="cybersecurity">
+        <svg class="lp-feature-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <polyline points="9 12 11 14 15 10"/>
+        </svg>
+        <h3 class="lp-feature-card__title">Ciberseguridad</h3>
+        <p class="lp-feature-card__desc">Protege tus datos con habilidades esenciales de seguridad.</p>
+      </a>
+      <a class="lp-feature-card lp-feature-card--link lp-reveal lp-reveal--delay-4" href="login.html" data-open-destination="ai">
+        <svg class="lp-feature-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <circle cx="12" cy="12" r="3"/>
+          <circle cx="5" cy="7" r="2"/><circle cx="19" cy="7" r="2"/>
+          <circle cx="5" cy="17" r="2"/><circle cx="19" cy="17" r="2"/>
+          <line x1="7" y1="8" x2="10" y2="10"/><line x1="14" y1="10" x2="17" y2="8"/>
+          <line x1="7" y1="16" x2="10" y2="14"/><line x1="14" y1="14" x2="17" y2="16"/>
+        </svg>
+        <h3 class="lp-feature-card__title">IA y Ciencia de Datos</h3>
+        <p class="lp-feature-card__desc">Domina conceptos de IA y técnicas de análisis de datos.</p>
+      </a>
+      <a class="lp-feature-card lp-feature-card--link lp-reveal lp-reveal--delay-5" href="login.html" data-open-course="javascript">
+        <svg class="lp-feature-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <rect x="2" y="3" width="20" height="14" rx="2"/>
+          <line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+          <polyline points="8 9 12 12 16 9"/>
+        </svg>
+        <h3 class="lp-feature-card__title">Desarrollo Web</h3>
+        <p class="lp-feature-card__desc">Crea sitios web responsivos y exitosos.</p>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     STATS
+══════════════════════════════════════ -->
+<section class="lp-stats lp-reveal" id="guides" aria-label="Estadísticas">
+  <svg class="lp-stats__wave-top" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0,30 C240,60 480,0 720,30 C960,60 1200,10 1440,35 L1440,60 L0,60 Z" fill="#ffffff"/>
+  </svg>
+  <div class="lp-container lp-stats__inner">
+    <div class="lp-stat lp-reveal lp-reveal--delay-1">
+      <div class="lp-stat__value">15k+</div>
+      <div class="lp-stat__label">Tutoriales técnicos</div>
+    </div>
+    <div class="lp-stat lp-reveal lp-reveal--delay-2">
+      <div class="lp-stat__value">8k+</div>
+      <div class="lp-stat__label">Usuarios activos</div>
+    </div>
+    <div class="lp-stat lp-reveal lp-reveal--delay-3">
+      <div class="lp-stat__value">200+</div>
+      <div class="lp-stat__label">Guías expertas</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     TESTIMONIOS — Carrusel
+══════════════════════════════════════ -->
+<section class="lp-testimonial-wrap lp-reveal" id="testimonials">
+  <div class="lp-container">
+    <h2 class="lp-testimonials__title lp-reveal lp-reveal--delay-1">Lo que dicen nuestros usuarios</h2>
+
+    <div class="lp-carousel lp-reveal lp-reveal--delay-2" id="testimonial-carousel" aria-roledescription="carrusel">
+      <div class="lp-carousel__viewport">
+        <div class="lp-carousel__track" id="testimonial-track" role="list"></div>
+      </div>
+      <div class="lp-carousel__dots" id="testimonial-dots" role="tablist" aria-label="Testimonios"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     CTA
+══════════════════════════════════════ -->
+<section class="lp-cta lp-reveal" id="contact">
+  <svg class="lp-cta__clouds" viewBox="0 0 1440 300" preserveAspectRatio="none" aria-hidden="true">
+    <ellipse cx="300" cy="250" rx="350" ry="70" fill="rgba(255,255,255,0.6)"/>
+    <ellipse cx="900" cy="220" rx="450" ry="80" fill="rgba(255,255,255,0.45)"/>
+  </svg>
+  <div class="lp-container">
+    <h2 class="lp-cta__title lp-reveal lp-reveal--delay-1">¿Listo para elevar tu conocimiento tecnológico?</h2>
+    <p class="lp-cta__sub lp-reveal lp-reveal--delay-2">Únete a IN4MIND hoy y comienza tu camino hacia el dominio tecnológico.</p>
+    <a class="lp-btn lp-btn--primary lp-btn--lg lp-reveal lp-reveal--delay-3" href="login.html">Comenzar</a>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     FOOTER
+══════════════════════════════════════ -->
+<footer class="lp-footer">
+  <div class="lp-container">
+    <div class="lp-footer__grid">
+      <div>
+        <div class="lp-footer__logo">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/>
+            <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0018 8 6 6 0 006 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 018.91 14"/>
+          </svg>
+          IN4MIND
+        </div>
+        <p class="lp-footer__copy">&copy; 2026 IN4MIND. Todos los derechos reservados.</p>
+      </div>
+
+      <div>
+        <h3 class="lp-footer__heading">Temas</h3>
+        <ul class="lp-footer__links">
+          <li><a href="login.html" data-open-course="python">Programación</a></li>
+          <li><a href="login.html" data-open-course="cybersecurity">Ciberseguridad</a></li>
+          <li><a href="login.html" data-open-destination="ai">IA y Ciencia de Datos</a></li>
+          <li><a href="login.html" data-open-course="javascript">Desarrollo Web</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 class="lp-footer__heading">Recursos</h3>
+        <ul class="lp-footer__links">
+          <li><a href="login.html" data-open-course="python">Guías</a></li>
+          <li><a href="login.html" data-open-quiz="general">Quizzes</a></li>
+          <li><a href="#testimonials">Testimonios</a></li>
+          <li><a href="#contact">Soporte</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 class="lp-footer__heading">Mantente conectado</h3>
+        <form class="lp-newsletter" id="newsletter-form" aria-label="Suscripción">
+          <input type="email" placeholder="Introduce tu correo" required aria-label="Correo electrónico">
+          <button type="submit" aria-label="Enviar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </form>
+        <div class="lp-social" aria-label="Redes sociales">
+          <a href="#" aria-label="Facebook">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
+          </a>
+          <a href="#" aria-label="Twitter">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/></svg>
+          </a>
+          <a href="#" aria-label="LinkedIn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="lp-footer__bar">
+      <span>&copy; 2026 IN4MIND</span>
+      <div class="lp-footer__legal">
+        <a href="privacidad.html">Política de privacidad</a>
+        <a href="terminos.html">Términos de servicio</a>
+        <a href="cookies.html">Cookies</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  /* Menú móvil */
+  const menuToggle = document.getElementById('lp-menu-toggle');
+  const nav = document.getElementById('lp-nav');
+  menuToggle?.addEventListener('click', () => {
+    const open = nav.classList.toggle('is-open');
+    menuToggle.setAttribute('aria-expanded', String(open));
+  });
+
+  /* Watch Intro → scroll a features */
+  document.getElementById('btn-watch-intro')?.addEventListener('click', () => {
+    document.getElementById('topics')?.scrollIntoView({ behavior: 'smooth' });
+  });
+
+  /* Carrusel de testimonios (sin flechas) */
+  const TESTIMONIALS = [
+    {
+      quote: '"IN4MIND ha sido un cambio total para aprender nuevas habilidades tecnológicas. Los tutoriales son claros, concisos y prácticos."',
+      name: 'Sarah Martinez',
+      role: 'Desarrolladora Web',
+      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&h=120&fit=crop&crop=face',
+    },
+    {
+      quote: '"Los quizzes me ayudaron a validar mi conocimiento en Python, SQL y desarrollo web. Muy recomendable para equipos."',
+      name: 'Carlos Mendoza',
+      role: 'Ingeniero de Software',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop&crop=face',
+    },
+    {
+      quote: '"Interfaz limpia, contenido profesional y el asistente IA responde exactamente lo que necesito mientras estudio."',
+      name: 'Ana Rodríguez',
+      role: 'Diseñadora UX',
+      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&h=120&fit=crop&crop=face',
+    },
+    {
+      quote: '"IN4MIND se siente como NotebookLM para educación tecnológica: estructurado, calmado y enfocado en resultados reales."',
+      name: 'James Chen',
+      role: 'Analista de Datos',
+      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&h=120&fit=crop&crop=face',
+    },
+  ];
+
+  const STAR_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+
+  const $track = document.getElementById('testimonial-track');
+  const $dots  = document.getElementById('testimonial-dots');
+  let current  = 0;
+  let autoTimer = null;
+
+  if ($track && $dots) {
+    $track.innerHTML = TESTIMONIALS.map((t, i) => `
+      <article class="lp-carousel__slide" role="listitem" data-index="${i}" aria-hidden="${i !== 0}">
+        <div class="lp-testimonial-card">
+          <div class="lp-testimonial__stars">${STAR_SVG.repeat(5)}</div>
+          <blockquote class="lp-testimonial__quote">${t.quote}</blockquote>
+          <div class="lp-testimonial__author">
+            <img class="lp-testimonial__avatar" src="${t.avatar}" alt="${t.name}" width="52" height="52" loading="lazy">
+            <div>
+              <div class="lp-testimonial__name">${t.name}</div>
+              <div class="lp-testimonial__role">${t.role}</div>
+            </div>
+          </div>
+        </div>
+      </article>
+    `).join('');
+
+    TESTIMONIALS.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.type = 'button';
+      dot.className = 'lp-carousel__dot' + (i === 0 ? ' is-active' : '');
+      dot.setAttribute('role', 'tab');
+      dot.setAttribute('aria-label', 'Testimonio ' + (i + 1));
+      dot.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+      dot.addEventListener('click', () => goTo(i, true));
+      $dots.appendChild(dot);
+    });
+
+    function goTo(i, userAction) {
+      current = (i + TESTIMONIALS.length) % TESTIMONIALS.length;
+      $track.style.transform = 'translateX(-' + (current * 100) + '%)';
+      $track.querySelectorAll('.lp-carousel__slide').forEach((slide, idx) => {
+        slide.setAttribute('aria-hidden', idx !== current ? 'true' : 'false');
+      });
+      $dots.querySelectorAll('.lp-carousel__dot').forEach((d, idx) => {
+        d.classList.toggle('is-active', idx === current);
+        d.setAttribute('aria-selected', idx === current ? 'true' : 'false');
+      });
+      if (userAction) resetAuto();
+    }
+
+    function resetAuto() {
+      clearInterval(autoTimer);
+      autoTimer = setInterval(() => goTo(current + 1), 5500);
+    }
+
+    /* Deslizar con el dedo / ratón */
+    const carousel = document.getElementById('testimonial-carousel');
+    let startX = 0;
+    carousel?.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+    carousel?.addEventListener('touchend', e => {
+      const diff = e.changedTouches[0].clientX - startX;
+      if (Math.abs(diff) > 50) goTo(current + (diff < 0 ? 1 : -1), true);
+    }, { passive: true });
+
+    resetAuto();
+  }
+
+  /* Aparición al hacer scroll */
+  const revealEls = document.querySelectorAll('.lp-reveal');
+  if (revealEls.length && 'IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+    revealEls.forEach(el => observer.observe(el));
+  } else {
+    revealEls.forEach(el => el.classList.add('is-visible'));
+  }
+
+  /* Newsletter */
+  document.getElementById('newsletter-form')?.addEventListener('submit', e => {
+    e.preventDefault();
+    alert('¡Gracias por suscribirte a las novedades de IN4MIND!');
+    e.target.reset();
+  });
+
+  /* Enlaces de la home → login con destino post-auth */
+  document.querySelectorAll('[data-open-course]').forEach(el => {
+    el.addEventListener('click', () => {
+      sessionStorage.removeItem('in4mind_open_quiz');
+      sessionStorage.removeItem('in4mind_open_destination');
+      sessionStorage.setItem('in4mind_open_course', el.dataset.openCourse);
+    });
+  });
+
+  document.querySelectorAll('[data-open-quiz]').forEach(el => {
+    el.addEventListener('click', () => {
+      sessionStorage.removeItem('in4mind_open_course');
+      sessionStorage.removeItem('in4mind_open_destination');
+      sessionStorage.setItem('in4mind_open_quiz', el.dataset.openQuiz || 'general');
+    });
+  });
+
+  document.querySelectorAll('[data-open-destination]').forEach(el => {
+    el.addEventListener('click', () => {
+      sessionStorage.removeItem('in4mind_open_course');
+      sessionStorage.removeItem('in4mind_open_quiz');
+      sessionStorage.setItem('in4mind_open_destination', el.dataset.openDestination);
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

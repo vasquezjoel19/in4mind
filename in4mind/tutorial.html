@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="IN4MIND — Tutoriales de tecnología.">
+  <title>IN4MIND — Tutoriales</title>
+
+  <script src="src/js/controllers/ThemeController.js?v=20260617"></script>
+  <script>ThemeController.initEarly();</script>
+
+  <link rel="stylesheet" href="src/css/tokens.css?v=20260706">
+  <link rel="stylesheet" href="src/css/base.css?v=20260617">
+  <link rel="stylesheet" href="src/css/dashboard.css?v=20260704">
+  <link rel="stylesheet" href="src/css/responsive.css?v=20260613">
+  <link rel="stylesheet" href="src/css/tutorial.css?v=20260709">
+  <link rel="stylesheet" href="src/css/theme.css?v=20260707">
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='20' font-size='20'>💡</text></svg>">
+
+  <style>
+    /* ── Estilos extra para TutorialController ── */
+
+    .tut-list-banner {
+      background: linear-gradient(135deg, var(--clr-bg-banner) 0%, var(--clr-bg-input) 100%);
+      border-radius: var(--rad-xl);
+      padding: var(--sp-xl);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--sp-xl);
+      border: 1px solid var(--clr-border);
+      box-shadow: var(--shadow-card);
+      margin-bottom: var(--sp-xl);
+      animation: fadeInUp var(--dur-slow) var(--ease) both;
+    }
+
+    .tut-list-banner__info { flex: 1; }
+
+    .tut-list-banner__title {
+      font-family: var(--font-display);
+      font-size: 1.9rem;
+      font-weight: 800;
+      color: var(--clr-text-primary);
+      margin-bottom: var(--sp-xs);
+      line-height: 1.2;
+    }
+
+    .tut-list-banner__sub {
+      font-size: 0.9rem;
+      color: var(--clr-text-secondary);
+      margin-bottom: var(--sp-lg);
+    }
+
+    .tut-list-banner__graphic {
+      flex-shrink: 0;
+      width: 160px;
+      height: 130px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--clr-brand-500);
+      opacity: 0.75;
+    }
+
+    /* Filtros de categoria */
+    .tut-filters-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--sp-sm);
+      margin-bottom: var(--sp-md);
+    }
+
+    .tut-filters {
+      display: flex;
+      gap: var(--sp-sm);
+      flex-wrap: wrap;
+    }
+
+    .tut-filter {
+      font-size: 0.78rem;
+      color: var(--clr-text-secondary);
+      cursor: pointer;
+      padding: 4px 14px;
+      border-radius: var(--rad-pill);
+      border: 1.5px solid var(--clr-border-lt);
+      background: transparent;
+      font-family: var(--font-body);
+      font-weight: 500;
+      transition: all var(--dur-fast) var(--ease);
+    }
+
+    .tut-filter:hover {
+      border-color: var(--clr-brand-300);
+      color: var(--clr-brand-600);
+    }
+
+    .tut-filter.tut-filter--active {
+      background: var(--clr-brand-600);
+      color: white;
+      border-color: var(--clr-brand-600);
+    }
+
+    /* Grid de tarjetas de tutorial */
+    .tut-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: var(--sp-md);
+      margin-bottom: var(--sp-xl);
+    }
+
+    .tut-grid-card {
+      background: var(--clr-bg-card);
+      border-radius: var(--rad-xl);
+      padding: var(--sp-md);
+      border: 1px solid var(--clr-border);
+      box-shadow: var(--shadow-card);
+      cursor: pointer;
+      transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-sm);
+    }
+
+    .tut-grid-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+    }
+
+    .tut-grid-card__header {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-sm);
+    }
+
+    .tut-grid-card__icon {
+      width: 42px;
+      height: 42px;
+      border-radius: var(--rad-sm);
+      background: var(--clr-bg-input);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .tut-grid-card__icon img {
+      width: 26px;
+      height: 26px;
+      object-fit: contain;
+    }
+
+    .tut-grid-card__title {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--clr-text-primary);
+    }
+
+    .tut-grid-card__category {
+      font-size: 0.72rem;
+      color: var(--clr-text-muted);
+      text-transform: capitalize;
+    }
+
+    .tut-grid-card__desc {
+      font-size: 0.8rem;
+      color: var(--clr-text-secondary);
+      line-height: 1.5;
+      flex: 1;
+    }
+
+    .tut-grid-card__footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: var(--sp-xs);
+    }
+
+    .tut-grid-card__meta {
+      font-size: 0.72rem;
+      color: var(--clr-text-muted);
+    }
+
+    .tut-grid-card__tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tut-tag {
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: var(--rad-pill);
+      background: var(--clr-tag-bg, var(--clr-bg-banner));
+      color: var(--clr-tag-text, var(--clr-brand-700));
+    }
+
+    .tut-tag--quiz {
+      background: rgba(22, 163, 74, 0.14);
+      color: #15803d;
+    }
+
+    .tut-empty {
+      color: var(--clr-text-muted);
+      font-size: 0.85rem;
+      grid-column: 1 / -1;
+    }
+
+    /* ── Vista detalle de tutorial ── */
+    #tutorial-detail-view { display: none; }
+
+    .tut-detail-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--clr-text-secondary);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      margin-bottom: var(--sp-md);
+      font-family: var(--font-body);
+      transition: color var(--dur-fast);
+    }
+
+    .tut-detail-back:hover { color: var(--clr-brand-500); }
+
+    /* Reutiliza las clases .tut-banner, .tut-actions, .tut-about, .tut-bottom de tutorial.css */
+
+    /* Video cards dinámicas */
+    .tut-thumb--dyn {
+      background: linear-gradient(135deg, #1e293b 0%, var(--clr-brand-700) 100%);
+    }
+
+    .tut-thumb--dyn:nth-child(2n) {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+    }
+
+    /* Topics dinámicos */
+    .tut-topic__icon-wrap {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--rad-sm);
+      background: var(--clr-bg-banner);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .tut-list-banner__graphic { display: none; }
+      .tut-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
+
+<div class="dashboard">
+
+  <!-- ══ SIDEBAR (generado dinámicamente igual que quizzes.html) ══ -->
+  <aside class="sidebar" id="sidebar" role="navigation" aria-label="Menú principal">
+    <div class="sidebar__brand">
+      <div class="sidebar__brand-main">
+        <svg class="sidebar__brand-icon" width="28" height="28" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="9" y1="18" x2="15" y2="18"/>
+          <line x1="10" y1="22" x2="14" y2="22"/>
+          <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0018 8 6 6 0 006 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 018.91 14"/>
+        </svg>
+        <span class="sidebar__brand-name">IN4MIND</span>
+      </div>
+      <button type="button" class="sidebar__collapse-btn" id="sidebar-collapse"
+              aria-label="Colapsar menú" aria-expanded="true">
+        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+    </div>
+
+    <ul class="sidebar__nav" id="sidebar-nav" role="menubar" aria-label="Navegación principal"></ul>
+
+    <div class="sidebar__footer">
+      <ul id="sidebar-footer" role="menubar" aria-label="Opciones de cuenta"></ul>
+    </div>
+  </aside>
+
+  <!-- ══ ÁREA PRINCIPAL ══ -->
+  <div class="main-area">
+
+    <!-- Top Bar -->
+    <header class="topbar" role="banner">
+      <button class="menu-toggle icon-btn" id="menu-toggle"
+              aria-label="Abrir menú" aria-expanded="false">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="6"  x2="21" y2="6"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+
+      <button type="button" class="icon-btn sidebar-top-toggle" id="sidebar-collapse-top"
+              aria-label="Colapsar menú" aria-expanded="true">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <line x1="9" y1="3" x2="9" y2="21"/>
+        </svg>
+      </button>
+
+      <div class="search-bar" role="search">
+        <svg class="search-bar__icon" width="16" height="16" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input class="search-bar__input" type="search" id="search-input"
+               placeholder="Búsqueda de tutoriales, temas u otros..."
+               aria-label="Buscar tutoriales">
+      </div>
+
+      <div class="topbar__actions">
+        <button class="icon-btn" aria-label="Ayuda">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </button>
+        <button class="icon-btn" aria-label="Notificaciones">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 01-3.46 0"/>
+          </svg>
+        </button>
+        <a class="avatar" id="avatar" href="profile.html" aria-label="Ir a mi perfil">U</a>
+      </div>
+    </header>
+
+    <!-- Contenido principal -->
+    <main class="content-area" id="content-area">
+
+      <!-- ══════════════════════════════════════
+           VISTA 1: LISTADO DE TUTORIALES
+      ══════════════════════════════════════ -->
+      <div id="tutorial-list-view">
+
+        <!-- Banner -->
+        <section class="tut-list-banner" aria-labelledby="tut-list-title">
+          <div class="tut-list-banner__info">
+            <h1 class="tut-list-banner__title" id="tut-list-title">
+              Explora todos los Tutoriales
+            </h1>
+            <p class="tut-list-banner__sub">Elige un tema y empieza a aprender hoy.</p>
+            <button class="btn--course" id="tut-banner-btn"
+                    style="padding:0 var(--sp-lg);height:38px;font-size:.875rem;">
+              Ver Destacados
+            </button>
+          </div>
+          <div class="tut-list-banner__graphic" aria-hidden="true">
+            <svg width="120" height="120" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+            </svg>
+          </div>
+        </section>
+
+        <!-- Filtros + título -->
+        <section class="anim-fade-up delay-1" aria-labelledby="tut-grid-title">
+          <div class="tut-filters-row">
+            <h2 class="section-header__title" id="tut-grid-title">Elige un tema</h2>
+            <div id="tut-filters" class="tut-filters" role="group" aria-label="Filtrar por categoría">
+              <!-- Generado por TutorialController -->
+            </div>
+          </div>
+
+          <div class="tut-grid" id="tut-grid" role="list" aria-label="Tutoriales disponibles">
+            <p style="color:var(--clr-text-muted);font-size:.85rem;">Cargando tutoriales…</p>
+          </div>
+        </section>
+
+      </div>
+      <!-- /tutorial-list-view -->
+
+
+      <!-- ══════════════════════════════════════
+           VISTA 2: DETALLE DE TUTORIAL
+      ══════════════════════════════════════ -->
+      <div id="tutorial-detail-view">
+
+        <!-- Botón volver -->
+        <button class="tut-detail-back" id="tut-btn-back" aria-label="Volver a tutoriales">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.5"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          Volver
+        </button>
+
+        <!-- Banner del tutorial -->
+        <section class="tut-banner anim-fade-up" id="tut-detail-banner">
+          <div class="tut-banner__info">
+            <div class="tut-banner__title" id="tut-detail-title">
+              <!-- Ícono + nombre generados dinámicamente -->
+            </div>
+            <p class="tut-banner__desc" id="tut-detail-desc"></p>
+            <div class="tut-banner__meta" id="tut-detail-meta"></div>
+            <button class="btn--primary tut-btn-learn" id="tut-detail-start">
+              Empieza a Aprender
+            </button>
+          </div>
+          <div class="tut-banner__graphic" aria-hidden="true">
+            <div class="tut-banner__graphic-glow"></div>
+            <div id="tut-detail-graphic"></div>
+          </div>
+        </section>
+
+        <!-- Acciones sociales -->
+        <div class="tut-actions anim-fade-up delay-1">
+          <button type="button" class="tut-action-btn" id="btn-fav" aria-label="Agregar a favoritos">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+            </svg>
+            Favorito
+          </button>
+          <button type="button" class="tut-action-btn" id="btn-save" aria-label="Guardar curso">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+            </svg>
+            Guardar
+          </button>
+          <button class="tut-action-btn" aria-label="Compartir curso">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18" cy="5" r="3"/>
+              <circle cx="6" cy="12" r="3"/>
+              <circle cx="18" cy="19" r="3"/>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+            </svg>
+            Compartir
+          </button>
+        </div>
+
+        <!-- Progreso hacia certificación -->
+        <section class="tut-cert-panel anim-fade-up delay-1" id="tut-cert-panel" aria-live="polite">
+          <!-- Generado por TutorialController -->
+        </section>
+
+        <!-- Sobre el tema -->
+        <section class="tut-about anim-fade-up delay-2">
+          <div class="tut-about__text">
+            <h2 class="section-header__title" id="tut-about-title"
+                style="margin-bottom: var(--sp-sm);"></h2>
+            <p class="tut-about__p" id="about-text"></p>
+            <p class="tut-about__p tut-about__p--extra" id="about-extra"
+               style="display:none; margin-top: var(--sp-sm);"></p>
+          </div>
+          <button class="btn--course tut-btn-more" id="btn-more">Leer Más</button>
+        </section>
+
+        <!-- Layout inferior: carátulas, lecciones + índice -->
+        <div class="tut-bottom">
+
+          <div class="tut-videos">
+            <div class="section-header">
+              <h2 class="section-header__title">Apartados del curso</h2>
+              <span class="tut-section-hint">Carátulas de cada módulo — haz clic para empezar</span>
+            </div>
+            <div class="tut-cards-wrap">
+              <div class="tut-cards-grid" id="tut-videos-grid" role="list" aria-label="Apartados del curso">
+                <!-- Generado dinámicamente -->
+              </div>
+              <div class="tut-timeline">
+                <div class="tut-timeline__line"></div>
+                <div class="tut-timeline__points" id="tut-timeline-points"></div>
+              </div>
+            </div>
+
+            <div class="section-header" style="margin-top: var(--sp-xl);">
+              <h2 class="section-header__title">Lecciones del curso</h2>
+              <span class="tut-section-hint">Contenido detallado paso a paso</span>
+            </div>
+            <div class="tut-lessons-list" id="tut-lessons-list"></div>
+          </div>
+
+          <div class="tut-topics">
+            <div class="section-header">
+              <h2 class="section-header__title">Índice rápido</h2>
+            </div>
+            <div class="tut-topics__list" id="tut-topics-list"></div>
+          </div>
+
+        </div><!-- /tut-bottom -->
+
+      </div>
+      <!-- /tutorial-detail-view -->
+
+
+      <!-- ══════════════════════════════════════
+           VISTA 3: LECCIÓN (estilo documentación W3Schools)
+      ══════════════════════════════════════ -->
+      <div id="tutorial-lesson-view" style="display:none;">
+
+        <div class="lesson-w3">
+          <aside class="lesson-w3__sidebar" id="lesson-sidebar" aria-label="Índice del curso">
+            <div class="lesson-w3__sidebar-head">
+              <img id="lesson-sidebar-icon" src="" alt="" width="28" height="28">
+              <div>
+                <span class="lesson-w3__sidebar-label">Tutorial</span>
+                <span class="lesson-w3__sidebar-course" id="lesson-sidebar-course">Curso</span>
+              </div>
+            </div>
+            <nav id="lesson-sidebar-list" class="lesson-w3__nav"></nav>
+            <a class="lesson-w3__sidebar-quiz" id="lesson-sidebar-quiz" href="quizzes.html">Ir al quiz del curso</a>
+          </aside>
+
+          <div class="lesson-w3__main">
+            <div class="lesson-w3__toolbar">
+              <button class="tut-detail-back" id="lesson-btn-back" aria-label="Volver al curso">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="15 18 9 12 15 6"/>
+                </svg>
+                Volver al curso
+              </button>
+              <button type="button" class="lesson-w3__sidebar-toggle" id="lesson-sidebar-toggle" aria-expanded="false"
+                      aria-controls="lesson-sidebar">Índice</button>
+            </div>
+
+            <nav class="lesson-w3__breadcrumb" id="lesson-breadcrumb" aria-label="Ruta de navegación"></nav>
+            <article class="lesson-w3__article" id="lesson-article"></article>
+
+            <footer class="lesson-w3__footer">
+              <button type="button" class="btn--back" id="lesson-prev">← Anterior</button>
+              <button type="button" class="btn--quiz-next" id="lesson-quiz-btn">Ir al Quiz</button>
+              <button type="button" class="btn--primary tut-btn-learn" id="lesson-next">Siguiente →</button>
+            </footer>
+          </div>
+        </div>
+
+        <!-- Comprobación rápida al avanzar lección -->
+        <div class="lesson-check" id="lesson-check" hidden role="dialog" aria-modal="true" aria-labelledby="lesson-check-title">
+          <div class="lesson-check__card">
+            <h2 class="lesson-check__title" id="lesson-check-title">Comprobación rápida</h2>
+            <p class="lesson-check__sub">Responde para registrar tu avance en el curso.</p>
+            <p class="lesson-check__question" id="lesson-check-question"></p>
+            <div class="lesson-check__options" id="lesson-check-options" role="group"></div>
+            <p class="lesson-check__feedback" id="lesson-check-feedback" role="alert" aria-live="polite"></p>
+            <div class="lesson-check__actions">
+              <button type="button" class="btn--back" id="lesson-check-cancel">Cancelar</button>
+              <button type="button" class="btn--primary tut-btn-learn" id="lesson-check-submit" disabled>Confirmar</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <!-- /tutorial-lesson-view -->
+
+    </main>
+  </div><!-- /main-area -->
+
+</div><!-- /dashboard -->
+
+<script src="src/js/services/DataService.js?v=20260704"></script>
+<script src="src/js/services/UserProfileService.js?v=20260708"></script>
+<script src="src/js/services/AppShell.js?v=20260704"></script>
+<script src="src/js/data/CourseCurriculum.js?v=20260709"></script>
+<script src="src/js/data/TutorialData.js?v=20260709"></script>
+<script src="src/js/data/LessonCheckData.js?v=20260708"></script>
+<script src="src/js/data/LessonExamples.js?v=20260709"></script>
+<script src="src/js/controllers/SidebarController.js?v=20260613"></script>
+<script src="src/js/controllers/TutorialController.js?v=20260709"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    AppShell.initPage('tutorials');
+  } catch (err) {
+    console.error('AppShell.initPage:', err);
+    AppShell.setupAvatar();
+  }
+  try {
+    TutorialController.init();
+  } catch (err) {
+    console.error('TutorialController.init:', err);
+  }
+});
+</script>
+
+</body>
+</html>

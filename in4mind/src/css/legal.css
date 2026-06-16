@@ -1,0 +1,187 @@
+/**
+ * IN4MIND — Páginas legales (términos, privacidad, cookies)
+ */
+
+.legal-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--clr-bg-app);
+  color: var(--clr-text-primary);
+}
+
+.legal-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 24px;
+  background: var(--clr-bg-card);
+  border-bottom: 1px solid var(--clr-border);
+  backdrop-filter: blur(10px);
+}
+
+.legal-header__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--clr-text-primary);
+  text-decoration: none;
+}
+
+.legal-header__brand svg {
+  width: 26px;
+  height: 26px;
+  color: var(--clr-brand-500);
+}
+
+.legal-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.legal-btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--rad-pill);
+  border: 1px solid var(--clr-border);
+  background: var(--clr-bg-input);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--clr-text-secondary);
+  text-decoration: none;
+  transition: background var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast);
+}
+
+.legal-btn-back:hover {
+  background: var(--clr-bg-banner);
+  border-color: var(--clr-brand-300);
+  color: var(--clr-text-primary);
+}
+
+.legal-main {
+  flex: 1;
+  width: min(100% - 40px, 760px);
+  margin: 0 auto;
+  padding: 48px 0 80px;
+}
+
+.legal-main__meta {
+  font-size: 0.82rem;
+  color: var(--clr-text-muted);
+  margin-bottom: 12px;
+}
+
+.legal-main h1 {
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  font-weight: 800;
+  color: var(--clr-text-primary);
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+}
+
+.legal-main__intro {
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--clr-text-secondary);
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--clr-border);
+}
+
+.legal-main h2 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--clr-text-primary);
+  margin: 32px 0 12px;
+}
+
+.legal-main p {
+  font-size: 0.92rem;
+  line-height: 1.75;
+  color: var(--clr-text-secondary);
+  margin-bottom: 14px;
+}
+
+.legal-main ul,
+.legal-main ol {
+  margin: 0 0 16px 20px;
+  padding: 0;
+}
+
+.legal-main li {
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: var(--clr-text-secondary);
+  margin-bottom: 8px;
+}
+
+.legal-main a {
+  color: var(--clr-link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.legal-main a:hover {
+  color: var(--clr-link-hover);
+}
+
+.legal-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--clr-border);
+}
+
+.legal-nav a {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: var(--rad-pill);
+  border: 1px solid var(--clr-border);
+  background: var(--clr-bg-card);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--clr-text-secondary);
+  text-decoration: none;
+  transition: all var(--dur-fast);
+}
+
+.legal-nav a:hover,
+.legal-nav a.is-active {
+  border-color: var(--clr-brand-400);
+  color: var(--clr-text-primary);
+  background: var(--clr-bg-banner);
+}
+
+.legal-nav a.is-active {
+  pointer-events: none;
+}
+
+.legal-footer {
+  padding: 20px 24px;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--clr-text-muted);
+  border-top: 1px solid var(--clr-border);
+  background: var(--clr-bg-sidebar);
+}
+
+@media (max-width: 600px) {
+  .legal-header { padding: 12px 16px; }
+  .legal-btn-back span { display: none; }
+  .legal-main { padding-top: 32px; }
+}

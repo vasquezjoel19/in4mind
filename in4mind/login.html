@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="IN4MIND — Plataforma educativa de tecnología. Aprende de forma clara y accesible.">
+  <title>IN4MIND — Iniciar Sesión</title>
+
+  <script src="src/js/controllers/ThemeController.js?v=20260617"></script>
+  <script>ThemeController.initEarly();</script>
+
+  <link rel="stylesheet" href="src/css/tokens.css?v=20260706">
+  <link rel="stylesheet" href="src/css/base.css?v=20260617">
+  <link rel="stylesheet" href="src/css/auth.css?v=20260621">
+  <link rel="stylesheet" href="src/css/theme.css?v=20260620">
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='20' font-size='20'>💡</text></svg>">
+</head>
+<body>
+
+<div class="auth-page" id="auth-page">
+
+  <header class="auth-topbar">
+    <a class="auth-topbar__brand" href="index.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="9" y1="18" x2="15" y2="18"/>
+        <line x1="10" y1="22" x2="14" y2="22"/>
+        <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0018 8 6 6 0 006 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 018.91 14"/>
+      </svg>
+      IN4MIND
+    </a>
+    <div class="auth-topbar__actions">
+      <a class="auth-btn-home" href="index.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        Volver a Home
+      </a>
+      <span class="auth-topbar__links">¿Necesitas Ayuda? &nbsp;|&nbsp; ES</span>
+    </div>
+  </header>
+
+  <main class="auth-center">
+    <div class="auth-card" role="main">
+
+      <div class="auth-panel-left" aria-hidden="true">
+        <svg class="auth-panel-left__icon" viewBox="0 0 24 24" fill="none"
+             stroke="rgba(255,255,255,0.9)" stroke-width="1.5"
+             stroke-linecap="round" stroke-linejoin="round">
+          <line x1="9" y1="18" x2="15" y2="18"/>
+          <line x1="10" y1="22" x2="14" y2="22"/>
+          <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0018 8 6 6 0 006 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 018.91 14"/>
+        </svg>
+        <h1 class="auth-panel-left__title" id="left-title">¡Bienvenido a IN4MIND!</h1>
+        <p  class="auth-panel-left__desc"  id="left-desc">
+          Empieza a entender la tecnología, de forma clara y accesible.
+        </p>
+      </div>
+
+      <div class="auth-panel-right">
+
+        <section class="auth-view auth-view--visible" id="login-view" aria-label="Formulario de inicio de sesión">
+          <h2 class="auth-form__heading">¡Empieza con IN4MIND!</h2>
+          <p  class="auth-form__subheading">Ingresa tus datos a continuación.</p>
+
+          <p class="auth-alert" id="login-error" role="alert"></p>
+
+          <form id="login-form" novalidate>
+            <div class="form-group">
+              <svg class="form-group__icon" width="16" height="16" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+              <input class="form-input" type="email" id="login-email"
+                     placeholder="Email" autocomplete="email" required>
+              <span class="field-error">Ingresa un email válido.</span>
+            </div>
+
+            <div class="form-group">
+              <svg class="form-group__icon" width="16" height="16" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0110 0v4"/>
+              </svg>
+              <input class="form-input" type="password" id="login-password"
+                     placeholder="Contraseña" autocomplete="current-password" required>
+              <button type="button" class="form-group__pwd-toggle pwd-toggle"
+                      aria-label="Mostrar/ocultar contraseña">
+                <svg class="eye-icon" width="16" height="16" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+              <span class="field-error">La contraseña debe tener al menos 6 caracteres.</span>
+            </div>
+
+            <button type="button" class="auth-forgot" id="to-forgot">¿Olvidaste la contraseña?</button>
+
+            <button type="submit" class="btn btn--primary" id="login-btn">
+              Inicia Sesión
+            </button>
+          </form>
+
+          <div class="auth-divider">
+            <span class="auth-divider__line"></span>
+            <span class="auth-divider__text">o</span>
+            <span class="auth-divider__line"></span>
+          </div>
+
+          <button class="btn btn--outline" type="button" aria-label="Iniciar sesión con Google">
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Inicia Sesión con Google
+          </button>
+
+          <p class="auth-footer-link">
+            ¿No tienes cuenta?
+            <button type="button" id="to-register">Regístrate &rsaquo;</button>
+          </p>
+        </section>
+
+        <!-- Recuperar contraseña -->
+        <section class="auth-view auth-view--hidden" id="forgot-view" aria-label="Recuperar contraseña">
+          <h2 class="auth-form__heading">¿Olvidaste tu contraseña?</h2>
+          <p class="auth-form__subheading">Introduce tu correo y te enviaremos instrucciones para restablecerla.</p>
+
+          <p class="auth-alert" id="forgot-error" role="alert"></p>
+
+          <form id="forgot-form" novalidate>
+            <div class="form-group">
+              <svg class="form-group__icon" width="16" height="16" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+              <input class="form-input" type="email" id="forgot-email"
+                     placeholder="Correo electrónico" autocomplete="email" required>
+              <span class="field-error">Ingresa un email válido.</span>
+            </div>
+
+            <button type="submit" class="btn btn--primary" id="forgot-btn">
+              Enviar enlace
+            </button>
+          </form>
+
+          <div class="auth-success" id="forgot-success" hidden>
+            <div class="auth-success__icon" aria-hidden="true">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+            </div>
+            <p class="auth-success__title">Solicitud enviada</p>
+            <p class="auth-success__text">Si existe una cuenta con ese correo, recibirás instrucciones.</p>
+            <button type="button" class="btn btn--primary" id="forgot-to-reset" style="margin-top:16px">
+              Establecer nueva contraseña
+            </button>
+          </div>
+
+          <p class="auth-footer-link">
+            <button type="button" id="back-to-login">&lsaquo; Volver al inicio de sesión</button>
+          </p>
+        </section>
+
+        <!-- Nueva contraseña -->
+        <section class="auth-view auth-view--hidden" id="reset-view" aria-label="Nueva contraseña">
+          <h2 class="auth-form__heading">Nueva contraseña</h2>
+          <p class="auth-form__subheading">Crea una contraseña segura de al menos 6 caracteres.</p>
+
+          <p class="auth-alert" id="reset-error" role="alert"></p>
+
+          <form id="reset-form" novalidate>
+            <div class="form-group">
+              <svg class="form-group__icon" width="16" height="16" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+              <input class="form-input" type="email" id="reset-email"
+                     placeholder="Correo electrónico" autocomplete="email" required readonly>
+            </div>
+
+            <div class="form-group">
+              <svg class="form-group__icon" width="16" height="16" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0110 0v4"/>
+              </svg>
+              <input class="form-input" type="password" id="reset-password"
+                     placeholder="Nueva contraseña" autocomplete="new-password" required>
+              <button type="button" class="form-group__pwd-toggle pwd-toggle" aria-label="Mostrar contraseña">
+                <svg class="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+              <span class="field-error">Mínimo 6 caracteres.</span>
+            </div>
+
+            <div class="form-group">
+              <svg class="form-group__icon" width="16" height="16" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0110 0v4"/>
+              </svg>
+              <input class="form-input" type="password" id="reset-password-confirm"
+                     placeholder="Confirmar contraseña" autocomplete="new-password" required>
+              <span class="field-error">Las contraseñas deben coincidir.</span>
+            </div>
+
+            <button type="submit" class="btn btn--primary" id="reset-btn">
+              Guardar contraseña
+            </button>
+          </form>
+
+          <div class="auth-success" id="reset-success" hidden>
+            <div class="auth-success__icon" aria-hidden="true">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+            </div>
+            <p class="auth-success__title">Contraseña actualizada</p>
+            <p class="auth-success__text">Ya puedes iniciar sesión con tu nueva contraseña.</p>
+            <button type="button" class="btn btn--primary" id="reset-to-login" style="margin-top:16px">
+              Ir a iniciar sesión
+            </button>
+          </div>
+
+          <p class="auth-footer-link">
+            <button type="button" id="back-from-reset">&lsaquo; Volver al inicio de sesión</button>
+          </p>
+        </section>
+
+        <section class="auth-view auth-view--hidden" id="register-view" aria-label="Formulario de registro">
+          <h2 class="auth-form__heading">Crea tu cuenta</h2>
+          <p  class="auth-form__subheading">Completa tus datos para empezar.</p>
+
+          <p class="auth-alert" id="register-error" role="alert"></p>
+
+          <form id="register-form" novalidate>
+            <div class="form-group">
+              <svg class="form-group__icon" width="16" height="16" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              <input class="form-input" type="text" id="reg-name"
+                     placeholder="Nombre Completo" autocomplete="name" required>
+              <span class="field-error">El nombre es requerido.</span>
+            </div>
+
+            <div class="form-group">
+              <svg class="form-group__icon" width="16" height="16" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+              <input class="form-input" type="email" id="reg-email"
+                     placeholder="Email" autocomplete="email" required>
+              <span class="field-error">Ingresa un email válido.</span>
+            </div>
+
+            <div class="form-group">
+              <svg class="form-group__icon" width="16" height="16" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0110 0v4"/>
+              </svg>
+              <input class="form-input" type="password" id="reg-password"
+                     placeholder="Contraseña (mín. 6 caracteres)"
+                     autocomplete="new-password" required>
+              <button type="button" class="form-group__pwd-toggle pwd-toggle"
+                      aria-label="Mostrar/ocultar contraseña">
+                <svg class="eye-icon" width="16" height="16" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+              <span class="field-error">Mínimo 6 caracteres.</span>
+            </div>
+
+            <button type="submit" class="btn btn--primary" id="register-btn"
+                    style="margin-top: 8px;">
+              Registrarse
+            </button>
+          </form>
+
+          <p class="auth-footer-link">
+            ¿Ya tienes cuenta?
+            <button type="button" id="to-login">Inicia Sesión &rsaquo;</button>
+          </p>
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+  <footer class="auth-bottom">
+    <a href="index.html">Volver al inicio</a> &nbsp;|&nbsp;
+    <a href="terminos.html">Términos de uso</a> &nbsp;|&nbsp;
+    <a href="privacidad.html">Privacidad</a> &nbsp;|&nbsp;
+    <a href="cookies.html">Cookies</a>
+  </footer>
+
+</div>
+
+<script src="src/js/services/DataService.js?v=20260621"></script>
+<script src="src/js/controllers/AuthController.js?v=20260621"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => AuthController.init());
+</script>
+
+</body>
+</html>

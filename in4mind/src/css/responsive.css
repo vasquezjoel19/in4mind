@@ -1,0 +1,218 @@
+/**
+ * IN4MIND — Responsive / pantalla dividida (Snap, ventanas estrechas)
+ * Complementa dashboard.css, tutorial.css, quizzes.css y ai.css
+ */
+
+/* ── Evitar desbordes horizontales en ventanas estrechas ── */
+html {
+  overflow-x: clip;
+}
+
+body:not(.landing-body) {
+  overflow-x: clip;
+}
+
+.dashboard {
+  width: 100%;
+  max-width: 100vw;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.main-area {
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.content-area {
+  min-width: 0;
+}
+
+.topbar {
+  min-width: 0;
+}
+
+.topbar__actions {
+  flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════
+   ESCRITORIO COMPACTO (901px – 1280px)
+   Mitad de pantalla, Snap lateral, etc.
+══════════════════════════════════════════ */
+@media (max-width: 1280px) and (min-width: 901px) {
+  :root {
+    --sidebar-w: 200px;
+  }
+
+  .content-area {
+    padding: var(--sp-lg) var(--sp-md) var(--sp-2xl);
+  }
+
+  .welcome-section__title {
+    font-size: 1.55rem;
+  }
+
+  .topbar {
+    padding: 0 var(--sp-md);
+    gap: var(--sp-sm);
+  }
+
+  .search-bar {
+    max-width: min(320px, 40vw);
+    min-width: 0;
+  }
+
+  .course-card {
+    width: 220px;
+    height: auto;
+    min-height: 140px;
+  }
+
+  .carousel-track--expanded {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+
+  .recent-card {
+    min-width: 200px;
+  }
+
+  /* Tutoriales */
+  .tut-cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tut-bottom {
+    grid-template-columns: 1fr;
+  }
+
+  /* Quizzes */
+  .quiz-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* IA */
+  .main-area--ai {
+    height: 100dvh;
+    max-height: 100dvh;
+  }
+
+  .ai-topbar {
+    padding: 10px 14px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .ai-topbar__left {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .ai-topbar__actions {
+    flex-wrap: wrap;
+  }
+
+  .ai-btn-ghost {
+    padding: 8px 12px;
+    font-size: 0.78rem;
+  }
+
+  .ai-suggestions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ai-chat-inner {
+    padding: 24px 16px 100px;
+  }
+
+  .ai-welcome__title {
+    font-size: 1.65rem;
+  }
+
+  .ai-composer-wrap {
+    padding: 0 12px 16px;
+  }
+}
+
+@media (max-width: 1100px) and (min-width: 901px) {
+  .course-card {
+    width: 200px;
+  }
+
+  .carousel-track--expanded {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+
+  .section-header__title {
+    font-size: 1rem;
+  }
+}
+
+/* ══════════════════════════════════════════
+   MÓVIL / VENTANA MUY ESTRECHA (≤900px)
+══════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .dashboard {
+    min-height: 100dvh;
+  }
+
+  .main-area--ai {
+    height: 100dvh;
+    max-height: 100dvh;
+  }
+
+  .ai-topbar__title {
+    font-size: 0.95rem;
+  }
+
+  .ai-btn-ghost {
+    padding: 8px 10px;
+    font-size: 0.75rem;
+  }
+
+  .tut-cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .tut-cards-grid,
+  .quiz-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ai-suggestions {
+    grid-template-columns: 1fr;
+  }
+
+  .ai-topbar__actions .ai-btn-ghost {
+    font-size: 0;
+    padding: 8px;
+    width: 36px;
+    height: 36px;
+    justify-content: center;
+  }
+
+  .ai-topbar__actions .ai-btn-ghost svg {
+    margin: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .course-card {
+    width: min(260px, 85vw);
+  }
+
+  .carousel-track--expanded {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Preferencia: menos animaciones si el usuario lo pide */
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .main-area,
+  .course-card {
+    transition: none !important;
+  }
+}

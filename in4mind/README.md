@@ -66,12 +66,19 @@ npx --yes serve -l 8080 .
 
 IN4MIND **no es** una app Python. Es HTML/CSS/JS + funciones Node (`api/`).
 
-1. En Vercel: **Framework Preset = Other**, **no** Python.
-2. Preferido: **Root Directory = `in4mind`**.
-   - Alternativa: dejar Root vacío; el `vercel.json` de la raíz del repo ya apunta a `in4mind`.
-3. Build: `npm run build` · Output: (vacío si Root = `in4mind`).
-4. Variables opcionales: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `GROQ_API_KEY`.
-5. Redeploy tras push a `main`.
+Si el deploy falla con *“No python entrypoint found”*, el proyecto en Vercel está
+marcado como Python/Flask/FastAPI. Corrige esto antes de redeployar:
+
+1. Vercel → Project → **Settings → General → Build & Development Settings**
+2. **Framework Preset** → **Other** (o Node). **Override** activado.
+3. **Root Directory** (recomendado): `in4mind`  
+   - Alternativa: Root vacío; el `vercel.json` de la raíz usa `outputDirectory: in4mind`.
+4. Build Command: `npm run build` · Install: `npm install` · Output: vacío (con Root = `in4mind`).
+5. Variables opcionales: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `GROQ_API_KEY`.
+6. **Redeploy** (Deployments → ⋮ → Redeploy) tras guardar settings y push a `main`.
+
+El repo fuerza el preset Node con `"framework": "node"` en `vercel.json`
+(no Python) y `engines.node` = `20.x` en `package.json`.
 
 ### Credenciales de prueba
 

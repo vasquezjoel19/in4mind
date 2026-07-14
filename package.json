@@ -1,0 +1,13 @@
+{
+  "name": "in4mind-root",
+  "private": true,
+  "description": "IN4MIND monorepo root — static HTML app in ./in4mind + Node serverless APIs",
+  "engines": {
+    "node": "20.x"
+  },
+  "scripts": {
+    "build": "npm run build --prefix in4mind",
+    "start": "npm start --prefix in4mind",
+    "test": "npm test --prefix in4mind"
+  }
+}

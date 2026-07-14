@@ -73,7 +73,7 @@ marcado como Python/Flask/FastAPI. Corrige esto antes de redeployar:
 2. **Framework Preset** → **Other** (Override). **No** uses Python ni Node server.
 3. **Root Directory** (recomendado): `in4mind` (minúsculas)  
    - Alternativa: Root vacío; el `vercel.json` de la raíz usa `outputDirectory: in4mind`.
-4. Build Command: `npm run build` · Install: `npm install` · Output: vacío (con Root = `in4mind`).
+4. Build Command: `npm run build` · Install: `npm install` · **Output Directory: `.`** (no uses `public`; los HTML están en la raíz de `in4mind`).
 5. Variables opcionales: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `GROQ_API_KEY`.
 6. **Redeploy** el commit más reciente de `main` tras guardar settings.
 

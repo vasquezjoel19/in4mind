@@ -80,6 +80,17 @@ marcado como Python/Flask/FastAPI. Corrige esto antes de redeployar:
 El repo declara `"framework": null` (= Other) en `vercel.json`. Las APIs en
 `api/*.js` siguen siendo funciones Node; el sitio en sí es estático HTML/CSS/JS.
 
+### Flujo Git (branch `develop` → PR → `main`)
+
+El trabajo diario va en **`develop`**. Cuando esté listo para producción:
+
+1. Push de `develop` a GitHub.
+2. Abrir un **Pull Request** `develop` → `main`.
+3. Revisar, hacer merge a `main`.
+4. Vercel despliega desde `main` (Root Directory `in4mind`, Framework **Other**).
+
+Evita commits directos a `main` salvo hotfixes urgentes.
+
 ### Credenciales de prueba
 
 En la versión demo, **cualquier email válido con contraseña de 6+ caracteres** accede al dashboard.

@@ -9,6 +9,6 @@
     "start": "npx --yes serve -l 8080 ."
   },
   "engines": {
-    "node": "20.x"
+    "node": "24.x"
   }
 }

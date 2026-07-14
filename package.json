@@ -3,7 +3,7 @@
   "private": true,
   "description": "IN4MIND monorepo root — static HTML app in ./in4mind + Node serverless APIs",
   "engines": {
-    "node": "20.x"
+    "node": "24.x"
   },
   "scripts": {
     "build": "npm run build --prefix in4mind",

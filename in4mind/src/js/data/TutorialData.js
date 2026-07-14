@@ -120,6 +120,7 @@ const TutorialData = (() => {
       topics: ['Principios CIA', 'Phishing e ingeniería social', 'Contraseñas y autenticación', 'Malware y ransomware', 'Buenas prácticas en la nube'],
       timeline: ['Fundamentos', 'Amenazas', 'Defensa', 'Respuesta'],
     },
+    ...(typeof ExtendedCourses !== 'undefined' ? ExtendedCourses.getTutorialRaw() : {}),
   };
 
   const LESSON_DETAILS = {
@@ -247,19 +248,42 @@ const TutorialData = (() => {
     });
   }
 
+  function _syncFromCurriculum(id, courseData) {
+    if (typeof CourseCurriculum === 'undefined') return courseData;
+    const meta = CourseCurriculum.getCertMeta(id);
+    const lessons = courseData.lessons || [];
+    if (!meta || !lessons.length) return courseData;
+    return {
+      ...courseData,
+      topics: lessons.map((l) => l.title),
+      videos: lessons.map((l) => l.title),
+      timeline: meta.levelsCovered,
+      quizzes: meta.quizModuleCount,
+      quizQuestions: meta.quizQuestionCount,
+      tutorials: meta.lessonCount,
+    };
+  }
+
   const COURSE_DATA = {};
   Object.keys(RAW).forEach(id => {
     const d = RAW[id];
     const lessons = _buildLessons(id, d);
-    COURSE_DATA[id] = {
+    COURSE_DATA[id] = _syncFromCurriculum(id, {
       ...d,
       tutorials: lessons.length,
       lessons,
-    };
+    });
   });
 
   function getCourseData(courseId) {
-    return COURSE_DATA[courseId] || null;
+    const base = COURSE_DATA[courseId] || null;
+    if (!base) return null;
+    const locale = typeof I18n !== 'undefined' ? I18n.getLocale() : 'es';
+    if (typeof ExtendedCourseLocales !== 'undefined') {
+      const meta = ExtendedCourseLocales.getTutorialMeta(courseId, locale);
+      if (meta) return { ...base, ...meta };
+    }
+    return base;
   }
 
   function getLessons(courseId) {
@@ -267,6 +291,18 @@ const TutorialData = (() => {
   }
 
   function getCategoryLabel(cat) {
+    const map = {
+      web: 'catWeb',
+      programming: 'catProgramming',
+      design: 'catDesign',
+      office: 'catOffice',
+      data: 'catData',
+      tools: 'catTools',
+      security: 'catSecurity',
+    };
+    if (typeof I18n !== 'undefined' && map[cat]) {
+      return I18n.t(`tutorial.${map[cat]}`);
+    }
     return CATEGORY_LABELS[cat] || cat;
   }
 

@@ -9,17 +9,18 @@
 const DataService = (() => {
 
   const COURSES = [
-    { id: 'canvas',      title: 'Canvas',      desc: 'Diseño visual profesional y creación de contenido gráfico.',       icon: 'https://cdn-icons-png.flaticon.com/512/5968/5968170.png', color: 'var(--clr-canvas)',  category: 'design',      tags: ['diseño', 'gráfico', 'canvas', 'visual'] },
+    { id: 'canvas',      title: 'Canvas',      desc: 'Diseño visual profesional y creación de contenido gráfico.',       icon: 'src/img/courses/canva.svg?v=20260713', color: 'var(--clr-canvas)',  category: 'design',      tags: ['diseño', 'gráfico', 'canva', 'canvas', 'visual'] },
     { id: 'figma',       title: 'Figma',        desc: 'Diseño de interfaces y prototipos colaborativos.',                 icon: 'https://cdn-icons-png.flaticon.com/512/5968/5968705.png', color: 'var(--clr-figma)',   category: 'design',      tags: ['ui', 'ux', 'figma', 'prototipo'] },
-    { id: 'python',      title: 'Python',       desc: 'Programación versátil para automatización y datos.',              icon: 'https://cdn-icons-png.flaticon.com/512/5968/5968350.png', color: 'var(--clr-python)',  category: 'programming', tags: ['python', 'programación', 'scripts', 'automatización'] },
-    { id: 'javascript',  title: 'JavaScript',   desc: 'Interactividad y dinamismo para la web moderna.',                 icon: 'https://cdn-icons-png.flaticon.com/512/5968/5968292.png', color: 'var(--clr-js)',      category: 'web',         tags: ['js', 'javascript', 'web', 'frontend'] },
-    { id: 'html',        title: 'HTML',         desc: 'Estructura y semántica de páginas web.',                          icon: 'https://cdn-icons-png.flaticon.com/512/732/732212.png',   color: 'var(--clr-html)',    category: 'web',         tags: ['html', 'web', 'estructura', 'marcado'] },
+    { id: 'python',      title: 'Python',       desc: 'Programación versátil para automatización y datos.',              icon: 'src/img/courses/python.svg', color: 'var(--clr-python)',  category: 'programming', tags: ['python', 'programación', 'scripts', 'automatización'] },
+    { id: 'javascript',  title: 'JavaScript',   desc: 'Interactividad y dinamismo para la web moderna.',                 icon: 'src/img/courses/javascript.svg', color: 'var(--clr-js)',      category: 'web',         tags: ['js', 'javascript', 'web', 'frontend'] },
+    { id: 'html',        title: 'HTML',         desc: 'Estructura y semántica de páginas web.',                          icon: 'src/img/courses/html.svg', color: 'var(--clr-html)',    category: 'web',         tags: ['html', 'web', 'estructura', 'marcado'] },
     { id: 'css',         title: 'CSS',          desc: 'Estilos, animaciones y diseño responsivo.',                       icon: 'https://cdn-icons-png.flaticon.com/512/732/732190.png',   color: 'var(--clr-css)',     category: 'web',         tags: ['css', 'estilos', 'web', 'diseño'] },
     { id: 'github',      title: 'GitHub',       desc: 'Control de versiones y colaboración en proyectos.',               icon: 'https://cdn-icons-png.flaticon.com/512/25/25231.png',     color: 'var(--clr-github)',  category: 'tools',       tags: ['github', 'git', 'versiones', 'repositorio'] },
     { id: 'excel',       title: 'Excel',        desc: 'Gestión y análisis de datos con hojas de cálculo.',               icon: 'https://cdn-icons-png.flaticon.com/512/732/732220.png',   color: 'var(--clr-excel)',   category: 'office',      tags: ['excel', 'datos', 'fórmulas', 'tablas'] },
     { id: 'powerpoint',  title: 'PowerPoint',   desc: 'Presentaciones visuales de impacto corporativo.',                 icon: 'https://cdn-icons-png.flaticon.com/512/732/732224.png',   color: 'var(--clr-pptx)',    category: 'office',      tags: ['powerpoint', 'presentaciones', 'slides'] },
-    { id: 'sql',         title: 'SQL',          desc: 'Consultas y gestión de bases de datos relacionales.',             icon: 'https://cdn-icons-png.flaticon.com/512/4248/4248443.png', color: 'var(--clr-sql)',     category: 'data',        tags: ['sql', 'bases de datos', 'consultas', 'datos'] },
-    { id: 'cybersecurity', title: 'Ciberseguridad', desc: 'Protege sistemas, datos y usuarios frente a amenazas digitales.', icon: 'https://cdn-icons-png.flaticon.com/512/2913/2913133.png', color: 'var(--clr-security)', category: 'security', tags: ['ciberseguridad', 'seguridad', 'phishing', 'malware', 'contraseñas', 'hacking'] },
+    { id: 'sql',         title: 'SQL',          desc: 'Consultas y gestión de bases de datos relacionales.',             icon: 'src/img/courses/sql.svg', color: 'var(--clr-sql)',     category: 'data',        tags: ['sql', 'bases de datos', 'consultas', 'datos'] },
+    { id: 'cybersecurity', title: 'Ciberseguridad', desc: 'Protege sistemas, datos y usuarios frente a amenazas digitales.', icon: 'src/img/courses/security.svg', color: 'var(--clr-security)', category: 'security', tags: ['ciberseguridad', 'seguridad', 'phishing', 'malware', 'contraseñas', 'hacking'] },
+    ...(typeof ExtendedCourses !== 'undefined' ? ExtendedCourses.getCatalogEntries() : []),
   ];
 
   const RECENT_ITEMS = [
@@ -36,7 +37,7 @@ const DataService = (() => {
 
   const NAV_ITEMS = [
     { id: 'home',      label: 'Inicio',     icon: 'home', href: 'dashboard.html' },
-    { id: 'tutorials', label: 'Tutoriales', icon: 'book', href: 'tutorial.html'  },
+    { id: 'tutorials', label: 'Cursos', icon: 'book', href: 'tutorial.html'  },
     { id: 'quizzes',   label: 'Quizzes',    icon: 'quiz', href: 'quizzes.html'   },
     { id: 'ai',        label: 'IA',         icon: 'bot',  href: 'ai.html'        },
   ];
@@ -64,10 +65,34 @@ const DataService = (() => {
 
   let _users = _loadUsers();
 
+  function _localizedCourses() {
+    return COURSES.map(c => {
+      const loc = typeof I18n !== 'undefined' ? I18n.t(`courses.${c.id}`) : null;
+      if (loc && typeof loc === 'object') {
+        return { ...c, title: loc.title || c.title, desc: loc.desc || c.desc };
+      }
+      return { ...c };
+    });
+  }
+
+  function _localizedRecent() {
+    return RECENT_ITEMS.map(r => {
+      const loc = typeof I18n !== 'undefined' ? I18n.t(`recent.${r.id}`) : null;
+      if (loc && typeof loc === 'object') {
+        return { ...r, title: loc.title, subtitle: loc.subtitle, timeLabel: loc.time };
+      }
+      return { ...r };
+    });
+  }
+
   function getCourses(query = '') {
-    if (!query.trim()) return COURSES;
+    let list = _localizedCourses();
+    if (typeof ContentLoader !== 'undefined') {
+      list = ContentLoader.applyOverlay(list);
+    }
+    if (!query.trim()) return list;
     const q = query.toLowerCase();
-    return COURSES.filter(c =>
+    return list.filter(c =>
       c.title.toLowerCase().includes(q) ||
       c.desc.toLowerCase().includes(q)  ||
       c.tags.some(t => t.includes(q))
@@ -75,12 +100,26 @@ const DataService = (() => {
   }
 
   function getCoursesByCategory(category) {
-    return COURSES.filter(c => c.category === category);
+    return _localizedCourses().filter(c => c.category === category);
   }
 
-  function getRecentItems() { return RECENT_ITEMS; }
-  function getNavItems()    { return NAV_ITEMS;    }
-  function getNavFooter()   { return NAV_FOOTER;   }
+  function getRecentItems() { return _localizedRecent(); }
+
+  function getNavItems() {
+    return [
+      { id: 'home',      label: typeof I18n !== 'undefined' ? I18n.t('nav.home') : 'Inicio',     icon: 'home', href: 'dashboard.html' },
+      { id: 'tutorials', label: typeof I18n !== 'undefined' ? I18n.t('nav.tutorials') : 'Cursos', icon: 'book', href: 'tutorial.html'  },
+      { id: 'quizzes',   label: typeof I18n !== 'undefined' ? I18n.t('nav.quizzes') : 'Quizzes',    icon: 'quiz', href: 'quizzes.html'   },
+      { id: 'ai',        label: typeof I18n !== 'undefined' ? I18n.t('nav.ai') : 'IA',         icon: 'bot',  href: 'ai.html'        },
+    ];
+  }
+
+  function getNavFooter() {
+    return [
+      { id: 'settings', label: typeof I18n !== 'undefined' ? I18n.t('nav.settings') : 'Ajustes', icon: 'settings' },
+      { id: 'other',    label: typeof I18n !== 'undefined' ? I18n.t('nav.other') : 'Otros',   icon: 'more'     },
+    ];
+  }
 
   /**
    * Simula login. Busca al usuario registrado en memoria o acepta cualquier
@@ -90,14 +129,14 @@ const DataService = (() => {
     return new Promise(resolve => {
       setTimeout(() => {
         if (!email || password.length < 6) {
-          resolve({ ok: false, error: 'Credenciales inválidas.' });
+          resolve({ ok: false, error: typeof I18n !== 'undefined' ? I18n.t('auth.invalidCreds') : 'Credenciales inválidas.' });
           return;
         }
         // Si el usuario se registró en esta sesión, usar su nombre real
         const registered = _users[email.toLowerCase()];
         if (registered) {
           if (registered.password !== password) {
-            resolve({ ok: false, error: 'Contraseña incorrecta.' });
+            resolve({ ok: false, error: typeof I18n !== 'undefined' ? I18n.t('auth.wrongPassword') : 'Contraseña incorrecta.' });
             return;
           }
           resolve({ ok: true, user: { name: registered.name, email } });

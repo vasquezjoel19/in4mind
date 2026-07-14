@@ -30,12 +30,12 @@ const GroqService = (() => {
 
 REGLA PRINCIPAL (OBLIGATORIA)
 - SOLO respondes consultas relacionadas con IN4MIND o su catálogo educativo.
-- IN4MIND incluye: la plataforma (tutoriales, quizzes, dashboard, perfil, favoritos, guardados, certificaciones, navegación) y los cursos que ofrece.
+- IN4MIND incluye: la plataforma (cursos, quizzes, dashboard, perfil, favoritos, guardados, certificaciones, navegación) y el catálogo educativo.
 - Si la pregunta NO tiene relación con IN4MIND ni con sus cursos, NO respondas el tema. Rechaza cortésmente y pide que reformule sobre IN4MIND.
 - No respondas preguntas generales ajenas: deportes, política, entretenimiento, recetas, salud personal, relaciones, finanzas no técnicas, chistes, etc.
 
 FORMATO DE RECHAZO (usa este estilo cuando la consulta esté fuera de alcance)
-"Consulta fuera del alcance de IN4MIND. Solo puedo ayudarte con la plataforma IN4MIND y sus cursos. Por favor, pregúntame sobre tutoriales, quizzes, perfil, certificaciones o temas de nuestro catálogo (Python, HTML, CSS, JavaScript, SQL, Excel, PowerPoint, Figma, Canva, GitHub, Ciberseguridad)."
+"Consulta fuera del alcance de IN4MIND. Solo puedo ayudarte con la plataforma IN4MIND y sus cursos. Por favor, pregúntame sobre cursos, quizzes, perfil, certificaciones o temas de nuestro catálogo (Python, HTML, CSS, JavaScript, SQL, Excel, PowerPoint, Figma, Canva, GitHub, Ciberseguridad)."
 
 IDENTIDAD Y TONO
 - Comunicación profesional, clara y respetuosa en español latinoamericano.
@@ -49,7 +49,7 @@ ALCANCE DEL CATÁLOGO IN4MIND
 - Desarrollo web, bases de datos, diseño UI/UX, control de versiones y productividad.
 
 PLATAFORMA IN4MIND
-- Tutoriales: lecciones por curso con pasos prácticos.
+- Cursos: lecciones por curso con pasos prácticos.
 - Quizzes: evaluaciones por curso y Conocimiento General.
 - Dashboard: cursos destacados y Recién vistos.
 - Perfil: favoritos, guardados, quizzes completados y certificaciones.
@@ -58,7 +58,7 @@ Cursos disponibles:
 ${coursesBlock || '(Catálogo estándar IN4MIND)'}
 
 DIRECTRICES
-- Recomienda Tutoriales o Quizzes de IN4MIND cuando sea pertinente.
+- Recomienda Cursos o Quizzes de IN4MIND cuando sea pertinente.
 - Ejemplos técnicos concisos solo para temas del catálogo IN4MIND.
 - Respuestas breves y sin redundancia.`;
   }
@@ -111,7 +111,88 @@ DIRECTRICES
     return reply;
   }
 
-  return { chat, isConfigured, buildSystemPrompt: _buildSystemPrompt };
+  /**
+   * Streaming chat. Calls onChunk(partialText) as tokens arrive.
+   * @param {{ role: string, content: string }[]} history
+   * @param {(partial: string) => void} [onChunk]
+   * @returns {Promise<string>}
+   */
+  async function chatStream(history, onChunk) {
+    if (!isConfigured()) {
+      throw new Error('GROQ_API_KEY_MISSING');
+    }
+
+    const messages = [
+      { role: 'system', content: _buildSystemPrompt() },
+      ...history.map(m => ({
+        role: m.role === 'assistant' ? 'assistant' : 'user',
+        content: m.content,
+      })),
+    ];
+
+    const cfg = _config();
+    if (!cfg) throw new Error('GROQ_API_KEY_MISSING');
+
+    const response = await fetch(cfg.API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${cfg.API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: cfg.MODEL,
+        messages,
+        max_tokens: cfg.MAX_TOKENS,
+        temperature: cfg.TEMPERATURE,
+        stream: true,
+      }),
+    });
+
+    if (!response.ok) {
+      const errBody = await response.text().catch(() => '');
+      if (response.status === 401 || response.status === 403) {
+        throw new Error('GROQ_API_KEY_INVALID');
+      }
+      throw new Error(`GROQ_HTTP_${response.status}: ${errBody.slice(0, 200)}`);
+    }
+
+    if (!response.body || !response.body.getReader) {
+      return chat(history);
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let full = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const raw of lines) {
+        const line = raw.trim();
+        if (!line.startsWith('data:')) continue;
+        const data = line.slice(5).trim();
+        if (!data || data === '[DONE]') continue;
+        try {
+          const json = JSON.parse(data);
+          const delta = json.choices?.[0]?.delta?.content;
+          if (delta) {
+            full += delta;
+            if (typeof onChunk === 'function') onChunk(full);
+          }
+        } catch (_) { /* ignore partial JSON */ }
+      }
+    }
+
+    if (!full.trim()) throw new Error('GROQ_EMPTY_RESPONSE');
+    return full.trim();
+  }
+
+  return { chat, chatStream, isConfigured, buildSystemPrompt: _buildSystemPrompt };
 
 })();
 

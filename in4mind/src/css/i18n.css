@@ -1,0 +1,199 @@
+/* IN4MIND — Language switcher & auth help panel */
+
+.lang-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--clr-text-secondary);
+}
+
+.lang-switcher__btn {
+  background: none;
+  border: none;
+  padding: 4px 6px;
+  border-radius: var(--rad-sm);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--clr-text-muted);
+  transition: color var(--dur-fast), background var(--dur-fast);
+}
+
+.lang-switcher__btn:hover {
+  color: var(--clr-brand-600);
+  background: var(--clr-bg-banner);
+}
+
+.lang-switcher__btn--active {
+  color: var(--clr-brand-600);
+  background: rgba(59, 130, 246, 0.12);
+}
+
+.auth-topbar__help-lang {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.auth-help-btn {
+  background: none;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--clr-brand-600);
+  cursor: pointer;
+  padding: 6px 0;
+  text-decoration: none;
+}
+
+.auth-help-btn:hover {
+  color: var(--clr-brand-700);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--clr-brand-400);
+}
+
+.auth-help-btn:focus {
+  outline: none;
+}
+
+.auth-help-btn:focus-visible {
+  outline: 2px solid var(--clr-brand-400);
+  outline-offset: 3px;
+  border-radius: var(--rad-sm);
+}
+
+.auth-help-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-lg);
+  background: rgba(74, 118, 178, 0.22);
+  backdrop-filter: blur(6px);
+  outline: none;
+  border: none;
+}
+
+.auth-help-panel.is-open {
+  display: flex;
+}
+
+.auth-help-panel[hidden] {
+  display: none !important;
+}
+
+.auth-help-panel__inner {
+  width: min(100%, 480px);
+  background: var(--clr-bg-card);
+  border: none;
+  border-radius: var(--rad-xl);
+  padding: var(--sp-xl);
+  box-shadow: var(--shadow-auth);
+  animation: fadeInUp var(--dur-slow) var(--ease) both;
+  outline: none;
+}
+
+.auth-help-panel__close:focus {
+  outline: none;
+}
+
+.auth-help-panel__close:focus-visible {
+  outline: 2px solid var(--clr-brand-400);
+  outline-offset: 2px;
+}
+
+.auth-help-panel__title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--clr-text-primary);
+  margin: 0 0 var(--sp-md);
+}
+
+.auth-help-panel__steps {
+  margin: 0 0 var(--sp-lg);
+  padding-left: 1.1rem;
+  color: var(--clr-text-secondary);
+  font-size: 0.88rem;
+  line-height: 1.65;
+}
+
+.auth-help-panel__steps li + li {
+  margin-top: var(--sp-sm);
+}
+
+.auth-help-panel__close {
+  width: 100%;
+}
+
+.prof-settings {
+  background: var(--clr-bg-card);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--rad-xl);
+  padding: var(--sp-lg) var(--sp-xl);
+  margin-bottom: var(--sp-xl);
+  box-shadow: var(--shadow-card);
+}
+
+.prof-settings__title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--clr-text-primary);
+  margin: 0 0 var(--sp-xs);
+}
+
+.prof-settings__sub {
+  margin: 0 0 var(--sp-md);
+  font-size: 0.88rem;
+  color: var(--clr-text-secondary);
+}
+
+.prof-settings__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-md);
+  flex-wrap: wrap;
+  padding-top: var(--sp-sm);
+  border-top: 1px solid var(--clr-border);
+}
+
+.prof-settings__label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--clr-text-primary);
+  margin: 0 0 4px;
+}
+
+.prof-settings__hint {
+  font-size: 0.8rem;
+  color: var(--clr-text-muted);
+  margin: 0;
+  max-width: 28rem;
+}
+
+html[data-theme="dark"] .prof-settings,
+html[data-theme="dark"] .auth-help-panel__inner {
+  background: var(--clr-bg-card);
+}
+
+html[data-theme="dark"] .auth-help-panel {
+  background: rgba(21, 34, 56, 0.72);
+}
+
+@media (max-width: 600px) {
+  .auth-topbar__help-lang {
+    order: -1;
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

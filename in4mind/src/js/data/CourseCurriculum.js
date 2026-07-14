@@ -7,11 +7,62 @@ const CourseCurriculum = (() => {
     ADVANCED: 'Avanzado',
   });
 
+  /**
+   * Videos de YouTube por curso, en orden de lección (índice 0 = lección 1).
+   * Solo se asigna el enlace correspondiente a cada posición; sin repetir ni mezclar cursos.
+   */
+  const LESSON_VIDEOS = Object.freeze({
+    html: [
+      'https://youtu.be/mNbnV3aN3KA',
+      'https://youtu.be/lZeH53-EdjA',
+      'https://youtu.be/MJkdaVFHrto',
+    ],
+    css: [
+      'https://youtu.be/3yM5uXp-T_0',
+      'https://youtu.be/wZniZEbPAzk',
+      'https://youtu.be/aNEOu7de_FQ',
+    ],
+    python: [
+      'https://youtu.be/_6N18g3ewnw',
+      'https://youtu.be/IimBRwHhW54',
+      'https://youtu.be/GRNI9T9R8gQ',
+    ],
+    javascript: [
+      'https://youtu.be/8GTaO9XhA5M',
+      'https://youtu.be/QoC4RxNIs5M',
+    ],
+    canvas: [
+      'https://youtu.be/UG3yIIuhAb0',
+      'https://youtu.be/K_h8vVleTC0',
+      'https://youtu.be/pv02oKNzlSo',
+    ],
+    figma: [
+      'https://youtu.be/Kgd9B6ETAUY',
+      'https://youtu.be/bIK7PIdlLTU',
+      'https://youtu.be/q6WPfjTU_B0',
+    ],
+    github: [
+      'https://youtu.be/yLkOYXVRDvw',
+    ],
+    excel: [
+      'https://youtu.be/yLkOYXVRDvw',
+    ],
+    powerpoint: [
+      'https://youtu.be/LIXfGkAca0g',
+      'https://youtu.be/qIsXgWYjPBU',
+    ],
+    sql: [
+      'https://youtu.be/6i670_GQQGA',
+      'https://youtu.be/Gn3cPj62bWk',
+    ],
+    ...(typeof ExtendedCourses !== 'undefined' ? ExtendedCourses.getLessonVideos() : {}),
+  });
+
   const DATA = {
     canvas: {
       title: 'Canvas',
       category: 'design',
-      icon: 'https://cdn-icons-png.flaticon.com/512/5968/5968170.png',
+      icon: 'src/img/courses/canva.svg?v=20260713',
       requirements: ['Cuenta activa en Canva', 'Conexión a internet estable', 'Nociones básicas de diseño visual'],
       docs: { label: 'Centro de ayuda de Canva', url: 'https://www.canva.com/help/' },
       certModules: ['Fundamentos de Canva', 'Diseño de marca', 'Exportación profesional', 'Colaboración y revisión'],
@@ -25,7 +76,7 @@ const CourseCurriculum = (() => {
           description: '¿Qué es Canva y para qué sirve? Esta lección explica su propósito como plataforma de diseño visual para crear piezas profesionales sin partir de cero.',
           requirements: ['Cuenta activa en Canva', 'Conexión a internet estable'],
           steps: ['Crear una cuenta y acceder al panel principal', 'Abrir un diseño nuevo con formato predefinido', 'Identificar barra lateral, lienzo y menú superior', 'Agregar texto, imagen y forma básica', 'Guardar y exportar una primera versión'],
-          resources: { video: 'https://www.youtube.com/watch?v=R5jY8wAn6cc', docs: 'Guía oficial de inicio en Canva', docsUrl: 'https://www.canva.com/help/getting-started/' },
+          resources: { video: 'https://youtu.be/UG3yIIuhAb0?si=sYXrGP2wRybAaSN3', docs: 'Guía oficial de inicio en Canva', docsUrl: 'https://www.canva.com/help/getting-started/' },
           tip: 'Define objetivo y audiencia antes de elegir plantilla para evitar retrabajo.',
         },
         {
@@ -37,7 +88,7 @@ const CourseCurriculum = (() => {
           description: '¿Qué son las plantillas y para qué sirven? Aprenderás a adaptarlas estratégicamente sin perder identidad visual ni claridad del mensaje.',
           requirements: ['Cuenta activa en Canva', 'Conexión a internet estable'],
           steps: ['Seleccionar plantilla alineada con el objetivo', 'Cambiar tipografías y colores de marca', 'Ajustar jerarquía visual de títulos y subtítulos', 'Reemplazar imágenes con contenido propio', 'Duplicar diseño para crear variaciones de campaña'],
-          resources: { video: 'https://www.youtube.com/watch?v=1rM7P7fW2h8', docs: 'Uso de plantillas en Canva', docsUrl: 'https://www.canva.com/help/templates/' },
+          resources: { video: 'https://youtu.be/K_h8vVleTC0?si=pKwM16sSrZiBlxTM', docs: 'Uso de plantillas en Canva', docsUrl: 'https://www.canva.com/help/templates/' },
           tip: 'Modifica primero estructura y luego detalles para mantener consistencia.',
         },
         {
@@ -49,7 +100,7 @@ const CourseCurriculum = (() => {
           description: '¿Qué es la composición y para qué sirve? Esta sesión te enseña a distribuir elementos para guiar la atención y mejorar comprensión.',
           requirements: ['Conocimiento básico de Canva', 'Criterio visual inicial'],
           steps: ['Aplicar regla de tercios para distribuir elementos', 'Usar contraste de color para destacar acciones', 'Alinear objetos con guías inteligentes', 'Controlar espacios en blanco de forma intencional', 'Revisar legibilidad en móvil y escritorio'],
-          resources: { video: 'https://www.youtube.com/watch?v=Wp7y4k0b4nQ', docs: 'Principios de diseño en Canva', docsUrl: 'https://www.canva.com/help/design-principles/' },
+          resources: { video: 'https://youtu.be/pv02oKNzlSo?si=dfMBKST0MQIEb7CQ', docs: 'Principios de diseño en Canva', docsUrl: 'https://www.canva.com/help/design-principles/' },
           tip: 'Si todo destaca, nada destaca: prioriza un foco visual por pieza.',
         },
         {
@@ -61,7 +112,7 @@ const CourseCurriculum = (() => {
           description: '¿Qué es exportar correctamente y para qué sirve? Verás cómo elegir formato según destino para preservar calidad y rendimiento.',
           requirements: ['Conocimiento básico de Canva', 'Objetivo de publicación definido'],
           steps: ['Definir canal final: impresión, web o presentación', 'Elegir formato PNG, JPG, PDF o MP4 según caso', 'Configurar calidad y transparencia si aplica', 'Verificar peso del archivo antes de publicar', 'Probar resultado en el dispositivo de destino'],
-          resources: { video: 'https://www.youtube.com/watch?v=8lP8PPkq8u0', docs: 'Descargar y exportar diseños', docsUrl: 'https://www.canva.com/help/download-your-design/' },
+          resources: { video: 'https://youtu.be/UG3yIIuhAb0?si=sYXrGP2wRybAaSN3', docs: 'Descargar y exportar diseños', docsUrl: 'https://www.canva.com/help/download-your-design/' },
           tip: 'Evita enviar JPG para impresión; usa PDF de alta calidad.',
         },
         {
@@ -271,7 +322,7 @@ const CourseCurriculum = (() => {
     python: {
       title: 'Python',
       category: 'programming',
-      icon: 'https://cdn-icons-png.flaticon.com/512/5968/5968350.png',
+      icon: 'src/img/courses/python.svg',
       requirements: ['Python 3 instalado', 'Editor de código (VS Code recomendado)', 'Terminal básica'],
       docs: { label: 'Documentación oficial de Python', url: 'https://docs.python.org/3/' },
       certModules: ['Sintaxis y tipos', 'Control de flujo', 'Funciones y módulos', 'Estructuras y archivos'],
@@ -455,7 +506,7 @@ const CourseCurriculum = (() => {
     sql: {
       title: 'SQL',
       category: 'data',
-      icon: 'https://cdn-icons-png.flaticon.com/512/4248/4248443.png',
+      icon: 'src/img/courses/sql.svg',
       requirements: ['Motor SQL disponible (PostgreSQL/MySQL)', 'Dataset de práctica', 'Editor o cliente SQL'],
       docs: { label: 'Documentación de PostgreSQL', url: 'https://www.postgresql.org/docs/current/index.html' },
       certModules: ['Consultas básicas', 'JOINs y agregaciones', 'Subconsultas/CTE', 'Optimización y seguridad'],
@@ -507,12 +558,105 @@ const CourseCurriculum = (() => {
     },
   };
 
+  if (typeof ExtendedCourses !== 'undefined') {
+    Object.assign(DATA, ExtendedCourses.getCourses(LEVELS));
+  }
+
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
   }
 
+  function _localeCode() {
+    return typeof I18n !== 'undefined' ? I18n.getLocale() : 'es';
+  }
+
+  function _curriculumBundle() {
+    const loc = _localeCode();
+    if (loc === 'en' && typeof CURRICULUM_EN !== 'undefined') return CURRICULUM_EN;
+    if (loc === 'zh' && typeof CURRICULUM_ZH !== 'undefined') return CURRICULUM_ZH;
+    return null;
+  }
+
+  function _levelsMap() {
+    const loc = _localeCode();
+    if (loc === 'en' && typeof LEVELS_EN !== 'undefined') return LEVELS_EN;
+    if (loc === 'zh' && typeof LEVELS_ZH !== 'undefined') return LEVELS_ZH;
+    return null;
+  }
+
+  function _localizeLevel(level) {
+    const map = _levelsMap();
+    if (map && map[level]) return map[level];
+    return level;
+  }
+
+  function _mergeQuestion(q, eq) {
+    if (!eq) return q;
+    return {
+      ...q,
+      q: eq.q || eq.text || q.q,
+      opts: eq.opts || eq.options || q.opts,
+      exp: eq.exp || eq.explanation || q.exp,
+      pairs: eq.pairs || q.pairs,
+    };
+  }
+
+  function _localizeCourse(course, courseId) {
+    const bundle = _curriculumBundle();
+    if (!bundle) {
+      return clone({
+        ...course,
+        lessons: course.lessons.map(l => ({ ...l, level: _localizeLevel(l.level) })),
+      });
+    }
+    const localized = clone(course);
+    let loc = bundle[courseId];
+    if (!loc && typeof ExtendedCourseLocales !== 'undefined' && ExtendedCourseLocales.isExtendedId(courseId)) {
+      const extOverlay = ExtendedCourseLocales.buildOverlay(courseId, course, _localeCode());
+      if (extOverlay) loc = extOverlay;
+    }
+    if (loc) {
+      if (loc.title) localized.title = loc.title;
+      if (loc.requirements) localized.requirements = loc.requirements;
+      if (loc.certModules) localized.certModules = loc.certModules;
+      if (loc.docs?.label) localized.docs = { ...localized.docs, label: loc.docs.label };
+      localized.lessons = localized.lessons.map(lesson => {
+        const ol = loc.lessons?.[lesson.id];
+        const merged = ol ? { ...lesson, ...ol } : { ...lesson };
+        merged.level = _localizeLevel(merged.level);
+        if (ol?.resources?.docs) merged.resources = { ...merged.resources, docs: ol.resources.docs };
+        return merged;
+      });
+      if (loc.quizSections) {
+        localized.quizSections = localized.quizSections.map((sec, i) => {
+          const es = loc.quizSections[i];
+          if (!es) return sec;
+          return {
+            title: es.title || sec.title,
+            questions: sec.questions.map((q, qi) => _mergeQuestion(q, es.questions?.[qi])),
+          };
+        });
+      }
+      if (loc.examSections) {
+        localized.examSections = localized.examSections.map((sec, i) => {
+          const es = loc.examSections[i];
+          if (!es) return sec;
+          return {
+            title: es.title || sec.title,
+            questions: sec.questions.map((q, qi) => _mergeQuestion(q, es.questions?.[qi])),
+          };
+        });
+      }
+    } else {
+      localized.lessons = localized.lessons.map(l => ({ ...l, level: _localizeLevel(l.level) }));
+    }
+    return localized;
+  }
+
   function getCourse(courseId) {
-    return DATA[courseId] || null;
+    const course = DATA[courseId] || null;
+    if (!course) return null;
+    return _localizeCourse(course, courseId);
   }
 
   function getCourseIds() {
@@ -532,9 +676,53 @@ const CourseCurriculum = (() => {
     });
   }
 
+  function _lessonVideoUrl(courseId, lessonIndex) {
+    const curated = LESSON_VIDEOS[courseId];
+    if (!curated || lessonIndex < 0 || lessonIndex >= curated.length) return null;
+    return curated[lessonIndex] || null;
+  }
+
   function getLessons(courseId) {
     const course = getCourse(courseId);
-    return course ? clone(course.lessons) : [];
+    if (!course) return [];
+    return clone(course.lessons.map((lesson, i) => {
+      const quizSection = course.quizSections[i];
+      const moduleTitle = quizSection?.title || lesson.title;
+      const curatedVideo = _lessonVideoUrl(courseId, i);
+      const video = curatedVideo ?? lesson.resources?.video ?? null;
+      return {
+        ...lesson,
+        section: moduleTitle,
+        quizModule: moduleTitle,
+        quizQuestionCount: quizSection?.questions?.length || 0,
+        certModule: course.certModules[i] || moduleTitle,
+        resources: {
+          ...lesson.resources,
+          ...(video ? { video } : {}),
+        },
+      };
+    }));
+  }
+
+  /** Ruta alineada: lección → quiz del módulo → examen final. */
+  function getLearningPath(courseId) {
+    const course = getCourse(courseId);
+    if (!course) return [];
+    return clone(course.lessons.map((lesson, i) => {
+      const quizSection = course.quizSections[i];
+      const moduleTitle = quizSection?.title || lesson.title;
+      return {
+        index: i,
+        lessonId: lesson.id,
+        lessonTitle: lesson.title,
+        moduleTitle,
+        certModule: course.certModules[i] || moduleTitle,
+        level: lesson.level,
+        duration: lesson.duration,
+        quizQuestions: quizSection?.questions?.length || 0,
+        videoUrl: _lessonVideoUrl(courseId, i),
+      };
+    }));
   }
 
   function getQuizDef(courseId) {
@@ -546,7 +734,9 @@ const CourseCurriculum = (() => {
       title: course.title,
       category: course.category,
       icon: course.icon,
-      desc: `Evaluación de ${qCount} preguntas alineada a los ${course.lessons.length} módulos del tutorial.`,
+      desc: typeof I18n !== 'undefined'
+        ? I18n.t('quizDesc', { n: qCount, m: course.lessons.length })
+        : `Evaluación de ${qCount} preguntas alineada a los ${course.lessons.length} módulos del curso.`,
       sections: course.quizSections,
     });
   }
@@ -565,17 +755,23 @@ const CourseCurriculum = (() => {
     if (!course) return null;
     const levelsCovered = Array.from(new Set(course.lessons.map((lesson) => lesson.level)));
     const quizQuestionCount = course.quizSections.reduce((sum, section) => sum + section.questions.length, 0);
+    const modules = course.lessons.map((lesson, i) =>
+      course.certModules[i] || course.quizSections[i]?.title || lesson.title
+    );
     return clone({
-      modules: course.certModules,
+      modules,
       levelsCovered,
       lessonCount: course.lessons.length,
+      quizModuleCount: course.quizSections.length,
       quizQuestionCount,
+      examSectionCount: course.examSections.length,
     });
   }
 
   return {
     getCourseIds,
     getLessons,
+    getLearningPath,
     getQuizDef,
     getAllQuizzes,
     getExamSections,

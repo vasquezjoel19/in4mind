@@ -1,31 +1,45 @@
 /**
  * IN4MIND — Design Tokens
- * Paleta unificada (app + landing): azul educativo #4a76b2.
+ * Marca azul institucional + acento teal para acciones.
+ * Fondos neutros, bordes sobre sombras.
  */
 
 :root {
-  /* ── Marca principal ── */
-  --clr-brand-900: #152238;
-  --clr-brand-800: #1a2b48;
-  --clr-brand-700: #2d4a6f;
-  --clr-brand-600: #3d6499;
-  --clr-brand-500: #4a76b2;
-  --clr-brand-400: #6b93c9;
-  --clr-brand-300: #93b4d9;
-  --clr-brand-200: #b8d0ec;
+  /* ── Marca principal (navy IN4MIND #1b273c + azul medio) ── */
+  --clr-brand-navy:     #1b273c;
+  --clr-brand-navy-rgb: 27, 39, 60;
+  --clr-brand-900:      #1b273c;
+  --clr-brand-800:      #1f3049;
+  --clr-brand-700:      #2a4060;
+  --clr-brand-600:      #3d6499;
+  --clr-brand-500:      #4a76b2;
+  --clr-brand-400:      #6b93c9;
+  --clr-brand-300:      #93b4d9;
+  --clr-brand-200:      #b8d0ec;
 
-  /* ── Accento / Highlight ── */
-  --clr-accent:     #4a76b2;
-  --clr-accent-lt:  #6b93c9;
+  /* ── Accento (CTAs y estados activos) ── */
+  --clr-accent:       #0d9488;
+  --clr-accent-hover: #0f766e;
+  --clr-accent-lt:    #14b8a6;
+  --clr-highlight:    #4a76b2;
 
-  /* ── Superficie & Fondo ── */
-  --clr-bg-app:     #f0f4fa;
+  --clr-brand-rgb:  74, 118, 178;
+  --clr-accent-rgb: 13, 148, 136;
+
+  /* ── Superficie & Fondo (tinte azul claro) ── */
+  --clr-bg-app:     #f0f5fb;
   --clr-bg-card:    #ffffff;
-  --clr-bg-sidebar: #f7f9fc;
-  --clr-bg-input:   #eef2f8;
-  --clr-bg-badge:   #e3edf9;
-  --clr-bg-banner:  #dde8f5;
-  --clr-bg-auth:    #e8f2fc;
+  --clr-bg-sidebar: #f8fbff;
+  --clr-bg-input:   #e4ecf7;
+  --clr-bg-badge:   #e8f0fa;
+  --clr-bg-banner:  #e8f0fa;
+  --clr-bg-auth:    #eef3fa;
+
+  --app-bg-gradient:
+    radial-gradient(ellipse 110% 70% at 50% -15%, rgba(var(--clr-brand-rgb), 0.14) 0%, transparent 58%),
+    radial-gradient(ellipse 55% 45% at 100% 35%, rgba(var(--clr-brand-navy-rgb), 0.07) 0%, transparent 52%),
+    radial-gradient(ellipse 50% 40% at 0% 78%, rgba(var(--clr-brand-rgb), 0.08) 0%, transparent 48%),
+    linear-gradient(180deg, #fafcfe 0%, #f0f5fb 45%, #e8f0fa 100%);
 
   /* ── Texto ── */
   --clr-text-primary:   #1a2332;
@@ -33,16 +47,16 @@
   --clr-text-muted:     #8b9bb0;
   --clr-text-on-brand:  #ffffff;
   --clr-link:           #3d6499;
-  --clr-link-hover:     #2d4a6f;
-  --clr-tag-bg:         #dde8f5;
-  --clr-tag-text:       #2d4a6f;
+  --clr-link-hover:     #2a4060;
+  --clr-tag-bg:         #e8f0fa;
+  --clr-tag-text:       #2a4060;
 
   /* ── Bordes ── */
-  --clr-border:     #dce3ed;
-  --clr-border-lt:  #c8d4e3;
+  --clr-border:     rgba(27, 39, 60, 0.1);
+  --clr-border-lt:  rgba(27, 39, 60, 0.16);
 
   /* ── Cursos — colores de acento por tecnología ── */
-  --clr-canvas:  #6C63FF;
+  --clr-canvas:  #00C4CC;
   --clr-python:  #FFD43B;
   --clr-excel:   #2ECC71;
   --clr-html:    #E44D26;
@@ -53,14 +67,28 @@
   --clr-figma:   #A259FF;
   --clr-sql:     #336791;
   --clr-security:#0d9488;
+  --clr-flowchart:   #6366f1;
+  --clr-os:          #475569;
+  --clr-powerapps:   #742774;
+  --clr-sharepoint:  #038387;
+  --clr-outlook:     #0078d4;
+  --clr-onedrive:    #0078d4;
+  --clr-scrum:       #f59e0b;
+  --clr-scratch:     #ffab19;
+  --clr-video:       #e11d48;
+  --clr-django:      #092e20;
+  --clr-powerbi:     #f2c811;
+  --clr-prompt:      #8b5cf6;
+  --clr-engineering: #0ea5e9;
+  --clr-game-editing: #7c3aed;
 
-  /* ── Estrellas (rating) — mismo color en claro y oscuro ── */
+  /* ── Estrellas (rating) ── */
   --clr-star:         #fbbf24;
   --clr-star-stroke:  #f59e0b;
 
   /* ── Tipografía ── */
-  --font-display: 'Sora', sans-serif;
-  --font-body:    'DM Sans', sans-serif;
+  --font-display: 'Outfit', 'Inter', system-ui, sans-serif;
+  --font-body:    'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   /* ── Espaciado base ── */
   --sp-xs:  4px;
@@ -70,18 +98,20 @@
   --sp-xl:  32px;
   --sp-2xl: 48px;
 
-  /* ── Radio de borde ── */
-  --rad-sm:  8px;
-  --rad-md:  12px;
-  --rad-lg:  16px;
-  --rad-xl:  20px;
-  --rad-2xl: 25px;
+  /* ── Radio de borde (más contenido) ── */
+  --rad-sm:  6px;
+  --rad-md:  8px;
+  --rad-lg:  10px;
+  --rad-xl:  14px;
+  --rad-2xl: 16px;
   --rad-pill: 999px;
 
-  /* ── Sombras ── */
-  --shadow-card: 0 4px 20px rgba(26, 43, 72, 0.07);
-  --shadow-auth: 0 20px 60px rgba(26, 43, 72, 0.12);
-  --shadow-btn:  0 2px 8px rgba(74, 118, 178, 0.28);
+  /* ── Sombras (solo modales y elevación fuerte) ── */
+  --shadow-card: none;
+  --shadow-auth: 0 8px 32px rgba(26, 43, 72, 0.08);
+  --shadow-btn:  none;
+  --shadow-elevated: 0 4px 16px rgba(26, 43, 72, 0.08);
+  --shadow-card-hover: 0 10px 28px rgba(26, 43, 72, 0.12), 0 4px 10px rgba(26, 43, 72, 0.06);
 
   /* ── Transiciones ── */
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
@@ -101,43 +131,55 @@
 html[data-theme="dark"] {
   color-scheme: dark;
 
-  --clr-brand-900: #0a1018;
-  --clr-brand-800: #121c2a;
-  --clr-brand-700: #1e3a5f;
-  --clr-brand-600: #2d5282;
-  --clr-brand-500: #4a76b2;
-  --clr-brand-400: #6b93c9;
-  --clr-brand-300: #93b4d9;
+  --clr-brand-900: #1b273c;
+  --clr-brand-800: #1f3049;
+  --clr-brand-700: #2a4060;
+  --clr-brand-600: #4a7aa8;
+  --clr-brand-500: #5DA9E9;
+  --clr-brand-400: #8ABCD2;
+  --clr-brand-300: #7CA4BC;
   --clr-brand-200: #64748b;
 
-  --clr-accent:    #6b93c9;
-  --clr-accent-lt: #93b4d9;
+  --clr-accent:       #2EC4B6;
+  --clr-accent-hover: #3dd4c6;
+  --clr-accent-lt:    #5eead4;
+  --clr-highlight:    #8ABCD2;
 
-  --clr-bg-app:     #0c1219;
-  --clr-bg-card:    #161f2e;
-  --clr-bg-sidebar: #111827;
-  --clr-bg-input:   #1e2d42;
-  --clr-bg-badge:   #1a3356;
-  --clr-bg-banner:  #1a2940;
-  --clr-bg-auth:    #0e1520;
+  --clr-brand-rgb:  74, 118, 178;
+  --clr-brand-navy-rgb: 27, 39, 60;
+  --clr-accent-rgb: 46, 196, 182;
 
-  --clr-text-primary:   #e8eef5;
-  --clr-text-secondary: #b8c5d6;
-  --clr-text-muted:     #8899ad;
-  --clr-text-on-brand:  #f8fafc;
-  --clr-link:           #93b4d9;
-  --clr-link-hover:     #b8d0ec;
-  --clr-tag-bg:         #1e2d42;
-  --clr-tag-text:       #b8c5d6;
+  --clr-bg-app:     #121a28;
+  --clr-bg-card:    #1f3049;
+  --clr-bg-sidebar: #1b273c;
+  --clr-bg-input:   #243348;
+  --clr-bg-badge:   #243348;
+  --clr-bg-banner:  #1f3049;
+  --clr-bg-auth:    #121a28;
 
-  --clr-border:    #263347;
-  --clr-border-lt: #334155;
+  --app-bg-gradient:
+    radial-gradient(ellipse 100% 60% at 50% -10%, rgba(var(--clr-brand-rgb), 0.2) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 100% 40%, rgba(var(--clr-brand-navy-rgb), 0.35) 0%, transparent 50%),
+    linear-gradient(180deg, #121a28 0%, #1b273c 55%, #1f3049 100%);
 
-  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.35);
-  --shadow-auth: 0 20px 60px rgba(0, 0, 0, 0.45);
-  --shadow-btn:  0 2px 10px rgba(0, 0, 0, 0.35);
+  --clr-text-primary:   #F2F2F2;
+  --clr-text-secondary: #CBD5E1;
+  --clr-text-muted:     #8B94A3;
+  --clr-text-on-brand:  #F8FAFC;
+  --clr-link:           #8ABCD2;
+  --clr-link-hover:     #B4CCD4;
+  --clr-tag-bg:         #243b52;
+  --clr-tag-text:       #CBD5E1;
 
-  /* Estrellas: mantener amarillo en modo oscuro */
+  --clr-border:    #3d5a73;
+  --clr-border-lt: #4a6a85;
+
+  --shadow-card: none;
+  --shadow-auth: 0 12px 40px rgba(0, 0, 0, 0.4);
+  --shadow-btn:  none;
+  --shadow-elevated: 0 4px 20px rgba(0, 0, 0, 0.35);
+  --shadow-card-hover: 0 18px 42px rgba(0, 0, 0, 0.58), 0 0 36px rgba(255, 255, 255, 0.24), 0 0 14px rgba(255, 255, 255, 0.16), 0 0 0 1px rgba(255, 255, 255, 0.14);
+
   --clr-star:        #fbbf24;
   --clr-star-stroke: #f59e0b;
 }

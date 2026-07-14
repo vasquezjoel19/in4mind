@@ -16,7 +16,9 @@ const AppShell = (() => {
   ];
 
   const PROFILE_HREF = 'profile.html';
+  const HELP_HREF = 'help.html';
   let _avatarBound = false;
+  let _helpBound = false;
 
   function clearSession() {
     SESSION_KEYS.forEach(k => sessionStorage.removeItem(k));
@@ -44,7 +46,29 @@ const AppShell = (() => {
   }
 
   function _goToProfile() {
-    window.location.assign(PROFILE_HREF);
+    navigateTo(PROFILE_HREF);
+  }
+
+  /**
+   * Navegación con crossfade suave entre páginas de la app.
+   * @param {string} href
+   */
+  function navigateTo(href) {
+    if (!href) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) {
+      window.location.assign(href);
+      return;
+    }
+    const main = document.querySelector('.main-area') || document.body;
+    if (main.classList.contains('page-exit')) {
+      window.location.assign(href);
+      return;
+    }
+    main.classList.add('page-exit');
+    window.setTimeout(() => {
+      window.location.assign(href);
+    }, 220);
   }
 
   /** Delegación global: avatar → perfil (fase capture, antes que otros handlers). */
@@ -69,7 +93,23 @@ const AppShell = (() => {
     });
   }
 
+  /** Delegación global: icono de ayuda → centro de ayuda. */
+  function _bindHelpNavigation() {
+    if (_helpBound) return;
+    _helpBound = true;
+
+    document.addEventListener('click', e => {
+      const trigger = e.target.closest('[data-help-link], a.icon-btn[href="help.html"], button.icon-btn[aria-label="Ayuda"], a[href="help.html"]');
+      if (!trigger) return;
+      if (trigger.closest('#sidebar')) return;
+      e.preventDefault();
+      navigateTo(HELP_HREF);
+    }, true);
+  }
+
   function setupAvatar() {
+    _bindAvatarNavigation();
+    _bindHelpNavigation();
     _bindAvatarNavigation();
 
     const $avatar = document.getElementById('avatar');
@@ -78,7 +118,8 @@ const AppShell = (() => {
     const user = typeof UserProfileService !== 'undefined'
       ? UserProfileService.getCurrentUser()
       : null;
-    const label = user?.name?.trim() || user?.email?.split('@')[0] || 'Usuario';
+    const label = user?.name?.trim() || user?.email?.split('@')[0] ||
+      (typeof I18n !== 'undefined' ? I18n.t('shell.user') : 'Usuario');
 
     if ($avatar.tagName !== 'A') {
       const link = document.createElement('a');
@@ -92,8 +133,10 @@ const AppShell = (() => {
 
     $avatar.href = PROFILE_HREF;
     $avatar.textContent = label.charAt(0).toUpperCase();
-    $avatar.setAttribute('aria-label', `Mi perfil — ${label}`);
-    $avatar.title = label;
+    $avatar.setAttribute('aria-label', typeof I18n !== 'undefined'
+      ? I18n.t('shell.profileLabel', { name: label })
+      : `Mi perfil — ${label}`);
+    $avatar.removeAttribute('title');
     $avatar.style.cursor = 'pointer';
   }
 
@@ -149,6 +192,7 @@ const AppShell = (() => {
    */
   function initPage(activeNavId = null) {
     _bindAvatarNavigation();
+    _bindHelpNavigation();
 
     if (typeof UserProfileService !== 'undefined') {
       const user = UserProfileService.getCurrentUser();
@@ -160,6 +204,29 @@ const AppShell = (() => {
 
     renderSidebar(activeNavId);
     setupAvatar();
+
+    if (typeof SettingsController !== 'undefined') {
+      SettingsController.init();
+    }
+
+    if (typeof OtherMenuController !== 'undefined') {
+      OtherMenuController.init();
+    }
+
+    if (typeof AppFeatures !== 'undefined') {
+      AppFeatures.init(activeNavId);
+    }
+
+    if (typeof CursorSpotlight !== 'undefined') {
+      CursorSpotlight.init({ intensity: 'app' });
+    }
+
+    const main = document.querySelector('.main-area');
+    if (main && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      requestAnimationFrame(() => main.classList.add('page-enter'));
+    } else if (main) {
+      main.classList.add('page-enter');
+    }
   }
 
   return {
@@ -168,6 +235,7 @@ const AppShell = (() => {
     setupAvatar,
     renderSidebar,
     initPage,
+    navigateTo,
     showToast,
     navIcon,
     renderNavItem,

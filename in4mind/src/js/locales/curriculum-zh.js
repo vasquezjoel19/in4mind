@@ -1,0 +1,365 @@
+'use strict';
+
+const LEVELS_ZH = {
+  Principiante: '初级',
+  Intermedio: '中级',
+  Avanzado: '高级',
+};
+
+const CURRICULUM_ZH = {
+  canvas: {
+    title: 'Canva',
+    requirements: ['有效的 Canva 账户', '稳定的网络连接', '基础视觉设计知识'],
+    certModules: ['Canva 基础', '品牌设计', '专业导出', '协作与审阅'],
+    docs: { label: 'Canva 帮助中心' },
+    lessons: {
+      'canvas-l1': {
+        title: 'Canva 基础',
+        section: '模块 1',
+        description: '什么是 Canva？它有什么用途？本课介绍其作为视觉设计平台的定位，帮助您无需从零开始即可创作专业作品。',
+        requirements: ['有效的 Canva 账户', '稳定的网络连接'],
+        steps: ['创建账户并进入主仪表盘', '使用预设格式打开新设计', '识别侧边栏、画布和顶部菜单', '添加文字、图片和基本形状', '保存并导出第一个版本'],
+        tip: '选择模板前先明确目标和受众，避免返工。',
+        resources: { docs: 'Canva 官方入门指南' },
+      },
+      'canvas-l2': {
+        title: '模板与视觉一致性',
+        section: '模块 2',
+        description: '什么是模板？它们有什么用途？您将学习如何策略性地调整模板，同时保持视觉识别和信息清晰度。',
+        requirements: ['有效的 Canva 账户', '稳定的网络连接'],
+        steps: ['选择与目标一致的模板', '更改品牌字体和颜色', '调整标题和副标题的视觉层级', '用自有内容替换图片', '复制设计以创建活动变体'],
+        tip: '先调整结构，再处理细节，以保持一致性。',
+        resources: { docs: '在 Canva 中使用模板' },
+      },
+      'canvas-l3': {
+        title: '构图与可读性',
+        section: '模块 3',
+        description: '什么是构图？它有什么用途？本课教您如何分配元素以引导注意力并提高理解度。',
+        requirements: ['Canva 基础知识', '初步视觉判断能力'],
+        steps: ['应用三分法则分配元素', '用色彩对比突出操作', '使用智能参考线对齐对象', '有意识地控制留白', '在移动端和桌面端检查可读性'],
+        tip: '如果什么都突出，就什么都不突出：每件作品只保留一个视觉焦点。',
+        resources: { docs: 'Canva 设计原则' },
+      },
+      'canvas-l4': {
+        title: '按渠道导出',
+        section: '模块 4',
+        description: '什么是正确导出？它有什么用途？您将了解如何按发布目标选择格式，以保留质量和性能。',
+        requirements: ['Canva 基础知识', '明确的发布目标'],
+        steps: ['确定最终渠道：印刷、网页或演示', '按需选择 PNG、JPG、PDF 或 MP4 格式', '如适用，配置质量和透明度', '发布前检查文件大小', '在目标设备上测试结果'],
+        tip: '印刷勿用 JPG；请使用高质量 PDF。',
+        resources: { docs: '下载和导出设计' },
+      },
+      'canvas-l5': {
+        title: '团队协作工作流',
+        section: '模块 5',
+        description: '什么是 Canva 协作？它有什么用途？您将学习审阅实践、评论和视觉版本控制。',
+        requirements: ['Canva 中级知识', '明确的团队工作流'],
+        steps: ['以适当权限分享设计', '使用评论提供上下文反馈', '创建命名清晰的版本', '整合负责人批准的修改', '发布最终版本并归档迭代'],
+        tip: '设定修改截止日期，避免无休止的迭代。',
+        resources: { docs: 'Canva 协作' },
+      },
+    },
+    quizSections: [
+      {
+        title: 'Canva 基础',
+        questions: [
+          { type: 'choice', text: '在专业工作流中，早期阶段使用 Canva 的主要原因是什么？', options: ['自动化服务器', '快速、一致地原型化视觉作品', '管理数据库', '编译前端代码'], ans: 1, explanation: 'Canva 可在低技术门槛下加速视觉验证。' },
+          { type: 'truefalse', text: 'Canva 支持在浏览器中工作并集中管理协作资源。', ans: true, explanation: '其云端模式便于访问和共享编辑。' },
+          { type: 'match', text: '匹配 Canva 中的功能与用途：', pairs: [{ left: '模板', right: '可编辑基础，加速制作' }, { left: '元素', right: '可复用图形资源' }, { left: '导出', right: '按渠道生成最终文件' }, { left: '评论', right: '团队上下文审阅' }], explanation: '每个模块覆盖设计工作流的一部分。' },
+        ],
+      },
+      {
+        title: '模板与视觉一致性',
+        questions: [
+          { type: 'choice', text: '若品牌要求在 12 件作品中保持一致，哪种做法最能减少错误？', options: ['每件作品从零设计', '使用具有一致样式的基础模板', '每篇帖子更换字体', '不经审阅直接导出'], ans: 1, explanation: '统一基础确保识别一致性。' },
+          { type: 'truefalse', text: '编辑模板而不检查字体层级通常会降低信息清晰度。', ans: true, explanation: '视觉层级决定阅读和理解。' },
+          { type: 'match', text: '匹配决策与预期结果：', pairs: [{ left: '固定色板', right: '可识别的视觉识别' }, { left: '主字体', right: '一致的阅读体验' }, { left: '边距系统', right: '稳定的视觉秩序' }, { left: '复制版本', right: '在不破坏基础的情况下做变体' }], explanation: '标准化组件避免不一致。' },
+        ],
+      },
+      {
+        title: '构图与可读性',
+        questions: [
+          { type: 'choice', text: '在含行动号召的作品中，哪种决策更能提高转化？', options: ['使用五种高对比色', '突出单一视觉焦点和留白', '将 CTA 缩到最小', '去掉文字层级'], ans: 1, explanation: '清晰焦点降低认知负担。' },
+          { type: 'truefalse', text: '发布前应在最终设备上验证可读性。', ans: true, explanation: '移动端与桌面端的阅读尺度不同。' },
+          { type: 'match', text: '匹配原则与益处：', pairs: [{ left: '对比', right: '突出关键信息' }, { left: '对齐', right: '减少视觉噪音' }, { left: '留白', right: '提高理解度' }, { left: '层级', right: '定义阅读顺序' }], explanation: '这些是功能性设计的基础。' },
+        ],
+      },
+      {
+        title: '按渠道导出',
+        questions: [
+          { type: 'choice', text: '在 Canva 中，高质量印刷最适合哪种格式？', options: ['GIF', '印刷用 PDF', 'TXT', '高度压缩的 WEBP'], ans: 1, explanation: 'PDF 保留细节并与印刷店兼容。' },
+          { type: 'truefalse', text: '理想格式取决于分发渠道和文件最终用途。', ans: true, explanation: '没有一种格式适合所有场景。' },
+          { type: 'match', text: '匹配格式与用例：', pairs: [{ left: 'PNG', right: '清晰度好的数字图像' }, { left: 'JPG', right: '轻量网页摄影文件' }, { left: 'PDF', right: '印刷或正式交付文档' }, { left: 'MP4', right: '动画视觉内容' }], explanation: '格式选择影响质量和性能。' },
+        ],
+      },
+      {
+        title: '团队协作工作流',
+        questions: [
+          { type: 'choice', text: '在分布式团队中，哪种做法改善审阅可追溯性？', options: ['无上下文发送聊天截图', '使用设计评论和带标签的版本', '允许无角色编辑', '跳过最终批准'], ans: 1, explanation: '上下文反馈减少歧义。' },
+          { type: 'truefalse', text: '明确最终审批人可避免模糊决策造成的阻塞。', ans: true, explanation: '明确责任加快收尾。' },
+          { type: 'match', text: '匹配角色与职责：', pairs: [{ left: '编辑', right: '实施设计修改' }, { left: '审阅者', right: '评估质量与一致性' }, { left: '利益相关方', right: '验证业务目标' }, { left: '最终审批人', right: '授权发布' }], explanation: '清晰角色避免返工。' },
+        ],
+      },
+    ],
+    examSections: [
+      {
+        title: '视觉活动实践案例',
+        questions: [
+          { type: 'choice', text: '您必须在 2 小时内交付多格式活动。哪种策略更稳健？', options: ['无结构地手动创建每种格式', '定义主模板、品牌样式并复制变体', '只设计一件并拉伸尺寸', '全部导出为单一格式'], ans: 1, explanation: '先标准化可优化速度和质量。' },
+          { type: 'truefalse', text: '发布前在真实设备上最终审阅可减少阅读和裁剪错误。', ans: true, explanation: '上下文验证是质量控制的一部分。' },
+          { type: 'match', text: '匹配问题与专业修复：', pairs: [{ left: '文字难读', right: '提高对比度和字号' }, { left: '构图过满', right: '应用留白' }, { left: '品牌不一致', right: '复用已定义样式' }, { left: '文件过大', right: '按渠道优化导出' }], explanation: '修复常见问题需要技术和视觉标准。' },
+        ],
+      },
+      {
+        title: '治理与最终交付',
+        questions: [
+          { type: 'choice', text: '若两名设计师并行编辑且决策冲突，哪种工作流最小化返工？', options: ['不经审阅发布最新版本', '对比评论、整合到基础版本并正式批准', '丢弃两位设计师的工作', '要求无限期修改'], ans: 1, explanation: '按标准引导整合可避免质量损失。' },
+          { type: 'truefalse', text: '没有版本命名策略，难以审计哪个文件已获批准。', ans: true, explanation: '文档可追溯性是设计运营的关键。' },
+          { type: 'match', text: '匹配证据与质量审计：', pairs: [{ left: '评论历史', right: '证明所做决策' }, { left: '带标签的最终版本', right: '唯一发布参考' }, { left: '导出清单', right: '避免错误格式' }, { left: '记录批准', right: '闭合运营周期' }], explanation: '最终质量也取决于交付流程。' },
+        ],
+      },
+    ],
+  },
+  figma: {
+    title: 'Figma',
+    requirements: ['Figma 账户', '网络连接', '基础界面知识'],
+    certModules: ['Figma 基础', '组件与变体', 'UX 原型', '开发交付'],
+    docs: { label: 'Figma 帮助中心' },
+    lessons: {
+      'figma-l1': { title: '什么是 Figma？如何开始？', section: '模块 1', description: '什么是 Figma？它有什么用途？您将了解其协作式设计界面和实时原型的方法。', requirements: ['Figma 账户', '网络连接'], steps: ['创建 Figma 账户并验证邮箱', '从草稿开始新项目', '识别图层面板、属性和画布', '探索基本框架、文字和形状工具', '保存文件并导出初始屏幕'], tip: '从一开始就命名每个图层，避免大型项目混乱。', resources: { docs: 'Figma 入门' } },
+      'figma-l2': { title: '框架、网格与约束', section: '模块 2', description: '什么是框架？它们有什么用途？您将学习用网格和响应式约束构建可扩展屏幕。', requirements: ['Figma 账户', '基础界面知识'], steps: ['创建桌面和移动端框架', '应用列布局网格', '为关键元素配置约束', '按间距规则对齐组件', '改变框架大小时验证缩放'], tip: '先设计结构，再处理视觉细节。', resources: { docs: 'Figma 中的框架与网格' } },
+      'figma-l3': { title: '组件与变体', section: '模块 3', description: '什么是组件？它们有什么用途？本课涵盖 UI 系统中的复用、可扩展性和一致性。', requirements: ['基础框架知识', '一致的图层命名'], steps: ['将基础按钮转换为主组件', '按状态和尺寸创建变体', '在多个屏幕应用实例', '更新主组件并观察传播', '为团队记录属性'], tip: '避免过于僵化的组件；考虑可扩展性。', resources: { docs: 'Figma 组件' } },
+      'figma-l4': { title: '原型与 UX 验证', section: '模块 4', description: '什么是原型？它有什么用途？您将学习在开发前模拟流程并验证决策。', requirements: ['已定义基础组件', '已勾勒屏幕流程'], steps: ['用交互连接屏幕', '定义过渡和叠加层', '创建主要用户路径', '与同事测试原型', '记录优先 UX 调整'], tip: '先原型化关键业务流。', resources: { docs: 'Figma 原型' } },
+      'figma-l5': { title: 'Dev Mode 与交付', section: '模块 5', description: '什么是交付？它有什么用途？您将了解如何向开发提供清晰规格，减少摩擦。', requirements: ['功能原型', '已组织组件和样式'], steps: ['打开 Dev Mode 并查看尺寸', '分享颜色和字体 token', '以一致命名导出资源', '标注关键交互规则', '与技术团队验证交付'], tip: '良好的技术交付始于命名清晰的图层和组件。', resources: { docs: 'Figma Dev Mode' } },
+    },
+    quizSections: [
+      { title: '什么是 Figma？如何开始？', questions: [{ type: 'choice', text: 'Figma 相比传统本地工作流有何战略优势？', options: ['自动编译后端', '在单一文件上实时协作', '运行 SQL 查询', '原生 Git 代码版本控制'], ans: 1, explanation: 'Figma 优化多学科实时协作。' }, { type: 'truefalse', text: 'Figma 在浏览器中运行，无需安装重型套件即可协作。', ans: true, explanation: '云端方式降低入门门槛。' }, { type: 'match', text: '匹配 Figma 中的区域与功能：', pairs: [{ left: '图层', right: '设计结构' }, { left: '画布', right: '主工作区' }, { left: '属性', right: '选中元素配置' }, { left: '资源', right: '访问可复用组件' }], explanation: '掌握界面可加速设计与审阅。' }] },
+      { title: '框架、网格与约束', questions: [{ type: 'choice', text: '哪种组合在调整屏幕大小时改善响应行为？', options: ['框架 + 明确定义的约束', '仅无结构的松散图层', '固定导出图像', '转换为轮廓的文字'], ans: 0, explanation: '框架和约束控制布局适配。' }, { type: 'truefalse', text: '布局网格有助于在复杂界面中保持对齐一致。', ans: true, explanation: '网格提供秩序和可扩展性。' }, { type: 'match', text: '匹配技术与结果：', pairs: [{ left: '12 列网格', right: '稳定的对齐系统' }, { left: '左/右约束', right: '元素保持相对边缘' }, { left: '移动端框架', right: '小屏体验验证' }, { left: '间距 token', right: '跨组件一致性' }], explanation: '这些是系统性设计的基础实践。' }] },
+      { title: '组件与变体', questions: [{ type: 'choice', text: '若按钮在 40 个屏幕上变化，什么最能减少维护？', options: ['手动编辑每个实例', '更新带变体的主组件', '栅格化按钮', '隐藏旧图层'], ans: 1, explanation: '主组件以可控方式传播变更。' }, { type: 'truefalse', text: '变体可在同一组件内建模 hover、active、disabled 等状态。', ans: true, explanation: '便于一致性和清晰交付。' }, { type: 'match', text: '匹配概念与目标：', pairs: [{ left: '主组件', right: '视觉单一来源' }, { left: '实例', right: '屏幕上的复用' }, { left: '变体集', right: '分组相关状态' }, { left: '属性', right: '控制可配置行为' }], explanation: '结构化组件减少设计债务。' }] },
+      { title: '原型与 UX 验证', questions: [{ type: 'choice', text: '开发前的可导航原型提供什么？', options: ['消除 QA 需求', '早期验证流程并发现使用摩擦', '替代业务需求', '生成最终数据库'], ans: 1, explanation: '可在昂贵构建前学习。' }, { type: 'truefalse', text: '原型化错误场景与理想流程同样重要。', ans: true, explanation: '真实体验包含失败与恢复。' }, { type: 'match', text: '匹配交互与 UX 用途：', pairs: [{ left: '点击', right: '明确用户操作' }, { left: '叠加层', right: '不离开上下文的模态' }, { left: 'Smart Animate', right: '状态间平滑过渡' }, { left: '流程起点', right: '定义测试路径' }], explanation: '这些选项模拟产品体验。' }] },
+      { title: 'Dev Mode 与交付', questions: [{ type: 'choice', text: '交付中什么信息能减少开发提问？', options: ['仅 PNG 截图', '尺寸、样式、token 和已记录交互', '无上下文的通用评论', '无结构文件'], ans: 1, explanation: '有效交付需要可追溯规格。' }, { type: 'truefalse', text: '语义化命名图层改善设计与开发沟通。', ans: true, explanation: '共同语言避免实现错误。' }, { type: 'match', text: '匹配交付物与价值：', pairs: [{ left: '颜色 token', right: '代码中的视觉一致' }, { left: '导出资源', right: '图形资源实现' }, { left: '间距规格', right: '布局精度' }, { left: '交互说明', right: '预期 UI 行为' }], explanation: '稳健交付将设计转为可靠实现。' }] },
+    ],
+    examSections: [
+      { title: '产品流程设计', questions: [{ type: 'choice', text: '您需重新设计含多状态的移动端 onboarding。哪种方法确保可扩展？', options: ['无组件的松散屏幕', '从一开始就建立组件系统、变体和 token', '每位设计师自由设计', '无图层结构的原型'], ans: 1, explanation: '系统防止不一致和返工。' }, { type: 'truefalse', text: '若原型未考虑验证错误，团队会低估实现复杂度。', ans: true, explanation: '边界情况影响产品时间和质量。' }, { type: 'match', text: '匹配决策与交付效果：', pairs: [{ left: '正确的 Auto Layout', right: '内容变化时的灵活行为' }, { left: '已记录的 Dev Mode', right: '更少开发提问' }, { left: '变体属性', right: '设计中可控状态' }, { left: '业务评论', right: '技术决策上下文' }], explanation: '设计与开发应共享同一产品叙事。' }] },
+      { title: '交付与技术质量', questions: [{ type: 'choice', text: '当设计与代码偏离时，哪种行动最快纠正？', options: ['忽略视觉差异', '审阅 Figma 规格并对齐 token 与实现', '仅手动改颜色', '移除共享组件'], ans: 1, explanation: '通过 token 和规格对齐最小化视觉漂移。' }, { type: 'truefalse', text: '无命名约定的 Figma 文件难以审计和维护。', ans: true, explanation: '文件治理是技术质量的一部分。' }, { type: 'match', text: '匹配问题与缓解：', pairs: [{ left: '资源不一致', right: '按命名规范导出' }, { left: '间距模糊', right: '定义 token 化间距尺度' }, { left: '缺少状态', right: '补全组件变体' }, { left: '交互疑问', right: '在原型中标注行为' }], explanation: '预防性交付减少 UI 债务。' }] },
+    ],
+  },
+  python: {
+    title: 'Python',
+    requirements: ['已安装 Python 3', '代码编辑器（推荐 VS Code）', '基础终端使用'],
+    certModules: ['语法与类型', '控制流', '函数与模块', '结构与文件'],
+    docs: { label: 'Python 官方文档' },
+    lessons: {
+      'python-l1': { title: '语法、类型与变量', section: '模块 1', description: '什么是 Python？它有什么用途？本课建立其清晰语法、数据类型以及有序编程的基础。', requirements: ['已安装 Python 3', '基础终端'], steps: ['在控制台运行第一个脚本', '用描述性名称创建变量', '区分 int、float、str 和 bool', '安全转换类型', '用 f-string 显示结果'], tip: '变量名应体现业务意图，而非技术缩写。', resources: { docs: 'Python 官方教程' } },
+      'python-l2': { title: '条件与循环', section: '模块 2', description: '什么是控制流？它有什么用途？您将学习做决策和重复任务，避免重复代码。', requirements: ['已安装 Python 3', '变量概念'], steps: ['用真实案例编写 if/elif/else', '用 for 遍历列表', '用 while 配合退出条件', '有标准地应用 break 和 continue', '用验证解决逻辑挑战'], tip: '避免深层嵌套条件；用小函数简化。', resources: { docs: 'Python 控制流' } },
+      'python-l3': { title: '函数与模块化', section: '模块 3', description: '什么是函数？它们有什么用途？您将了解如何封装逻辑以复用、测试和维护代码，降低风险。', requirements: ['基础控制流', '代码编辑器'], steps: ['定义带参数的函数', '返回值而非总是 print', '添加 docstring 和简单类型', '将工具分离到模块', '跨文件 import 并复用代码'], tip: '若函数做太多事，按职责拆分。', resources: { docs: '定义函数' } },
+      'python-l4': { title: '列表、字典与集合', section: '模块 4', description: '什么是数据结构？它们有什么用途？您将学习为每个实际问题选择最合适的结构。', requirements: ['基础函数', '循环处理'], steps: ['用推导式创建和转换列表', '安全访问字典', '用集合去重', '按标准排序集合', '建模小型数据目录'], tip: '选对结构可能比事后优化更简化问题。', resources: { docs: 'Python 数据结构' } },
+      'python-l5': { title: '文件、错误与最佳实践', section: '模块 5', description: '什么是文件和错误管理？它有什么用途？本课涵盖生产脚本中的稳健性和质量。', requirements: ['Python 中级知识', '数据结构练习'], steps: ['用上下文管理器读写文件', '捕获特定异常', '记录有助于调试的错误', '处理前验证输入', '在最终脚本中应用 PEP 8 风格'], tip: '处理预期错误；不要隐藏关键异常。', resources: { docs: '错误与异常' } },
+    },
+    quizSections: [
+      { title: '语法、类型与变量', questions: [{ type: 'choice', text: '在数据脚本中，Python 动态类型配合显式验证有何优势？', options: ['避免任何运行时错误', '在受控灵活性下加速迭代', '替代单元测试', '消除文档需求'], ans: 1, explanation: '有意识验证时灵活性很有用。' }, { type: 'truefalse', text: 'f-string 比复杂拼接更易读。', ans: true, explanation: '便于清晰格式化和维护。' }, { type: 'match', text: '匹配类型与常见用例：', pairs: [{ left: 'int', right: '离散计数' }, { left: 'float', right: '带小数测量' }, { left: 'str', right: '文本与标签' }, { left: 'bool', right: '逻辑状态' }], explanation: '选对类型减少语义错误。' }] },
+      { title: '条件与循环', questions: [{ type: 'choice', text: '哪种模式避免输入处理中的无限循环？', options: ['无退出条件的 while True', '显式条件 + 受控 break', '移除验证', '到处用递归'], ans: 1, explanation: '稳健循环必须有退出控制。' }, { type: 'truefalse', text: 'continue 可提前丢弃无效情况，提高清晰度。', ans: true, explanation: '减少不必要的嵌套。' }, { type: 'match', text: '匹配语句与效果：', pairs: [{ left: 'if', right: '条件决策' }, { left: 'for', right: '遍历集合' }, { left: 'while', right: '按条件重复' }, { left: 'break', right: '退出当前循环' }], explanation: '掌握流程是可维护逻辑的基础。' }] },
+      { title: '函数与模块化', questions: [{ type: 'choice', text: '哪种设计更利于业务函数的可测试性？', options: ['每个函数内 print', '返回数据并将 I/O 与逻辑分离', '使用级联全局变量', '写一个巨大函数'], ans: 1, explanation: '分离逻辑与展示便于测试。' }, { type: 'truefalse', text: '单一职责的函数通常更易维护。', ans: true, explanation: '降低耦合和认知复杂度。' }, { type: 'match', text: '匹配实践与益处：', pairs: [{ left: 'Docstring', right: '说明目的与契约' }, { left: '清晰参数', right: '可预测的函数使用' }, { left: '独立模块', right: '逻辑复用' }, { left: '显式 import', right: '透明依赖' }], explanation: '模块化减少技术债务。' }] },
+      { title: '列表、字典与集合', questions: [{ type: 'choice', text: '若需按唯一键快速访问，哪种结构最合适？', options: ['无索引元组列表', '字典', '文本字符串', '无限 while 循环'], ans: 1, explanation: '字典高效建模键值关系。' }, { type: 'truefalse', text: '集合无需额外逻辑即可去重。', ans: true, explanation: '唯一性是集合的原生属性。' }, { type: 'match', text: '匹配结构与优势：', pairs: [{ left: '列表', right: '顺序与顺序遍历' }, { left: '字典', right: '按键访问' }, { left: '集合', right: '元素唯一性' }, { left: '元组', right: '轻量不可变' }], explanation: '每种结构优化一种使用模式。' }] },
+      { title: '文件、错误与最佳实践', questions: [{ type: 'choice', text: '生产脚本中哪种错误处理更专业？', options: ['每个块 except: pass', '捕获特定异常并记录上下文', '忽略输入验证', '无消息停止进程'], ans: 1, explanation: '可观测性是软件质量的一部分。' }, { type: 'truefalse', text: 'with open(...) 即使异常也保证关闭文件。', ans: true, explanation: '上下文管理器安全管理资源。' }, { type: 'match', text: '匹配技术与结果：', pairs: [{ left: '特定 try/except', right: '受控失败处理' }, { left: 'logging', right: '后续诊断' }, { left: '预先验证', right: '预防可避免错误' }, { left: 'PEP 8', right: '可读性与团队标准' }], explanation: '稳健性结合预防、捕获和可追溯性。' }] },
+    ],
+    examSections: [
+      { title: '业务问题解决', questions: [{ type: 'choice', text: '您需处理含不完整数据的每日 CSV。哪种架构最小化失败？', options: ['全部读取并假设格式完美', '验证行、记录错误并继续有效数据', '首个错误即中止无报告', '每天手动改源文件'], ans: 1, explanation: '运营韧性需要验证和可追溯性。' }, { type: 'truefalse', text: '将解析、转换和导出分离为独立函数可提高可维护性。', ans: true, explanation: '便于测试和流水线演进。' }, { type: 'match', text: '匹配阶段与目标：', pairs: [{ left: '解析', right: '解释输入数据' }, { left: '验证', right: '保证最低质量' }, { left: '转换', right: '应用业务规则' }, { left: '输出', right: '持久可靠结果' }], explanation: '清晰流水线减少生产事故。' }] },
+      { title: '质量与安全运行', questions: [{ type: 'choice', text: '若关键脚本在生产失败，什么证据最有助诊断？', options: ['仅「错误」消息', '带上下文、时间戳和具体原因的日志', '孤立截图', '不分析直接重启服务器'], ans: 1, explanation: '无上下文时恢复慢且不确定。' }, { type: 'truefalse', text: '静默关键异常增加数据损坏风险。', ans: true, explanation: '隐藏失败阻止早期响应。' }, { type: 'match', text: '匹配实践与运营影响：', pairs: [{ left: '单元测试', right: '减少逻辑回归' }, { left: 'Lint', right: '风格统一与早期错误' }, { left: '异常处理', right: '对失败受控响应' }, { left: '模式验证', right: '避免无效数据' }], explanation: '技术质量是预防性的，非反应性的。' }] },
+    ],
+  },
+  javascript: {
+    title: 'JavaScript',
+    requirements: ['现代浏览器', '代码编辑器', '基础 HTML/CSS 知识'],
+    certModules: ['JS 基础', '函数与异步', 'DOM 与事件', 'API 集成'],
+    docs: { label: 'MDN JavaScript' },
+    lessons: {
+      'javascript-l1': { title: '变量、类型与作用域', section: '模块 1', description: '什么是 JavaScript？它有什么用途？您将理解其在交互式 Web 中的角色，以及如何安全管理状态。', requirements: ['现代浏览器', '代码编辑器'], steps: ['区分 var、let 和 const', '用 typeof 检查类型', '练习块级和函数作用域', '避免混淆的重复声明', '编写不含全局变量的简单脚本'], tip: '默认使用 const，仅在确实需要重新赋值时使用 let。', resources: { docs: 'JS 变量与作用域' } },
+      'javascript-l2': { title: '函数与现代模式', section: '模块 2', description: '什么是函数？它们有什么用途？本课涵盖前端中的逻辑封装、清晰度和复用。', requirements: ['JS 变量基础', '浏览器控制台练习'], steps: ['定义声明式和箭头函数', '将函数作为参数传递', '创建简单闭包', '对数组应用 map/filter/reduce', '将重复代码块重构为可复用函数'], tip: '小函数便于调试和测试。', resources: { docs: 'JavaScript 函数' } },
+      'javascript-l3': { title: 'DOM、事件与无障碍', section: '模块 3', description: '什么是 DOM？它有什么用途？您将学习稳健、无障碍地操作界面和事件。', requirements: ['基础 HTML/CSS 知识', '基础 JS 函数'], steps: ['用 querySelector 选择节点', '用 addEventListener 监听事件', '动态修改类和属性', '实现可见焦点和键盘支持', '构建小型交互组件'], tip: '不要只依赖点击；交互组件应支持键盘。', resources: { docs: 'DOM 简介' } },
+      'javascript-l4': { title: 'Promise 与 async/await 异步', section: '模块 4', description: '什么是异步？它有什么用途？您将了解如何协调非阻塞任务并处理网络错误。', requirements: ['JS 函数', '基础 HTTP 概念'], steps: ['创建 Promise 并处理 resolve/reject', '用 then/catch 消费 Promise', '用 async/await 重写流程', '在请求上应用 try/catch', '展示加载、成功和错误状态'], tip: '始终处理网络错误和不成功响应。', resources: { docs: 'JavaScript Promise' } },
+      'javascript-l5': { title: 'API 集成与客户端架构', section: '模块 5', description: '什么是 API 集成？它有什么用途？您将学习以清晰契约和状态管理消费外部服务。', requirements: ['async/await 异步', '基础 JSON 知识'], steps: ['用 fetch 消费 REST 端点', '验证 response.ok 并解析 JSON', '渲染前规范化数据', '简单缓存关键响应', '应用服务模式分离逻辑'], tip: '分离数据层和 UI 层以便更好扩展。', resources: { docs: 'MDN Fetch API' } },
+    },
+    quizSections: [
+      { title: '变量、类型与作用域', questions: [{ type: 'choice', text: '在现代 JavaScript 中，哪种做法最能减少重复声明错误？', options: ['到处使用 var', '优先使用 const/let 与块级作用域', '将状态存在 window 上', '避免使用函数'], ans: 1, explanation: 'const/let 减少歧义和作用域泄漏。' }, { type: 'truefalse', text: 'let/const 的块级作用域有助于隔离临时状态。', ans: true, explanation: '避免不必要的副作用。' }, { type: 'match', text: '匹配声明与行为：', pairs: [{ left: 'const', right: '不允许绑定重新赋值' }, { left: 'let', right: '可重新赋值且为块级作用域' }, { left: 'var', right: '函数作用域与传统提升' }, { left: 'typeof', right: '运行时检查类型' }], explanation: '了解变量语义可避免细微错误。' }] },
+      { title: '函数与现代模式', questions: [{ type: 'choice', text: '哪种模式能在数组处理中复用逻辑而不重复？', options: ['每个界面嵌套 for', 'map/filter/reduce 配合纯函数', '每个模块复制代码', '冗长 if 链'], ans: 1, explanation: '函数式编程减少噪音和错误。' }, { type: 'truefalse', text: '闭包可在多次调用间保留私有状态。', ans: true, explanation: '有助于封装行为。' }, { type: 'match', text: '匹配方法与用途：', pairs: [{ left: 'map', right: '转换每个元素' }, { left: 'filter', right: '选择子集' }, { left: 'reduce', right: '累积单一结果' }, { left: 'forEach', right: '对每个元素产生副作用' }], explanation: '选对方法可提高可读性。' }] },
+      { title: 'DOM、事件与无障碍', questions: [{ type: 'choice', text: '在动态列表中，哪种技术减少冗余监听器？', options: ['为每个新节点添加监听器', '在父容器上使用事件委托', '每次点击后刷新页面', '在 HTML 中使用内联 onclick'], ans: 1, explanation: '委托更适合动态内容扩展。' }, { type: 'truefalse', text: '在交互组件中添加键盘支持可改善无障碍。', ans: true, explanation: '并非所有用户都用鼠标操作。' }, { type: 'match', text: '匹配 API 与用途：', pairs: [{ left: 'querySelector', right: '选择首个匹配节点' }, { left: 'classList.toggle', right: '切换视觉状态' }, { left: 'addEventListener', right: '注册用户交互' }, { left: 'setAttribute', right: '更新节点元数据' }], explanation: '有目的地操作 DOM 可避免 UI 不一致。' }] },
+      { title: 'Promise 与 async/await 异步', questions: [{ type: 'choice', text: 'async/await 相比长 then 链的主要优势是什么？', options: ['消除错误处理需求', '提高异步流程的顺序可读性', '将代码转为真正同步', '避免所有网络延迟'], ans: 1, explanation: '仍是异步，但语法更清晰。' }, { type: 'truefalse', text: 'try/catch 也能捕获 async 函数中 await 抛出的错误。', ans: true, explanation: '可集中处理失败。' }, { type: 'match', text: '匹配概念与功能：', pairs: [{ left: 'Promise', right: '表示未来结果' }, { left: 'await', right: '在 async 内暂停逻辑' }, { left: 'catch', right: '处理异步错误' }, { left: 'finally', right: '执行最终清理' }], explanation: '稳健的异步流程需考虑成功与失败。' }] },
+      { title: 'API 集成与客户端架构', questions: [{ type: 'choice', text: '哪种做法防止 UI 直接依赖原始 API 格式？', options: ['在屏幕上渲染原始响应', '在服务层规范化数据', '在每个组件重复 fetch', '忽略 API 契约'], ans: 1, explanation: '规范化解耦后端与展示。' }, { type: 'truefalse', text: '解析 JSON 前验证 response.ok 可避免静默错误。', ans: true, explanation: '并非每个 HTTP 响应都表示成功。' }, { type: 'match', text: '匹配策略与益处：', pairs: [{ left: '服务层', right: '复用数据访问' }, { left: '加载状态', right: '清晰用户反馈' }, { left: '简单缓存', right: '减少重复延迟' }, { left: '错误回退', right: '失败时保持 UX' }], explanation: '稳健的客户端架构提高韧性。' }] },
+    ],
+    examSections: [
+      { title: '真实前端实现', questions: [{ type: 'choice', text: '您需构建查询三个端点且结果相互依赖的面板。哪种设计更易维护？', options: ['全部放在一个巨大全局函数中', '分离服务 + async/await 编排 + 集中错误处理', '无失败控制的嵌套请求', '任何错误都刷新页面'], ans: 1, explanation: '分离职责便于演进和诊断。' }, { type: 'truefalse', text: '缺少加载和错误状态会给终端用户带来模糊体验。', ans: true, explanation: '稳健 UX 始终传达正在发生什么。' }, { type: 'match', text: '匹配问题与技术缓解：', pairs: [{ left: '竞态条件', right: '取消过时请求' }, { left: 'API 缓慢', right: '显示加载状态' }, { left: '500 错误', right: '回退与清晰消息' }, { left: '数据不完整', right: '渲染前防御性验证' }], explanation: '前端工程需要运营韧性。' }] },
+      { title: '代码质量与可扩展性', questions: [{ type: 'choice', text: '代码审查中，哪种信号表明架构性技术债务？', options: ['单一职责的小函数', 'UI 与 fetch 在多处强耦合', '一致的错误处理', '语义化模块命名'], ans: 1, explanation: '分散耦合使维护困难。' }, { type: 'truefalse', text: '异步流程的集成测试可减少生产回归。', ans: true, explanation: '验证层与服务间的协调。' }, { type: 'match', text: '匹配实践与业务结果：', pairs: [{ left: '模块化架构', right: '更快交付新功能' }, { left: '一致错误处理', right: '更少可见用户事故' }, { left: '明确数据契约', right: '可预测的后端集成' }, { left: '规范的代码审查', right: '长期保持质量' }], explanation: '技术可扩展性直接影响产品。' }] },
+    ],
+  },
+  html: {
+    title: 'HTML',
+    requirements: ['代码编辑器', '网页浏览器', '基础网络知识'],
+    certModules: ['HTML5 结构', '语义与无障碍', '表单', 'SEO 最佳实践'],
+    docs: { label: 'MDN HTML' },
+    lessons: {
+      'html-l1': { title: 'HTML5 基础结构', section: '模块 1', description: '什么是 HTML？它有什么用途？本课定义构建有效、清晰 Web 文档的最小结构。', requirements: ['代码编辑器', '网页浏览器'], steps: ['从零创建 HTML 文件', '添加 doctype、html、head 和 body', '配置 charset 和 viewport', '添加标题和基础元数据', '用标准工具验证结构'], tip: '从一开始就保持文档整洁，避免结构性债务。', resources: { docs: 'HTML 文档结构' } },
+      'html-l2': { title: '语义内容与层级', section: '模块 2', description: '什么是 HTML 语义？它有什么用途？您将学习标记内容，以改善用户和搜索引擎的理解。', requirements: ['基础 HTML 结构', '理解标题层级'], steps: ['用 h1-h6 建立连贯层级', '用 section 和 article 分隔内容', '用 nav 定义导航', '在 footer 中包含上下文信息', '审查文档逻辑大纲'], tip: '语义不是美学，而是结构含义。', resources: { docs: '语义化 HTML' } },
+      'html-l3': { title: '链接、多媒体与列表', section: '模块 3', description: '什么是内容元素？它们有什么用途？您将了解如何用最佳实践构建信息丰富、可导航的页面。', requirements: ['HTML 语义基础', '准备好的内容资源'], steps: ['创建安全的内部和外部链接', '插入带描述性 alt 的图片', '添加带原生控件的音频/视频', '正确使用有序和无序列表', '检查加载和资源回退'], tip: '每个链接应传达目的地，不依赖视觉上下文。', resources: { docs: 'HTML 多媒体元素' } },
+      'html-l4': { title: '无障碍表单', section: '模块 4', description: '什么是无障碍表单？它有什么用途？您将学习以清晰验证和良好用户体验收集数据。', requirements: ['有效 HTML 结构', '基础 input 知识'], steps: ['构建带关联 label 的表单', '使用合适的 input 类型', '应用原生 required 验证', '用 fieldset 和 legend 分组字段', '测试完整键盘导航'], tip: '表单错误应说明要改什么以及如何改。', resources: { docs: 'HTML 表单' } },
+      'html-l5': { title: '技术 SEO 与结构质量', section: '模块 5', description: '什么是为 SEO 优化 HTML？它有什么用途？本课连接结构、性能与搜索引擎可发现性。', requirements: ['掌握结构与语义', '基础元数据知识'], steps: ['配置有用的 title 和 meta description', '按搜索意图审查标题', '添加 loading 等性能属性', '检测结构与内容重复', '用技术 SEO 清单审计文档'], tip: '技术 SEO 始于语义化且快速的 HTML。', resources: { docs: 'HTML 最佳实践' } },
+    },
+    quizSections: [
+      { title: 'HTML5 基础结构', questions: [{ type: 'choice', text: '哪个元素定义对用户不可见但对渲染和 SEO 关键的元数据？', options: ['body', 'head', 'main', 'footer'], ans: 1, explanation: 'head 封装文档元数据。' }, { type: 'truefalse', text: '正确的 doctype 帮助浏览器使用标准模式。', ans: true, explanation: '避免引擎间渲染不一致。' }, { type: 'match', text: '匹配标签与用途：', pairs: [{ left: '<html>', right: '文档根' }, { left: '<head>', right: '页面元数据' }, { left: '<body>', right: '可见内容' }, { left: '<title>', right: '标签页标题与基础 SEO' }], explanation: '坚实基础保证兼容性。' }] },
+      { title: '语义内容与层级', questions: [{ type: 'choice', text: '哪种语义错误最影响屏幕阅读器理解？', options: ['使用外部 CSS', '无逻辑地跳过标题层级', '包含 footer', '使用有序列表'], ans: 1, explanation: '层级引导辅助导航。' }, { type: 'truefalse', text: 'article 应用于可独立理解的自主内容。', ans: true, explanation: '其语义表示块独立性。' }, { type: 'match', text: '匹配标签与功能：', pairs: [{ left: '<nav>', right: '主导航链接' }, { left: '<section>', right: '主题内容分组' }, { left: '<article>', right: '独立内容单元' }, { left: '<aside>', right: '补充内容' }], explanation: '语义改善结构与维护。' }] },
+      { title: '链接、多媒体与列表', questions: [{ type: 'choice', text: '在新标签页打开外部链接时，哪种做法更安全？', options: ['仅 target="_blank"', '添加 rel="noopener noreferrer"', '移除 href 属性', '将链接转为无效按钮'], ans: 1, explanation: '防止目标页访问原页面上下文。' }, { type: 'truefalse', text: 'alt 属性应描述图像的信息功能。', ans: true, explanation: '对有内容价值的图像并非可选。' }, { type: 'match', text: '匹配元素与正确用法：', pairs: [{ left: '<a>', right: '资源间导航' }, { left: '<img>', right: '显示带替代文本的图像' }, { left: '<ul>', right: '无优先顺序的列表' }, { left: '<ol>', right: '有明确顺序的序列' }], explanation: '元素应匹配内容含义。' }] },
+      { title: '无障碍表单', questions: [{ type: 'choice', text: '哪种组合改善邮箱字段的可用性与基础验证？', options: ['input type="text"', 'input type="email" + 关联 label', '无 label 的 placeholder', '带 contenteditable 的 div'], ans: 1, explanation: '正确类型启用验证和优化键盘。' }, { type: 'truefalse', text: 'placeholder 不能替代无障碍 label。', ans: true, explanation: 'label 保持持久上下文。' }, { type: 'match', text: '匹配组件与益处：', pairs: [{ left: 'label for', right: '字段与文字显式关联' }, { left: 'required', right: '最低原生验证' }, { left: 'fieldset', right: '逻辑字段分组' }, { left: 'aria-describedby', right: '额外帮助/错误上下文' }], explanation: '表单无障碍依赖语义结构。' }] },
+      { title: '技术 SEO 与结构质量', questions: [{ type: 'choice', text: '哪种做法直接影响索引与主题理解？', options: ['无标准地使用多个 h1', 'title 与标题对齐搜索意图', '总是移除 meta description', '将所有文字藏在图片中'], ans: 1, explanation: '语义连贯帮助引擎和用户。' }, { type: 'truefalse', text: '语义化且轻量的 HTML 有助于感知性能。', ans: true, explanation: '清晰结构便于解析与渲染。' }, { type: 'match', text: '匹配技术信号与 SEO 效果：', pairs: [{ left: '清晰的 meta description', right: '结果中更好的上下文' }, { left: '有序标题', right: '层级内容理解' }, { left: '优化图像', right: '更快页面加载' }, { left: '语义地标', right: '更强结构无障碍' }], explanation: '技术 SEO 与无障碍相互加强。' }] },
+    ],
+    examSections: [
+      { title: '企业页面构建', questions: [{ type: 'choice', text: '您需发布面向转化的无障碍落地页。哪种工作顺序更扎实？', options: ['先设计样式无结构', '定义语义结构，再内容，再技术优化', '粘贴自动生成 HTML 不审查', '优先动画而非内容'], ans: 1, explanation: '语义基础便于无障碍、SEO 和维护。' }, { type: 'truefalse', text: '若表单缺少可见或等效 label，用户错误会增加。', ans: true, explanation: '缺少上下文影响表单完成率。' }, { type: 'match', text: '匹配审查与目标：', pairs: [{ left: 'HTML 验证器', right: '检测无效结构' }, { left: '键盘测试', right: '验证无障碍导航' }, { left: '元数据审计', right: '改善可发现性' }, { left: '媒体优化', right: '减少加载时间' }], explanation: '最终质量依赖具体技术控制。' }] },
+      { title: 'Web 质量治理', questions: [{ type: 'choice', text: '持续维护中，哪种做法减少结构性回归？', options: ['不经审查直接改生产', '使用语义清单与同行评审', '移除标记文档', '用大量内嵌脚本混合结构'], ans: 1, explanation: '标准化避免渐进退化。' }, { type: 'truefalse', text: '层级不当的标题可同时影响无障碍和 SEO。', ans: true, explanation: '两者都依赖清晰结构。' }, { type: 'match', text: '匹配风险与缓解：', pairs: [{ left: '无上下文内容', right: '正确标题与地标' }, { left: '模糊字段', right: '清晰 label 与错误消息' }, { left: '加载缓慢', right: '多媒体资源优化' }, { left: '语义不一致', right: '共享标记指南' }], explanation: '技术治理维持长期质量。' }] },
+    ],
+  },
+  css: {
+    title: 'CSS',
+    requirements: ['基础 HTML 知识', '代码编辑器', '带 DevTools 的浏览器'],
+    certModules: ['基础与特异性', '盒模型', 'Flexbox/Grid', '响应式与动画'],
+    docs: { label: 'MDN CSS' },
+    lessons: {
+      'css-l1': { title: '选择器与层叠', section: '模块 1', description: '什么是 CSS？它有什么用途？您将理解如何通过选择器、继承和层叠应用样式。', requirements: ['基础 HTML 知识', '代码编辑器'], steps: ['按标签、类和 id 应用规则', '比较选择器特异性', '避免滥用 !important', '按组件组织样式', '在 DevTools 中检查规则'], tip: '最佳特异性是所需的最小值。', resources: { docs: 'CSS 选择器' } },
+      'css-l2': { title: '盒模型与视觉流', section: '模块 2', description: '什么是盒模型？它有什么用途？您将学习控制尺寸、间距和可靠的视觉分布。', requirements: ['基础选择器', '可用 DevTools'], steps: ['配置全局 box-sizing', '区分 margin、border 和 padding', '调整组件宽高', '检测 margin 折叠', '构建间距一致的卡片'], tip: 'border-box 在几乎所有布局中简化计算。', resources: { docs: 'CSS 盒模型' } },
+      'css-l3': { title: 'Flexbox 一维布局', section: '模块 3', description: '什么是 Flexbox？它有什么用途？您将掌握可适应行/列中元素的对齐与分布。', requirements: ['掌握盒模型', 'UI 组件练习'], steps: ['创建基础 flex 容器', '调整主轴与交叉轴', '配置 grow/shrink/basis', '应用 gap 与换行', '解决响应式导航布局'], tip: '先想清楚轴向，再动对齐属性。', resources: { docs: 'Flexbox 指南' } },
+      'css-l4': { title: 'Grid 复杂结构', section: '模块 4', description: '什么是 CSS Grid？它有什么用途？本课涵盖现代界面的稳健二维布局。', requirements: ['Flexbox 知识', '基础布局完成'], steps: ['用 fr 和 minmax 定义行列', '用 grid-template-areas 放置区域', '结合 grid 与自动放置', '设计含主区域的面板', '在断点调整行为'], tip: 'Grid 管宏观结构；Flexbox 管内部组件。', resources: { docs: 'CSS Grid 简介' } },
+      'css-l5': { title: '响应式、状态与微交互', section: '模块 5', description: '什么是响应式设计？它有什么用途？您将学习适配界面、过渡与运动无障碍。', requirements: ['Flexbox 与 Grid', '基础无障碍概念'], steps: ['应用移动优先媒体查询', '使用 rem、clamp 等流体单位', '定义清晰的 hover/focus/active 状态', '添加有目的的过渡', '尊重 prefers-reduced-motion'], tip: '切勿为视觉动画牺牲无障碍。', resources: { docs: 'CSS 响应式设计' } },
+    },
+    quizSections: [
+      { title: '选择器与层叠', questions: [{ type: 'choice', text: '大型项目中哪种选择器策略减少脆弱性？', options: ['深层层次的长选择器', '面向组件的语义类', '大量 id', '每个节点内联样式'], ans: 1, explanation: '组件类扩展时耦合更少。' }, { type: 'truefalse', text: '滥用 !important 通常表明样式架构问题。', ans: true, explanation: '这是特异性战争的症状。' }, { type: 'match', text: '匹配选择器与相对特异性：', pairs: [{ left: '#id', right: '高特定优先级' }, { left: '.class', right: '可复用且可控' }, { left: 'element', right: '全局样式基础' }, { left: ':root', right: '全局变量上下文' }], explanation: '了解特异性避免混乱覆盖。' }] },
+      { title: '盒模型与视觉流', questions: [{ type: 'choice', text: '组件在定义宽度后仍溢出容器，应先检查什么？', options: ['字体类型', '盒模型与累积的 padding/border', '背景色', '类名'], ans: 1, explanation: '无 border-box 时 padding 和 border 改变总尺寸。' }, { type: 'truefalse', text: 'margin 控制外部空间；padding 控制内部空间。', ans: true, explanation: '区分二者是稳定构图的关键。' }, { type: 'match', text: '匹配属性与效果：', pairs: [{ left: 'margin', right: '元素间外部分离' }, { left: 'padding', right: '内容内部留白' }, { left: 'border', right: '视觉块边界' }, { left: 'box-sizing', right: '尺寸计算模型' }], explanation: '盒模型影响布局与可读性。' }] },
+      { title: 'Flexbox 一维布局', questions: [{ type: 'choice', text: '哪个属性控制主轴上的项目分布？', options: ['align-items', 'justify-content', 'z-index', 'font-weight'], ans: 1, explanation: 'justify-content 作用于主轴。' }, { type: 'truefalse', text: 'flex 中的 gap 可在不用侧 margin 技巧的情况下分隔元素。', ans: true, explanation: '简化视觉维护。' }, { type: 'match', text: '匹配属性与结果：', pairs: [{ left: 'display:flex', right: '激活弹性上下文' }, { left: 'flex-wrap', right: '允许项目换行' }, { left: 'align-items', right: '交叉轴对齐' }, { left: 'flex-grow', right: '分配剩余空间' }], explanation: 'Flexbox 解决大多数线性布局。' }] },
+      { title: 'Grid 复杂结构', questions: [{ type: 'choice', text: 'Grid 相比 Flexbox 在仪表板上的主要优势？', options: ['更好的默认排版', '明确的二维行列控制', '避免任何媒体查询', '替代语义 HTML'], ans: 1, explanation: 'Grid 精确建模二维。' }, { type: 'truefalse', text: 'grid-template-areas 提高复杂布局可读性。', ans: true, explanation: '可声明式可视化结构。' }, { type: 'match', text: '匹配 Grid 概念与用法：', pairs: [{ left: 'fr', right: '可用空间分数' }, { left: 'minmax', right: '可适应尺寸范围' }, { left: 'auto-fit', right: '自动响应式列' }, { left: 'grid-area', right: '分配到命名区域' }], explanation: '这些工具支持抗变更设计。' }] },
+      { title: '响应式、状态与微交互', questions: [{ type: 'choice', text: '多设备下哪种响应式方法更可持续？', options: ['无断点的刚性桌面优先', '内容驱动断点的移动优先', '一切固定宽度', '只为 1920px 设计'], ans: 1, explanation: '断点应响应内容，而非孤立设备。' }, { type: 'truefalse', text: '动画无障碍应考虑 prefers-reduced-motion。', ans: true, explanation: '尊重对运动的敏感。' }, { type: 'match', text: '匹配模式与 UX 益处：', pairs: [{ left: ':focus-visible', right: '清晰键盘导航' }, { left: 'clamp()', right: '流体排版尺度' }, { left: 'transition', right: '渐进视觉变化' }, { left: 'media query', right: '上下文布局适配' }], explanation: '响应式与无障碍应一并设计。' }] },
+    ],
+    examSections: [
+      { title: '可适配界面设计', questions: [{ type: 'choice', text: '您需实现手机、平板、桌面均可用且不重复代码的界面。采用哪种策略？', options: ['三个无共同系统的孤立 CSS 文件', '移动优先架构与 token 和可复用组件', '固定布局加横向滚动', '每屏内联样式'], ans: 1, explanation: '系统化复用减少维护与错误。' }, { type: 'truefalse', text: 'token 化间距系统改善跨团队视觉一致。', ans: true, explanation: '定义共享可预测规则。' }, { type: 'match', text: '匹配布局问题与解法：', pairs: [{ left: '按钮未对齐', right: 'Flex 对齐与一致 gap' }, { left: '移动端列断裂', right: 'Grid minmax 与媒体查询' }, { left: '文字比例失调', right: 'clamp 排版尺度' }, { left: '焦点不可见', right: '无障碍 focus-visible 样式' }], explanation: '视觉质量来自结构决策。' }] },
+      { title: '前端设计运营', questions: [{ type: 'choice', text: '若团队报告各模块样式不一致，哪种行动解决根因？', options: ['每条规则加 !important', '定义 CSS 架构约定并审查样式 PR', '从其他项目复制 CSS', '移除可复用组件'], ans: 1, explanation: '样式治理防止持续回归。' }, { type: 'truefalse', text: '缺少 CSS 命名约定会增加冲突与技术债务。', ans: true, explanation: '模糊名称导致意外覆盖。' }, { type: 'match', text: '匹配质量控制与目标：', pairs: [{ left: 'CSS lint', right: '早期错误检测' }, { left: '设计 token', right: '全局视觉一致' }, { left: '响应式审查', right: '各视口正确行为' }, { left: '无障碍清单', right: '包容 UX 标准合规' }], explanation: '专业 CSS 运营需要清晰技术标准。' }] },
+    ],
+  },
+  github: {
+    title: 'GitHub',
+    requirements: ['GitHub 账户', '本地已安装 Git', '基础终端'],
+    certModules: ['Git 基础', '分支与协作', 'Pull Request', 'Actions 自动化'],
+    docs: { label: 'GitHub 官方文档' },
+    lessons: {
+      'github-l1': { title: 'Git 与远程仓库', section: '模块 1', description: '什么是 GitHub？它有什么用途？您将学习版本控制基础和在远程仓库上的协作。', requirements: ['GitHub 账户', '本地已安装 Git'], steps: ['在 Git 中配置身份', '初始化本地仓库', '用清晰消息创建首次提交', '在 GitHub 连接远程', '安全发布 main 分支'], tip: '清晰的提交消息减少审查和支持时间。', resources: { docs: 'GitHub 简介' } },
+      'github-l2': { title: '分支与工作流', section: '模块 2', description: '什么是分支？它们有什么用途？您将了解如何隔离变更，在不破坏 main 稳定性的情况下开发。', requirements: ['已创建初始仓库', '提交知识'], steps: ['创建功能分支', '实现隔离变更', 'rebase 或与 main 同步', '解决基础冲突', '为审查准备干净历史'], tip: '小分支审查更快、风险更低。', resources: { docs: '关于分支' } },
+      'github-l3': { title: 'Pull Request 与技术审查', section: '模块 3', description: '什么是 Pull Request？它有什么用途？您将学习提出可追溯变更并进行有效技术讨论。', requirements: ['基础分支工作流', '能解决简单冲突'], steps: ['用上下文和目标打开 PR', '添加可复现测试计划', '回应审查评论', '应用变更并更新分支', '按仓库策略完成合并'], tip: '说明变更原因，而不只是做了什么。', resources: { docs: '关于 Pull Request' } },
+      'github-l4': { title: 'Issue 管理与可追溯性', section: '模块 4', description: '什么是工作可追溯性？它有什么用途？本课连接 issue、提交和 PR，实现透明管理。', requirements: ['PR 知识', '明确的团队工作流'], steps: ['用业务上下文创建 issue', '标注优先级和工作类型', '将分支/PR 关联 issue', '用解决方案证据关闭 issue', '生成冲刺进度报告'], tip: '写得好的 issue 可节省数小时理解时间。', resources: { docs: 'GitHub Issues' } },
+      'github-l5': { title: 'GitHub Actions 入门 CI/CD', section: '模块 5', description: '什么是 GitHub Actions？它有什么用途？您将学习自动化测试和部署以保障持续质量。', requirements: ['仓库与 PR 知识', '终端与脚本基础'], steps: ['在 .github/workflows 创建工作流', '配置 push 和 pull_request 触发器', '在流水线运行 lint 和测试', '发布构建产物', '流水线失败时阻止合并'], tip: '先自动化重复且业务关键的任务。', resources: { docs: 'GitHub Actions' } },
+    },
+    quizSections: [
+      { title: 'Git 与远程仓库', questions: [{ type: 'choice', text: '频繁提交版本变更有何业务益处？', options: ['消除文档需求', '审计决策并以较低影响回滚事故', '加速服务器硬件', '避免代码审查'], ans: 1, explanation: '历史是运营与技术日志。' }, { type: 'truefalse', text: '集中式远程仓库便于协作和历史备份。', ans: true, explanation: '降低丢失和碎片化风险。' }, { type: 'match', text: '匹配命令与功能：', pairs: [{ left: 'git init', right: '初始化本地仓库' }, { left: 'git add', right: '暂存变更以待提交' }, { left: 'git commit', right: '保存版本快照' }, { left: 'git push', right: '发布变更到远程' }], explanation: '基础流程支撑有序协作。' }] },
+      { title: '分支与工作流', questions: [{ type: 'choice', text: '在功能分支上开发的主要原因？', options: ['避免文档', '隔离变更并保护稳定分支', '直接发布到 main', '消除测试'], ans: 1, explanation: '隔离降低运营风险。' }, { type: 'truefalse', text: '合并前用 main 更新功能分支可减少后期冲突。', ans: true, explanation: '逐步集成变更。' }, { type: 'match', text: '匹配术语与用途：', pairs: [{ left: '功能分支', right: '实现隔离变更' }, { left: 'main 分支', right: '稳定集成基线' }, { left: '合并冲突', right: '同时变更碰撞' }, { left: 'rebase', right: '在新历史上重放提交' }], explanation: '理解分支提高开发可预测性。' }] },
+      { title: 'Pull Request 与技术审查', questions: [{ type: 'choice', text: 'PR 中哪项元素提高审查质量？', options: ['空描述', '上下文、范围与可验证测试计划', '无说明的单一巨大提交', '无关混合变更'], ans: 1, explanation: '清晰减少审查摩擦。' }, { type: 'truefalse', text: '用技术证据回应评论可加速 PR 批准。', ans: true, explanation: '有效协作减少周期。' }, { type: 'match', text: '匹配产物与价值：', pairs: [{ left: 'PR 描述', right: '传达变更意图' }, { left: 'CI 检查', right: '验证自动质量' }, { left: '审查评论', right: '改进拟议方案' }, { left: '合并策略', right: '保护 main 分支' }], explanation: '结构良好的 PR 提高代码可靠性。' }] },
+      { title: 'Issue 管理与可追溯性', questions: [{ type: 'choice', text: '哪种做法最好连接报告问题与技术方案？', options: ['无上下文或步骤的 issue', '关联 issue、分支和 PR 并显式引用', '在仓库外解决', '无工单直接改生产'], ans: 1, explanation: '可追溯便于审计与学习。' }, { type: 'truefalse', text: 'issue 上的标签和优先级有助于按价值规划工作。', ans: true, explanation: '按影响与紧急度排序待办。' }, { type: 'match', text: '匹配管理元素与功能：', pairs: [{ left: 'Issue', right: '已记录工作单元' }, { left: 'Label', right: '主题/优先级分类' }, { left: 'Milestone', right: '按时间目标分组' }, { left: 'Assignee', right: '执行负责人' }], explanation: '显式管理减少运营不确定性。' }] },
+      { title: 'GitHub Actions 入门 CI/CD', questions: [{ type: 'choice', text: '每次 PR 用 Actions 运行测试的关键优势？', options: ['消除人工审查', '合并前发现回归', '增大提交体积', '避免 main 分支'], ans: 1, explanation: 'CI 在流程早期防止缺陷。' }, { type: 'truefalse', text: '失败流水线应在受保护分支阻止合并。', ans: true, explanation: '保证最低质量标准。' }, { type: 'match', text: '匹配工作流阶段与目标：', pairs: [{ left: 'checkout', right: '从仓库获取代码' }, { left: 'install', right: '准备依赖' }, { left: 'test', right: '验证预期行为' }, { left: 'artifact', right: '保存构建结果' }], explanation: '结构化流水线加速安全交付。' }] },
+    ],
+    examSections: [
+      { title: '协作功能交付', questions: [{ type: 'choice', text: '团队报告频繁冲突合并和缓慢 PR。哪种干预影响最大？', options: ['允许直接推送到 main', '缩小分支、标准化 PR 模板并启用强制检查', '为速度禁用审查', '每月集中变更'], ans: 1, explanation: '流程纪律减少系统性摩擦。' }, { type: 'truefalse', text: '清晰的提交历史便于事故时受控回滚。', ans: true, explanation: '可快速隔离并回滚问题。' }, { type: 'match', text: '匹配风险与推荐控制：', pairs: [{ left: '未审查变更', right: '带审查者的分支保护' }, { left: '跳过测试', right: 'PR 强制 CI' }, { left: '模糊上下文', right: '标准化 PR 模板' }, { left: '不可见工作', right: 'Issue 关联开发' }], explanation: '协作质量是流程设计。' }] },
+      { title: 'GitHub DevOps 治理', questions: [{ type: 'choice', text: '哪种指标表明 GitHub 交付流程成熟度？', options: ['巨大且稀少的提交', '短周期时间与低回滚率', '无变更文档', '可选流水线'], ans: 1, explanation: '衡量可持续的稳定与速度。' }, { type: 'truefalse', text: '在 CI 中自动化安全验证可降低发布漏洞风险。', ans: true, explanation: '早期安全检查减少暴露。' }, { type: 'match', text: '匹配实践与组织结果：', pairs: [{ left: 'Code owners', right: '领域专家审查' }, { left: 'Dependabot', right: '主动依赖更新' }, { left: '可复用 action', right: '流水线标准化' }, { left: 'Release 标签', right: '生产版本可追溯' }], explanation: '技术治理支撑团队扩展。' }] },
+    ],
+  },
+  excel: {
+    title: 'Excel',
+    requirements: ['已安装 Microsoft Excel', '工作表练习数据', '基础单元格知识'],
+    certModules: ['工作表基础', '关键公式', '查找与分析', '高管可视化'],
+    docs: { label: 'Excel 官方帮助' },
+    lessons: {
+      'excel-l1': { title: '工作表结构与引用', section: '模块 1', description: '什么是 Excel？它有什么用途？本课建立组织数据和可靠引用的基础。', requirements: ['已安装 Microsoft Excel', '工作表练习数据'], steps: ['创建表头一致的数据表', '应用数字和日期格式', '区分相对/绝对引用', '命名关键工作区域', '以受控版本保存文件'], tip: '良好数据结构避免脆弱公式。', resources: { docs: 'Excel 简介' } },
+      'excel-l2': { title: '核心业务公式', section: '模块 2', description: '什么是公式？它们有什么用途？您将学习自动化重复计算并减少手工错误。', requirements: ['已组织工作表结构', '基础函数知识'], steps: ['正确应用 SUM 和 AVERAGE', '用 IF 实现简单规则', '组合基础文本函数', '用正确引用复制公式', '用对照数据审计结果'], tip: '用边界情况验证后再认定公式正确。', resources: { docs: 'Excel 函数' } },
+      'excel-l3': { title: 'VLOOKUP/XLOOKUP 与数据关系', section: '模块 3', description: '什么是跨表查找数据？它有什么用途？您将了解如何关联数据源而无需手工复制。', requirements: ['掌握基础公式', '可用参考表'], steps: ['准备干净主表', '应用 VLOOKUP 并识别局限', '在灵活场景实现 XLOOKUP', '用 IFERROR 处理错误', '与手工对照比较结果'], tip: '可用时优先 XLOOKUP 以获得更大灵活性。', resources: { docs: 'VLOOKUP 与 XLOOKUP' } },
+      'excel-l4': { title: '数据透视表与切片', section: '模块 4', description: '什么是数据透视表？它有什么用途？您将学习汇总大量数据以快速决策。', requirements: ['干净表格数据', '筛选与排序知识'], steps: ['从干净源插入透视表', '配置行、列和值', '应用筛选器和切片器', '按期间创建对比指标', '新增数据时更新表'], tip: '源数据勿用空行，否则透视不稳定。', resources: { docs: 'Excel 数据透视表' } },
+      'excel-l5': { title: '仪表板与高管沟通', section: '模块 5', description: '什么是 Excel 仪表板？它有什么用途？本课整合指标、可视化与叙事以支持高管决策。', requirements: ['可用透视表', '业务定义的指标'], steps: ['选择优先 KPI', '按指标选合适图表', '统一仪表板视觉风格', '添加筛选控件供探索', '与利益相关方验证一致性'], tip: '有用仪表板回答具体业务问题，而非展示一切。', resources: { docs: '创建图表与仪表板' } },
+    },
+    quizSections: [
+      { title: '工作表结构与引用', questions: [{ type: 'choice', text: '复制公式时使用绝对引用可避免哪种操作错误？', options: ['系统语言变化', '关键单元格意外偏移', '网络故障', '文件锁定'], ans: 1, explanation: '绝对引用保留关键坐标。' }, { type: 'truefalse', text: '将区域转为表格可改善公式和筛选一致性。', ans: true, explanation: '结构化表格更稳健。' }, { type: 'match', text: '匹配引用类型与行为：', pairs: [{ left: 'A1', right: '完全相对' }, { left: '$A$1', right: '完全绝对' }, { left: 'A$1', right: '固定行、相对列' }, { left: '$A1', right: '固定列、相对行' }], explanation: '理解引用是可靠模型的基础。' }] },
+      { title: '核心业务公式', questions: [{ type: 'choice', text: '哪种方法减少复杂公式错误？', options: ['一行写完不验证', '分步构建并验证子结果', '从网上复制不改编', '只用手工值'], ans: 1, explanation: '增量验证提高精度。' }, { type: 'truefalse', text: 'IF 可在单元格中建模条件业务规则。', ans: true, explanation: '是决策逻辑的关键函数。' }, { type: 'match', text: '匹配函数与用法：', pairs: [{ left: 'SUM', right: '汇总数值' }, { left: 'AVERAGE', right: '求平均值' }, { left: 'IF', right: '条件求值' }, { left: 'CONCAT', right: '拼接文本' }], explanation: '基础函数覆盖大多数初始需求。' }] },
+      { title: 'VLOOKUP/XLOOKUP 与数据关系', questions: [{ type: 'choice', text: 'XLOOKUP 在现代场景相比 VLOOKUP 有何优势？', options: ['仅适用于小表', '灵活左右查找与未找到处理', '替代透视表', '避免所有数据验证'], ans: 1, explanation: 'XLOOKUP 扩展场景并提高可读性。' }, { type: 'truefalse', text: '用明确策略处理 #N/A 可避免模糊报告。', ans: true, explanation: '未管理错误会扭曲决策。' }, { type: 'match', text: '匹配问题与解法：', pairs: [{ left: '键不存在', right: 'IFERROR 或 if_not_found' }, { left: '表无序', right: '使用精确查找' }, { left: '多数据源', right: '规范化主键' }, { left: '结果不一致', right: '审计查找范围' }], explanation: '数据质量决定分析质量。' }] },
+      { title: '数据透视表与切片', questions: [{ type: 'choice', text: '更新时透视表不失败的关键要求？', options: ['鲜艳颜色', '源无空行或模糊表头', '多个隐藏表', '复杂条件格式'], ans: 1, explanation: '干净源决定汇总稳定性。' }, { type: 'truefalse', text: 'Excel 中无 HAVING，但切片器承担动态视觉筛选角色。', ans: true, explanation: '切片器改善非技术用户的数据探索。' }, { type: 'match', text: '匹配透视元素与功能：', pairs: [{ left: '行', right: '主分组维度' }, { left: '列', right: '次要轴对比' }, { left: '值', right: '聚合指标' }, { left: '筛选', right: '修剪分析数据集' }], explanation: '正确配置轴避免误读。' }] },
+      { title: '仪表板与高管沟通', questions: [{ type: 'choice', text: '哪种标准使仪表板对高管更有用？', options: ['展示所有可能指标', '优先可行动 KPI 并附时间上下文', '使用装饰性 3D 图', '隐藏计算假设'], ans: 1, explanation: '仪表板应促进决策，而非仅展示数据。' }, { type: 'truefalse', text: '无 KPI 定义的仪表板可能导致矛盾解读。', ans: true, explanation: '指标需要共同含义。' }, { type: 'match', text: '匹配图表与推荐场景：', pairs: [{ left: '折线图', right: '时间演变' }, { left: '柱状图', right: '类别对比' }, { left: 'KPI 卡片', right: '当前关键值' }, { left: '切片器', right: '交互维度筛选' }], explanation: '选对可视化减少分析噪音。' }] },
+    ],
+    examSections: [
+      { title: '商业分析案例', questions: [{ type: 'choice', text: '您需汇总 5 个区域代码不一致的销售。哪种顺序更扎实？', options: ['直接做图表', '标准化键、验证完整性再汇总指标', '只用条件格式', '逐表手工复制'], ans: 1, explanation: '无清洗与标准化则分析不可靠。' }, { type: 'truefalse', text: '若未先验证数据质量，透视表可掩盖源错误。', ans: true, explanation: '可视化不能修复缺陷数据。' }, { type: 'match', text: '匹配阶段与控制：', pairs: [{ left: '数据清洗', right: '消除源不一致' }, { left: '公式模型', right: '计算可重复指标' }, { left: '透视', right: '按维度汇总信息' }, { left: '仪表板', right: '传达高管发现' }], explanation: '完整链条保证可辩护的分析。' }] },
+      { title: '报告质量治理', questions: [{ type: 'choice', text: '哪种做法减少月报的重复性错误？', options: ['每月手工改公式', '受控模板加验证与收尾清单', '移除绝对引用', '每周期改表结构'], ans: 1, explanation: '标准化提高运营可靠性。' }, { type: 'truefalse', text: '记录计算假设是分析可追溯性的一部分。', ans: true, explanation: '便于审计与工作延续。' }, { type: 'match', text: '匹配风险与缓解：', pairs: [{ left: '数据不完整', right: '输入预先验证' }, { left: '指标模糊', right: '正式 KPI 定义' }, { left: '公式错误', right: '对照案例测试' }, { left: '个人依赖', right: '文档与共享模板' }], explanation: '报告质量是流程，而非单个文件。' }] },
+    ],
+  },
+  powerpoint: {
+    title: 'PowerPoint',
+    requirements: ['Microsoft PowerPoint', '明确的演示目标', '准备好的基础内容'],
+    certModules: ['视觉叙事', '幻灯片设计', '有效动画', '高管演示'],
+    docs: { label: 'PowerPoint 官方帮助' },
+    lessons: {
+      'powerpoint-l1': { title: '演示叙事结构', section: '模块 1', description: '什么是有效叙事？它有什么用途？您将学习组织观点以清晰引导决策。', requirements: ['Microsoft PowerPoint', '明确的演示目标'], steps: ['定义受众与预期结果', '用逻辑故事设计目录', '为每张幻灯片分配主信息', '删除冗余内容', '验证完整流程连贯性'], tip: '一张幻灯片应支撑一个主观点，而非五个。', resources: { docs: '创建有效演示' } },
+      'powerpoint-l2': { title: '视觉设计与幻灯片母版', section: '模块 2', description: '什么是幻灯片母版？它有什么用途？您将了解如何在整套幻灯片中保持字体与视觉一致。', requirements: ['已定义叙事', '准备好的基础内容'], steps: ['配置颜色主题与字体', '用基础版式编辑幻灯片母版', '应用标题视觉层级', '用参考线对齐对象', '审查全局设计一致性'], tip: '若每张都改风格，会失去视觉可信度。', resources: { docs: '使用幻灯片母版' } },
+      'powerpoint-l3': { title: '图表、数据与高管清晰度', section: '模块 3', description: '什么是幻灯片上的数据沟通？它有什么用途？您将学习把数字转化为可行动信息。', requirements: ['基础视觉设计', '来自 Excel 或源的结构化数据'], steps: ['按问题类型选图表', '用对比突出关键数据', '简化多余图例与坐标轴', '适当时链接数据', '为每张图添加明确结论'], tip: '无洞察的图表是装饰，不是沟通。', resources: { docs: '在 PowerPoint 中插入图表' } },
+      'powerpoint-l4': { title: '有目的的动画与过渡', section: '模块 4', description: '什么是有效动画？它们有什么用途？本课避免干扰并改善讲解节奏。', requirements: ['结构化演示', '已组织视觉内容'], steps: ['在章节间应用一致过渡', '用简单动画揭示观点', '在动画面板控制顺序', '与演讲同步节奏', '在演示模式测试显示'], tip: '动画应强化信息，而非与之竞争。', resources: { docs: 'PowerPoint 动画' } },
+      'powerpoint-l5': { title: '交付、排练与问答处理', section: '模块 5', description: '什么是娴熟演示？它有什么用途？您将学习有冲击力地收尾并用证据回答问题。', requirements: ['演示稿接近完成', '已完成基础排练'], steps: ['配置带备注的演讲者视图', '按章节排练时间安排', '准备备用幻灯片', '用具体数据回应异议', '以清晰行动号召收尾'], tip: '排练幻灯片间的口头过渡，而非孤立地练每张。', resources: { docs: '自信地演示幻灯片' } },
+    },
+    quizSections: [
+      { title: '演示叙事结构', questions: [{ type: 'choice', text: '哪种做法提高高管受众的信息记忆留存？', options: ['以深度技术细节开场', '构建问题-影响-解决方案故事', '展示所有数字无综合', '避免明确结论'], ans: 1, explanation: '面向决策的叙事便于理解。' }, { type: 'truefalse', text: '设计幻灯片前先定义受众可改善内容聚焦。', ans: true, explanation: '可调整深度与语言。' }, { type: 'match', text: '匹配章节与叙事目标：', pairs: [{ left: '开场', right: '设定背景与目标' }, { left: '展开', right: '用证据支撑' }, { left: '结论', right: '提出决策或行动' }, { left: '问答', right: '解决关键疑问' }], explanation: '清晰故事减少沟通摩擦。' }] },
+      { title: '视觉设计与幻灯片母版', questions: [{ type: 'choice', text: '长演示中使用幻灯片母版有何运营优势？', options: ['复制文件体积', '集中样式并避免幻灯片间不一致', '阻止文字编辑', '禁止使用图表'], ans: 1, explanation: '母版减少重复手工。' }, { type: 'truefalse', text: '保持一致的色板与字体提高专业感。', ans: true, explanation: '视觉连贯传达清晰与严谨。' }, { type: 'match', text: '匹配设计元素与功能：', pairs: [{ left: '字体', right: '层级阅读' }, { left: '颜色', right: '优先视觉注意力' }, { left: '留白', right: '降低认知饱和' }, { left: '对齐', right: '构图秩序' }], explanation: '一致设计支撑叙事。' }] },
+      { title: '图表、数据与高管清晰度', questions: [{ type: 'choice', text: '呈现复杂数据时的主要错误？', options: ['按问题选图', '展示无明确洞察的可视化', '突出关键指标', '比较同质期间'], ans: 1, explanation: '无解读的数据无法引导决策。' }, { type: 'truefalse', text: '图表应回答具体业务问题。', ans: true, explanation: '无目的可视化产生噪音。' }, { type: 'match', text: '匹配图表与推荐用法：', pairs: [{ left: '折线', right: '时间趋势' }, { left: '柱状', right: '类别对比' }, { left: '面积', right: '累积演变' }, { left: 'KPI 卡片', right: '展示关键点数值' }], explanation: '选对视觉提高理解。' }] },
+      { title: '有目的的动画与过渡', questions: [{ type: 'choice', text: '高管场景下专业动画的标准？', options: ['最大视觉复杂度', '支持讲解节奏而不分散注意', '每张换不同效果', '一切用默认效果'], ans: 1, explanation: '动画应功能性，非装饰性。' }, { type: 'truefalse', text: '过多不同过渡会降低受众对核心信息的专注。', ans: true, explanation: '一致性有助于保持认知注意。' }, { type: 'match', text: '匹配资源与预期效果：', pairs: [{ left: '淡入淡出', right: '观点间离散过渡' }, { left: '分块出现', right: '控制内容揭示' }, { left: 'Morph', right: '状态间视觉连续' }, { left: '无动画', right: '优先清晰静态内容' }], explanation: '选择取决于沟通意图。' }] },
+      { title: '交付、排练与问答处理', questions: [{ type: 'choice', text: '哪种做法改善困难问题的表现？', options: ['照读幻灯片文字', '准备备用证据与异议场景', '无数据即兴', '避免问答环节'], ans: 1, explanation: '准备可预见沟通风险。' }, { type: 'truefalse', text: '按章节排练时间安排 可减少演示末尾过载。', ans: true, explanation: '管理节奏与内容覆盖。' }, { type: 'match', text: '匹配阶段与准备重点：', pairs: [{ left: '预排练', right: '调整叙事与顺序' }, { left: '技术排练', right: '验证设备与格式' }, { left: '正式演示', right: '将信息与受众连接' }, { left: '会后', right: '收集反馈迭代' }], explanation: '讲好演示是迭代过程。' }] },
+    ],
+    examSections: [
+      { title: '战略成果演示', questions: [{ type: 'choice', text: '您需在有限时间内向领导汇报季度成果。哪种方法影响最大？', options: ['展示所有运营细节', '综合关键发现、风险与建议决策', '只用炫目动画', '逐表完整朗读'], ans: 1, explanation: '领导需要清晰以快速决策。' }, { type: 'truefalse', text: '每节明确结论有助于受众记住关键信息。', ans: true, explanation: '结构与综合改善记忆留存。' }, { type: 'match', text: '匹配挑战与专业回应：', pairs: [{ left: '时间缩短', right: '优先高影响信息' }, { left: '受众异质', right: '清晰语言加技术附录' }, { left: '数据异议', right: '可验证证据与来源' }, { left: '待定决策', right: '可执行最终建议' }], explanation: '演示价值在于促成决策。' }] },
+      { title: '高管沟通质量', questions: [{ type: 'choice', text: '哪种信号表明团队演示治理良好？', options: ['每位作者风格不同', '模板、指南与标准化事前审查', '无版本控制', '最后一刻无记录变更'], ans: 1, explanation: '标准化保护质量与声誉。' }, { type: 'truefalse', text: '记录最终版与 PDF 备份可降低活动运营风险。', ans: true, explanation: '防止兼容性或误编辑导致失败。' }, { type: 'match', text: '匹配控制与结果：', pairs: [{ left: '事前清单', right: '减少现场错误' }, { left: '视觉指南', right: '演讲者间一致' }, { left: '计时排练', right: '遵守时间' }, { left: '备用幻灯片', right: '扎实回答问题' }], explanation: '卓越演示靠流程构建。' }] },
+    ],
+  },
+  sql: {
+    title: 'SQL',
+    requirements: ['可用 SQL 引擎（PostgreSQL/MySQL）', '练习数据集', 'SQL 编辑器或客户端'],
+    certModules: ['基础查询', 'JOIN 与聚合', '子查询/CTE', '优化与安全'],
+    docs: { label: 'PostgreSQL 文档' },
+    lessons: {
+      'sql-l1': { title: 'SELECT、筛选与排序', section: '模块 1', description: '什么是 SQL？它有什么用途？您将从用筛选和排序精确查询数据开始。', requirements: ['可用 SQL 引擎', '练习数据集'], steps: ['连接示例数据库', '用显式列执行 SELECT', '用 WHERE 和逻辑运算符筛选', '用 ORDER BY 排序', '限制结果以快速分析'], tip: '生产查询避免 SELECT *，以利清晰与性能。', resources: { docs: 'SQL 基础教程' } },
+      'sql-l2': { title: 'JOIN 与表关系', section: '模块 2', description: '什么是合并表？它有什么用途？您将学习关联相关数据而不丢失业务上下文。', requirements: ['基础 SELECT 与 WHERE', '简单关系模型'], steps: ['识别主键与外键', '在基础案例应用 INNER JOIN', '用 LEFT JOIN 保留缺失行', '按基数检测重复', '用对照计数验证结果'], tip: '先理解表关系，再写 JOIN。', resources: { docs: 'PostgreSQL JOIN' } },
+      'sql-l3': { title: 'GROUP BY 与聚合函数', section: '模块 3', description: '什么是聚合数据？它有什么用途？您将了解如何获得有用指标而不丢失可追溯性。', requirements: ['基础 JOIN', '筛选处理'], steps: ['按类别计算 COUNT、SUM、AVG', '区分行筛选与组筛选', '在聚合中使用 HAVING', '用 COALESCE 处理 null', '比较跨期指标'], tip: 'SELECT 中每个非聚合列必须在 GROUP BY 中。', resources: { docs: '聚合函数' } },
+      'sql-l4': { title: '子查询与 CTE', section: '模块 4', description: '什么是 CTE？它们有什么用途？您将学习把复杂查询结构化为可读、可维护的块。', requirements: ['掌握 GROUP BY', '中级查询'], steps: ['构建筛选子查询', '用 WITH 将逻辑迁移到 CTE', '链式两个 CTE 做分析流水线', '比较可读性与初始性能', '为团队审查重构查询'], tip: 'CTE 为清晰，但大体积需验证执行计划。', resources: { docs: 'WITH 查询（CTE）' } },
+      'sql-l5': { title: '优化、索引与安全', section: '模块 5', description: '什么是 SQL 优化？它有什么用途？本课涵盖性能、完整性与防 SQL 注入实践。', requirements: ['可用复杂查询', '测试环境可访问 EXPLAIN'], steps: ['用 EXPLAIN 解读计划', '在筛选列创建索引', '比较优化前后性能', '在应用中应用参数化查询', '审查最低用户权限'], tip: '用计划与计时证据优化，而非直觉。', resources: { docs: '索引与性能' } },
+    },
+    quizSections: [
+      { title: 'SELECT、筛选与排序', questions: [{ type: 'choice', text: '哪种做法改善报表查询可维护性？', options: ['所有视图 SELECT *', '显式列与清晰别名', '总是按数字位置排序', '移除 WHERE'], ans: 1, explanation: '显式意图便于演进与审计。' }, { type: 'truefalse', text: 'WHERE 在任何聚合前筛选行。', ans: true, explanation: '在早期评估阶段应用。' }, { type: 'match', text: '匹配子句与功能：', pairs: [{ left: 'SELECT', right: '定义输出列' }, { left: 'FROM', right: '指明数据源' }, { left: 'WHERE', right: '应用行筛选' }, { left: 'ORDER BY', right: '排序最终结果' }], explanation: '理解查询逻辑流至关重要。' }] },
+      { title: 'JOIN 与表关系', questions: [{ type: 'choice', text: '未分析基数就 JOIN 表会出现什么风险？', options: ['自动更好性能', '意外行重复与指标失真', '数据压缩', 'SQL 引擎锁定'], ans: 1, explanation: '误解基数会扭曲结果。' }, { type: 'truefalse', text: 'LEFT JOIN 即使无匹配也保留左表所有行。', ans: true, explanation: '右列可能为 NULL。' }, { type: 'match', text: '匹配 JOIN 类型与结果：', pairs: [{ left: 'INNER JOIN', right: '仅两表匹配行' }, { left: 'LEFT JOIN', right: '全部左行 + 右匹配' }, { left: 'RIGHT JOIN', right: '全部右行 + 左匹配' }, { left: 'CROSS JOIN', right: '行笛卡尔积' }], explanation: '选对 JOIN 避免误读。' }] },
+      { title: 'GROUP BY 与聚合函数', questions: [{ type: 'choice', text: '何时用 HAVING 而非 WHERE？', options: ['筛选索引列', '按组筛选聚合结果', '降序排序', '创建索引'], ans: 1, explanation: 'HAVING 在聚合后操作。' }, { type: 'truefalse', text: 'COUNT(DISTINCT field) 有助于在大集合中衡量唯一性。', ans: true, explanation: '减少重复导致的过度计数。' }, { type: 'match', text: '匹配函数与分析目标：', pairs: [{ left: 'COUNT', right: '记录数量' }, { left: 'SUM', right: '数值累加' }, { left: 'AVG', right: '数值平均' }, { left: 'MAX', right: '观测最大值' }], explanation: '聚合函数回答关键业务问题。' }] },
+      { title: '子查询与 CTE', questions: [{ type: 'choice', text: '冗长查询中 CTE 的主要优势？', options: ['在无限内存中执行', '将复杂逻辑分为可读块', '避免任何执行成本', '自动替代索引'], ans: 1, explanation: '可读性改善审查与维护。' }, { type: 'truefalse', text: '相关子查询若每行执行可能影响性能。', ans: true, explanation: '应评估执行计划。' }, { type: 'match', text: '匹配技术与用法：', pairs: [{ left: 'CTE', right: '分步逻辑流水线' }, { left: '标量子查询', right: '派生单一值' }, { left: 'EXISTS', right: '高效验证存在' }, { left: 'IN', right: '与值集比较' }], explanation: '选对技术影响清晰度与性能。' }] },
+      { title: '优化、索引与安全', questions: [{ type: 'choice', text: '哪种措施降低应用中的 SQL 注入风险？', options: ['在查询中拼接用户输入', '使用参数化查询', '给应用超级用户权限', '隐藏错误不记录'], ans: 1, explanation: '分离数据与指令可缓解注入。' }, { type: 'truefalse', text: '索引可加速读，但写操作也有维护成本。', ans: true, explanation: '每项优化都有权衡。' }, { type: 'match', text: '匹配实践与效果：', pairs: [{ left: 'EXPLAIN', right: '检查执行计划' }, { left: '索引', right: '加速常用筛选/连接' }, { left: '预处理语句', right: '查询安全与复用' }, { left: '最小权限', right: '缩小损害面' }], explanation: '性能与安全应共同演进。' }] },
+    ],
+    examSections: [
+      { title: '关系数据分析', questions: [{ type: 'choice', text: '您需构建多维度大容量的月度销售报告。哪种方法更稳健？', options: ['无验证的单一非结构化查询', '分阶段 CTE、验证 JOIN 与审计聚合', '全部导出 Excel 不用 SQL', '每份报告复制表'], ans: 1, explanation: '结构化 SQL 流水线提高可靠性与可维护性。' }, { type: 'truefalse', text: '不验证 JOIN 基数，聚合指标可能被放大。', ans: true, explanation: '关系完整性对分析精度至关重要。' }, { type: 'match', text: '匹配问题与技术控制：', pairs: [{ left: '高延迟', right: '计划分析与合适索引' }, { left: '计数错误', right: '审查 JOIN 与 DISTINCT' }, { left: '安全失败', right: '参数与最低权限' }, { left: '难读查询', right: '用语义 CTE 重构' }], explanation: '良好 SQL 设计平衡精度、性能与安全。' }] },
+      { title: '查询运营质量', questions: [{ type: 'choice', text: '哪种做法便于多分析师维护关键查询？', options: ['无别名无注释的查询', '风格标准、命名与同行评审', '每份报告改字段名', '排除验证测试'], ans: 1, explanation: '标准化减少对单人的依赖。' }, { type: 'truefalse', text: '在仓库中版本化 SQL 脚本可改善业务变更可追溯性。', ans: true, explanation: '便于审计与可靠回滚。' }, { type: 'match', text: '匹配产物与益处：', pairs: [{ left: '版本化脚本', right: '技术决策历史' }, { left: '测试数据集', right: '可复现验证' }, { left: 'QA 清单', right: '早期发现不一致' }, { left: '假设文档', right: '正确解读指标' }], explanation: '成熟分析运营需要工程纪律。' }] },
+    ],
+  },
+  cybersecurity: {
+    title: '网络安全',
+    requirements: ['已更新浏览器', '测试邮箱账户', '基础网络与账户知识'],
+    certModules: ['CIA 基础', '常见威胁', '预防控制', '事件响应'],
+    docs: { label: 'OWASP Top 10' },
+    lessons: {
+      'cybersecurity-l1': { title: '数字安全基础', section: '模块 1', description: '什么是网络安全？它有什么用途？您将理解如何在数字环境中保护信息、系统与人员。', requirements: ['已更新浏览器', '基础网络与账户知识'], steps: ['定义机密性、完整性与可用性', '识别关键信息资产', '认识基本攻击面', '将风险与业务影响关联', '创建优先控制初始清单'], tip: '安全不是产品，而是持续实践。', resources: { docs: 'OWASP 简介' } },
+      'cybersecurity-l2': { title: '钓鱼与社会工程', section: '模块 2', description: '社会工程在攻击中有什么用途？您将学习识别数字操纵的早期迹象。', requirements: ['测试邮箱账户', '关注欺诈模式'], steps: ['分析发件人与真实域名', '检测紧迫与操纵性语言', '打开前验证链接', '向官方渠道举报可疑消息', '模拟对欺诈尝试的安全响应'], tip: '若某事听起来紧迫又反常，请通过另一渠道核实。', resources: { docs: '反钓鱼指南' } },
+      'cybersecurity-l3': { title: '密码、MFA 与访问控制', section: '模块 3', description: '什么是保护凭据？它有什么用途？本课降低个人与企业账户未授权访问风险。', requirements: ['基础数字账户知识', '可访问安全设置'], steps: ['创建唯一且足够长的密码', '配置密码管理器', '在关键服务启用 MFA', '审查活动会话与设备', '移除过时或不安全访问'], tip: '重复使用密码会放大单次泄露的影响。', resources: { docs: 'NIST 多因素认证' } },
+      'cybersecurity-l4': { title: '恶意软件、勒索软件与终端防护', section: '模块 4', description: '恶意软件在攻击中有什么用途？您将了解如何预防感染并限制运营损害。', requirements: ['已更新设备', '可访问基础杀毒或 EDR'], steps: ['区分常见恶意软件类型', '配置自动更新', '审查安全下载策略', '定义已验证的备份策略', '练习感染初期响应'], tip: '未测试的备份只是恢复假设。', resources: { docs: 'CISA 最佳实践' } },
+      'cybersecurity-l5': { title: '事件响应与安全文化', section: '模块 5', description: '什么是事件响应？它有什么用途？您将学习快速行动、控制影响并改进事后流程。', requirements: ['威胁与控制概念', '明确的内部沟通渠道'], steps: ['检测并分类报告的事件', '用即时行动控制范围', '按严重程度升级至合适团队', '记录证据与时间线', '进行回顾并制定预防改进'], tip: '速度重要，但文档也为未来运营节省时间。', resources: { docs: 'NIST 事件响应' } },
+    },
+    quizSections: [
+      { title: '数字安全基础', questions: [{ type: 'choice', text: '哪种情况直接损害数据机密性？', options: ['加密备份副本', '未授权访问敏感信息', '操作系统更新', '可用性监控'], ans: 1, explanation: '不应看到数据者看到即违反机密性。' }, { type: 'truefalse', text: 'CIA 三元组是评估安全风险的基础。', ans: true, explanation: '可分类影响并优先控制。' }, { type: 'match', text: '匹配支柱与重点：', pairs: [{ left: '机密性', right: '限制不当访问' }, { left: '完整性', right: '防止未授权篡改' }, { left: '可用性', right: '及时服务访问' }, { left: '风险', right: '概率乘以影响' }], explanation: '每个安全计划都从这些概念开始。' }] },
+      { title: '钓鱼与社会工程', questions: [{ type: 'choice', text: '对索要凭据的紧急邮件，最佳首要响应？', options: ['立即回复以免锁定', '通过备用渠道验证真实性并举报', '在隐身模式打开链接', '转发给所有人确认'], ans: 1, explanation: '外部验证避免落入操纵。' }, { type: 'truefalse', text: '人为紧迫感是常见社会工程手段。', ans: true, explanation: '旨在降低受害者批判思考。' }, { type: 'match', text: '匹配信号与相关风险：', pairs: [{ left: '可疑域名', right: '身份冒充' }, { left: '意外附件', right: '可能恶意软件' }, { left: '保密请求', right: '凭据窃取' }, { left: '书写错误', right: '可能欺诈活动' }], explanation: '识别早期信号可打断攻击链。' }] },
+      { title: '密码、MFA 与访问控制', questions: [{ type: 'choice', text: '哪种做法最能降低撞库风险？', options: ['重复密码仅做小改', '唯一密码 + 管理器 + MFA', '一年只改一次密码', '通过内部聊天共享密码'], ans: 1, explanation: '组合控制降低自动化攻击成功率。' }, { type: 'truefalse', text: '即使密码泄露，MFA 仍有价值。', ans: true, explanation: '为未授权访问增加额外屏障。' }, { type: 'match', text: '匹配控制与益处：', pairs: [{ left: '密码管理器', right: '长唯一密钥无需全记' }, { left: 'MFA', right: '第二认证因素' }, { left: '会话审查', right: '发现异常访问' }, { left: '最小权限原则', right: '降低被攻破账户影响' }], explanation: '身份保护需要互补层次。' }] },
+      { title: '恶意软件、勒索软件与终端防护', questions: [{ type: 'choice', text: '哪种措施降低勒索软件的运营影响？', options: ['为速度关闭杀毒', '离线且定期测试的备份', '允许未知宏', '使用未打补丁软件'], ans: 1, explanation: '恢复依赖经验证完好的副本。' }, { type: 'truefalse', text: '给系统打补丁可降低已知漏洞暴露。', ans: true, explanation: '投机性攻击利用过时软件。' }, { type: 'match', text: '匹配威胁与推荐控制：', pairs: [{ left: '勒索软件', right: '备份 + 分段 + 快速响应' }, { left: '木马', right: '仅可信来源下载' }, { left: '间谍软件', right: '终端检测与监控' }, { left: '恶意 U 盘', right: '设备策略与自动阻断' }], explanation: '预防与响应控制应并存。' }] },
+      { title: '事件响应与安全文化', questions: [{ type: 'choice', text: '发现活跃事件时，哪项初始步骤关键？', options: ['不行动等待最终确认', '按定义严重程度控制并升级', '在社交媒体发布细节', '不保留证据重启一切'], ans: 1, explanation: '早期控制减少损害并便于调查。' }, { type: 'truefalse', text: '记录事件时间线有助于改进未来控制。', ans: true, explanation: '支持组织学习与审计。' }, { type: 'match', text: '匹配响应阶段与目的：', pairs: [{ left: '检测', right: '识别可疑事件' }, { left: '控制', right: '限制影响扩散' }, { left: '根除', right: '消除根本原因' }, { left: '经验教训', right: '加强未来预防' }], explanation: '有效响应是循环的，每次事件都会改进。' }] },
+    ],
+    examSections: [
+      { title: '真实事件场景', questions: [{ type: 'choice', text: '同事运行了可疑附件并报告异常行为。哪种顺序最正确？', options: ['忽略直到更多报告', '隔离设备、通知 SOC/IT、保留证据并评估范围', '无记录立即格式化', '分享给更多用户对比'], ans: 1, explanation: '早期控制与证据至关重要。' }, { type: 'truefalse', text: '无正式举报渠道会明显恶化事件响应时间。', ans: true, explanation: '沟通治理影响韧性。' }, { type: 'match', text: '匹配症状与初始行动：', pairs: [{ left: '异常网络活动', right: '隔离终端并监控流量' }, { left: '账户被攻破', right: '强制重置并撤销会话' }, { left: '大量文件被加密', right: '启动反勒索计划' }, { left: '内部欺诈邮件', right: '阻断活动并告警用户' }], explanation: '首次响应速度决定最终损害。' }] },
+      { title: '组织网络安全成熟度', questions: [{ type: 'choice', text: '哪种做法反映组织更高安全成熟度？', options: ['可选年度培训无跟进', '持续培训、演练与基于事件的改进', '只买工具无流程', '有政策无明确负责人'], ans: 1, explanation: '文化与流程支撑技术控制。' }, { type: 'truefalse', text: '有效安全需要业务、IT 与用户共同负责。', ans: true, explanation: '不依赖单一孤立团队。' }, { type: 'match', text: '匹配能力与结果：', pairs: [{ left: '持续意识', right: '降低钓鱼成功率' }, { left: '已测试响应计划', right: '更快恢复' }, { left: '补丁管理', right: '降低已知 CVE 暴露' }, { left: '定期审计', right: '可见差距与合规' }], explanation: '成熟度靠持续运营纪律构建。' }] },
+    ],
+  },
+};
+
+if (typeof module !== 'undefined') module.exports = { LEVELS_ZH, CURRICULUM_ZH };

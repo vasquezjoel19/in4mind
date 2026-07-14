@@ -1,0 +1,452 @@
+/**
+ * IN4MIND — Ambient backgrounds
+ * Cinematic depth inspired by Lusion-like motion, kept in brand (navy / blue / teal).
+ * Layers stay soft so hero waves, cards and content remain primary.
+ */
+
+/* ══════════════════════════════════════
+   SHARED AMBIENT LAYER
+══════════════════════════════════════ */
+.lp-ambient {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.lp-ambient--soft {
+  opacity: 0.85;
+}
+
+.lp-ambient__mesh,
+.lp-ambient__orbs,
+.lp-ambient__aurora,
+.lp-ambient__beams,
+.lp-ambient__grid {
+  position: absolute;
+  inset: 0;
+}
+
+/* ── Mesh blobs (slow) ── */
+.lp-ambient__blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(48px);
+  will-change: transform;
+  opacity: 0.55;
+}
+
+.lp-ambient__blob--1 {
+  width: min(52vw, 520px);
+  height: min(52vw, 520px);
+  left: -8%;
+  top: -12%;
+  background: radial-gradient(circle, rgba(74, 118, 178, 0.45) 0%, transparent 68%);
+  animation: lpMeshDriftA 28s ease-in-out infinite alternate;
+}
+
+.lp-ambient__blob--2 {
+  width: min(44vw, 440px);
+  height: min(44vw, 440px);
+  right: -6%;
+  top: 18%;
+  background: radial-gradient(circle, rgba(13, 148, 136, 0.32) 0%, transparent 70%);
+  animation: lpMeshDriftB 34s ease-in-out infinite alternate;
+}
+
+.lp-ambient__blob--3 {
+  width: min(38vw, 380px);
+  height: min(38vw, 380px);
+  left: 38%;
+  bottom: -18%;
+  background: radial-gradient(circle, rgba(107, 147, 201, 0.36) 0%, transparent 70%);
+  animation: lpMeshDriftC 40s ease-in-out infinite alternate;
+}
+
+@keyframes lpMeshDriftA {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(8%, 10%, 0) scale(1.08); }
+}
+
+@keyframes lpMeshDriftB {
+  from { transform: translate3d(0, 0, 0) scale(1.04); }
+  to   { transform: translate3d(-10%, 6%, 0) scale(0.96); }
+}
+
+@keyframes lpMeshDriftC {
+  from { transform: translate3d(0, 0, 0) scale(0.98); }
+  to   { transform: translate3d(-6%, -12%, 0) scale(1.1); }
+}
+
+/* ── Floating orbs (NotebookLM / Lusion soft depth) ── */
+.lp-ambient__orb {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.35), rgba(74, 118, 178, 0.1) 45%, transparent 70%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(2px);
+  animation: lpOrbFloat 12s ease-in-out infinite;
+}
+
+.lp-ambient__orb--a {
+  width: 120px;
+  height: 120px;
+  left: 12%;
+  top: 22%;
+  opacity: 0.35;
+  animation-duration: 14s;
+}
+
+.lp-ambient__orb--b {
+  width: 72px;
+  height: 72px;
+  right: 16%;
+  top: 38%;
+  opacity: 0.28;
+  animation-duration: 11s;
+  animation-delay: -3s;
+}
+
+.lp-ambient__orb--c {
+  width: 96px;
+  height: 96px;
+  left: 48%;
+  bottom: 18%;
+  opacity: 0.22;
+  animation-duration: 16s;
+  animation-delay: -6s;
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.28), rgba(13, 148, 136, 0.14) 48%, transparent 72%);
+}
+
+@keyframes lpOrbFloat {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -18px, 0); }
+}
+
+/* ── Aurora soft band ── */
+.lp-ambient__aurora {
+  background: linear-gradient(
+    115deg,
+    transparent 0%,
+    rgba(107, 147, 201, 0.1) 38%,
+    rgba(13, 148, 136, 0.12) 52%,
+    rgba(74, 118, 178, 0.08) 66%,
+    transparent 100%
+  );
+  mix-blend-mode: soft-light;
+  transform: translateX(-30%) rotate(-8deg) scale(1.3);
+  animation: lpAuroraSweep 26s ease-in-out infinite;
+  opacity: 0.65;
+}
+
+@keyframes lpAuroraSweep {
+  0%, 100% {
+    transform: translateX(-35%) rotate(-8deg) scale(1.25);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translateX(20%) rotate(-6deg) scale(1.35);
+    opacity: 0.75;
+  }
+}
+
+/* ── Beams / rays ── */
+.lp-ambient__beam {
+  position: absolute;
+  width: 1px;
+  height: 140%;
+  top: -20%;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(74, 118, 178, 0.2) 30%,
+    rgba(13, 148, 136, 0.18) 55%,
+    transparent 100%
+  );
+  transform-origin: center top;
+  opacity: 0.35;
+  animation: lpBeamDrift 22s linear infinite;
+}
+
+.lp-ambient__beam:nth-child(1) {
+  left: 18%;
+  transform: rotate(18deg);
+  animation-duration: 26s;
+}
+
+.lp-ambient__beam:nth-child(2) {
+  left: 46%;
+  transform: rotate(14deg);
+  animation-duration: 32s;
+  animation-delay: -8s;
+  opacity: 0.22;
+}
+
+.lp-ambient__beam:nth-child(3) {
+  left: 72%;
+  transform: rotate(20deg);
+  animation-duration: 28s;
+  animation-delay: -14s;
+  opacity: 0.28;
+}
+
+@keyframes lpBeamDrift {
+  0% { transform: translateY(0) rotate(16deg); opacity: 0.15; }
+  40% { opacity: 0.4; }
+  100% { transform: translateY(8%) rotate(16deg); opacity: 0.12; }
+}
+
+/* ── Dot grid (features / blue zone) ── */
+.lp-ambient__grid {
+  background-image: radial-gradient(rgba(27, 39, 60, 0.14) 1px, transparent 1px);
+  background-size: 22px 22px;
+  opacity: 0.35;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 20%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 20%, transparent 75%);
+  transform: translate3d(0, 0, 0);
+  will-change: transform, opacity;
+  transition: opacity 0.4s ease;
+}
+
+.lp-ambient--dark .lp-ambient__grid {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.18) 1px, transparent 1px);
+  opacity: 0.28;
+}
+
+/* ── Global cursor: fluid WebGL glass (Lusion-style) + CSS fallback ── */
+.in4-cursor-spotlight {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.in4-cursor-spotlight.is-active {
+  opacity: 1;
+}
+
+.in4-cursor-spotlight--fluid {
+  mix-blend-mode: soft-light;
+  opacity: 0.9;
+}
+
+.in4-cursor-spotlight--fluid canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.in4-cursor-spotlight--css {
+  background: radial-gradient(
+    700px circle at var(--spot-x, 50%) var(--spot-y, 40%),
+    rgba(255, 255, 255, 0.55) 0%,
+    rgba(180, 210, 240, 0.32) 16%,
+    rgba(107, 147, 201, 0.24) 32%,
+    rgba(13, 148, 136, 0.1) 48%,
+    transparent 68%
+  );
+  mix-blend-mode: screen;
+}
+
+.in4-cursor-spotlight--css.in4-cursor-spotlight--soft {
+  background: radial-gradient(
+    580px circle at var(--spot-x, 50%) var(--spot-y, 40%),
+    rgba(255, 255, 255, 0.35) 0%,
+    rgba(150, 190, 230, 0.22) 18%,
+    rgba(74, 118, 178, 0.16) 36%,
+    transparent 66%
+  );
+}
+
+html[data-theme="dark"] .in4-cursor-spotlight--fluid {
+  mix-blend-mode: screen;
+  opacity: 0.75;
+}
+
+html[data-theme="dark"] .in4-cursor-spotlight--css {
+  background: radial-gradient(
+    720px circle at var(--spot-x, 50%) var(--spot-y, 40%),
+    rgba(255, 255, 255, 0.45) 0%,
+    rgba(160, 200, 240, 0.32) 18%,
+    rgba(107, 147, 201, 0.28) 34%,
+    rgba(20, 184, 166, 0.14) 50%,
+    transparent 70%
+  );
+}
+
+/* ── Grain boost (landing body already has light noise; amplify locally) ── */
+.lp-ambient__grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+
+html[data-theme="dark"] .lp-ambient__grain {
+  mix-blend-mode: overlay;
+  opacity: 0.07;
+}
+
+/* ══════════════════════════════════════
+   NAVY BAND — shimmer + particles
+══════════════════════════════════════ */
+.lp-navy-band {
+  isolation: isolate;
+}
+
+.lp-navy-band::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    transparent 40%,
+    rgba(255, 255, 255, 0.07) 50%,
+    transparent 60%,
+    transparent 100%
+  );
+  background-size: 220% 100%;
+  animation: lpNavyShimmer 8.5s ease-in-out infinite;
+}
+
+.lp-navy-band > .lp-container {
+  position: relative;
+  z-index: 3;
+}
+
+@keyframes lpNavyShimmer {
+  0%, 100% { background-position: 120% 0; opacity: 0.35; }
+  45%, 55% { background-position: -20% 0; opacity: 0.9; }
+}
+
+.lp-navy-band__particles {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.lp-navy-band__particles span {
+  position: absolute;
+  bottom: -8px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(148, 210, 230, 0.55);
+  box-shadow: 0 0 8px rgba(20, 184, 166, 0.35);
+  animation: lpParticleRise linear infinite;
+  opacity: 0;
+}
+
+.lp-navy-band__particles span:nth-child(1) { left: 8%;  animation-duration: 11s; animation-delay: 0s; }
+.lp-navy-band__particles span:nth-child(2) { left: 18%; animation-duration: 14s; animation-delay: -2s; width: 2px; height: 2px; }
+.lp-navy-band__particles span:nth-child(3) { left: 28%; animation-duration: 12s; animation-delay: -4s; }
+.lp-navy-band__particles span:nth-child(4) { left: 40%; animation-duration: 15s; animation-delay: -1s; width: 2px; height: 2px; }
+.lp-navy-band__particles span:nth-child(5) { left: 52%; animation-duration: 13s; animation-delay: -6s; }
+.lp-navy-band__particles span:nth-child(6) { left: 61%; animation-duration: 16s; animation-delay: -3s; width: 2px; height: 2px; }
+.lp-navy-band__particles span:nth-child(7) { left: 72%; animation-duration: 12.5s; animation-delay: -5s; }
+.lp-navy-band__particles span:nth-child(8) { left: 81%; animation-duration: 14.5s; animation-delay: -7s; }
+.lp-navy-band__particles span:nth-child(9) { left: 90%; animation-duration: 13.5s; animation-delay: -2.5s; width: 2px; height: 2px; }
+.lp-navy-band__particles span:nth-child(10){ left: 35%; animation-duration: 17s; animation-delay: -8s; }
+.lp-navy-band__particles span:nth-child(11){ left: 66%; animation-duration: 11.5s; animation-delay: -9s; width: 2px; height: 2px; }
+.lp-navy-band__particles span:nth-child(12){ left: 5%;  animation-duration: 15.5s; animation-delay: -4.5s; }
+
+@keyframes lpParticleRise {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  12% { opacity: 0.7; }
+  80% { opacity: 0.35; }
+  100% {
+    transform: translate3d(12px, -180px, 0);
+    opacity: 0;
+  }
+}
+
+/* ══════════════════════════════════════
+   APP notes — gradient drift lives in base.css;
+   sidebar active glow lives in dashboard.css.
+══════════════════════════════════════ */
+
+/* Landing section stacking */
+.lp-hero,
+.lp-features,
+.lp-blue-zone {
+  position: relative;
+  isolation: isolate;
+}
+
+.lp-hero > *:not(.lp-ambient),
+.lp-features > *:not(.lp-ambient),
+.lp-blue-zone > *:not(.lp-ambient) {
+  position: relative;
+  z-index: 1;
+}
+
+.lp-hero .lp-hero__wave {
+  z-index: 2;
+}
+
+/* Soft sections get lighter blobs */
+.lp-ambient--soft .lp-ambient__blob {
+  opacity: 0.32;
+  filter: blur(56px);
+}
+
+.lp-ambient--soft .lp-ambient__orb {
+  opacity: 0.18;
+}
+
+/* ══════════════════════════════════════
+   REDUCED MOTION + MOBILE
+══════════════════════════════════════ */
+@media (max-width: 768px) {
+  .lp-ambient__orb,
+  .lp-ambient__beam,
+  .in4-cursor-spotlight {
+    display: none !important;
+  }
+
+  .lp-ambient__blob {
+    filter: blur(40px);
+    opacity: 0.35;
+    animation-duration: 40s;
+  }
+
+  .lp-ambient__aurora {
+    opacity: 0.4;
+    animation-duration: 40s;
+  }
+
+  .lp-navy-band__particles span:nth-child(n+7) {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-ambient__blob,
+  .lp-ambient__orb,
+  .lp-ambient__aurora,
+  .lp-ambient__beam,
+  .lp-navy-band::before,
+  .lp-navy-band__particles span {
+    animation: none !important;
+  }
+
+  .in4-cursor-spotlight {
+    display: none !important;
+  }
+
+  .lp-ambient__grid {
+    transform: none !important;
+  }
+}

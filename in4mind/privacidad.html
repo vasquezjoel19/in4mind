@@ -1,20 +1,30 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-i18n-title="legal.privacyTitle">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Política de privacidad de IN4MIND — Cómo tratamos tus datos personales.">
-  <title>IN4MIND — Política de privacidad</title>
+  <meta name="description" content="Pol?tica de privacidad de IN4MIND ? C?mo tratamos tus datos personales.">
+  <title>IN4MIND ? Pol?tica de privacidad</title>
 
   <script src="src/js/controllers/ThemeController.js?v=20260617"></script>
-  <script>ThemeController.initEarly();</script>
+  <script src="src/js/a11y-boot.js?v=20260707"></script>
+  <script src="src/js/locales/es.js?v=20260722"></script>
+  <script src="src/js/locales/en.js?v=20260722"></script>
+  <script src="src/js/locales/zh.js?v=20260801"></script>
+  <script src="src/js/locales/legal-bodies-en.js?v=20260722"></script>
+  <script src="src/js/locales/legal-bodies-zh.js?v=20260801"></script>
+  <script src="src/js/services/I18n.js?v=20260801"></script>
+  <script>ThemeController.initEarly(); I18n.initEarly();</script>
 
-  <link rel="stylesheet" href="src/css/tokens.css?v=20260706">
-  <link rel="stylesheet" href="src/css/base.css?v=20260617">
-  <link rel="stylesheet" href="src/css/theme.css?v=20260706">
-  <link rel="stylesheet" href="src/css/legal.css?v=20260617">
+  <link rel="stylesheet" href="src/css/tokens.css?v=20260702">
+  <link rel="stylesheet" href="src/css/base.css?v=20260714fluid3">
+  <link rel="stylesheet" href="src/css/theme.css?v=20260714bulb2">
+  <link rel="stylesheet" href="src/css/accessibility.css?v=20260707">
+  <link rel="stylesheet" href="src/css/legal.css?v=20260714bulb2">
+  <link rel="stylesheet" href="src/css/settings-modal.css?v=20260714theme">
+  <link rel="stylesheet" href="src/css/i18n.css?v=20260722">
 
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='20' font-size='20'>💡</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='20' font-size='20'>??</text></svg>">
 </head>
 <body>
 
@@ -28,41 +38,44 @@
       IN4MIND
     </a>
     <div class="legal-header__actions">
+      <button type="button" class="in4-other-trigger" data-open-other-menu data-i18n-aria="nav.other">
+        <span data-i18n="nav.other">Otros</span>
+      </button>
       <a class="legal-btn-back" href="index.html">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
-        <span>Volver al inicio</span>
+        <span data-i18n="legal.back">Volver al inicio</span>
       </a>
     </div>
   </header>
 
-  <main class="legal-main">
-    <p class="legal-main__meta">Última actualización: 29 de mayo de 2026</p>
-    <h1>Política de privacidad</h1>
+  <main class="legal-main" id="legal-body" data-legal-page="privacy">
+    <p class="legal-main__meta">?ltima actualizaci?n: 29 de mayo de 2026</p>
+    <h1>Pol?tica de privacidad</h1>
     <p class="legal-main__intro">
-      En IN4MIND respetamos tu privacidad. Esta política explica qué datos recopilamos,
-      para qué los usamos y qué derechos tienes sobre tu información personal.
+      En IN4MIND respetamos tu privacidad. Esta pol?tica explica qu? datos recopilamos,
+      para qu? los usamos y qu? derechos tienes sobre tu informaci?n personal.
     </p>
 
     <h2>1. Responsable del tratamiento</h2>
     <p>
-      El responsable del tratamiento de los datos personales recogidos a través de IN4MIND es
+      El responsable del tratamiento de los datos personales recogidos a trav?s de IN4MIND es
       el titular de la plataforma. Contacto: <a href="mailto:privacidad@in4mind.app">privacidad@in4mind.app</a>.
     </p>
 
     <h2>2. Datos que recopilamos</h2>
-    <p>Podemos tratar las siguientes categorías de datos:</p>
+    <p>Podemos tratar las siguientes categor?as de datos:</p>
     <ul>
-      <li><strong>Datos de cuenta:</strong> nombre, correo electrónico y contraseña (almacenada de forma segura).</li>
-      <li><strong>Datos de uso:</strong> progreso en tutoriales, resultados de quizzes, preferencias de navegación y tema visual.</li>
-      <li><strong>Datos técnicos:</strong> dirección IP, tipo de navegador, dispositivo y registros de actividad para seguridad.</li>
+      <li><strong>Datos de cuenta:</strong> nombre, correo electr?nico y contrase?a (almacenada de forma segura).</li>
+      <li><strong>Datos de uso:</strong> progreso en cursos, resultados de quizzes, preferencias de navegaci?n y tema visual.</li>
+      <li><strong>Datos t?cnicos:</strong> direcci?n IP, tipo de navegador, dispositivo y registros de actividad para seguridad.</li>
       <li><strong>Conversaciones con IA:</strong> mensajes enviados al asistente para generar respuestas educativas.</li>
-      <li><strong>Comunicaciones:</strong> mensajes que nos envíes por formularios de contacto o soporte.</li>
+      <li><strong>Comunicaciones:</strong> mensajes que nos env?es por formularios de contacto o soporte.</li>
     </ul>
 
     <h2>3. Finalidades del tratamiento</h2>
     <p>Utilizamos tus datos para:</p>
     <ul>
-      <li>Gestionar tu registro y autenticación en la plataforma.</li>
+      <li>Gestionar tu registro y autenticaci?n en la plataforma.</li>
       <li>Personalizar tu experiencia de aprendizaje y recordar tu progreso.</li>
       <li>Prestar el servicio de asistente IA y mejorar la calidad educativa de las respuestas.</li>
       <li>Garantizar la seguridad, prevenir fraudes y cumplir obligaciones legales.</li>
@@ -71,24 +84,24 @@
 
     <h2>4. Base legal</h2>
     <p>
-      El tratamiento se basa en la ejecución del contrato de servicios (cuenta de usuario),
-      tu consentimiento (newsletter, cookies no esenciales), el interés legítimo (seguridad y mejora del servicio)
+      El tratamiento se basa en la ejecuci?n del contrato de servicios (cuenta de usuario),
+      tu consentimiento (newsletter, cookies no esenciales), el inter?s leg?timo (seguridad y mejora del servicio)
       y el cumplimiento de obligaciones legales cuando corresponda.
     </p>
 
-    <h2>5. Conservación de datos</h2>
+    <h2>5. Conservaci?n de datos</h2>
     <p>
       Conservamos los datos mientras mantengas tu cuenta activa y durante el plazo necesario
       para cumplir obligaciones legales o resolver reclamaciones. Los datos de uso anonimizados
-      pueden conservarse con fines estadísticos.
+      pueden conservarse con fines estad?sticos.
     </p>
 
     <h2>6. Destinatarios y transferencias</h2>
     <p>
-      No vendemos tus datos personales. Podemos compartirlos con proveedores tecnológicos
-      (alojamiento, analítica, APIs de IA) que actúan como encargados del tratamiento y
-      están sujetos a acuerdos de confidencialidad. Si algún proveedor está fuera del Espacio Económico Europeo,
-      aplicamos garantías adecuadas conforme a la normativa vigente.
+      No vendemos tus datos personales. Podemos compartirlos con proveedores tecnol?gicos
+      (alojamiento, anal?tica, APIs de IA) que act?an como encargados del tratamiento y
+      est?n sujetos a acuerdos de confidencialidad. Si alg?n proveedor est? fuera del Espacio Econ?mico Europeo,
+      aplicamos garant?as adecuadas conforme a la normativa vigente.
     </p>
 
     <h2>7. Tus derechos</h2>
@@ -98,38 +111,45 @@
       <li>Limitar u oponerte a determinados tratamientos.</li>
       <li>Solicitar la portabilidad de tus datos cuando sea aplicable.</li>
       <li>Retirar el consentimiento en cualquier momento, sin afectar a tratamientos previos.</li>
-      <li>Presentar una reclamación ante la autoridad de protección de datos de tu país.</li>
+      <li>Presentar una reclamaci?n ante la autoridad de protecci?n de datos de tu pa?s.</li>
     </ul>
     <p>Para ejercer tus derechos escribe a <a href="mailto:privacidad@in4mind.app">privacidad@in4mind.app</a>.</p>
 
     <h2>8. Seguridad</h2>
     <p>
-      Aplicamos medidas técnicas y organizativas razonables para proteger tus datos frente a
-      accesos no autorizados, pérdida o alteración. Ningún sistema es 100 % infalible;
-      te recomendamos usar contraseñas robustas y no compartirlas.
+      Aplicamos medidas t?cnicas y organizativas razonables para proteger tus datos frente a
+      accesos no autorizados, p?rdida o alteraci?n. Ning?n sistema es 100 % infalible;
+      te recomendamos usar contrase?as robustas y no compartirlas.
     </p>
 
     <h2>9. Menores de edad</h2>
     <p>
-      IN4MIND está dirigida principalmente a usuarios mayores de 16 años. Si eres menor,
-      necesitas autorización de tu tutor legal para registrarte.
+      IN4MIND est? dirigida principalmente a usuarios mayores de 16 a?os. Si eres menor,
+      necesitas autorizaci?n de tu tutor legal para registrarte.
     </p>
 
-    <h2>10. Cambios en esta política</h2>
+    <h2>10. Cambios en esta pol?tica</h2>
     <p>
-      Podemos actualizar esta política para reflejar cambios legales o en nuestros servicios.
-      Publicaremos la versión revisada en esta página con la fecha de actualización.
+      Podemos actualizar esta pol?tica para reflejar cambios legales o en nuestros servicios.
+      Publicaremos la versi?n revisada en esta p?gina con la fecha de actualizaci?n.
     </p>
 
     <nav class="legal-nav" aria-label="Documentos legales">
-      <a href="terminos.html">Términos de uso</a>
+      <a href="terminos.html">T?rminos de uso</a>
       <a href="privacidad.html" class="is-active">Privacidad</a>
       <a href="cookies.html">Cookies</a>
     </nav>
   </main>
 
-  <footer class="legal-footer">&copy; 2026 IN4MIND. Todos los derechos reservados.</footer>
+  <footer class="legal-footer" data-i18n="legal.footerCopy">&copy; 2026 IN4MIND. Todos los derechos reservados.</footer>
 </div>
 
+<script src="src/js/legal-page.js?v=20260723"></script>
+<script src="src/js/controllers/OtherMenuController.js?v=20260714theme"></script>
+<script src="src/js/other-menu-boot.js?v=20260707"></script>
+
+<script src="src/js/components/In4mindBulb.js?v=20260714bulb2"></script>
+<script src="src/js/services/CursorSpotlight.js?v=20260714fluid4"></script>
+<script>document.addEventListener('DOMContentLoaded',()=>{ if(typeof CursorSpotlight!=='undefined') CursorSpotlight.init({ intensity:'app' }); });</script>
 </body>
 </html>

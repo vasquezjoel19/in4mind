@@ -1,30 +1,57 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-i18n-title="meta.landingTitle">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="IN4MIND — Mantente al día con las últimas tendencias tecnológicas. Tutoriales expertos en programación, ciberseguridad y más.">
-  <title>IN4MIND — Plataforma educativa de tecnología</title>
+  <meta name="description" content="IN4MIND � Mantente al d�a con las �ltimas tendencias tecnol�gicas. Cursos expertos en programaci�n, ciberseguridad y m�s.">
+  <title>IN4MIND � Plataforma educativa de tecnolog�a</title>
+  <meta property="og:title" content="IN4MIND � Plataforma educativa">
+  <meta property="og:description" content="Cursos, quizzes, certificaciones y asistente IA.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <script src="src/js/controllers/ThemeController.js?v=20260617"></script>
-  <script>ThemeController.initEarly();</script>
+  <script src="src/js/a11y-boot.js?v=20260707"></script>
+  <script src="src/js/locales/es.js?v=20260714theme"></script>
+  <script src="src/js/locales/en.js?v=20260714theme"></script>
+  <script src="src/js/locales/zh.js?v=20260714theme"></script>
+  <script src="src/js/locales/curriculum-en.js?v=20260722"></script>
+  <script src="src/js/locales/curriculum-zh.js?v=20260801"></script>
+  <script src="src/js/services/I18n.js?v=20260801"></script>
+  <script>ThemeController.initEarly(); I18n.initEarly();</script>
 
-  <link rel="stylesheet" href="src/css/tokens.css?v=20260706">
-  <link rel="stylesheet" href="src/css/landing.css?v=20260706">
-  <link rel="stylesheet" href="src/css/theme.css?v=20260706">
+  <link rel="stylesheet" href="src/css/tokens.css?v=20260702">
+  <link rel="stylesheet" href="src/css/landing.css?v=20260714bulb2">
+  <link rel="stylesheet" href="src/css/ambient.css?v=20260714fluid3">
+  <link rel="stylesheet" href="src/css/theme.css?v=20260714bulb2">
+  <link rel="stylesheet" href="src/css/i18n.css?v=20260722">
+  <link rel="stylesheet" href="src/css/accessibility.css?v=20260707">
+  <link rel="stylesheet" href="src/css/cookie-consent.css?v=20260713m3">
+  <link rel="stylesheet" href="src/css/settings-modal.css?v=20260714theme">
+  <link rel="manifest" href="manifest.json">
 
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='20' font-size='20'>💡</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='20' font-size='20'>??</text></svg>">
 </head>
 <body class="landing-body">
 
-<!-- ══════════════════════════════════════
+<div class="lp-loader" id="lp-loader" aria-hidden="true">
+  <div class="lp-loader__mark">
+    <svg class="lp-loader__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/>
+      <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0018 8 6 6 0 006 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 018.91 14"/>
+    </svg>
+    <span class="lp-loader__text">IN4MIND</span>
+  </div>
+</div>
+
+<!-- --------------------------------------
      HEADER
-══════════════════════════════════════ -->
-<header class="lp-header">
+-------------------------------------- -->
+<header class="lp-header" id="lp-header">
   <div class="lp-container lp-header__inner">
     <a class="lp-logo" href="index.html" aria-label="IN4MIND inicio">
       <svg class="lp-logo__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -35,124 +62,85 @@
       IN4MIND
     </a>
 
-    <nav class="lp-nav" id="lp-nav" aria-label="Navegación principal">
-      <a href="#home" class="is-active">Inicio</a>
-      <a href="#topics">Temas</a>
-      <a href="#guides">Guías</a>
-      <a href="#testimonials">Testimonios</a>
-      <a href="#contact">Contacto</a>
+    <nav class="lp-nav" id="lp-nav" aria-label="Navegaci?n principal" data-i18n-aria="shell.mainNav">
+      <a href="#home" class="is-active" data-i18n="landing.navHome">Inicio</a>
+      <a href="#catalog" data-i18n="landing.navCatalog">Cat?logo</a>
+      <a href="#topics" data-i18n="landing.navTopics">Temas</a>
+      <a href="#testimonials" data-i18n="landing.navTestimonials">Testimonios</a>
+      <a href="#about" data-i18n="landing.navAbout">Nosotros</a>
+      <a href="#popular" data-i18n="landing.navCommunity">Comunidad</a>
+      <a href="#guides" data-i18n="landing.navGuides">Gu?as</a>
+      <a href="#contact" data-i18n="landing.navContact">Contacto</a>
     </nav>
 
     <div class="lp-header__actions">
-      <button type="button" class="lp-menu-toggle" id="lp-menu-toggle" aria-label="Abrir menú" aria-expanded="false">
+      <button type="button" class="lp-menu-toggle" id="lp-menu-toggle" aria-label="Abrir men?" data-i18n-aria="shell.openMenu" aria-expanded="false">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
         </svg>
       </button>
-      <button type="button" class="lp-icon-btn" aria-label="Buscar">
+      <button type="button" class="lp-icon-btn" aria-label="Buscar" data-i18n-aria="landing.search">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
       </button>
-      <button type="button" class="lp-icon-btn" aria-label="Notificaciones">
-        <span class="lp-icon-btn__badge" aria-hidden="true"></span>
+      <button type="button" class="lp-icon-btn" aria-label="Notificaciones" data-i18n-aria="shell.notifications">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
         </svg>
       </button>
-      <a class="lp-btn lp-btn--primary" href="login.html">Comenzar</a>
+      <button type="button" class="in4-other-trigger lp-other-trigger" data-open-other-menu data-i18n-aria="nav.other">
+        <span data-i18n="nav.other">Otros</span>
+      </button>
+      <a class="lp-btn lp-btn--primary" href="login.html" data-i18n="landing.start">Comenzar</a>
     </div>
   </div>
 </header>
 
-<!-- ══════════════════════════════════════
+<!-- --------------------------------------
      HERO
-══════════════════════════════════════ -->
+-------------------------------------- -->
 <section class="lp-hero" id="home">
-  <svg class="lp-hero__clouds" viewBox="0 0 1440 400" preserveAspectRatio="none" aria-hidden="true">
-    <ellipse cx="200" cy="320" rx="280" ry="80" fill="rgba(255,255,255,0.5)"/>
-    <ellipse cx="700" cy="350" rx="400" ry="90" fill="rgba(255,255,255,0.35)"/>
-    <ellipse cx="1200" cy="300" rx="300" ry="70" fill="rgba(255,255,255,0.4)"/>
-  </svg>
-
+  <div class="lp-ambient" aria-hidden="true">
+    <div class="lp-ambient__mesh">
+      <span class="lp-ambient__blob lp-ambient__blob--1"></span>
+      <span class="lp-ambient__blob lp-ambient__blob--2"></span>
+      <span class="lp-ambient__blob lp-ambient__blob--3"></span>
+    </div>
+    <div class="lp-ambient__orbs">
+      <span class="lp-ambient__orb lp-ambient__orb--a"></span>
+      <span class="lp-ambient__orb lp-ambient__orb--b"></span>
+      <span class="lp-ambient__orb lp-ambient__orb--c"></span>
+    </div>
+    <div class="lp-ambient__aurora"></div>
+    <div class="lp-ambient__beams">
+      <span class="lp-ambient__beam"></span>
+      <span class="lp-ambient__beam"></span>
+      <span class="lp-ambient__beam"></span>
+    </div>
+    <div class="lp-ambient__grain"></div>
+  </div>
   <div class="lp-container lp-hero__inner">
     <div class="lp-hero__content">
-      <h1 class="lp-hero__title">Mantente al día con las últimas tendencias tecnológicas</h1>
-      <p class="lp-hero__sub">Tutoriales y guías expertas en programación, ciberseguridad y mucho más.</p>
-      <div class="lp-hero__actions">
-        <a class="lp-btn lp-btn--primary" href="login.html">Explorar temas</a>
+      <h1 class="lp-hero__title lp-hero-enter lp-hero-enter--1" data-i18n="landing.heroTitle">Aprende tecnolog?a de forma clara y moderna</h1>
+      <p class="lp-hero__sub lp-hero-enter lp-hero-enter--2" data-i18n="landing.heroSub">Cursos, quizzes, certificaciones y asistente IA en una sola plataforma.</p>
+      <div class="lp-hero__actions lp-hero-enter lp-hero-enter--3">
+        <a class="lp-btn lp-btn--primary" href="login.html" data-i18n="landing.explore">Explorar temas</a>
         <button type="button" class="lp-btn lp-btn--ghost" id="btn-watch-intro">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
             <polygon points="10 8 16 12 10 16 10 8"/>
           </svg>
-          Ver introducción
+          <span data-i18n="landing.intro">Ver introducci?n</span>
         </button>
       </div>
     </div>
 
-    <div class="lp-hero__visual" aria-hidden="true">
+    <div class="lp-hero__visual lp-hero-enter lp-hero-enter--4">
       <div class="lp-hero-illustration">
         <div class="lp-hero-illustration__glow"></div>
 
-        <div class="lp-float-card lp-float-card--py" title="Python">
-          <span class="lp-float-card__icon" aria-hidden="true">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
-              <path d="M9 2h6v4H9V2zm0 18h6v4H9v-4z" fill="#3776AB"/>
-              <path d="M12 6c-3 0-4 1.5-4 4v2h8v-2c0-2.5-1-4-4-4zm-4 8v2c0 2.5 1 4 4 4s4-1.5 4-4v-2H8z" fill="#FFD43B"/>
-            </svg>
-          </span>
-          <span class="lp-float-card__label">Python</span>
-        </div>
-        <div class="lp-float-card lp-float-card--shield" title="Ciberseguridad">
-          <span class="lp-float-card__icon" aria-hidden="true">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#4a76b2" stroke-width="2">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              <polyline points="9 12 11 14 15 10"/>
-            </svg>
-          </span>
-          <span class="lp-float-card__label">Seguridad</span>
-        </div>
-        <div class="lp-float-card lp-float-card--code" title="Desarrollo Web">
-          <span class="lp-float-card__icon" aria-hidden="true">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#4a76b2" stroke-width="2">
-              <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
-            </svg>
-          </span>
-          <span class="lp-float-card__label">Web Dev</span>
-        </div>
-        <div class="lp-float-card lp-float-card--ai" title="Inteligencia Artificial">
-          <span class="lp-float-card__icon" aria-hidden="true">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2">
-              <path d="M12 2a4 4 0 014 4v1a3 3 0 013 3v1a3 3 0 01-3 3h-1a3 3 0 01-3-3V9a3 3 0 013-3V6a4 4 0 014-4z"/>
-              <path d="M8 14H6a3 3 0 00-3 3v1a3 3 0 003 3h2"/>
-              <path d="M16 14h2a3 3 0 013 3v1a3 3 0 01-3 3h-2"/>
-              <circle cx="9" cy="9" r="1" fill="#6366f1"/><circle cx="15" cy="9" r="1" fill="#6366f1"/>
-            </svg>
-          </span>
-          <span class="lp-float-card__label">IA</span>
-        </div>
-        <div class="lp-float-card lp-float-card--quiz" title="Quizzes interactivos">
-          <span class="lp-float-card__icon" aria-hidden="true">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2">
-              <path d="M9 11l3 3L22 4"/>
-              <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
-            </svg>
-          </span>
-          <span class="lp-float-card__label">Quizzes</span>
-        </div>
-        <div class="lp-float-card lp-float-card--data" title="Ciencia de Datos">
-          <span class="lp-float-card__icon" aria-hidden="true">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2">
-              <ellipse cx="12" cy="5" rx="9" ry="3"/>
-              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
-              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
-            </svg>
-          </span>
-          <span class="lp-float-card__label">Datos</span>
-        </div>
-
-        <svg class="lp-hero-illustration__bulb" viewBox="0 0 320 320" fill="none">
+        <svg class="lp-hero-illustration__bulb" viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <linearGradient id="bulbGrad" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stop-color="#6b93c9"/>
@@ -164,130 +152,532 @@
               <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
             </filter>
           </defs>
+          <g class="in4mind-bulb__rays" stroke="#5a86bc" stroke-linecap="round">
+            <line x1="160" y1="8"  x2="160" y2="26" stroke-width="5"/>
+            <line x1="128" y1="12" x2="134" y2="28" stroke-width="4.5"/>
+            <line x1="192" y1="12" x2="186" y2="28" stroke-width="4.5"/>
+            <line x1="96"  y1="22" x2="106" y2="36" stroke-width="4"/>
+            <line x1="224" y1="22" x2="214" y2="36" stroke-width="4"/>
+            <line x1="64"  y1="44" x2="76"  y2="54" stroke-width="3.5"/>
+            <line x1="256" y1="44" x2="244" y2="54" stroke-width="3.5"/>
+          </g>
           <circle cx="160" cy="130" r="90" fill="url(#bulbGrad)" opacity="0.15" filter="url(#glow)"/>
           <path d="M160 40c-44 0-80 36-80 80 0 28 14 52 36 66v14h88v-14c22-14 36-38 36-66 0-44-36-80-80-80z" fill="url(#bulbGrad)" stroke="#3d6499" stroke-width="2"/>
+          <g class="in4mind-bulb__filament" stroke="rgba(255,255,255,0.7)" stroke-linecap="round" stroke-linejoin="round" fill="none">
+            <path d="M122 172 V142 c0-14 11-22 20-16 9 6 8 15-2 22" stroke-width="4.5"/>
+            <path d="M198 172 V142 c0-14-11-22-20-16-9 6-8 15 2 22" stroke-width="4.5"/>
+            <path d="M136 128 Q160 104 184 128" stroke-width="3.5"/>
+          </g>
           <path d="M120 210h80v12c0 8-6 14-14 14h-52c-8 0-14-6-14-14v-12z" fill="#3d6499"/>
           <rect x="136" y="236" width="48" height="10" rx="4" fill="#2b4566"/>
           <rect x="144" y="250" width="32" height="8" rx="3" fill="#1a2b48"/>
-          <circle cx="130" cy="100" r="4" fill="rgba(255,255,255,0.6)"/>
-          <circle cx="160" cy="85" r="3" fill="rgba(255,255,255,0.5)"/>
-          <circle cx="190" cy="105" r="3.5" fill="rgba(255,255,255,0.55)"/>
-          <path d="M140 130h40M150 145h20M145 160h30" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-linecap="round"/>
-          <path d="M155 115l10 8-10 8" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" fill="none"/>
         </svg>
+
+        <button type="button" class="lp-float-card lp-float-card--py" data-float-topic="py" data-i18n-title="landing.floatPyTitle" title="Python" aria-expanded="false">
+          <span class="lp-float-card__icon" aria-hidden="true">
+            <img src="src/img/courses/python.svg" alt="" width="36" height="36" loading="lazy">
+          </span>
+          <span class="lp-float-card__label">Python</span>
+          <span class="lp-float-card__tip lp-float-card__tip--left" data-i18n="landing.floatTipPy" role="tooltip">Aprende Python desde cero con lecciones paso a paso.</span>
+        </button>
+        <button type="button" class="lp-float-card lp-float-card--shield" data-float-topic="shield" data-i18n-title="landing.floatCyberTitle" title="Ciberseguridad" aria-expanded="false">
+          <span class="lp-float-card__icon" aria-hidden="true">
+            <img src="src/img/courses/security.svg" alt="" width="36" height="36" loading="lazy">
+          </span>
+          <span class="lp-float-card__label" data-i18n="landing.floatSecurity">Seguridad</span>
+          <span class="lp-float-card__tip lp-float-card__tip--right" data-i18n="landing.floatTipSecurity" role="tooltip">Protege tus cuentas y datos con buenas pr?cticas de seguridad.</span>
+        </button>
+        <button type="button" class="lp-float-card lp-float-card--code" data-float-topic="code" data-i18n-title="landing.floatWebTitle" title="Desarrollo Web" aria-expanded="false">
+          <span class="lp-float-card__icon" aria-hidden="true">
+            <img src="src/img/courses/web.svg" alt="" width="36" height="36" loading="lazy">
+          </span>
+          <span class="lp-float-card__label" data-i18n="landing.floatWebDev">Web Dev</span>
+          <span class="lp-float-card__tip lp-float-card__tip--left" data-i18n="landing.floatTipWebDev" role="tooltip">Construye sitios con HTML, CSS y JavaScript.</span>
+        </button>
+        <button type="button" class="lp-float-card lp-float-card--ai" data-float-topic="ai" data-i18n-title="landing.floatAiTitle" title="Inteligencia Artificial" aria-expanded="false">
+          <span class="lp-float-card__icon" aria-hidden="true">
+            <img src="src/img/courses/ai.svg" alt="" width="36" height="36" loading="lazy">
+          </span>
+          <span class="lp-float-card__label" data-i18n="landing.floatAi">IA</span>
+          <span class="lp-float-card__tip lp-float-card__tip--right" data-i18n="landing.floatTipAi" role="tooltip">Asistente inteligente que responde dudas sobre IN4MIND al instante.</span>
+        </button>
+        <button type="button" class="lp-float-card lp-float-card--quiz" data-float-topic="quiz" data-i18n-title="landing.floatQuizTitle" title="Quizzes interactivos" aria-expanded="false">
+          <span class="lp-float-card__icon" aria-hidden="true">
+            <img src="src/img/courses/quiz.svg" alt="" width="36" height="36" loading="lazy">
+          </span>
+          <span class="lp-float-card__label" data-i18n="landing.floatQuizzes">Quizzes</span>
+          <span class="lp-float-card__tip lp-float-card__tip--right" data-i18n="landing.floatTipQuizzes" role="tooltip">Pon a prueba lo aprendido con preguntas interactivas.</span>
+        </button>
+        <button type="button" class="lp-float-card lp-float-card--data" data-float-topic="data" data-i18n-title="landing.floatDataTitle" title="Ciencia de Datos" aria-expanded="false">
+          <span class="lp-float-card__icon" aria-hidden="true">
+            <img src="src/img/courses/sql.svg" alt="" width="36" height="36" loading="lazy">
+          </span>
+          <span class="lp-float-card__label" data-i18n="landing.floatData">Datos</span>
+          <span class="lp-float-card__tip lp-float-card__tip--left" data-i18n="landing.floatTipData" role="tooltip">Analiza informaci?n con Excel, SQL y ciencia de datos.</span>
+        </button>
       </div>
     </div>
   </div>
 
-  <svg class="lp-hero__wave" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true">
-    <path d="M0,40 C360,80 720,0 1080,40 C1260,60 1380,50 1440,45 L1440,80 L0,80 Z" fill="#ffffff"/>
-  </svg>
+  <div class="lp-hero__wave" aria-hidden="true">
+    <svg class="lp-hero__waves" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
+      <defs>
+        <path id="lp-wave-hero" d="M-160 44c30 0 58-18 88-18s58 18 88 18 58-18 88-18 58 18 88 18v44h-352z"/>
+      </defs>
+      <g class="lp-hero__parallax">
+        <use xlink:href="#lp-wave-hero" href="#lp-wave-hero" x="48" y="0"/>
+        <use xlink:href="#lp-wave-hero" href="#lp-wave-hero" x="48" y="3"/>
+        <use xlink:href="#lp-wave-hero" href="#lp-wave-hero" x="48" y="5"/>
+        <use xlink:href="#lp-wave-hero" href="#lp-wave-hero" x="48" y="7"/>
+      </g>
+    </svg>
+  </div>
 </section>
 
-<!-- ══════════════════════════════════════
+<!-- --------------------------------------
      FEATURES
-══════════════════════════════════════ -->
+-------------------------------------- -->
 <section class="lp-features lp-reveal" id="topics">
+  <div class="lp-ambient lp-ambient--soft" aria-hidden="true">
+    <div class="lp-ambient__grid" data-ambient-grid></div>
+    <div class="lp-ambient__mesh">
+      <span class="lp-ambient__blob lp-ambient__blob--1"></span>
+      <span class="lp-ambient__blob lp-ambient__blob--2"></span>
+    </div>
+  </div>
   <div class="lp-container">
-    <h2 class="lp-section-title lp-reveal lp-reveal--delay-1">Todo lo que necesitas para potenciar tus habilidades tecnológicas</h2>
+    <h2 class="lp-section-title lp-reveal lp-reveal--delay-1" data-i18n="landing.featuresTitle">Todo lo que necesitas para potenciar tus habilidades tecnol?gicas</h2>
     <div class="lp-features__grid">
       <a class="lp-feature-card lp-feature-card--link lp-reveal lp-reveal--delay-2" href="login.html" data-open-course="python">
-        <svg class="lp-feature-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-          <path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/>
-          <path d="M12 8l-4 4 4 4M16 12H8"/>
-        </svg>
-        <h3 class="lp-feature-card__title">Programación</h3>
-        <p class="lp-feature-card__desc">Aprende lenguajes como Python, JavaScript y más.</p>
+        <span class="lp-feature-card__icon lp-feature-card__icon--python" aria-hidden="true">
+          <img src="src/img/courses/python.svg" alt="" width="32" height="32" loading="lazy">
+        </span>
+        <h3 class="lp-feature-card__title" data-i18n="landing.featureProgramming">Programaci?n</h3>
+        <p class="lp-feature-card__desc" data-i18n="landing.featureProgrammingDesc">Aprende lenguajes como Python, JavaScript y m?s.</p>
       </a>
       <a class="lp-feature-card lp-feature-card--link lp-reveal lp-reveal--delay-3" href="login.html" data-open-course="cybersecurity">
-        <svg class="lp-feature-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-          <polyline points="9 12 11 14 15 10"/>
-        </svg>
-        <h3 class="lp-feature-card__title">Ciberseguridad</h3>
-        <p class="lp-feature-card__desc">Protege tus datos con habilidades esenciales de seguridad.</p>
+        <span class="lp-feature-card__icon lp-feature-card__icon--security" aria-hidden="true">
+          <img src="https://cdn-icons-png.flaticon.com/512/2913/2913133.png" alt="" width="32" height="32" loading="lazy">
+        </span>
+        <h3 class="lp-feature-card__title" data-i18n="landing.featureSecurity">Ciberseguridad</h3>
+        <p class="lp-feature-card__desc" data-i18n="landing.featureSecurityDesc">Protege tus datos con habilidades esenciales de seguridad.</p>
       </a>
       <a class="lp-feature-card lp-feature-card--link lp-reveal lp-reveal--delay-4" href="login.html" data-open-destination="ai">
-        <svg class="lp-feature-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-          <circle cx="12" cy="12" r="3"/>
-          <circle cx="5" cy="7" r="2"/><circle cx="19" cy="7" r="2"/>
-          <circle cx="5" cy="17" r="2"/><circle cx="19" cy="17" r="2"/>
-          <line x1="7" y1="8" x2="10" y2="10"/><line x1="14" y1="10" x2="17" y2="8"/>
-          <line x1="7" y1="16" x2="10" y2="14"/><line x1="14" y1="14" x2="17" y2="16"/>
-        </svg>
-        <h3 class="lp-feature-card__title">IA y Ciencia de Datos</h3>
-        <p class="lp-feature-card__desc">Domina conceptos de IA y técnicas de análisis de datos.</p>
+        <span class="lp-feature-card__icon lp-feature-card__icon--data" aria-hidden="true">
+          <img src="src/img/courses/sql.svg" alt="" width="32" height="32" loading="lazy">
+        </span>
+        <h3 class="lp-feature-card__title" data-i18n="landing.featureAi">IA y Ciencia de Datos</h3>
+        <p class="lp-feature-card__desc" data-i18n="landing.featureAiDesc">Domina conceptos de IA y t?cnicas de an?lisis de datos.</p>
       </a>
       <a class="lp-feature-card lp-feature-card--link lp-reveal lp-reveal--delay-5" href="login.html" data-open-course="javascript">
-        <svg class="lp-feature-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-          <rect x="2" y="3" width="20" height="14" rx="2"/>
-          <line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
-          <polyline points="8 9 12 12 16 9"/>
-        </svg>
-        <h3 class="lp-feature-card__title">Desarrollo Web</h3>
-        <p class="lp-feature-card__desc">Crea sitios web responsivos y exitosos.</p>
+        <span class="lp-feature-card__icon lp-feature-card__icon--web" aria-hidden="true">
+          <img src="https://cdn-icons-png.flaticon.com/512/732/732212.png" alt="" width="32" height="32" loading="lazy">
+        </span>
+        <h3 class="lp-feature-card__title" data-i18n="landing.featureWeb">Desarrollo Web</h3>
+        <p class="lp-feature-card__desc" data-i18n="landing.featureWebDesc">Crea sitios web responsivos y exitosos.</p>
       </a>
     </div>
   </div>
 </section>
 
-<!-- ══════════════════════════════════════
-     STATS
-══════════════════════════════════════ -->
-<section class="lp-stats lp-reveal" id="guides" aria-label="Estadísticas">
-  <svg class="lp-stats__wave-top" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true">
-    <path d="M0,30 C240,60 480,0 720,30 C960,60 1200,10 1440,35 L1440,60 L0,60 Z" fill="#ffffff"/>
-  </svg>
-  <div class="lp-container lp-stats__inner">
-    <div class="lp-stat lp-reveal lp-reveal--delay-1">
-      <div class="lp-stat__value">15k+</div>
-      <div class="lp-stat__label">Tutoriales técnicos</div>
-    </div>
-    <div class="lp-stat lp-reveal lp-reveal--delay-2">
-      <div class="lp-stat__value">8k+</div>
-      <div class="lp-stat__label">Usuarios activos</div>
-    </div>
-    <div class="lp-stat lp-reveal lp-reveal--delay-3">
-      <div class="lp-stat__value">200+</div>
-      <div class="lp-stat__label">Guías expertas</div>
+<!-- --------------------------------------
+     CARRUSEL ? Cat?logo de herramientas y aplicaciones
+-------------------------------------- -->
+<section class="lp-courses-wrap lp-reveal" id="catalog">
+  <div class="lp-container">
+    <h2 class="lp-section-title lp-reveal lp-reveal--delay-1" data-i18n="landing.coursesCarouselTitle">Herramientas y aplicaciones IN4MIND</h2>
+    <p class="lp-courses-wrap__sub lp-reveal lp-reveal--delay-2" data-i18n="landing.coursesCarouselSub">Explora cursos, quizzes y certificaciones de todo el cat�logo.</p>
+
+    <div class="lp-carousel lp-carousel--courses lp-reveal lp-reveal--delay-3" id="courses-carousel" aria-roledescription="carrusel" data-i18n-attr="aria-roledescription" data-i18n="landing.carousel">
+      <div class="lp-carousel__viewport">
+        <div class="lp-carousel__track" id="courses-track" role="list"></div>
+      </div>
+      <div class="lp-carousel__progress" id="courses-progress" aria-hidden="true"><span></span></div>
+      <div class="lp-carousel__dots" id="courses-dots" role="tablist" aria-label="Aplicaciones" data-i18n-aria="landing.coursesCarouselTitle"></div>
     </div>
   </div>
 </section>
 
-<!-- ══════════════════════════════════════
-     TESTIMONIOS — Carrusel
-══════════════════════════════════════ -->
+<!-- --------------------------------------
+     IMPACTO ? Estad?sticas de la plataforma
+-------------------------------------- -->
+<section class="lp-stats lp-navy-band lp-reveal" id="stats" aria-label="Impacto de IN4MIND" data-i18n-aria="landing.navImpact">
+  <div class="lp-navy-band__particles" aria-hidden="true">
+    <span></span><span></span><span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span><span></span><span></span>
+  </div>
+  <div class="lp-navy-band__wave lp-navy-band__wave--top" aria-hidden="true">
+    <svg class="lp-navy-band__waves" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
+      <defs>
+        <path id="lp-wave-stats-top" d="M-160 44c30 0 58-18 88-18s58 18 88 18 58-18 88-18 58 18 88 18v44h-352z"/>
+      </defs>
+      <g class="lp-navy-band__parallax">
+        <use xlink:href="#lp-wave-stats-top" href="#lp-wave-stats-top" x="48" y="0"/>
+        <use xlink:href="#lp-wave-stats-top" href="#lp-wave-stats-top" x="48" y="3"/>
+        <use xlink:href="#lp-wave-stats-top" href="#lp-wave-stats-top" x="48" y="5"/>
+        <use xlink:href="#lp-wave-stats-top" href="#lp-wave-stats-top" x="48" y="7"/>
+      </g>
+    </svg>
+  </div>
+  <div class="lp-container lp-stats__inner">
+    <div class="lp-stat lp-reveal lp-reveal--delay-1">
+      <div class="lp-stat__value" data-count="15" data-suffix="k+">0k+</div>
+      <div class="lp-stat__label" data-i18n="landing.statsTutorials">Cursos t�cnicos</div>
+    </div>
+    <div class="lp-stat lp-reveal lp-reveal--delay-2">
+      <div class="lp-stat__value" data-count="8" data-suffix="k+">0k+</div>
+      <div class="lp-stat__label" data-i18n="landing.statsUsers">Usuarios activos</div>
+    </div>
+    <div class="lp-stat lp-reveal lp-reveal--delay-3">
+      <div class="lp-stat__value" id="lp-stat-courses" data-count="25" data-suffix="+">0+</div>
+      <div class="lp-stat__label" data-i18n="landing.statsCourses">Cursos disponibles</div>
+    </div>
+  </div>
+  <div class="lp-navy-band__wave lp-navy-band__wave--bottom" aria-hidden="true">
+    <svg class="lp-navy-band__waves" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
+      <defs>
+        <path id="lp-wave-stats-bottom" d="M-160 44c30 0 58-18 88-18s58 18 88 18 58-18 88-18 58 18 88 18v44h-352z"/>
+      </defs>
+      <g class="lp-navy-band__parallax">
+        <use xlink:href="#lp-wave-stats-bottom" href="#lp-wave-stats-bottom" x="48" y="0"/>
+        <use xlink:href="#lp-wave-stats-bottom" href="#lp-wave-stats-bottom" x="48" y="3"/>
+        <use xlink:href="#lp-wave-stats-bottom" href="#lp-wave-stats-bottom" x="48" y="5"/>
+        <use xlink:href="#lp-wave-stats-bottom" href="#lp-wave-stats-bottom" x="48" y="7"/>
+      </g>
+    </svg>
+  </div>
+</section>
+
+<!-- --------------------------------------
+     TESTIMONIOS ? Carrusel
+-------------------------------------- -->
 <section class="lp-testimonial-wrap lp-reveal" id="testimonials">
   <div class="lp-container">
-    <h2 class="lp-testimonials__title lp-reveal lp-reveal--delay-1">Lo que dicen nuestros usuarios</h2>
+    <h2 class="lp-testimonials__title lp-reveal lp-reveal--delay-1" data-i18n="landing.testimonialsTitle">Lo que dicen nuestros usuarios</h2>
 
-    <div class="lp-carousel lp-reveal lp-reveal--delay-2" id="testimonial-carousel" aria-roledescription="carrusel">
+    <div class="lp-carousel lp-reveal lp-reveal--delay-2" id="testimonial-carousel" aria-roledescription="carrusel" data-i18n-attr="aria-roledescription" data-i18n="landing.carousel">
       <div class="lp-carousel__viewport">
         <div class="lp-carousel__track" id="testimonial-track" role="list"></div>
       </div>
-      <div class="lp-carousel__dots" id="testimonial-dots" role="tablist" aria-label="Testimonios"></div>
+      <div class="lp-carousel__progress" id="testimonial-progress" aria-hidden="true"><span></span></div>
+      <div class="lp-carousel__dots" id="testimonial-dots" role="tablist" aria-label="Testimonios" data-i18n-aria="landing.testimonialsTitle"></div>
     </div>
   </div>
 </section>
 
-<!-- ══════════════════════════════════════
-     CTA
-══════════════════════════════════════ -->
-<section class="lp-cta lp-reveal" id="contact">
-  <svg class="lp-cta__clouds" viewBox="0 0 1440 300" preserveAspectRatio="none" aria-hidden="true">
-    <ellipse cx="300" cy="250" rx="350" ry="70" fill="rgba(255,255,255,0.6)"/>
-    <ellipse cx="900" cy="220" rx="450" ry="80" fill="rgba(255,255,255,0.45)"/>
-  </svg>
+<!-- --------------------------------------
+     ZONA AZUL ? secciones nuevas
+-------------------------------------- -->
+<div class="lp-blue-zone">
+  <div class="lp-ambient lp-ambient--soft" aria-hidden="true">
+    <div class="lp-ambient__grid" data-ambient-grid></div>
+    <div class="lp-ambient__mesh">
+      <span class="lp-ambient__blob lp-ambient__blob--2"></span>
+      <span class="lp-ambient__blob lp-ambient__blob--3"></span>
+    </div>
+    <div class="lp-ambient__orbs">
+      <span class="lp-ambient__orb lp-ambient__orb--b"></span>
+    </div>
+  </div>
+<!-- --------------------------------------
+     SOBRE IN4MIND
+-------------------------------------- -->
+<section class="lp-about lp-reveal" id="about">
   <div class="lp-container">
-    <h2 class="lp-cta__title lp-reveal lp-reveal--delay-1">¿Listo para elevar tu conocimiento tecnológico?</h2>
-    <p class="lp-cta__sub lp-reveal lp-reveal--delay-2">Únete a IN4MIND hoy y comienza tu camino hacia el dominio tecnológico.</p>
-    <a class="lp-btn lp-btn--primary lp-btn--lg lp-reveal lp-reveal--delay-3" href="login.html">Comenzar</a>
+    <div class="lp-panel lp-about__panel">
+      <div class="lp-about__intro">
+        <h2 class="lp-panel__title" data-i18n="landing.aboutTitle">Sobre IN4MIND</h2>
+        <p class="lp-panel__lead" data-i18n="landing.aboutLead">Somos una plataforma educativa enfocada en tecnolog?a, dise?ada para ayudarte a aprender de forma clara, pr?ctica y a tu propio ritmo.</p>
+      </div>
+      <div class="lp-about__grid">
+        <div class="lp-about__item lp-reveal lp-reveal--from-left lp-reveal--delay-1">
+          <div class="lp-about__icon" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
+          </div>
+          <h3 class="lp-about__item-title" data-i18n="landing.aboutMission">Nuestra misi?n</h3>
+          <p class="lp-about__item-desc" data-i18n="landing.aboutMissionDesc">Empoderar a estudiantes en todo el mundo con educaci?n de calidad y habilidades pr?cticas.</p>
+        </div>
+        <div class="lp-about__item lp-reveal lp-reveal--from-right lp-reveal--delay-2">
+          <div class="lp-about__icon" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          </div>
+          <h3 class="lp-about__item-title" data-i18n="landing.aboutEveryone">Para todos</h3>
+          <p class="lp-about__item-desc" data-i18n="landing.aboutEveryoneDesc">Desde principiantes dando sus primeros pasos hasta profesionales que quieren avanzar en su carrera.</p>
+        </div>
+        <div class="lp-about__item lp-reveal lp-reveal--from-left lp-reveal--delay-3">
+          <div class="lp-about__icon" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 00-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 012-3.95A12.88 12.88 0 0122 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 01-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+          </div>
+          <h3 class="lp-about__item-title" data-i18n="landing.aboutEvolving">Siempre evolucionando</h3>
+          <p class="lp-about__item-desc" data-i18n="landing.aboutEvolvingDesc">Actualizamos el contenido constantemente para mantenerte al d?a en el mundo tecnol?gico.</p>
+        </div>
+        <div class="lp-about__item lp-reveal lp-reveal--from-right lp-reveal--delay-4">
+          <div class="lp-about__icon" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+          </div>
+          <h3 class="lp-about__item-title" data-i18n="landing.aboutPassion">Hecho con pasi?n</h3>
+          <p class="lp-about__item-desc" data-i18n="landing.aboutPassionDesc">Creado por un equipo que ama ense?ar, la tecnolog?a y ayudar a otros a crecer.</p>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
-<!-- ══════════════════════════════════════
+<!-- --------------------------------------
+     TEMAS POPULARES + LO QUE AMAN
+-------------------------------------- -->
+<section class="lp-popular lp-reveal" id="popular">
+  <div class="lp-container">
+    <div class="lp-panel lp-popular__panel">
+      <div class="lp-popular__col">
+        <h2 class="lp-panel__title" data-i18n="landing.popularTitle">Temas populares</h2>
+        <ul class="lp-popular__list">
+          <li class="lp-popular__row lp-reveal lp-reveal--delay-1">
+            <div class="lp-popular__row-head">
+              <span class="lp-popular__topic">
+                <span class="lp-popular__topic-icon lp-popular__topic-icon--py" aria-hidden="true">
+                  <img src="src/img/courses/python.svg" alt="" width="22" height="22" loading="lazy">
+                </span>
+                Python
+              </span>
+              <span class="lp-popular__pct">98%</span>
+            </div>
+            <div class="lp-popular__bar"><span style="--bar-w:98%"></span></div>
+          </li>
+          <li class="lp-popular__row lp-reveal lp-reveal--delay-2">
+            <div class="lp-popular__row-head">
+              <span class="lp-popular__topic">
+                <span class="lp-popular__topic-icon lp-popular__topic-icon--js" aria-hidden="true">
+                  <img src="https://cdn-icons-png.flaticon.com/512/5968/5968292.png" alt="" width="22" height="22" loading="lazy">
+                </span>
+                JavaScript
+              </span>
+              <span class="lp-popular__pct">92%</span>
+            </div>
+            <div class="lp-popular__bar"><span style="--bar-w:92%"></span></div>
+          </li>
+          <li class="lp-popular__row lp-reveal lp-reveal--delay-3">
+            <div class="lp-popular__row-head">
+              <span class="lp-popular__topic">
+                <span class="lp-popular__topic-icon lp-popular__topic-icon--web" aria-hidden="true">
+                  <img src="https://cdn-icons-png.flaticon.com/512/732/732212.png" alt="" width="22" height="22" loading="lazy">
+                </span>
+                <span data-i18n="landing.popularWebDev">Desarrollo Web</span>
+              </span>
+              <span class="lp-popular__pct">90%</span>
+            </div>
+            <div class="lp-popular__bar"><span style="--bar-w:90%"></span></div>
+          </li>
+          <li class="lp-popular__row lp-reveal lp-reveal--delay-4">
+            <div class="lp-popular__row-head">
+              <span class="lp-popular__topic">
+                <span class="lp-popular__topic-icon lp-popular__topic-icon--data" aria-hidden="true">
+                  <img src="src/img/courses/sql.svg" alt="" width="22" height="22" loading="lazy">
+                </span>
+                <span data-i18n="landing.popularDataSci">Ciencia de Datos</span>
+              </span>
+              <span class="lp-popular__pct">85%</span>
+            </div>
+            <div class="lp-popular__bar"><span style="--bar-w:85%"></span></div>
+          </li>
+          <li class="lp-popular__row lp-reveal lp-reveal--delay-5">
+            <div class="lp-popular__row-head">
+              <span class="lp-popular__topic">
+                <span class="lp-popular__topic-icon lp-popular__topic-icon--security" aria-hidden="true">
+                  <img src="https://cdn-icons-png.flaticon.com/512/2913/2913133.png" alt="" width="22" height="22" loading="lazy">
+                </span>
+                <span data-i18n="landing.featureSecurity">Ciberseguridad</span>
+              </span>
+              <span class="lp-popular__pct">80%</span>
+            </div>
+            <div class="lp-popular__bar"><span style="--bar-w:80%"></span></div>
+          </li>
+        </ul>
+      </div>
+      <div class="lp-popular__col">
+        <h2 class="lp-panel__title" data-i18n="landing.loveTitle">Lo que m?s valoran</h2>
+        <div class="lp-love__grid">
+          <div class="lp-love__item lp-reveal lp-reveal--delay-1">
+            <div class="lp-love__icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+            </div>
+            <div>
+              <h3 class="lp-love__title" data-i18n="landing.loveClear">Claro y estructurado</h3>
+              <p class="lp-love__desc" data-i18n="landing.loveClearDesc">Contenido f?cil de seguir que hace el aprendizaje simple y agradable.</p>
+            </div>
+          </div>
+          <div class="lp-love__item lp-reveal lp-reveal--delay-2">
+            <div class="lp-love__icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><polyline points="8 9 12 12 16 9"/></svg>
+            </div>
+            <div>
+              <h3 class="lp-love__title" data-i18n="landing.lovePractice">Pr?ctica real</h3>
+              <p class="lp-love__desc" data-i18n="landing.lovePracticeDesc">Ejemplos del mundo real, retos y quizzes para poner a prueba tus habilidades.</p>
+            </div>
+          </div>
+          <div class="lp-love__item lp-reveal lp-reveal--delay-3">
+            <div class="lp-love__icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>
+            <div>
+              <h3 class="lp-love__title" data-i18n="landing.loveProgress">Seguimiento de progreso</h3>
+              <p class="lp-love__desc" data-i18n="landing.loveProgressDesc">Monitorea tu avance y celebra cada logro en tu camino de aprendizaje.</p>
+            </div>
+          </div>
+          <div class="lp-love__item lp-reveal lp-reveal--delay-4">
+            <div class="lp-love__icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+            </div>
+            <div>
+              <h3 class="lp-love__title" data-i18n="landing.loveSave">Guardar y organizar</h3>
+              <p class="lp-love__desc" data-i18n="landing.loveSaveDesc">Guarda tu contenido favorito y accede cuando quieras, desde cualquier lugar.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- --------------------------------------
+     VISTA PREVIA DE GU?AS
+-------------------------------------- -->
+<section class="lp-guides lp-reveal" id="guides">
+  <div class="lp-container">
+    <div class="lp-panel lp-guides__panel">
+      <header class="lp-guides__header">
+        <h2 class="lp-panel__title" data-i18n="landing.guidesTitle">Vista previa de gu?as</h2>
+        <p class="lp-panel__lead" data-i18n="landing.guidesLead">Gu?as paso a paso para dominar nuevas habilidades y construir proyectos reales.</p>
+      </header>
+      <div class="lp-guides__list">
+        <a class="lp-guide-card lp-reveal lp-reveal--delay-1" href="login.html" data-open-course="python">
+          <div class="lp-guide-card__illus lp-guide-card__illus--python" aria-hidden="true">
+            <img src="src/img/courses/python.svg" alt="" width="52" height="52" loading="lazy">
+          </div>
+          <div class="lp-guide-card__body">
+            <span class="lp-guide-card__badge lp-guide-card__badge--beginner" data-i18n="landing.levelBeginner">Principiante</span>
+            <h3 class="lp-guide-card__title" data-i18n="landing.guidePyTitle">Python para principiantes</h3>
+            <p class="lp-guide-card__intro" data-i18n="landing.guidePyIntro" data-i18n-attr="html"><strong>Introducci?n:</strong> Python es uno de los lenguajes m?s demandados en programaci?n, datos y automatizaci?n. Esta gu?a te lleva desde cero hasta escribir scripts claros y reutilizables, sin necesidad de experiencia previa.</p>
+            <p class="lp-guide-card__desc" data-i18n="landing.guidePyDesc">Recorrer?s sintaxis, control de flujo, funciones, estructuras de datos y manejo de archivos con ejemplos pr?cticos en cada m?dulo.</p>
+            <div class="lp-guide-card__meta">
+              <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg> <span data-i18n="landing.guidePyChapters">12 cap?tulos</span></span>
+              <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> <span data-i18n="landing.guidePyDuration">4h 30m</span></span>
+            </div>
+          </div>
+        </a>
+        <a class="lp-guide-card lp-reveal lp-reveal--delay-2" href="login.html" data-open-course="javascript">
+          <div class="lp-guide-card__illus lp-guide-card__illus--js" aria-hidden="true">
+            <img src="https://cdn-icons-png.flaticon.com/512/5968/5968292.png" alt="" width="52" height="52" loading="lazy">
+          </div>
+          <div class="lp-guide-card__body">
+            <span class="lp-guide-card__badge lp-guide-card__badge--intermediate" data-i18n="landing.levelIntermediate">Intermedio</span>
+            <h3 class="lp-guide-card__title" data-i18n="landing.guideJsTitle">JavaScript moderno</h3>
+            <p class="lp-guide-card__intro" data-i18n="landing.guideJsIntro" data-i18n-attr="html"><strong>Introducci?n:</strong> JavaScript impulsa la web interactiva: desde botones y formularios hasta apps que consumen APIs. Si ya conoces HTML b?sico, aqu? aprender?s a dar vida a tus p?ginas con c?digo moderno y buenas pr?cticas.</p>
+            <p class="lp-guide-card__desc" data-i18n="landing.guideJsDesc">Cubrir?s variables, funciones, DOM, eventos, asincron?a con async/await e integraci?n con servicios externos paso a paso.</p>
+            <div class="lp-guide-card__meta">
+              <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg> <span data-i18n="landing.guideJsChapters">18 cap?tulos</span></span>
+              <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> <span data-i18n="landing.guideJsDuration">6h 15m</span></span>
+            </div>
+          </div>
+        </a>
+        <a class="lp-guide-card lp-reveal lp-reveal--delay-3" href="login.html" data-open-course="cybersecurity">
+          <div class="lp-guide-card__illus lp-guide-card__illus--security" aria-hidden="true">
+            <img src="https://cdn-icons-png.flaticon.com/512/2913/2913133.png" alt="" width="52" height="52" loading="lazy">
+          </div>
+          <div class="lp-guide-card__body">
+            <span class="lp-guide-card__badge lp-guide-card__badge--advanced" data-i18n="landing.levelAdvanced">Avanzado</span>
+            <h3 class="lp-guide-card__title" data-i18n="landing.guideCyberTitle">Fundamentos de ciberseguridad</h3>
+            <p class="lp-guide-card__intro" data-i18n="landing.guideCyberIntro" data-i18n-attr="html"><strong>Introducci?n:</strong> En un entorno digital conectado, proteger datos, cuentas y sistemas es una habilidad esencial. Esta gu?a explica c?mo piensan los atacantes y qu? controles aplicar desde el primer d?a.</p>
+            <p class="lp-guide-card__desc" data-i18n="landing.guideCyberDesc">Abordar?s phishing, contrase?as y MFA, malware, respuesta a incidentes y h?bitos seguros con escenarios del mundo real.</p>
+            <div class="lp-guide-card__meta">
+              <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg> <span data-i18n="landing.guideCyberChapters">15 cap?tulos</span></span>
+              <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> <span data-i18n="landing.guideCyberDuration">5h 45m</span></span>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- --------------------------------------
+     BANNER DE ESTAD?STICAS
+-------------------------------------- -->
+<section class="lp-metrics lp-reveal" aria-label="M?tricas de la plataforma" data-i18n-aria="landing.metricsAria">
+  <div class="lp-container">
+    <div class="lp-metrics__bar">
+      <div class="lp-metric lp-reveal lp-reveal--delay-1">
+        <div class="lp-metric__icon" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        </div>
+        <div>
+          <div class="lp-metric__value" data-count="250" data-suffix="K+">0K+</div>
+          <div class="lp-metric__label" data-i18n="landing.metricUsers">Usuarios registrados</div>
+        </div>
+      </div>
+      <div class="lp-metric lp-reveal lp-reveal--delay-2">
+        <div class="lp-metric__icon" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        </div>
+        <div>
+          <div class="lp-metric__value" data-count="15" data-suffix="K+">0K+</div>
+          <div class="lp-metric__label" data-i18n="landing.metricArticles">Cursos y art�culos</div>
+        </div>
+      </div>
+      <div class="lp-metric lp-reveal lp-reveal--delay-3">
+        <div class="lp-metric__icon" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div>
+          <div class="lp-metric__value" data-count="1.2" data-suffix="M+" data-decimals="1">0.0M+</div>
+          <div class="lp-metric__label" data-i18n="landing.metricHours">Horas de aprendizaje</div>
+        </div>
+      </div>
+      <div class="lp-metric lp-reveal lp-reveal--delay-4">
+        <div class="lp-metric__icon" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 010-5C7 4 7 7 7 7"/><path d="M18 9h1.5a2.5 2.5 0 000-5C17 4 17 7 17 7"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"/><path d="M18 2H6v7a6 6 0 0012 0V2z"/></svg>
+        </div>
+        <div>
+          <div class="lp-metric__value" data-count="98" data-suffix="%">0%</div>
+          <div class="lp-metric__label" data-i18n="landing.metricSatisfaction">Satisfacci?n de estudiantes</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</div><!-- /.lp-blue-zone -->
+
+<!-- --------------------------------------
+     CTA
+-------------------------------------- -->
+<section class="lp-cta lp-navy-band lp-reveal" id="contact">
+  <div class="lp-navy-band__particles" aria-hidden="true">
+    <span></span><span></span><span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span><span></span><span></span>
+  </div>
+  <div class="lp-navy-band__wave lp-navy-band__wave--top" aria-hidden="true">
+    <svg class="lp-navy-band__waves" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
+      <defs>
+        <path id="lp-wave-cta-top" d="M-160 44c30 0 58-18 88-18s58 18 88 18 58-18 88-18 58 18 88 18v44h-352z"/>
+      </defs>
+      <g class="lp-navy-band__parallax">
+        <use xlink:href="#lp-wave-cta-top" href="#lp-wave-cta-top" x="48" y="0"/>
+        <use xlink:href="#lp-wave-cta-top" href="#lp-wave-cta-top" x="48" y="3"/>
+        <use xlink:href="#lp-wave-cta-top" href="#lp-wave-cta-top" x="48" y="5"/>
+        <use xlink:href="#lp-wave-cta-top" href="#lp-wave-cta-top" x="48" y="7"/>
+      </g>
+    </svg>
+  </div>
+  <div class="lp-container">
+    <h2 class="lp-cta__title lp-reveal lp-reveal--delay-1 lp-cta__title--slow" data-i18n="landing.ctaTitle">Listo para elevar tu conocimiento tecnologico?</h2>
+    <p class="lp-cta__sub lp-reveal lp-reveal--delay-2" data-i18n="landing.ctaSub">Unete a IN4MIND hoy y comienza tu camino hacia el dominio tecnologico.</p>
+    <a class="lp-btn lp-btn--primary lp-btn--lg lp-btn--pulse lp-reveal lp-reveal--delay-3" href="login.html" data-i18n="landing.start">Comenzar</a>
+  </div>
+</section>
+
+<!-- --------------------------------------
      FOOTER
-══════════════════════════════════════ -->
+-------------------------------------- -->
 <footer class="lp-footer">
   <div class="lp-container">
     <div class="lp-footer__grid">
@@ -299,34 +689,35 @@
           </svg>
           IN4MIND
         </div>
-        <p class="lp-footer__copy">&copy; 2026 IN4MIND. Todos los derechos reservados.</p>
+        <p class="lp-footer__copy" data-i18n="landing.footerCopy">&copy; 2026 IN4MIND. Todos los derechos reservados.</p>
       </div>
 
       <div>
-        <h3 class="lp-footer__heading">Temas</h3>
+        <h3 class="lp-footer__heading" data-i18n="landing.navTopics">Temas</h3>
         <ul class="lp-footer__links">
-          <li><a href="login.html" data-open-course="python">Programación</a></li>
-          <li><a href="login.html" data-open-course="cybersecurity">Ciberseguridad</a></li>
-          <li><a href="login.html" data-open-destination="ai">IA y Ciencia de Datos</a></li>
-          <li><a href="login.html" data-open-course="javascript">Desarrollo Web</a></li>
+          <li><a href="login.html" data-open-course="python" data-i18n="landing.featureProgramming">Programaci?n</a></li>
+          <li><a href="login.html" data-open-course="cybersecurity" data-i18n="landing.featureSecurity">Ciberseguridad</a></li>
+          <li><a href="login.html" data-open-destination="ai" data-i18n="landing.featureAi">IA y Ciencia de Datos</a></li>
+          <li><a href="login.html" data-open-course="javascript" data-i18n="landing.featureWeb">Desarrollo Web</a></li>
         </ul>
       </div>
 
       <div>
-        <h3 class="lp-footer__heading">Recursos</h3>
+        <h3 class="lp-footer__heading" data-i18n="landing.footerResources">Recursos</h3>
         <ul class="lp-footer__links">
-          <li><a href="login.html" data-open-course="python">Guías</a></li>
-          <li><a href="login.html" data-open-quiz="general">Quizzes</a></li>
-          <li><a href="#testimonials">Testimonios</a></li>
-          <li><a href="#contact">Soporte</a></li>
+          <li><a href="#guides" data-i18n="landing.navGuides">Gu?as</a></li>
+          <li><a href="login.html" data-open-quiz="general" data-i18n="nav.quizzes">Quizzes</a></li>
+          <li><a href="#testimonials" data-i18n="landing.navTestimonials">Testimonios</a></li>
+          <li><a href="#contact" data-i18n="landing.footerSupport">Soporte</a></li>
         </ul>
       </div>
 
       <div>
-        <h3 class="lp-footer__heading">Mantente conectado</h3>
-        <form class="lp-newsletter" id="newsletter-form" aria-label="Suscripción">
-          <input type="email" placeholder="Introduce tu correo" required aria-label="Correo electrónico">
-          <button type="submit" aria-label="Enviar">
+        <h3 class="lp-footer__heading" data-i18n="landing.footerConnected">Mantente conectado</h3>
+        <form class="lp-newsletter" id="newsletter-form" aria-label="Suscripci?n" data-i18n-aria="landing.newsletterBtn">
+          <input type="email" placeholder="Introduce tu correo" data-i18n-placeholder="landing.newsletterPh"
+                 required aria-label="Correo electr?nico" data-i18n-aria="common.email">
+          <button type="submit" aria-label="Enviar" data-i18n-aria="landing.newsletterBtn">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </button>
         </form>
@@ -347,58 +738,392 @@
     <div class="lp-footer__bar">
       <span>&copy; 2026 IN4MIND</span>
       <div class="lp-footer__legal">
-        <a href="privacidad.html">Política de privacidad</a>
-        <a href="terminos.html">Términos de servicio</a>
-        <a href="cookies.html">Cookies</a>
+        <a href="privacidad.html" data-i18n="legal.privacyTitle">Pol?tica de privacidad</a>
+        <a href="terminos.html" data-i18n="common.terms">T?rminos de servicio</a>
+        <a href="cookies.html" data-i18n="common.cookies">Cookies</a>
       </div>
     </div>
   </div>
 </footer>
 
+<button type="button" class="lp-back-top" id="lp-back-top" aria-label="Volver arriba" data-i18n-aria="landing.backTop" hidden>
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+    <polyline points="18 15 12 9 6 15"/>
+  </svg>
+</button>
+
+<script src="src/js/data/courseFactory.js?v=20260903"></script>
+<script src="src/js/data/extendedCourses.js?v=20260702d"></script>
+<script src="src/js/locales/extended-course-locales.js?v=20260904"></script>
+<script src="src/js/data/extendedCourseLocales.js?v=20260904"></script>
+<script src="src/js/services/DataService.js?v=20260903"></script>
+<script src="src/js/components/In4mindBulb.js?v=20260714bulb2"></script>
+<script src="src/js/controllers/OtherMenuController.js?v=20260714theme"></script>
+<script src="src/js/other-menu-boot.js?v=20260714theme"></script>
+<script src="src/js/services/CookieConsent.js?v=20260706"></script>
+<script src="src/js/services/CursorSpotlight.js?v=20260714fluid4"></script>
+<script src="src/js/controllers/LandingController.js?v=20260714theme"></script>
+<script src="src/js/i18n-boot.js?v=20260722"></script>
 <script>
 (function () {
   'use strict';
 
-  /* Menú móvil */
+  /* Men? m?vil */
   const menuToggle = document.getElementById('lp-menu-toggle');
   const nav = document.getElementById('lp-nav');
   menuToggle?.addEventListener('click', () => {
     const open = nav.classList.toggle('is-open');
     menuToggle.setAttribute('aria-expanded', String(open));
+    document.body.classList.toggle('lp-nav-open', open);
   });
 
-  /* Watch Intro → scroll a features */
-  document.getElementById('btn-watch-intro')?.addEventListener('click', () => {
-    document.getElementById('topics')?.scrollIntoView({ behavior: 'smooth' });
+  /* Cerrar men? m?vil al elegir secci?n */
+  nav?.querySelectorAll('a[href^="#"]').forEach(link => {
+    link.addEventListener('click', () => {
+      nav.classList.remove('is-open');
+      menuToggle?.setAttribute('aria-expanded', 'false');
+      document.body.classList.remove('lp-nav-open');
+    });
   });
+
+  /* Hero entrance stagger */
+  const hero = document.querySelector('.lp-hero');
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => hero?.classList.add('is-ready'));
+  });
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function _restartProgress(progressEl) {
+    if (!progressEl || reduceMotion) return;
+    progressEl.classList.remove('is-running');
+    // force reflow to restart CSS animation
+    void progressEl.offsetWidth;
+    progressEl.classList.add('is-running');
+  }
+
+  function _animateCount(el) {
+    if (!el || el.dataset.counted === '1') return;
+    const target = parseFloat(el.dataset.count);
+    if (!Number.isFinite(target)) return;
+    const suffix = el.dataset.suffix || '';
+    const decimals = el.dataset.decimals != null
+      ? parseInt(el.dataset.decimals, 10)
+      : (String(el.dataset.count).includes('.') ? 1 : 0);
+    el.dataset.counted = '1';
+
+    if (reduceMotion) {
+      el.textContent = target.toFixed(decimals) + suffix;
+      return;
+    }
+
+    const duration = 1400;
+    const start = performance.now();
+
+    function tick(now) {
+      const t = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      const value = target * eased;
+      el.textContent = (decimals ? value.toFixed(decimals) : Math.round(value)) + suffix;
+      if (t < 1) requestAnimationFrame(tick);
+      else el.textContent = target.toFixed(decimals) + suffix;
+    }
+
+    requestAnimationFrame(tick);
+  }
+
+  function _runCountsIn(root) {
+    (root || document).querySelectorAll('[data-count]').forEach(_animateCount);
+  }
+
+  /* Resaltar secci?n activa en navegaci?n */
+  const navLinks = nav ? Array.from(nav.querySelectorAll('a[href^="#"]')) : [];
+  const navSections = navLinks
+    .map(link => document.querySelector(link.getAttribute('href')))
+    .filter(Boolean);
+
+  if (navLinks.length && navSections.length && 'IntersectionObserver' in window) {
+    const navObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        const id = entry.target.id;
+        navLinks.forEach(link => {
+          link.classList.toggle('is-active', link.getAttribute('href') === '#' + id);
+        });
+      });
+    }, { rootMargin: '-45% 0px -45% 0px', threshold: 0 });
+
+    navSections.forEach(section => navObserver.observe(section));
+  }
+
+  /* Scroll suave con offset del header sticky */
+  const HEADER_OFFSET = 84;
+  function _scrollToId(id, push) {
+    const el = document.querySelector(id);
+    if (!el) return;
+    const top = el.getBoundingClientRect().top + window.scrollY - HEADER_OFFSET;
+    window.scrollTo({ top, behavior: reduceMotion ? 'auto' : 'smooth' });
+    if (push) history.pushState(null, '', id);
+  }
+
+  document.querySelectorAll('a[href^="#"]').forEach(link => {
+    link.addEventListener('click', e => {
+      const href = link.getAttribute('href');
+      if (!href || href === '#' || href.length < 2) return;
+      if (!document.querySelector(href)) return;
+      e.preventDefault();
+      _scrollToId(href, true);
+    });
+  });
+
+  /* Header sombra al hacer scroll + back to top */
+  const headerEl = document.getElementById('lp-header');
+  const backTop = document.getElementById('lp-back-top');
+  function _onScrollChrome() {
+    const y = window.scrollY || 0;
+    headerEl?.classList.toggle('is-scrolled', y > 12);
+    if (backTop) {
+      backTop.hidden = false;
+      backTop.classList.toggle('is-visible', y > 480);
+    }
+  }
+  window.addEventListener('scroll', _onScrollChrome, { passive: true });
+  _onScrollChrome();
+  backTop?.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+  });
+
+  /* Page loader */
+  const loader = document.getElementById('lp-loader');
+  function _hideLoader() {
+    if (!loader) return;
+    loader.classList.add('is-done');
+    window.setTimeout(() => loader.remove(), 500);
+  }
+  if (reduceMotion) {
+    loader?.remove();
+  } else {
+    window.addEventListener('load', () => window.setTimeout(_hideLoader, 280));
+    window.setTimeout(_hideLoader, 1600);
+  }
+
+  /* Parallax suave: bombillo + glow (mouse) y scroll */
+  const heroBulb = document.querySelector('.lp-hero-illustration__bulb');
+  const heroGlow = document.querySelector('.lp-hero-illustration__glow');
+  const heroVisual = document.querySelector('.lp-hero__visual');
+  let parallaxX = 0;
+  let parallaxY = 0;
+  let scrollParallax = 0;
+
+  function _applyHeroParallax() {
+    if (reduceMotion) return;
+    const tx = parallaxX * 14;
+    const ty = parallaxY * 10 + scrollParallax;
+    if (heroBulb) heroBulb.style.transform = 'translate(calc(-50% + ' + tx + 'px), calc(-50% + ' + ty + 'px))';
+    if (heroGlow) heroGlow.style.transform = 'translate(calc(-50% + ' + (tx * 0.6) + 'px), calc(-50% + ' + (ty * 0.6) + 'px)) scale(1)';
+    if (heroVisual) heroVisual.style.transform = 'translateY(' + (scrollParallax * 0.35) + 'px)';
+  }
+
+  const isMobileAmbient = window.matchMedia('(max-width: 768px)').matches;
+
+  hero?.addEventListener('mousemove', e => {
+    if (reduceMotion || !hero) return;
+    const rect = hero.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+    parallaxX = x - 0.5;
+    parallaxY = y - 0.5;
+    _applyHeroParallax();
+  });
+  hero?.addEventListener('mouseleave', () => {
+    parallaxX = 0;
+    parallaxY = 0;
+    _applyHeroParallax();
+  });
+
+  const ambientGrids = Array.from(document.querySelectorAll('[data-ambient-grid]'));
+  function _applyAmbientScroll() {
+    const y = window.scrollY || 0;
+    scrollParallax = Math.min(36, y * 0.06);
+    _applyHeroParallax();
+    if (reduceMotion || isMobileAmbient) return;
+    ambientGrids.forEach(grid => {
+      const section = grid.closest('.lp-features, .lp-blue-zone') || grid.parentElement;
+      if (!section) return;
+      const rect = section.getBoundingClientRect();
+      const mid = rect.top + rect.height * 0.5;
+      const offset = (mid - window.innerHeight * 0.5) * 0.04;
+      grid.style.transform = 'translate3d(0, ' + offset.toFixed(1) + 'px, 0)';
+      const fade = Math.max(0.18, Math.min(0.42, 0.4 - Math.abs(offset) * 0.004));
+      grid.style.opacity = String(fade);
+    });
+  }
+  window.addEventListener('scroll', _applyAmbientScroll, { passive: true });
+  _applyAmbientScroll();
+
+  if (typeof CursorSpotlight !== 'undefined') {
+    CursorSpotlight.init({ intensity: 'landing' });
+  }
 
   /* Carrusel de testimonios (sin flechas) */
-  const TESTIMONIALS = [
-    {
-      quote: '"IN4MIND ha sido un cambio total para aprender nuevas habilidades tecnológicas. Los tutoriales son claros, concisos y prácticos."',
-      name: 'Sarah Martinez',
-      role: 'Desarrolladora Web',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&h=120&fit=crop&crop=face',
-    },
-    {
-      quote: '"Los quizzes me ayudaron a validar mi conocimiento en Python, SQL y desarrollo web. Muy recomendable para equipos."',
-      name: 'Carlos Mendoza',
-      role: 'Ingeniero de Software',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop&crop=face',
-    },
-    {
-      quote: '"Interfaz limpia, contenido profesional y el asistente IA responde exactamente lo que necesito mientras estudio."',
-      name: 'Ana Rodríguez',
-      role: 'Diseñadora UX',
-      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&h=120&fit=crop&crop=face',
-    },
-    {
-      quote: '"IN4MIND se siente como NotebookLM para educación tecnológica: estructurado, calmado y enfocado en resultados reales."',
-      name: 'James Chen',
-      role: 'Analista de Datos',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&h=120&fit=crop&crop=face',
-    },
+  function _coursesPerSlide() {
+    if (window.innerWidth < 640) return 2;
+    if (window.innerWidth < 1024) return 3;
+    return 5;
+  }
+
+  function _chunk(arr, size) {
+    const out = [];
+    for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+    return out.length ? out : [[]];
+  }
+
+  function _escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function _bindAuthLinks(root) {
+    (root || document).querySelectorAll('[data-open-course]').forEach(el => {
+      if (el.dataset.authBound) return;
+      el.dataset.authBound = '1';
+      el.addEventListener('click', () => {
+        sessionStorage.removeItem('in4mind_open_quiz');
+        sessionStorage.removeItem('in4mind_open_destination');
+        sessionStorage.setItem('in4mind_open_course', el.dataset.openCourse);
+      });
+    });
+  }
+
+  function _initCarousel({ trackEl, dotsEl, carouselEl, slideCount, dotLabel, progressEl }) {
+    if (!trackEl || !dotsEl || !slideCount) return null;
+
+    let current = 0;
+    let autoTimer = null;
+
+    dotsEl.innerHTML = '';
+    for (let i = 0; i < slideCount; i += 1) {
+      const dot = document.createElement('button');
+      dot.type = 'button';
+      dot.className = 'lp-carousel__dot' + (i === 0 ? ' is-active' : '');
+      dot.setAttribute('role', 'tab');
+      dot.setAttribute('aria-label', typeof dotLabel === 'function' ? dotLabel(i) : ('Slide ' + (i + 1)));
+      dot.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+      dot.addEventListener('click', () => goTo(i, true));
+      dotsEl.appendChild(dot);
+    }
+
+    function goTo(i, userAction) {
+      current = (i + slideCount) % slideCount;
+      trackEl.style.transform = 'translateX(-' + (current * 100) + '%)';
+      trackEl.querySelectorAll('.lp-carousel__slide').forEach((slide, idx) => {
+        slide.setAttribute('aria-hidden', idx !== current ? 'true' : 'false');
+      });
+      dotsEl.querySelectorAll('.lp-carousel__dot').forEach((d, idx) => {
+        d.classList.toggle('is-active', idx === current);
+        d.setAttribute('aria-selected', idx === current ? 'true' : 'false');
+      });
+      _restartProgress(progressEl);
+      if (userAction) resetAuto();
+    }
+
+    function resetAuto() {
+      clearInterval(autoTimer);
+      autoTimer = setInterval(() => goTo(current + 1), 7500);
+      _restartProgress(progressEl);
+    }
+
+    let startX = 0;
+    carouselEl?.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+    carouselEl?.addEventListener('touchend', e => {
+      const diff = e.changedTouches[0].clientX - startX;
+      if (Math.abs(diff) > 50) goTo(current + (diff < 0 ? 1 : -1), true);
+    }, { passive: true });
+
+    resetAuto();
+    return { goTo, resetAuto };
+  }
+
+  function _renderCoursesCarousel() {
+    const $track = document.getElementById('courses-track');
+    const $dots = document.getElementById('courses-dots');
+    const $carousel = document.getElementById('courses-carousel');
+    if (!$track || typeof DataService === 'undefined') return;
+
+    const courses = DataService.getCourses();
+    const statEl = document.getElementById('lp-stat-courses');
+    if (statEl && courses.length) {
+      statEl.dataset.count = String(courses.length);
+      statEl.dataset.suffix = '+';
+      if (statEl.dataset.counted === '1') {
+        statEl.textContent = courses.length + '+';
+      }
+    }
+
+    const perSlide = _coursesPerSlide();
+    const slides = _chunk(courses, perSlide);
+
+    $track.innerHTML = slides.map((group, slideIdx) => `
+      <article class="lp-carousel__slide" role="listitem" data-index="${slideIdx}" aria-hidden="${slideIdx !== 0}">
+        <div class="lp-courses-slide">
+          ${group.map(c => `
+            <a href="login.html" class="lp-course-card" data-open-course="${_escapeHtml(c.id)}"
+               style="--course-accent: ${c.color || 'var(--clr-brand-500)'}">
+              <span class="lp-course-card__icon" aria-hidden="true">
+                <img src="${_escapeHtml(c.icon)}" alt="" width="28" height="28" loading="lazy">
+              </span>
+              <h3 class="lp-course-card__title">${_escapeHtml(c.title)}</h3>
+              <p class="lp-course-card__desc">${_escapeHtml(c.desc)}</p>
+            </a>
+          `).join('')}
+        </div>
+      </article>
+    `).join('');
+
+    _bindAuthLinks($track);
+
+    _initCarousel({
+      trackEl: $track,
+      dotsEl: $dots,
+      carouselEl: $carousel,
+      slideCount: slides.length,
+      progressEl: document.getElementById('courses-progress'),
+      dotLabel: (i) => (typeof I18n !== 'undefined'
+        ? I18n.t('landing.courseSlideDot', { n: i + 1 })
+        : 'Aplicaciones ' + (i + 1)),
+    });
+  }
+
+  _renderCoursesCarousel();
+  let coursesResizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(coursesResizeTimer);
+    coursesResizeTimer = setTimeout(_renderCoursesCarousel, 180);
+  });
+
+  document.addEventListener('in4mind-locale-change', _renderCoursesCarousel);
+
+  const TESTIMONIAL_AVATARS = [
+    'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&h=120&fit=crop&crop=face',
+    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop&crop=face',
+    'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&h=120&fit=crop&crop=face',
+    'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&h=120&fit=crop&crop=face',
   ];
+
+  function _getTestimonials() {
+    const raw = typeof I18n !== 'undefined' ? I18n.t('landing.testimonials') : null;
+    if (Array.isArray(raw) && raw.length) {
+      return raw.map((t, i) => ({ ...t, avatar: TESTIMONIAL_AVATARS[i] || TESTIMONIAL_AVATARS[0] }));
+    }
+    return TESTIMONIAL_AVATARS.map((avatar, i) => ({
+      quote: '', name: '', role: '', avatar,
+    }));
+  }
+
+  const TESTIMONIALS = _getTestimonials();
 
   const STAR_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
 
@@ -429,7 +1154,9 @@
       dot.type = 'button';
       dot.className = 'lp-carousel__dot' + (i === 0 ? ' is-active' : '');
       dot.setAttribute('role', 'tab');
-      dot.setAttribute('aria-label', 'Testimonio ' + (i + 1));
+      dot.setAttribute('aria-label', typeof I18n !== 'undefined'
+        ? I18n.t('landing.testimonialDot', { n: i + 1 })
+        : 'Testimonio ' + (i + 1));
       dot.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
       dot.addEventListener('click', () => goTo(i, true));
       $dots.appendChild(dot);
@@ -445,15 +1172,17 @@
         d.classList.toggle('is-active', idx === current);
         d.setAttribute('aria-selected', idx === current ? 'true' : 'false');
       });
+      _restartProgress(document.getElementById('testimonial-progress'));
       if (userAction) resetAuto();
     }
 
     function resetAuto() {
       clearInterval(autoTimer);
-      autoTimer = setInterval(() => goTo(current + 1), 5500);
+      autoTimer = setInterval(() => goTo(current + 1), 7500);
+      _restartProgress(document.getElementById('testimonial-progress'));
     }
 
-    /* Deslizar con el dedo / ratón */
+    /* Deslizar con el dedo / rat?n */
     const carousel = document.getElementById('testimonial-carousel');
     let startX = 0;
     carousel?.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
@@ -465,13 +1194,17 @@
     resetAuto();
   }
 
-  /* Aparición al hacer scroll */
+  /* Aparici?n al hacer scroll */
   const revealEls = document.querySelectorAll('.lp-reveal');
   if (revealEls.length && 'IntersectionObserver' in window) {
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           entry.target.classList.add('is-visible');
+          if (entry.target.matches('.lp-stats, .lp-metrics, .lp-stat, .lp-metric') ||
+              entry.target.querySelector?.('[data-count]')) {
+            _runCountsIn(entry.target);
+          }
           observer.unobserve(entry.target);
         }
       });
@@ -480,23 +1213,18 @@
     revealEls.forEach(el => observer.observe(el));
   } else {
     revealEls.forEach(el => el.classList.add('is-visible'));
+    _runCountsIn(document);
   }
 
   /* Newsletter */
   document.getElementById('newsletter-form')?.addEventListener('submit', e => {
     e.preventDefault();
-    alert('¡Gracias por suscribirte a las novedades de IN4MIND!');
+    alert(typeof I18n !== 'undefined' ? I18n.t('landing.newsletterThanks') : '?Gracias por suscribirte! Te mantendremos informado.');
     e.target.reset();
   });
 
-  /* Enlaces de la home → login con destino post-auth */
-  document.querySelectorAll('[data-open-course]').forEach(el => {
-    el.addEventListener('click', () => {
-      sessionStorage.removeItem('in4mind_open_quiz');
-      sessionStorage.removeItem('in4mind_open_destination');
-      sessionStorage.setItem('in4mind_open_course', el.dataset.openCourse);
-    });
-  });
+  /* Enlaces de la home ? login con destino post-auth */
+  _bindAuthLinks(document);
 
   document.querySelectorAll('[data-open-quiz]').forEach(el => {
     el.addEventListener('click', () => {
@@ -513,6 +1241,39 @@
       sessionStorage.setItem('in4mind_open_destination', el.dataset.openDestination);
     });
   });
+
+  /* Cartas flotantes del hero */
+  const floatCards = document.querySelectorAll('.lp-float-card[data-float-topic]');
+  const heroIllustration = document.querySelector('.lp-hero-illustration');
+
+  function closeFloatTips() {
+    floatCards.forEach(card => {
+      card.classList.remove('is-active');
+      card.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  floatCards.forEach(card => {
+    card.addEventListener('click', e => {
+      e.stopPropagation();
+      const wasActive = card.classList.contains('is-active');
+      closeFloatTips();
+      if (!wasActive) {
+        card.classList.add('is-active');
+        card.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.lp-float-card')) closeFloatTips();
+  });
+
+  heroIllustration?.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeFloatTips();
+  });
+
+  if (typeof LandingController !== 'undefined') LandingController.init();
 })();
 </script>
 

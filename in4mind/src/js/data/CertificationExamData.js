@@ -7,6 +7,9 @@
 
 const CertificationExamData = (() => {
 
+  const CERT_EXAM_MIN = 25;
+  const CERT_EXAM_MAX = 30;
+
   const EXAM_QUESTIONS = {
     canvas: [
       { type: 'match', q: 'En un brief de redes sociales, relaciona cada recurso de Canva con su uso:',
@@ -327,7 +330,187 @@ const CertificationExamData = (() => {
         ],
         exp: 'Identificar amenazas guía la respuesta adecuada.' },
     ],
+    ...(typeof ExtendedCourses !== 'undefined' ? ExtendedCourses.getExamQuestions() : {}),
   };
+
+  function _hashCourseId(courseId) {
+    let h = 0;
+    for (let i = 0; i < courseId.length; i += 1) {
+      h = (h * 31 + courseId.charCodeAt(i)) % 2147483647;
+    }
+    return Math.abs(h);
+  }
+
+  function _targetQuestionCount(courseId) {
+    return CERT_EXAM_MIN + (_hashCourseId(courseId) % (CERT_EXAM_MAX - CERT_EXAM_MIN + 1));
+  }
+
+  function _normalizeQuestion(raw) {
+    const text = (raw?.q || raw?.text || '').trim();
+    if (!text) return null;
+    return { ...raw, q: text };
+  }
+
+  function _collectQuestionPool(courseId, seen) {
+    const pool = [];
+    const add = (questions) => {
+      (questions || []).forEach((raw) => {
+        const q = _normalizeQuestion(raw);
+        if (!q) return;
+        const key = q.q.toLowerCase();
+        if (seen.has(key)) return;
+        seen.add(key);
+        pool.push(q);
+      });
+    };
+
+    if (typeof CourseCurriculum !== 'undefined') {
+      (CourseCurriculum.getExamSections(courseId) || []).forEach((sec) => add(sec.questions));
+      const quizDef = CourseCurriculum.getQuizDef(courseId);
+      quizDef?.sections?.forEach((sec) => add(sec.questions));
+    }
+
+    add(EXAM_QUESTIONS[courseId]);
+
+    if (typeof CourseFactory !== 'undefined') {
+      const title = typeof DataService !== 'undefined'
+        ? DataService.getCourses().find((c) => c.id === courseId)?.title
+        : null;
+      let round = 0;
+      while (pool.length < CERT_EXAM_MAX && round < 8) {
+        CourseFactory.buildExamQuestions(title || courseId).forEach((q, i) => {
+          add([{
+            ...q,
+            q: round === 0 && i < 6 ? q.q : `${q.q} (evaluación ${round + 1}.${i + 1})`,
+          }]);
+        });
+        round += 1;
+      }
+    }
+
+    return pool;
+  }
+
+  function _padSynthetic(pool, seen, courseId, courseTitle, target) {
+    const modules = typeof CourseCurriculum !== 'undefined'
+      ? (CourseCurriculum.getCertMeta(courseId)?.modules || [])
+      : [];
+    const t = courseTitle || courseId;
+    let n = 0;
+    while (pool.length < target) {
+      const mod = modules[n % Math.max(modules.length, 1)] || `Módulo ${(n % 5) + 1}`;
+      const kind = n % 3;
+      let candidate;
+      if (kind === 0) {
+        candidate = {
+          type: 'choice',
+          q: `En ${t}, aplicando «${mod}», ¿qué decisión refleja mejor práctica profesional?`,
+          opts: [
+            'Improvisar sin validar',
+            'Planificar, ejecutar con estándares y revisar resultado',
+            'Omitir documentación',
+            'Duplicar trabajo innecesario',
+          ],
+          ans: 1,
+          exp: `Dominar ${mod} reduce errores y mejora entregas con ${t}.`,
+        };
+      } else if (kind === 1) {
+        candidate = {
+          type: 'truefalse',
+          q: `Documentar el trabajo en «${mod}» con ${t} facilita colaboración y mantenimiento.`,
+          ans: true,
+          exp: 'La trazabilidad es clave en entornos profesionales.',
+        };
+      } else {
+        candidate = {
+          type: 'match',
+          q: `Relaciona etapa y control al trabajar con ${t} en «${mod}»:`,
+          pairs: [
+            { left: 'Planificación', right: 'Definir objetivo y alcance' },
+            { left: 'Ejecución', right: 'Aplicar pasos del módulo' },
+            { left: 'Validación', right: 'Verificar resultado esperado' },
+            { left: 'Mejora', right: 'Iterar con feedback' },
+          ],
+          exp: 'Cada fase aporta calidad al flujo de trabajo.',
+        };
+      }
+      const key = candidate.q.toLowerCase();
+      if (!seen.has(key)) {
+        seen.add(key);
+        pool.push(candidate);
+      } else {
+        candidate.q = `${candidate.q} [${pool.length + 1}]`;
+        seen.add(candidate.q.toLowerCase());
+        pool.push(candidate);
+      }
+      n += 1;
+      if (n > 120) break;
+    }
+    return pool;
+  }
+
+  function _splitIntoSections(questions, courseTitle) {
+    const titles = [
+      `Fundamentos de ${courseTitle}`,
+      'Aplicación práctica',
+      'Casos intermedios',
+      'Escenarios avanzados',
+      'Evaluación integrada',
+    ];
+    const sections = [];
+    const perSection = Math.ceil(questions.length / titles.length);
+    let idx = 0;
+    titles.forEach((title) => {
+      if (idx >= questions.length) return;
+      const chunk = questions.slice(idx, idx + perSection);
+      if (chunk.length) sections.push({ title, questions: chunk });
+      idx += perSection;
+    });
+    if (idx < questions.length && sections.length) {
+      sections[sections.length - 1].questions.push(...questions.slice(idx));
+    }
+    return sections.length ? sections : [{ title: `Examen de ${courseTitle}`, questions }];
+  }
+
+  function _normalizeCertSections(courseId, courseTitle, rawSections) {
+    const target = _targetQuestionCount(courseId);
+    const seen = new Set();
+    const pool = [];
+
+    const add = (questions) => {
+      (questions || []).forEach((raw) => {
+        const q = _normalizeQuestion(raw);
+        if (!q) return;
+        const key = q.q.toLowerCase();
+        if (seen.has(key)) return;
+        seen.add(key);
+        pool.push(q);
+      });
+    };
+
+    (rawSections || []).forEach((sec) => add(sec.questions));
+
+    if (pool.length < target) {
+      _collectQuestionPool(courseId, seen).forEach((q) => {
+        const key = q.q.toLowerCase();
+        if (!seen.has(key)) {
+          seen.add(key);
+          pool.push(q);
+        }
+      });
+    }
+
+    _padSynthetic(pool, seen, courseId, courseTitle, target);
+
+    let final = pool.slice(0, CERT_EXAM_MAX);
+    if (final.length > target) final = final.slice(0, target);
+    while (final.length < CERT_EXAM_MIN) {
+      _padSynthetic(final, seen, courseId, courseTitle, CERT_EXAM_MIN);
+      final = final.slice(0, CERT_EXAM_MAX);
+    }
+
+    return _splitIntoSections(final, courseTitle);
+  }
 
   function getExamId(courseId) {
     return `${courseId}-cert-exam`;
@@ -339,14 +522,16 @@ const CertificationExamData = (() => {
       : null;
     if (!course) return null;
 
-    const sections = typeof CourseCurriculum !== 'undefined'
+    const rawSections = typeof CourseCurriculum !== 'undefined'
       ? CourseCurriculum.getExamSections(courseId)
-      : (EXAM_QUESTIONS[courseId] ? [
-          { title: 'Escenarios prácticos', questions: EXAM_QUESTIONS[courseId].slice(0, 3) },
-          { title: 'Evaluación integrada', questions: EXAM_QUESTIONS[courseId].slice(3) },
-        ] : []);
+      : (EXAM_QUESTIONS[courseId]
+        ? [{ title: 'Escenarios prácticos', questions: EXAM_QUESTIONS[courseId] }]
+        : []);
 
-    if (!sections.length) return null;
+    if (!rawSections.length) return null;
+
+    const sections = _normalizeCertSections(courseId, course.title, rawSections);
+    const questionCount = sections.reduce((n, sec) => n + (sec.questions?.length || 0), 0);
 
     const meta = typeof CourseCurriculum !== 'undefined'
       ? CourseCurriculum.getCertMeta(courseId)
@@ -358,7 +543,7 @@ const CertificationExamData = (() => {
       isCertExam: true,
       title: course.title,
       category: course.category,
-      desc: `Examen de certificación (${meta?.lessonCount || 5} módulos del tutorial · ${meta?.quizQuestionCount || 15} temas evaluados).`,
+      desc: `Examen de certificación · ${questionCount} preguntas (${meta?.lessonCount || 5} módulos del tutorial evaluados).`,
       icon: course.icon,
       sections,
     };
@@ -375,6 +560,8 @@ const CertificationExamData = (() => {
     getExamId,
     getExam,
     getAllExams,
+    CERT_EXAM_MIN,
+    CERT_EXAM_MAX,
   };
 
 })();

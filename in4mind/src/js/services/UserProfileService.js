@@ -1,320 +1,836 @@
 /**
- * IN4MIND — Perfil de usuario (favoritos, guardados, quizzes, visitas)
- * Persistencia por email en localStorage.
+ * IN4MIND — Perfil de usuario con Supabase
+ * Favoritos, guardados, visitas, quizzes, lecciones y certificaciones
+ * se guardan en la nube en vez de localStorage.
  */
 
 'use strict';
 
 const UserProfileService = (() => {
 
-  const PREFIX = 'in4mind_profile_';
-  const EVENT  = 'in4mind-profile-updated';
-  const MAX_VISITS = 24;
-  const CERT_MIN_PCT = 70;
-  const EXAM_CERT_MIN_PCT = 80;
-  const LESSON_EXAM_UNLOCK_AVG = 80;
-  const QUIZ_UNLOCK_EXAM_PCT = 70;
+  // ── Supabase client (usa _sbClient de supabase.config.js si está cargado) ──
+  const _sb = typeof _sbClient !== 'undefined'
+    ? _sbClient
+    : supabase.createClient(
+        typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : '',
+        typeof SUPABASE_ANON_KEY !== 'undefined' ? SUPABASE_ANON_KEY : ''
+      );
 
+  // ── Constantes (igual que antes) ─────────────────────────────
+  const EVENT               = 'in4mind-profile-updated';
+  const MAX_VISITS          = 24;
+  const CERT_MIN_PCT        = 70;
+  const EXAM_CERT_MIN_PCT   = 80;
+  const LESSON_EXAM_UNLOCK_AVG = 80;
+  const QUIZ_UNLOCK_EXAM_PCT   = 70;
+
+  // ── Cache local para evitar llamadas repetidas ───────────────
+  let _cache = {
+    favorites:      null,
+    saved:          null,
+    visits:         null,
+    quizProgress:   null,
+    lessonProgress: null,
+    certifications: null,
+  };
+
+  let _userIdResolved = undefined;
+  let _userIdPromise  = null;
+  let _prefetchPromise = null;
+  let _certSyncPromise = null;
+
+  function _invalidateUserIdCache() {
+    _userIdResolved = undefined;
+    _userIdPromise = null;
+  }
+
+  function _clearCache() {
+    Object.keys(_cache).forEach(k => { _cache[k] = null; });
+    _prefetchPromise = null;
+  }
+
+  function _notify() {
+    const user = getCurrentUser();
+    window.dispatchEvent(new CustomEvent(EVENT, { detail: { email: user?.email } }));
+  }
+
+  // ── Usuario actual ───────────────────────────────────────────
   function getCurrentUser() {
     try {
-      return JSON.parse(sessionStorage.getItem('in4mind_user') || 'null');
+      // Primero intenta sessionStorage (compatibilidad con AuthController existente)
+      const stored = sessionStorage.getItem('in4mind_user');
+      if (stored) return JSON.parse(stored);
+      return null;
     } catch {
       return null;
     }
   }
 
-  function mergeGuestIntoUser(email) {
-    const normalized = email?.trim().toLowerCase();
-    if (!normalized) return;
+  async function getCurrentUserId() {
+    if (_userIdResolved !== undefined) return _userIdResolved;
+    if (_userIdPromise) return _userIdPromise;
 
-    const guestKey = PREFIX + 'guest';
-    const userKey = PREFIX + normalized;
+    _userIdPromise = (async () => {
+      const { data } = await _sb.auth.getUser();
+      if (data?.user) {
+        _userIdResolved = data.user.id;
+        return _userIdResolved;
+      }
+
+      const local = getCurrentUser();
+      if (!local?.email) {
+        _userIdResolved = null;
+        return null;
+      }
+
+      const { data: profile } = await _sb
+        .from('profiles')
+        .select('id')
+        .eq('email', local.email.toLowerCase())
+        .single();
+
+      _userIdResolved = profile?.id || null;
+      return _userIdResolved;
+    })();
 
     try {
-      const guestRaw = localStorage.getItem(guestKey);
-      if (!guestRaw) return;
-
-      const guest = { ..._defaultProfile(), ...JSON.parse(guestRaw) };
-      const userRaw = localStorage.getItem(userKey);
-      const user = { ..._defaultProfile(), ...(userRaw ? JSON.parse(userRaw) : {}) };
-
-      const mergeList = (a, b) => {
-        const map = new Map();
-        [...(b || []), ...(a || [])].forEach(item => {
-          const key = `${item.type}:${item.refId}`;
-          if (!map.has(key)) map.set(key, item);
-        });
-        return Array.from(map.values());
-      };
-
-      user.favorites = mergeList(user.favorites, guest.favorites);
-      user.saved = mergeList(user.saved, guest.saved);
-      user.visits = mergeList(user.visits, guest.visits).slice(0, MAX_VISITS);
-
-      Object.entries(guest.quizProgress || {}).forEach(([id, data]) => {
-        const prev = user.quizProgress[id];
-        if (!prev || (data.pct || 0) > (prev.pct || 0)) {
-          user.quizProgress[id] = { ...prev, ...data };
-        }
-      });
-
-      Object.entries(guest.lessonProgress || {}).forEach(([courseId, data]) => {
-        const prev = user.lessonProgress[courseId] || { lessons: {} };
-        const mergedLessons = { ...prev.lessons };
-        Object.entries(data.lessons || {}).forEach(([lessonId, lesson]) => {
-          const existing = mergedLessons[lessonId];
-          if (!existing || (lesson.pct || 0) > (existing.pct || 0)) {
-            mergedLessons[lessonId] = { ...existing, ...lesson };
-          }
-        });
-        user.lessonProgress[courseId] = { lessons: mergedLessons };
-      });
-
-      user.certifications = mergeList(user.certifications, guest.certifications);
-
-      localStorage.setItem(userKey, JSON.stringify(user));
-      localStorage.removeItem(guestKey);
-      _notify();
-    } catch { /* ignore */ }
-  }
-
-  function _email() {
-    const email = getCurrentUser()?.email?.trim().toLowerCase();
-    return email || 'guest';
-  }
-
-  function _storageKey() {
-    return PREFIX + _email();
-  }
-
-  function _defaultProfile() {
-    return {
-      favorites: [],
-      saved: [],
-      quizProgress: {},
-      lessonProgress: {},
-      visits: [],
-      certifications: [],
-    };
-  }
-
-  function _load() {
-    try {
-      const raw = localStorage.getItem(_storageKey());
-      if (!raw) return _defaultProfile();
-      const data = JSON.parse(raw);
-      return {
-        favorites: Array.isArray(data.favorites) ? data.favorites : [],
-        saved: Array.isArray(data.saved) ? data.saved : [],
-        quizProgress: data.quizProgress && typeof data.quizProgress === 'object' ? data.quizProgress : {},
-        lessonProgress: data.lessonProgress && typeof data.lessonProgress === 'object' ? data.lessonProgress : {},
-        visits: Array.isArray(data.visits) ? data.visits : [],
-        certifications: Array.isArray(data.certifications) ? data.certifications : [],
-      };
-    } catch {
-      return _defaultProfile();
+      return await _userIdPromise;
+    } finally {
+      _userIdPromise = null;
     }
   }
 
-  function _save(profile) {
-    localStorage.setItem(_storageKey(), JSON.stringify(profile));
-    window.dispatchEvent(new CustomEvent(EVENT, { detail: { email: _email() } }));
+  /** Vista instantánea desde localStorage (sin red). */
+  function hydrateCacheFromLocal() {
+    const favKey = _profileStorageKey('favorites');
+    const savedKey = _profileStorageKey('saved');
+    if (favKey && _cache.favorites === null) {
+      _cache.favorites = _readLocalList(favKey).map(_normalizeItem);
+    }
+    if (savedKey && _cache.saved === null) {
+      _cache.saved = _readLocalList(savedKey).map(_normalizeItem);
+    }
   }
 
-  function _notify() {
-    window.dispatchEvent(new CustomEvent(EVENT, { detail: { email: _email() } }));
+  /** Estadísticas síncronas si el caché ya está poblado. */
+  function getStatsSync() {
+    hydrateCacheFromLocal();
+    const saved = _cache.saved || [];
+    const favorites = _cache.favorites || [];
+    const quizzes = _cache.quizProgress || {};
+    const certifications = _cache.certifications || [];
+    return {
+      saved:          saved.length,
+      favorites:      favorites.length,
+      quizzes:        Object.keys(quizzes).length,
+      certifications: certifications.length,
+    };
   }
 
+  /** Precarga paralela de favoritos, guardados, quizzes y certificaciones. */
+  function prefetchProfileData() {
+    if (_prefetchPromise) return _prefetchPromise;
+    hydrateCacheFromLocal();
+    _prefetchPromise = Promise.all([
+      getSaved(),
+      getFavorites(),
+      getQuizProgress(),
+      getCertifications(),
+    ]).finally(() => { _prefetchPromise = null; });
+    return _prefetchPromise;
+  }
+
+  // ── Helpers de item ──────────────────────────────────────────
   function buildCourseItem(course) {
     return {
-      id: `course-${course.id}`,
-      type: 'course',
-      refId: course.id,
-      title: course.title,
-      desc: course.desc,
-      icon: course.icon,
-      color: course.color || '',
+      id:        `course-${course.id}`,
+      type:      'course',
+      refId:     course.id,
+      title:     course.title,
+      desc:      course.desc,
+      icon:      course.icon,
+      color:     course.color || '',
       visitedAt: Date.now(),
     };
   }
 
   function buildQuizItem(quiz) {
     return {
-      id: `quiz-${quiz.id}`,
-      type: 'quiz',
-      refId: quiz.id,
-      title: quiz.title,
-      desc: quiz.desc || 'Quiz completado',
-      icon: quiz.icon || '',
+      id:        `quiz-${quiz.id}`,
+      type:      'quiz',
+      refId:     quiz.id,
+      title:     quiz.title,
+      desc:      quiz.desc || 'Quiz completado',
+      icon:      quiz.icon || '',
       visitedAt: Date.now(),
     };
   }
 
-  function _findIndex(list, refId, type) {
-    return list.findIndex(i => i.refId === refId && i.type === type);
+  // ════════════════════════════════════════════════════════════
+  // FAVORITOS
+  // ════════════════════════════════════════════════════════════
+
+  function _profileStorageKey(suffix) {
+    const email = getCurrentUser()?.email?.toLowerCase();
+    return email ? `in4mind_${suffix}_${email}` : null;
   }
 
-  function isFavorite(refId, type = 'course') {
-    return _findIndex(_load().favorites, refId, type) >= 0;
+  function _readLocalList(key) {
+    if (!key) return [];
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
   }
 
-  function isSaved(refId, type = 'course') {
-    return _findIndex(_load().saved, refId, type) >= 0;
+  function _writeLocalList(key, list) {
+    if (!key) return;
+    localStorage.setItem(key, JSON.stringify(list));
   }
 
-  function toggleFavorite(item) {
-    const profile = _load();
-    const idx = _findIndex(profile.favorites, item.refId, item.type);
-    if (idx >= 0) {
-      profile.favorites.splice(idx, 1);
-      _save(profile);
+  function _normalizeItem(item) {
+    return {
+      id:        item.id || `${item.type}-${item.refId}`,
+      type:      item.type,
+      refId:     item.refId,
+      title:     item.title || '',
+      desc:      item.desc  || '',
+      icon:      item.icon  || '',
+      color:     item.color || '',
+      savedAt:   item.savedAt   || Date.now(),
+      visitedAt: item.visitedAt || Date.now(),
+    };
+  }
+
+  async function getFavorites() {
+    if (_cache.favorites) return _cache.favorites;
+    const userId = await getCurrentUserId();
+
+    if (userId) {
+      const { data, error } = await _sb
+        .from('favorites')
+        .select('*')
+        .eq('user_id', userId)
+        .order('saved_at', { ascending: false });
+
+      if (!error) {
+        _cache.favorites = (data || []).map(_rowToItem);
+        return _cache.favorites;
+      }
+      console.error('getFavorites:', error);
+    }
+
+    const key = _profileStorageKey('favorites');
+    _cache.favorites = _readLocalList(key).map(_normalizeItem);
+    return _cache.favorites;
+  }
+
+  async function isFavorite(refId, type = 'course') {
+    const favs = await getFavorites();
+    return favs.some(f => f.refId === refId && f.type === type);
+  }
+
+  async function toggleFavorite(item) {
+    const userId = await getCurrentUserId();
+    const normalized = _normalizeItem(item);
+    const already = await isFavorite(normalized.refId, normalized.type);
+
+    if (userId) {
+      if (already) {
+        await _sb.from('favorites')
+          .delete()
+          .eq('user_id', userId)
+          .eq('ref_id',  normalized.refId)
+          .eq('type',    normalized.type);
+      } else {
+        await _sb.from('favorites').insert({
+          user_id:     userId,
+          ref_id:      normalized.refId,
+          type:        normalized.type,
+          title:       normalized.title || '',
+          description: normalized.desc  || '',
+          icon_url:    normalized.icon  || '',
+          color_var:   normalized.color || '',
+          saved_at:    new Date().toISOString(),
+        });
+      }
+      _cache.favorites = null;
+      _notify();
+      return !already;
+    }
+
+    const key = _profileStorageKey('favorites');
+    if (!key) return false;
+
+    let favs = _readLocalList(key).map(_normalizeItem);
+    if (already) {
+      favs = favs.filter(f => !(f.refId === normalized.refId && f.type === normalized.type));
+      _writeLocalList(key, favs);
+      _cache.favorites = favs;
+      _notify();
       return false;
     }
-    profile.favorites.unshift({ ...item, savedAt: Date.now() });
-    _save(profile);
+
+    favs.unshift(normalized);
+    _writeLocalList(key, favs);
+    _cache.favorites = favs;
+    _notify();
     return true;
   }
 
-  function toggleSaved(item) {
-    const profile = _load();
-    const idx = _findIndex(profile.saved, item.refId, item.type);
-    if (idx >= 0) {
-      profile.saved.splice(idx, 1);
-      _save(profile);
+  async function removeFavorite(id) {
+    const userId = await getCurrentUserId();
+    const refId = id.replace(/^(course|quiz)-/, '');
+
+    if (userId) {
+      await _sb.from('favorites')
+        .delete()
+        .eq('user_id', userId)
+        .eq('ref_id', refId);
+    }
+
+    const key = _profileStorageKey('favorites');
+    if (key) {
+      const favs = _readLocalList(key)
+        .map(_normalizeItem)
+        .filter(f => f.id !== id && f.refId !== refId);
+      _writeLocalList(key, favs);
+      _cache.favorites = favs;
+    } else {
+      _cache.favorites = null;
+    }
+    _notify();
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // GUARDADOS
+  // ════════════════════════════════════════════════════════════
+
+  async function getSaved() {
+    if (_cache.saved) return _cache.saved;
+    const userId = await getCurrentUserId();
+
+    if (userId) {
+      const { data, error } = await _sb
+        .from('saved_items')
+        .select('*')
+        .eq('user_id', userId)
+        .order('saved_at', { ascending: false });
+
+      if (!error) {
+        _cache.saved = (data || []).map(_rowToItem);
+        return _cache.saved;
+      }
+      console.error('getSaved:', error);
+    }
+
+    const key = _profileStorageKey('saved');
+    _cache.saved = _readLocalList(key).map(_normalizeItem);
+    return _cache.saved;
+  }
+
+  async function isSaved(refId, type = 'course') {
+    const saved = await getSaved();
+    return saved.some(s => s.refId === refId && s.type === type);
+  }
+
+  async function toggleSaved(item) {
+    const userId = await getCurrentUserId();
+    const normalized = _normalizeItem(item);
+    const already = await isSaved(normalized.refId, normalized.type);
+
+    if (userId) {
+      if (already) {
+        await _sb.from('saved_items')
+          .delete()
+          .eq('user_id', userId)
+          .eq('ref_id',  normalized.refId)
+          .eq('type',    normalized.type);
+      } else {
+        await _sb.from('saved_items').insert({
+          user_id:     userId,
+          ref_id:      normalized.refId,
+          type:        normalized.type,
+          title:       normalized.title || '',
+          description: normalized.desc  || '',
+          icon_url:    normalized.icon  || '',
+          color_var:   normalized.color || '',
+          saved_at:    new Date().toISOString(),
+        });
+      }
+      _cache.saved = null;
+      _notify();
+      return !already;
+    }
+
+    const key = _profileStorageKey('saved');
+    if (!key) return false;
+
+    let saved = _readLocalList(key).map(_normalizeItem);
+    if (already) {
+      saved = saved.filter(s => !(s.refId === normalized.refId && s.type === normalized.type));
+      _writeLocalList(key, saved);
+      _cache.saved = saved;
+      _notify();
       return false;
     }
-    profile.saved.unshift({ ...item, savedAt: Date.now() });
-    _save(profile);
+
+    saved.unshift(normalized);
+    _writeLocalList(key, saved);
+    _cache.saved = saved;
+    _notify();
     return true;
   }
 
-  function removeFavorite(id) {
-    const profile = _load();
-    profile.favorites = profile.favorites.filter(i => i.id !== id);
-    _save(profile);
+  async function removeSaved(id) {
+    const userId = await getCurrentUserId();
+    const refId = id.replace(/^(course|quiz)-/, '');
+
+    if (userId) {
+      await _sb.from('saved_items')
+        .delete()
+        .eq('user_id', userId)
+        .eq('ref_id', refId);
+    }
+
+    const key = _profileStorageKey('saved');
+    if (key) {
+      const saved = _readLocalList(key)
+        .map(_normalizeItem)
+        .filter(s => s.id !== id && s.refId !== refId);
+      _writeLocalList(key, saved);
+      _cache.saved = saved;
+    } else {
+      _cache.saved = null;
+    }
+    _notify();
   }
 
-  function removeSaved(id) {
-    const profile = _load();
-    profile.saved = profile.saved.filter(i => i.id !== id);
-    _save(profile);
+  // ════════════════════════════════════════════════════════════
+  // HISTORIAL DE VISITAS
+  // ════════════════════════════════════════════════════════════
+
+  async function recordVisit(item) {
+    const userId = await getCurrentUserId();
+    if (!userId) return;
+
+    // UPSERT: si ya existe la visita, actualiza visited_at
+    await _sb.from('visit_history').upsert({
+      user_id:     userId,
+      ref_id:      item.refId,
+      type:        item.type,
+      title:       item.title || '',
+      description: item.desc  || '',
+      icon_url:    item.icon  || '',
+      color_var:   item.color || '',
+      visited_at:  new Date().toISOString(),
+    }, { onConflict: 'user_id,ref_id,type' });
+
+    _cache.visits = null;
+    _notify();
   }
 
-  function getFavorites() {
-    return _load().favorites;
+  async function getRecentVisits(limit = 9) {
+    if (_cache.visits) return _cache.visits.slice(0, limit);
+    const userId = await getCurrentUserId();
+    if (!userId) return [];
+
+    const { data, error } = await _sb
+      .from('visit_history')
+      .select('*')
+      .eq('user_id', userId)
+      .order('visited_at', { ascending: false })
+      .limit(MAX_VISITS);
+
+    if (error) { console.error('getRecentVisits:', error); return []; }
+
+    _cache.visits = (data || []).map(row => ({
+      ..._rowToItem(row),
+      visitedAt: new Date(row.visited_at).getTime(),
+    }));
+
+    return _cache.visits.slice(0, limit);
   }
 
-  function getSaved() {
-    return _load().saved;
-  }
+  // ════════════════════════════════════════════════════════════
+  // PROGRESO DE QUIZZES
+  // ════════════════════════════════════════════════════════════
 
-  function recordVisit(item) {
-    const profile = _load();
-    const filtered = profile.visits.filter(v => !(v.refId === item.refId && v.type === item.type));
-    filtered.unshift({ ...item, visitedAt: Date.now() });
-    profile.visits = filtered.slice(0, MAX_VISITS);
-    _save(profile);
-  }
+  async function saveQuizProgress(quizId, correct, total, meta = {}) {
+    const userId = await getCurrentUserId();
+    if (!userId) return null;
 
-  function getRecentVisits(limit = 9) {
-    return _load().visits.slice(0, limit);
-  }
+    const pct  = total > 0 ? Math.round((correct / total) * 100) : 0;
 
-  function saveQuizProgress(quizId, correct, total, meta = {}) {
-    const profile = _load();
-    const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
-    const prev = profile.quizProgress[quizId];
-    profile.quizProgress[quizId] = {
+    // Obtener mejor pct anterior
+    const { data: prev } = await _sb
+      .from('quiz_progress')
+      .select('best_pct, attempts')
+      .eq('user_id', userId)
+      .eq('quiz_id', quizId)
+      .single();
+
+    const bestPct  = Math.max(prev?.best_pct || 0, pct);
+    const attempts = (prev?.attempts || 0) + 1;
+
+    const row = {
+      user_id:      userId,
+      quiz_id:      quizId,
+      title:        meta.title || quizId,
+      icon_url:     meta.icon  || '',
       correct,
       total,
       pct,
-      title: meta.title || prev?.title || quizId,
-      icon: meta.icon || prev?.icon || '',
-      completedAt: Date.now(),
-      attempts: (prev?.attempts || 0) + 1,
-      bestPct: Math.max(prev?.bestPct || 0, pct),
+      best_pct:     bestPct,
+      attempts,
+      completed_at: new Date().toISOString(),
+      updated_at:   new Date().toISOString(),
     };
-    _save(profile);
-    return profile.quizProgress[quizId];
+
+    await _sb.from('quiz_progress')
+      .upsert(row, { onConflict: 'user_id,quiz_id' });
+
+    _cache.quizProgress = null;
+    _notify();
+
+    return { correct, total, pct, bestPct, attempts, title: row.title, icon: row.icon_url };
   }
 
-  function getQuizProgress() {
-    return _load().quizProgress;
+  async function getQuizProgress() {
+    if (_cache.quizProgress) return _cache.quizProgress;
+    const userId = await getCurrentUserId();
+    if (!userId) return {};
+
+    const { data, error } = await _sb
+      .from('quiz_progress')
+      .select('*')
+      .eq('user_id', userId);
+
+    if (error) { console.error('getQuizProgress:', error); return {}; }
+
+    // Convertir array a objeto { quizId: { ... } } igual que antes
+    const map = {};
+    (data || []).forEach(row => {
+      map[row.quiz_id] = {
+        correct:     row.correct,
+        total:       row.total,
+        pct:         row.pct,
+        bestPct:     row.best_pct,
+        attempts:    row.attempts,
+        title:       row.title,
+        icon:        row.icon_url,
+        completedAt: new Date(row.completed_at).getTime(),
+      };
+    });
+
+    _cache.quizProgress = map;
+    return map;
   }
 
-  function getCompletedQuizCount() {
-    return Object.keys(_load().quizProgress).length;
+  async function getCompletedQuizCount() {
+    const progress = await getQuizProgress();
+    return Object.keys(progress).length;
   }
 
-  function getStats() {
-    const profile = _load();
-    return {
-      saved: profile.saved.length,
-      favorites: profile.favorites.length,
-      quizzes: Object.keys(profile.quizProgress).length,
-      certifications: (profile.certifications || []).length,
-    };
+  async function getQuizScoreForCourse(courseId) {
+    const progress = await getQuizProgress();
+    const data = progress[courseId];
+    return data?.bestPct ?? data?.pct ?? 0;
   }
 
-  function getCertifications() {
-    return _load().certifications || [];
+  async function isQuizPassedForCert(courseId) {
+    const score = await getQuizScoreForCourse(courseId);
+    return score >= QUIZ_UNLOCK_EXAM_PCT;
   }
 
-  function getExamId(courseId) {
-    return `${courseId}-cert-exam`;
+  // ════════════════════════════════════════════════════════════
+  // PROGRESO DE LECCIONES
+  // ════════════════════════════════════════════════════════════
+
+  const LESSON_LOCAL_KEY = 'in4mind_lesson_local';
+
+  function _getLessonLocal() {
+    try {
+      return JSON.parse(localStorage.getItem(LESSON_LOCAL_KEY) || '{}');
+    } catch {
+      return {};
+    }
   }
 
-  function saveLessonProgress(courseId, lessonId, pct, meta = {}) {
-    const profile = _load();
-    if (!profile.lessonProgress) profile.lessonProgress = {};
-    if (!profile.lessonProgress[courseId]) profile.lessonProgress[courseId] = { lessons: {} };
+  function _mergeLessonLocal(courseId, map) {
+    const all = _getLessonLocal();
+    all[courseId] = { ...(all[courseId] || {}), ...map };
+    try {
+      localStorage.setItem(LESSON_LOCAL_KEY, JSON.stringify(all));
+    } catch { /* ignore */ }
+  }
 
-    const prev = profile.lessonProgress[courseId].lessons[lessonId];
+  /** Lectura síncrona del progreso de lecciones (caché local optimista). */
+  function getLessonProgressSync(courseId) {
+    return _getLessonLocal()[courseId] || {};
+  }
+
+  async function saveLessonProgress(courseId, lessonId, pct, meta = {}) {
+    const userId = await getCurrentUserId();
+    if (!userId) return null;
+
     const score = Math.max(0, Math.min(100, Math.round(pct)));
-    profile.lessonProgress[courseId].lessons[lessonId] = {
-      pct: Math.max(prev?.pct || 0, score),
-      title: meta.title || prev?.title || lessonId,
-      completedAt: Date.now(),
-      attempts: (prev?.attempts || 0) + 1,
-    };
-    _save(profile);
-    return profile.lessonProgress[courseId].lessons[lessonId];
+
+    // Obtener pct anterior para no bajar el mejor resultado
+    const { data: prev } = await _sb
+      .from('lesson_progress')
+      .select('pct, attempts')
+      .eq('user_id',  userId)
+      .eq('course_id', courseId)
+      .eq('lesson_id', lessonId)
+      .single();
+
+    const bestPct  = Math.max(prev?.pct || 0, score);
+    const attempts = (prev?.attempts || 0) + 1;
+
+    await _sb.from('lesson_progress').upsert({
+      user_id:      userId,
+      course_id:    courseId,
+      lesson_id:    lessonId,
+      title:        meta.title || lessonId,
+      pct:          bestPct,
+      attempts,
+      completed_at: new Date().toISOString(),
+      updated_at:   new Date().toISOString(),
+    }, { onConflict: 'user_id,course_id,lesson_id' });
+
+    _cache.lessonProgress = null;
+    _mergeLessonLocal(courseId, {
+      [lessonId]: { pct: bestPct, title: meta.title || lessonId, attempts },
+    });
+    _notify();
+
+    return { pct: bestPct, attempts, title: meta.title || lessonId };
   }
 
-  function getLessonProgress(courseId) {
-    return _load().lessonProgress?.[courseId]?.lessons || {};
+  async function getLessonProgress(courseId) {
+    const userId = await getCurrentUserId();
+    if (!userId) return {};
+
+    const { data, error } = await _sb
+      .from('lesson_progress')
+      .select('*')
+      .eq('user_id',  userId)
+      .eq('course_id', courseId);
+
+    if (error) { console.error('getLessonProgress:', error); return {}; }
+
+    const map = {};
+    (data || []).forEach(row => {
+      map[row.lesson_id] = {
+        pct:         row.pct,
+        title:       row.title,
+        attempts:    row.attempts,
+        completedAt: new Date(row.completed_at).getTime(),
+      };
+    });
+
+    _mergeLessonLocal(courseId, map);
+    return map;
   }
 
-  function getCourseLessonStats(courseId, totalLessons = 0) {
-    const lessons = getLessonProgress(courseId);
-    const entries = Object.values(lessons);
+  async function getCourseLessonStats(courseId, totalLessons = 0) {
+    const lessons  = await getLessonProgress(courseId);
+    const entries  = Object.values(lessons);
     const completed = entries.length;
     const avg = completed
       ? Math.round(entries.reduce((sum, l) => sum + (l.pct || 0), 0) / completed)
       : 0;
     const allComplete = totalLessons > 0 && completed >= totalLessons;
-    const lessonsOk = allComplete && avg >= LESSON_EXAM_UNLOCK_AVG;
+    const unlocked    = allComplete && avg >= LESSON_EXAM_UNLOCK_AVG;
 
-    return { completed, total: totalLessons, avg, allComplete, unlocked: lessonsOk };
+    return { completed, total: totalLessons, avg, allComplete, unlocked };
   }
 
-  function getQuizScoreForCourse(courseId) {
-    const data = _load().quizProgress[courseId];
-    return data?.bestPct ?? data?.pct ?? 0;
+  // ════════════════════════════════════════════════════════════
+  // CERTIFICACIONES
+  // ════════════════════════════════════════════════════════════
+
+  async function getCertifications() {
+    if (_cache.certifications) return _cache.certifications;
+    const userId = await getCurrentUserId();
+    if (!userId) return [];
+
+    const { data, error } = await _sb
+      .from('certifications')
+      .select('*')
+      .eq('user_id', userId)
+      .order('earned_at', { ascending: false });
+
+    if (error) { console.error('getCertifications:', error); return []; }
+
+    _cache.certifications = (data || []).map(row => ({
+      id:            row.id,
+      refId:         row.ref_id,
+      type:          row.type,
+      title:         row.title,
+      desc:          row.description,
+      icon:          row.icon_url,
+      pct:           row.pct,
+      modules:       row.modules       || [],
+      levelsCovered: row.levels_covered || [],
+      lessonCount:   row.lesson_count  || 0,
+      earnedAt:      new Date(row.earned_at).getTime(),
+    }));
+
+    return _cache.certifications;
   }
 
-  function isQuizPassedForCert(courseId) {
-    return getQuizScoreForCourse(courseId) >= QUIZ_UNLOCK_EXAM_PCT;
+  async function tryAwardCertification(quizId, meta = {}) {
+    const pct = meta.pct ?? 0;
+    if (pct < CERT_MIN_PCT) return null;
+
+    const userId = await getCurrentUserId();
+    if (!userId) return null;
+
+    const cert = {
+      user_id:     userId,
+      ref_id:      quizId,
+      type:        'quiz',
+      title:       meta.title || `Certificado: ${quizId}`,
+      description: meta.desc  || `Aprobado con ${pct}% de aciertos`,
+      icon_url:    meta.icon  || '',
+      pct,
+      earned_at:   new Date().toISOString(),
+    };
+
+    // Solo actualiza si el nuevo pct es mayor
+    const { data: existing } = await _sb
+      .from('certifications')
+      .select('pct')
+      .eq('user_id', userId)
+      .eq('ref_id',  quizId)
+      .eq('type',    'quiz')
+      .single();
+
+    if (existing && pct <= existing.pct) return null;
+
+    await _sb.from('certifications')
+      .upsert(cert, { onConflict: 'user_id,ref_id,type' });
+
+    _cache.certifications = null;
+    _notify();
+    return cert;
   }
 
-  /** Requisitos completos para desbloquear el examen de certificación. */
-  function getCertificationRequirements(courseId, totalLessons = 0) {
+  async function tryAwardExamCertification(courseId, meta = {}) {
+    const pct = meta.pct ?? 0;
+    if (pct < EXAM_CERT_MIN_PCT) return null;
+
+    const userId = await getCurrentUserId();
+    if (!userId) return null;
+
+    const cert = {
+      user_id:        userId,
+      ref_id:         courseId,
+      type:           'exam',
+      title:          meta.title || `Certificación profesional: ${courseId}`,
+      description:    meta.desc  || `Examen práctico aprobado con ${pct}%`,
+      icon_url:       meta.icon  || '',
+      pct,
+      modules:        meta.modules       || [],
+      levels_covered: meta.levelsCovered || [],
+      lesson_count:   meta.lessonCount   || 0,
+      earned_at:      new Date().toISOString(),
+    };
+
+    const { data: existing } = await _sb
+      .from('certifications')
+      .select('pct')
+      .eq('user_id', userId)
+      .eq('ref_id',  courseId)
+      .eq('type',    'exam')
+      .single();
+
+    if (existing && pct <= existing.pct) return null;
+
+    await _sb.from('certifications')
+      .upsert(cert, { onConflict: 'user_id,ref_id,type' });
+
+    _cache.certifications = null;
+    _notify();
+    return cert;
+  }
+
+  async function hasExamCertification(courseId) {
+    const certs = await getCertifications();
+    return certs.some(c => c.refId === courseId && c.type === 'exam');
+  }
+
+  async function syncCertificationsFromQuizzes() {
+    if (_certSyncPromise) return _certSyncPromise;
+    _certSyncPromise = _syncCertificationsFromQuizzesImpl().finally(() => {
+      _certSyncPromise = null;
+    });
+    return _certSyncPromise;
+  }
+
+  async function _syncCertificationsFromQuizzesImpl() {
+    const progress = await getQuizProgress();
+    const eligible = Object.entries(progress).filter(([, data]) => (data.pct || 0) >= CERT_MIN_PCT);
+    if (!eligible.length) return;
+
+    const userId = await getCurrentUserId();
+    if (!userId) return;
+
+    const { data: existing } = await _sb
+      .from('certifications')
+      .select('ref_id, pct')
+      .eq('user_id', userId)
+      .eq('type', 'quiz');
+
+    const bestByRef = new Map((existing || []).map(row => [row.ref_id, row.pct || 0]));
+    const pending = eligible.filter(([quizId, data]) => {
+      const prev = bestByRef.get(quizId) ?? 0;
+      return (data.pct || 0) > prev;
+    });
+    if (!pending.length) return;
+
+    await Promise.all(pending.map(([quizId, data]) => tryAwardCertification(quizId, {
+      title: `Certificado: ${data.title || quizId}`,
+      icon:  data.icon,
+      pct:   data.pct,
+      desc:  `Aprobado con ${data.pct}% de aciertos`,
+    })));
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // ESTADÍSTICAS
+  // ════════════════════════════════════════════════════════════
+
+  async function getStats() {
+    const [saved, favorites, quizzes, certifications] = await Promise.all([
+      getSaved(),
+      getFavorites(),
+      getQuizProgress(),
+      getCertifications(),
+    ]);
+    return {
+      saved:          saved.length,
+      favorites:      favorites.length,
+      quizzes:        Object.keys(quizzes).length,
+      certifications: certifications.length,
+    };
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // REQUISITOS DE CERTIFICACIÓN
+  // ════════════════════════════════════════════════════════════
+
+  async function getCertificationRequirements(courseId, totalLessons = 0) {
     if (!totalLessons && typeof TutorialData !== 'undefined') {
       totalLessons = TutorialData.getLessons(courseId).length;
     }
-    const lessonStats = getCourseLessonStats(courseId, totalLessons);
-    const quizPct = getQuizScoreForCourse(courseId);
-    const quizPassed = quizPct >= QUIZ_UNLOCK_EXAM_PCT;
+    const lessonStats  = await getCourseLessonStats(courseId, totalLessons);
+    const quizPct      = await getQuizScoreForCourse(courseId);
+    const quizPassed   = quizPct >= QUIZ_UNLOCK_EXAM_PCT;
     const examUnlocked = lessonStats.unlocked && quizPassed;
 
     return {
@@ -323,132 +839,45 @@ const UserProfileService = (() => {
       quizPassed,
       examUnlocked,
       lessonMinAvg: LESSON_EXAM_UNLOCK_AVG,
-      quizMinPct: QUIZ_UNLOCK_EXAM_PCT,
-      examMinPct: EXAM_CERT_MIN_PCT,
+      quizMinPct:   QUIZ_UNLOCK_EXAM_PCT,
+      examMinPct:   EXAM_CERT_MIN_PCT,
     };
   }
 
-  function isExamUnlocked(courseId, totalLessons = 0) {
-    return getCertificationRequirements(courseId, totalLessons).examUnlocked;
+  async function isExamUnlocked(courseId, totalLessons = 0) {
+    const req = await getCertificationRequirements(courseId, totalLessons);
+    return req.examUnlocked;
   }
 
-  function hasExamCertification(courseId) {
-    return (_load().certifications || []).some(c => c.type === 'exam' && c.refId === courseId);
+  function getExamId(courseId) {
+    return `${courseId}-cert-exam`;
   }
 
-  /** Otorga certificación al aprobar un quiz de práctica (≥70%). */
-  function tryAwardCertification(quizId, meta = {}) {
-    const pct = meta.pct ?? 0;
-    if (pct < CERT_MIN_PCT) return null;
+  // ════════════════════════════════════════════════════════════
+  // NOMBRE / PERFIL
+  // ════════════════════════════════════════════════════════════
 
-    const profile = _load();
-    if (!profile.certifications) profile.certifications = [];
-
-    const existingIdx = profile.certifications.findIndex(c => c.refId === quizId && c.type === 'quiz');
-    const cert = {
-      id: `cert-${quizId}`,
-      refId: quizId,
-      type: 'quiz',
-      title: meta.title || `Certificado: ${quizId}`,
-      desc: meta.desc || `Aprobado con ${pct}% de aciertos`,
-      icon: meta.icon || '',
-      pct,
-      earnedAt: Date.now(),
-    };
-
-    if (existingIdx >= 0) {
-      if (pct > (profile.certifications[existingIdx].pct || 0)) {
-        profile.certifications[existingIdx] = { ...profile.certifications[existingIdx], ...cert };
-      }
-    } else {
-      profile.certifications.unshift(cert);
-    }
-
-    _save(profile);
-    return cert;
-  }
-
-  /** Certificación profesional al aprobar examen práctico (≥80%). */
-  function tryAwardExamCertification(courseId, meta = {}) {
-    const pct = meta.pct ?? 0;
-    if (pct < EXAM_CERT_MIN_PCT) return null;
-
-    const profile = _load();
-    if (!profile.certifications) profile.certifications = [];
-
-    const existingIdx = profile.certifications.findIndex(c => c.refId === courseId && c.type === 'exam');
-    const cert = {
-      id: `cert-exam-${courseId}`,
-      refId: courseId,
-      type: 'exam',
-      title: meta.title || `Certificación profesional: ${courseId}`,
-      desc: meta.desc || `Examen práctico aprobado con ${pct}% de aciertos`,
-      icon: meta.icon || '',
-      pct,
-      earnedAt: Date.now(),
-      modules: meta.modules || [],
-      levelsCovered: meta.levelsCovered || [],
-      lessonCount: meta.lessonCount || 0,
-    };
-
-    if (existingIdx >= 0) {
-      if (pct > (profile.certifications[existingIdx].pct || 0)) {
-        profile.certifications[existingIdx] = { ...profile.certifications[existingIdx], ...cert };
-      }
-    } else {
-      profile.certifications.unshift(cert);
-    }
-
-    _save(profile);
-    return cert;
-  }
-
-  /** Sincroniza certificaciones desde quizzes ya completados. */
-  function syncCertificationsFromQuizzes() {
-    const profile = _load();
-    Object.entries(profile.quizProgress).forEach(([quizId, data]) => {
-      if ((data.pct || 0) >= CERT_MIN_PCT) {
-        tryAwardCertification(quizId, {
-          title: `Certificado: ${data.title || quizId}`,
-          icon: data.icon,
-          pct: data.pct,
-          desc: `Aprobado con ${data.pct}% de aciertos`,
-        });
-      }
-    });
-  }
-
-  function formatVisitDate(ts) {
-    if (!ts) return 'Reciente';
-    const diff = Date.now() - ts;
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return 'Visto hace un momento';
-    if (mins < 60) return `Visitado hace ${mins} min`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `Visitado hace ${hours} h`;
-    const days = Math.floor(hours / 24);
-    if (days === 1) return 'Visitado ayer';
-    if (days < 7) return `Visitado hace ${days} días`;
-    const d = new Date(ts);
-    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-    return `Visitado ${months[d.getMonth()]} ${d.getDate()}`;
-  }
-
-  function updateDisplayName(name) {
+  async function updateDisplayName(name) {
     const trimmed = name?.trim();
     if (!trimmed) return false;
-    const user = getCurrentUser();
-    if (!user) return false;
 
-    user.name = trimmed;
-    sessionStorage.setItem('in4mind_user', JSON.stringify(user));
+    const userId = await getCurrentUserId();
+    if (!userId) return false;
 
+    // Actualiza en Supabase
+    const { error } = await _sb
+      .from('profiles')
+      .update({ name: trimmed, updated_at: new Date().toISOString() })
+      .eq('id', userId);
+
+    if (error) { console.error('updateDisplayName:', error); return false; }
+
+    // Actualiza también en sessionStorage para compatibilidad
     try {
-      const users = JSON.parse(localStorage.getItem('in4mind_users') || '{}');
-      const key = user.email.toLowerCase();
-      if (users[key]) {
-        users[key].name = trimmed;
-        localStorage.setItem('in4mind_users', JSON.stringify(users));
+      const user = getCurrentUser();
+      if (user) {
+        user.name = trimmed;
+        sessionStorage.setItem('in4mind_user', JSON.stringify(user));
       }
     } catch { /* ignore */ }
 
@@ -456,59 +885,140 @@ const UserProfileService = (() => {
     return true;
   }
 
-  /** Migra progreso de quiz en sessionStorage al perfil del usuario. */
-  function migrateSessionQuizProgress() {
-    try {
-      const raw = sessionStorage.getItem('in4mind_quiz_progress');
-      if (!raw) return;
-      const session = JSON.parse(raw);
-      Object.entries(session).forEach(([quizId, data]) => {
-        if (data && typeof data.correct === 'number') {
-          saveQuizProgress(quizId, data.correct, data.total, { title: data.title, icon: data.icon });
-        }
-      });
-    } catch { /* ignore */ }
+  // ════════════════════════════════════════════════════════════
+  // COMPATIBILIDAD — funciones que el resto del código llama
+  // pero que con Supabase ya no son necesarias
+  // ════════════════════════════════════════════════════════════
+
+  async function mergeGuestIntoUser() {
+    // Con Supabase Auth la sesión de invitado se maneja automáticamente.
+    // Se mantiene la función para no romper el AuthController.
   }
 
+  async function migrateSessionQuizProgress() {
+    // Ya no es necesario migrar desde sessionStorage.
+    // Se mantiene para no romper QuizzesController.
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // UTILIDADES
+  // ════════════════════════════════════════════════════════════
+
+  /** Convierte una fila de la BD al formato que usa el resto de la app */
+  function _rowToItem(row) {
+    return {
+      id:        `${row.type}-${row.ref_id}`,
+      type:      row.type,
+      refId:     row.ref_id,
+      title:     row.title       || '',
+      desc:      row.description || '',
+      icon:      row.icon_url    || '',
+      color:     row.color_var   || '',
+      savedAt:   row.saved_at   ? new Date(row.saved_at).getTime()   : Date.now(),
+      visitedAt: row.visited_at ? new Date(row.visited_at).getTime() : Date.now(),
+    };
+  }
+
+  function _visitT(key, params) {
+    if (typeof I18n !== 'undefined') return I18n.t(`visit.${key}`, params);
+    const fallbacks = {
+      recent: 'Reciente',
+      moment: 'Visto hace un momento',
+      mins: `Visitado hace ${params?.n ?? 0} min`,
+      hours: `Visitado hace ${params?.n ?? 0} h`,
+      days: `Visitado hace ${params?.n ?? 0} días`,
+      yesterday: 'Ayer',
+    };
+    return fallbacks[key] ?? '';
+  }
+
+  function formatVisitDate(ts) {
+    if (!ts) return _visitT('recent');
+    const diff = Date.now() - ts;
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1)  return _visitT('moment');
+    if (mins < 60) return _visitT('mins', { n: mins });
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return _visitT('hours', { n: hours });
+    const days = Math.floor(hours / 24);
+    if (days === 1) return _visitT('yesterday');
+    if (days < 7)   return _visitT('days', { n: days });
+    const d = new Date(ts);
+    const months = typeof I18n !== 'undefined'
+      ? (I18n.t('visit.months') || [])
+      : ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    const monthLabel = Array.isArray(months) ? months[d.getMonth()] : months;
+    return `${monthLabel} ${d.getDate()}`;
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // API PÚBLICA — misma interfaz que antes para no romper nada
+  // ════════════════════════════════════════════════════════════
   return {
+    // Usuario
     getCurrentUser,
+    getCurrentUserId,
+    updateDisplayName,
+    mergeGuestIntoUser,
+    migrateSessionQuizProgress,
+
+    // Builders
     buildCourseItem,
     buildQuizItem,
+
+    // Favoritos
     isFavorite,
-    isSaved,
     toggleFavorite,
-    toggleSaved,
     removeFavorite,
-    removeSaved,
     getFavorites,
+
+    // Guardados
+    isSaved,
+    toggleSaved,
+    removeSaved,
     getSaved,
+
+    // Visitas
     recordVisit,
     getRecentVisits,
+    formatVisitDate,
+
+    // Quizzes
     saveQuizProgress,
     getQuizProgress,
     getCompletedQuizCount,
-    getStats,
+    getQuizScoreForCourse,
+    isQuizPassedForCert,
+
+    // Lecciones
+    saveLessonProgress,
+    getLessonProgress,
+    getLessonProgressSync,
+    getCourseLessonStats,
+
+    // Certificaciones
     getCertifications,
     tryAwardCertification,
     tryAwardExamCertification,
-    syncCertificationsFromQuizzes,
-    saveLessonProgress,
-    getLessonProgress,
-    getCourseLessonStats,
-    isExamUnlocked,
-    isQuizPassedForCert,
-    getQuizScoreForCourse,
-    getCertificationRequirements,
     hasExamCertification,
+    syncCertificationsFromQuizzes,
     getExamId,
-    formatVisitDate,
-    updateDisplayName,
-    migrateSessionQuizProgress,
-    mergeGuestIntoUser,
+
+    // Requisitos
+    getCertificationRequirements,
+    isExamUnlocked,
+
+    // Estadísticas
+    getStats,
+    getStatsSync,
+    hydrateCacheFromLocal,
+    prefetchProfileData,
+
+    // Constantes (otros controllers las usan)
+    CERT_MIN_PCT,
+    EXAM_CERT_MIN_PCT,
     LESSON_EXAM_UNLOCK_AVG,
     QUIZ_UNLOCK_EXAM_PCT,
-    EXAM_CERT_MIN_PCT,
-    CERT_MIN_PCT,
     EVENT,
   };
 

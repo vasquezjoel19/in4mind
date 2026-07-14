@@ -1,2 +1,12 @@
-# Claves de API — no subir al repositorio
+# Claves y configs generados en build
 src/js/config/groq.config.js
+.env
+.env.local
+.vercel
+
+# Dependencias
+node_modules/
+
+# Sistema
+.DS_Store
+Thumbs.db

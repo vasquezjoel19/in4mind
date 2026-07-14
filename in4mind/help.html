@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es" data-i18n-title="meta.helpTitle">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="IN4MIND ? Centro de ayuda y preguntas frecuentes.">
+  <title>IN4MIND ? Centro de ayuda</title>
+
+  <script src="src/js/controllers/ThemeController.js?v=20260617"></script>
+  <script src="src/js/a11y-boot.js?v=20260707"></script>
+  <script src="src/js/locales/es.js?v=20260725"></script>
+  <script src="src/js/locales/en.js?v=20260725"></script>
+  <script src="src/js/locales/zh.js?v=20260801"></script>
+  <script src="src/js/locales/curriculum-en.js?v=20260722"></script>
+  <script src="src/js/locales/curriculum-zh.js?v=20260801"></script>
+  <script src="src/js/services/I18n.js?v=20260801"></script>
+  <script>ThemeController.initEarly(); I18n.initEarly();</script>
+
+  <link rel="stylesheet" href="src/css/tokens.css?v=20260702">
+  <link rel="stylesheet" href="src/css/base.css?v=20260714fluid3">
+  <link rel="stylesheet" href="src/css/dashboard.css?v=20260713amb">
+  <link rel="stylesheet" href="src/css/responsive.css?v=20260613">
+  <link rel="stylesheet" href="src/css/help.css?v=20260727">
+  <link rel="stylesheet" href="src/css/theme.css?v=20260714bulb2">
+  <link rel="stylesheet" href="src/css/accessibility.css?v=20260707">
+  <link rel="stylesheet" href="src/css/i18n.css?v=20260722">
+  <link rel="stylesheet" href="src/css/settings-modal.css?v=20260714theme">
+  <link rel="stylesheet" href="src/css/app-features.css?v=20260713app">
+  <link rel="manifest" href="manifest.json">
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='20' font-size='20'>??</text></svg>">
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
+
+<div class="dashboard">
+
+  <aside class="sidebar" id="sidebar" role="navigation" aria-label="Men? principal" data-i18n-aria="shell.mainMenu">
+    <div class="sidebar__brand">
+      <div class="sidebar__brand-main">
+        <svg class="sidebar__brand-icon" width="28" height="28" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="9" y1="18" x2="15" y2="18"/>
+          <line x1="10" y1="22" x2="14" y2="22"/>
+          <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0018 8 6 6 0 006 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 018.91 14"/>
+        </svg>
+        <span class="sidebar__brand-name">IN4MIND</span>
+      </div>
+      <button type="button" class="sidebar__collapse-btn" id="sidebar-collapse"
+              aria-label="Colapsar men?" data-i18n-aria="shell.collapseMenu" aria-expanded="true">
+        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+    </div>
+
+    <ul class="sidebar__nav" id="sidebar-nav" role="menubar" aria-label="Navegaci?n principal" data-i18n-aria="shell.mainNav"></ul>
+
+    <div class="sidebar__footer">
+      <ul id="sidebar-footer" role="menubar" aria-label="Opciones de cuenta" data-i18n-aria="shell.accountOptions"></ul>
+    </div>
+  </aside>
+
+  <div class="main-area">
+
+    <header class="topbar" role="banner">
+      <button class="menu-toggle icon-btn" id="menu-toggle"
+              aria-label="Abrir men?" data-i18n-aria="shell.openMenu" aria-expanded="false">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="6"  x2="21" y2="6"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+
+      <div class="search-bar" role="search">
+        <svg class="search-bar__icon" width="16" height="16" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input class="search-bar__input" type="search" id="search-input"
+               data-help-assistant="true"
+               placeholder="Pregunta sobre IN4MIND o temas IT..."
+               data-i18n-placeholder="help.searchHero"
+               aria-label="Preguntar al asistente de ayuda" data-i18n-aria="help.askPlaceholder">
+      </div>
+
+      <div class="topbar__actions">
+        <a class="icon-btn icon-btn--active" href="help.html" aria-label="Ayuda" data-i18n-aria="shell.help" aria-current="page">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </a>
+        <button class="icon-btn" aria-label="Notificaciones" data-i18n-aria="shell.notifications">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 01-3.46 0"/>
+          </svg>
+        </button>
+        <a class="avatar" id="avatar" href="profile.html" aria-label="Ir a mi perfil" data-i18n-aria="shell.myProfile">U</a>
+      </div>
+    </header>
+
+    <main class="content-area help-page" id="content-area">
+
+      <section class="help-hero" id="help-hero-section" aria-labelledby="help-title">
+        <div class="help-hero__main">
+          <div class="help-hero__top">
+            <div>
+              <h1 class="help-hero__title" id="help-title" data-i18n="help.title">Centro de ayuda</h1>
+              <p class="help-hero__sub" data-i18n="help.sub">
+                Pregunta lo que necesites sobre IN4MIND. El asistente responde al instante con IA.
+              </p>
+            </div>
+            <span class="help-hero__status" id="help-ai-status" aria-live="polite"></span>
+          </div>
+
+          <div class="help-hero__chips" id="help-ai-chips" role="list"></div>
+
+          <div class="help-hero__chat">
+            <div class="help-ai__thread" id="help-ai-thread" aria-live="polite" hidden></div>
+            <div class="help-hero__composer">
+              <input class="help-hero__input" type="text" id="help-hero-search" maxlength="2000"
+                     placeholder="Ej.: ?C?mo guardo un curso? ?Qu? es el phishing?"
+                     data-i18n-placeholder="help.askPlaceholder"
+                     aria-label="Pregunta al asistente" data-i18n-aria="help.askPlaceholder">
+              <button type="button" class="help-hero__send" id="help-ai-send" aria-label="Enviar" data-i18n-aria="ai.send">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                  <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
+                </svg>
+              </button>
+            </div>
+            <div class="help-hero__foot">
+              <p class="help-hero__hint" data-i18n="help.askHint">El asistente puede cometer errores. Verifica informaci?n cr?tica en cursos.</p>
+              <a class="help-hero__full-link" id="help-ai-open-full" href="ai.html" data-i18n="help.askOpenFull">Chat completo en IA ?</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="help-hero__art" aria-hidden="true">
+          <div class="help-hero__illustration">
+            <div class="help-hero__glow"></div>
+            <svg class="help-hero__svg help-hero__bulb" viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="helpBulbGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#6b93c9"/>
+                  <stop offset="50%" stop-color="#4a76b2"/>
+                  <stop offset="100%" stop-color="#3d6499"/>
+                </linearGradient>
+                <filter id="helpBulbGlow" x="-30%" y="-30%" width="160%" height="160%">
+                  <feGaussianBlur stdDeviation="8" result="blur"/>
+                  <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+              </defs>
+              <g class="in4mind-bulb__rays" stroke="#5a86bc" stroke-linecap="round">
+                <line x1="160" y1="8"  x2="160" y2="26" stroke-width="5"/>
+                <line x1="128" y1="12" x2="134" y2="28" stroke-width="4.5"/>
+                <line x1="192" y1="12" x2="186" y2="28" stroke-width="4.5"/>
+                <line x1="96"  y1="22" x2="106" y2="36" stroke-width="4"/>
+                <line x1="224" y1="22" x2="214" y2="36" stroke-width="4"/>
+                <line x1="64"  y1="44" x2="76"  y2="54" stroke-width="3.5"/>
+                <line x1="256" y1="44" x2="244" y2="54" stroke-width="3.5"/>
+              </g>
+              <circle cx="160" cy="130" r="90" fill="url(#helpBulbGrad)" opacity="0.15" filter="url(#helpBulbGlow)"/>
+              <path d="M160 40c-44 0-80 36-80 80 0 28 14 52 36 66v14h88v-14c22-14 36-38 36-66 0-44-36-80-80-80z" fill="url(#helpBulbGrad)" stroke="#3d6499" stroke-width="2"/>
+              <g class="in4mind-bulb__filament" stroke="rgba(255,255,255,0.7)" stroke-linecap="round" stroke-linejoin="round" fill="none">
+                <path d="M122 172 V142 c0-14 11-22 20-16 9 6 8 15-2 22" stroke-width="4.5"/>
+                <path d="M198 172 V142 c0-14-11-22-20-16-9 6-8 15 2 22" stroke-width="4.5"/>
+                <path d="M136 128 Q160 104 184 128" stroke-width="3.5"/>
+              </g>
+              <path d="M120 210h80v12c0 8-6 14-14 14h-52c-8 0-14-6-14-14v-12z" fill="#3d6499"/>
+              <rect x="136" y="236" width="48" height="10" rx="4" fill="#2b4566"/>
+              <rect x="144" y="250" width="32" height="8" rx="3" fill="#1a2b48"/>
+            </svg>
+          </div>
+        </div>
+      </section>
+
+      <section class="help-faq-section" aria-labelledby="help-faq-title">
+        <div class="help-faq-section__head">
+          <h2 class="help-faq-section__title" id="help-faq-title" data-i18n="help.faqTitle">Preguntas frecuentes</h2>
+          <button type="button" class="help-faq-section__contact" id="help-contact-link" data-i18n="help.contact">
+            ?No encuentras lo que buscas? Cont?ctanos ?
+          </button>
+        </div>
+
+        <div class="help-faq-section__search-wrap help-search">
+          <svg class="help-search__icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input class="help-search__input" type="search" id="help-search"
+                 placeholder="Filtrar preguntas..."
+                 data-i18n-placeholder="help.filter"
+                 aria-label="Filtrar preguntas frecuentes" data-i18n-aria="help.filter">
+        </div>
+
+        <div class="help-faq__list" id="help-faq-list" role="list"></div>
+        <p class="help-faq-empty" id="help-faq-empty" hidden data-i18n="help.empty">No hay resultados para tu b?squeda.</p>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="src/js/config/supabase.config.js"></script>
+<script src="src/js/components/In4mindBulb.js?v=20260714bulb2"></script>
+<script src="src/js/i18n-boot.js?v=20260722"></script>
+<script src="src/js/config/groq.config.js?v=20260810"></script>
+<script src="src/js/data/courseFactory.js?v=20260902"></script>
+<script src="src/js/data/extendedCourses.js?v=20260702d"></script>
+<script src="src/js/locales/extended-course-locales.js?v=20260904"></script>
+<script src="src/js/data/extendedCourseLocales.js?v=20260904"></script>
+<script src="src/js/services/DataService.js?v=20260902"></script>
+<script src="src/js/services/UserProfileService.js?v=20260717"></script>
+<script src="src/js/data/LearningPathsData.js?v=20260706c"></script>
+<script src="src/js/services/ContentLoader.js?v=20260706d"></script>
+<script src="src/js/services/GamificationService.js?v=20260706d"></script>
+<script src="src/js/services/VideoProgressService.js?v=20260706c"></script>
+<script src="src/js/services/GlobalSearchService.js?v=20260706c"></script>
+<script src="src/js/services/NotificationService.js?v=20260706d"></script>
+<script src="src/js/services/CertificateShare.js?v=20260706c"></script>
+<script src="src/js/services/AIUserContext.js?v=20260706c"></script>
+<script src="src/js/services/AccessibilityService.js?v=20260707"></script>
+<script src="src/js/controllers/AppFeatures.js?v=20260706d"></script>
+<script src="src/js/services/CursorSpotlight.js?v=20260714fluid4"></script>
+<script src="src/js/services/AppShell.js?v=20260714spot"></script>
+<script src="src/js/services/GroqService.js?v=20260713app"></script>
+<script src="src/js/utils/AIMarkdown.js?v=20260811"></script>
+<script src="src/js/data/AIKnowledge.js?v=20260902"></script>
+<script src="src/js/services/AIEngine.js?v=20260707"></script>
+<script src="src/js/controllers/SidebarController.js?v=20260713app"></script>
+<script src="src/js/services/AuthService.js?v=20260706"></script>
+<script src="src/js/services/DataExportService.js?v=20260706"></script>
+<script src="src/js/controllers/OtherMenuController.js?v=20260714theme"></script>
+<script src="src/js/controllers/SettingsController.js?v=20260731"></script>
+<script src="src/js/data/HelpData.js?v=20260706c"></script>
+<script src="src/js/controllers/HelpController.js?v=20260707"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => HelpController.init());
+</script>
+
+</body>
+</html>

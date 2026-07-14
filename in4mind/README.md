@@ -2,6 +2,8 @@
 
 > Aprende tecnología de forma clara, moderna y accesible.
 
+**Actualización Julio 2026:** Auth unificado (Supabase + demo), certificados verificables (`verify.html`), banner de cookies, catálogo público en landing, notas y valoraciones en lecciones, metas semanales personalizables, XP/badges, temporizador en exámenes, exportar/eliminar datos (GDPR), panel de accesibilidad, Web Push stub, y más.
+
 ---
 
 ## Descripción del Proyecto
@@ -54,17 +56,22 @@ start in4mind/index.html  # Windows
 ### Opción 2 — Servidor local (recomendado)
 
 ```bash
-# Con Python (viene instalado en macOS/Linux)
-python3 -m http.server 8080
+# Desde la carpeta in4mind/
+cd in4mind
+npx --yes serve -l 8080 .
 # → Abre http://localhost:8080
-
-# Con Node.js
-npx serve .
-# → Abre la URL indicada en consola
-
-# Con VS Code
-# Instala la extensión "Live Server" y haz clic en "Go Live"
 ```
+
+### Opción 3 — Deploy en Vercel
+
+IN4MIND **no es** una app Python. Es HTML/CSS/JS + funciones Node (`api/`).
+
+1. En Vercel: **Framework Preset = Other**, **no** Python.
+2. Preferido: **Root Directory = `in4mind`**.
+   - Alternativa: dejar Root vacío; el `vercel.json` de la raíz del repo ya apunta a `in4mind`.
+3. Build: `npm run build` · Output: (vacío si Root = `in4mind`).
+4. Variables opcionales: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `GROQ_API_KEY`.
+5. Redeploy tras push a `main`.
 
 ### Credenciales de prueba
 

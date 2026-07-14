@@ -1,22 +1,34 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-i18n-title="meta.aiTitle">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="IN4MIND IA — Asistente educativo con Groq.">
-  <title>IN4MIND — Asistente IA</title>
+  <meta name="description" content="IN4MIND IA ? Asistente educativo con Groq.">
+  <title>IN4MIND ? Asistente IA</title>
 
   <script src="src/js/controllers/ThemeController.js?v=20260617"></script>
-  <script>ThemeController.initEarly();</script>
+  <script src="src/js/a11y-boot.js?v=20260707"></script>
+  <script src="src/js/locales/es.js?v=20260722"></script>
+  <script src="src/js/locales/en.js?v=20260722"></script>
+  <script src="src/js/locales/zh.js?v=20260801"></script>
+  <script src="src/js/locales/curriculum-en.js?v=20260722"></script>
+  <script src="src/js/locales/curriculum-zh.js?v=20260801"></script>
+  <script src="src/js/services/I18n.js?v=20260801"></script>
+  <script>ThemeController.initEarly(); I18n.initEarly();</script>
 
-  <link rel="stylesheet" href="src/css/tokens.css?v=20260706">
-  <link rel="stylesheet" href="src/css/base.css?v=20260617">
-  <link rel="stylesheet" href="src/css/dashboard.css?v=20260613">
+  <link rel="stylesheet" href="src/css/tokens.css?v=20260702">
+  <link rel="stylesheet" href="src/css/base.css?v=20260714fluid3">
+  <link rel="stylesheet" href="src/css/dashboard.css?v=20260713amb">
   <link rel="stylesheet" href="src/css/responsive.css?v=20260613">
-  <link rel="stylesheet" href="src/css/ai.css?v=20260613">
-  <link rel="stylesheet" href="src/css/theme.css?v=20260706">
+  <link rel="stylesheet" href="src/css/ai.css?v=20260713app">
+  <link rel="stylesheet" href="src/css/theme.css?v=20260714bulb2">
+  <link rel="stylesheet" href="src/css/accessibility.css?v=20260707">
+  <link rel="stylesheet" href="src/css/i18n.css?v=20260722">
+  <link rel="stylesheet" href="src/css/settings-modal.css?v=20260714theme">
+  <link rel="stylesheet" href="src/css/app-features.css?v=20260713app">
+  <link rel="manifest" href="manifest.json">
 
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='20' font-size='20'>💡</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='20' font-size='20'>??</text></svg>">
 </head>
 <body>
 
@@ -24,7 +36,7 @@
 
 <div class="dashboard">
 
-  <aside class="sidebar" id="sidebar" role="navigation" aria-label="Menú principal">
+  <aside class="sidebar" id="sidebar" role="navigation" aria-label="Men? principal" data-i18n-aria="shell.mainMenu">
     <div class="sidebar__brand">
       <div class="sidebar__brand-main">
         <svg class="sidebar__brand-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -33,19 +45,19 @@
         </svg>
         <span class="sidebar__brand-name">IN4MIND</span>
       </div>
-      <button type="button" class="sidebar__collapse-btn" id="sidebar-collapse" aria-label="Colapsar menú" aria-expanded="true">
+      <button type="button" class="sidebar__collapse-btn" id="sidebar-collapse" aria-label="Colapsar men?" data-i18n-aria="shell.collapseMenu" aria-expanded="true">
         <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="15 18 9 12 15 6"/>
         </svg>
       </button>
     </div>
 
-    <ul class="sidebar__nav" id="sidebar-nav" role="menubar" aria-label="Navegación principal"></ul>
+    <ul class="sidebar__nav" id="sidebar-nav" role="menubar" aria-label="Navegaci?n principal" data-i18n-aria="shell.mainNav"></ul>
 
     <div class="sidebar__recent" id="sidebar-recent"></div>
 
     <div class="sidebar__footer">
-      <ul id="sidebar-footer" role="menubar" aria-label="Opciones de cuenta"></ul>
+      <ul id="sidebar-footer" role="menubar" aria-label="Opciones de cuenta" data-i18n-aria="shell.accountOptions"></ul>
     </div>
   </aside>
 
@@ -53,28 +65,34 @@
 
     <header class="ai-topbar" role="banner">
       <div class="ai-topbar__left">
-        <button class="menu-toggle icon-btn" id="menu-toggle" aria-label="Abrir menú" aria-expanded="false">
+        <button class="menu-toggle icon-btn" id="menu-toggle" aria-label="Abrir men?" data-i18n-aria="shell.openMenu" aria-expanded="false">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
-        <button type="button" class="icon-btn sidebar-top-toggle" id="sidebar-collapse-top" aria-label="Colapsar menú" aria-expanded="true">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
-        </button>
         <div>
-          <div class="ai-topbar__title">IN4MIND Assistant</div>
-          <span class="ai-topbar__model" id="chat-status">Conectando…</span>
+          <div class="ai-topbar__title" data-i18n="ai.assistant">IN4MIND Assistant</div>
+          <span class="ai-topbar__model" id="chat-status">Conectando?</span>
         </div>
       </div>
       <div class="ai-topbar__actions">
-        <button type="button" class="ai-btn-ghost" id="btn-new-chat" aria-label="Nueva conversación">
+        <button type="button" class="ai-btn-ghost" id="btn-new-chat" aria-label="Nueva conversaci?n" data-i18n-aria="ai.newChat">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-          Nueva conversación
+          <span data-i18n="ai.newChat">Nueva conversaci?n</span>
         </button>
-        <a class="avatar" id="avatar" href="profile.html" aria-label="Ir a mi perfil">U</a>
+        <a class="icon-btn" href="help.html" aria-label="Ayuda" data-i18n-aria="shell.help">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </a>
+        <a class="avatar" id="avatar" href="profile.html" aria-label="Ir a mi perfil" data-i18n-aria="shell.myProfile">U</a>
       </div>
     </header>
 
     <div class="ai-config-banner" id="config-banner" role="alert">
-      <span>Configure su API Key de Groq en <code>src/js/config/groq.config.js</code> para activar respuestas con IA en tiempo real.</span>
+      <span data-i18n="ai.configBanner">Configure <code>GROQ_API_KEY</code> en Vercel (Environment Variables) o use <code>groq.config.js</code> en local.</span>
     </div>
 
     <div class="ai-workspace">
@@ -83,21 +101,21 @@
 
           <section class="ai-welcome" id="chat-welcome">
             <div class="ai-welcome__logo" aria-hidden="true">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+              <svg class="ai-welcome__bulb" width="34" height="42" viewBox="0 0 32 40" fill="none" aria-hidden="true">
+                <path d="M16 5.5c-5.5 0-10 4.5-10 10 0 3.5 1.8 6.5 4.5 8.2v1.8h11v-1.8c2.7-1.7 4.5-4.7 4.5-8.2 0-5.5-4.5-10-10-10z"/>
               </svg>
             </div>
-            <h1 class="ai-welcome__title">Asistente educativo IN4MIND</h1>
-            <p class="ai-welcome__sub">
-              Solo respondo consultas sobre <strong>IN4MIND</strong>: la plataforma, tutoriales, quizzes, perfil y los cursos del catálogo. Preguntas ajenas no serán atendidas.
+            <h1 class="ai-welcome__title" data-i18n="ai.welcomeTitle">Asistente educativo IN4MIND</h1>
+            <p class="ai-welcome__sub" data-i18n="ai.welcomeSub">
+              Solo respondo consultas sobre IN4MIND: la plataforma, cursos, quizzes, perfil y los cursos del cat?logo. Preguntas ajenas no ser?n atendidas.
             </p>
             <div class="ai-suggestions" id="suggestions"></div>
           </section>
 
-          <div class="ai-thread" id="chat-thread" style="display:none;" aria-live="polite" aria-label="Historial de conversación">
+          <div class="ai-thread" id="chat-thread" style="display:none;" aria-live="polite" aria-label="Historial de conversaci?n" data-i18n-aria="ai.historyAria">
             <div class="ai-typing-row" id="typing-row" style="display:none;">
-              <div class="ai-turn__avatar ai-turn__avatar--ai" aria-hidden="true">IA</div>
-              <div class="ai-typing" aria-label="Generando respuesta">
+              <div class="ai-turn__avatar ai-turn__avatar--ai" aria-hidden="true" data-i18n="ai.roleIa">IA</div>
+              <div class="ai-typing" aria-label="Generando respuesta" data-i18n-aria="ai.typingAria">
                 <span></span><span></span><span></span>
               </div>
             </div>
@@ -108,27 +126,53 @@
 
       <footer class="ai-composer-wrap">
         <div class="ai-composer">
-          <textarea id="chat-input" rows="1" placeholder="Pregunte solo sobre IN4MIND o sus cursos…" aria-label="Mensaje" maxlength="2000" autocomplete="off"></textarea>
-          <button type="button" class="ai-composer__send" id="btn-send" aria-label="Enviar mensaje">
+          <textarea id="chat-input" rows="1" placeholder="Pregunte solo sobre IN4MIND o sus cursos?"
+                    data-i18n-placeholder="ai.placeholder"
+                    aria-label="Mensaje" data-i18n-aria="ai.send" maxlength="2000" autocomplete="off"></textarea>
+          <button type="button" class="ai-composer__send" id="btn-send" aria-label="Enviar mensaje" data-i18n-aria="ai.send">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
           </button>
         </div>
-        <p class="ai-composer__hint">IN4MIND Assistant puede cometer errores. Verifique la información crítica en tutoriales y documentación oficial.</p>
+        <p class="ai-composer__hint" data-i18n="ai.hint">IN4MIND Assistant puede cometer errores. Verifique la informaci?n cr?tica en cursos y documentaci?n oficial.</p>
       </footer>
     </div>
 
   </div>
 </div>
 
-<!-- ══ ORDEN DE SCRIPTS (no modificar) ══ -->
-<script src="src/js/config/groq.config.js?v=20260610"></script>
-<script src="src/js/services/DataService.js?v=20260629"></script>
+<!-- -- ORDEN DE SCRIPTS (no modificar) -- -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="src/js/config/supabase.config.js"></script>
+<script src="src/js/components/In4mindBulb.js?v=20260714bulb2"></script>
+<script src="src/js/i18n-boot.js?v=20260722"></script>
+<script src="src/js/config/groq.config.js?v=20260810"></script>
+<script src="src/js/data/courseFactory.js?v=20260902"></script>
+<script src="src/js/data/extendedCourses.js?v=20260702d"></script>
+<script src="src/js/locales/extended-course-locales.js?v=20260904"></script>
+<script src="src/js/data/extendedCourseLocales.js?v=20260904"></script>
+<script src="src/js/services/DataService.js?v=20260902"></script>
+<script src="src/js/utils/AIMarkdown.js?v=20260811"></script>
 <script src="src/js/services/UserProfileService.js?v=20260702"></script>
-<script src="src/js/services/AppShell.js?v=20260702"></script>
-<script src="src/js/services/GroqService.js?v=20260705"></script>
-<script src="src/js/data/AIKnowledge.js?v=20260705"></script>
-<script src="src/js/controllers/SidebarController.js?v=20260613"></script>
-<script src="src/js/controllers/AIChatController.js?v=20260705"></script>
+<script src="src/js/data/LearningPathsData.js?v=20260706c"></script>
+<script src="src/js/services/ContentLoader.js?v=20260706d"></script>
+<script src="src/js/services/GamificationService.js?v=20260706d"></script>
+<script src="src/js/services/VideoProgressService.js?v=20260706c"></script>
+<script src="src/js/services/GlobalSearchService.js?v=20260706c"></script>
+<script src="src/js/services/NotificationService.js?v=20260706d"></script>
+<script src="src/js/services/CertificateShare.js?v=20260706c"></script>
+<script src="src/js/services/AIUserContext.js?v=20260706c"></script>
+<script src="src/js/services/AccessibilityService.js?v=20260707"></script>
+<script src="src/js/controllers/AppFeatures.js?v=20260706d"></script>
+<script src="src/js/services/CursorSpotlight.js?v=20260714fluid4"></script>
+<script src="src/js/services/AppShell.js?v=20260714spot"></script>
+<script src="src/js/services/GroqService.js?v=20260713app"></script>
+<script src="src/js/data/AIKnowledge.js?v=20260902"></script>
+<script src="src/js/controllers/SidebarController.js?v=20260713app"></script>
+<script src="src/js/services/AuthService.js?v=20260706"></script>
+<script src="src/js/services/DataExportService.js?v=20260706"></script>
+<script src="src/js/controllers/OtherMenuController.js?v=20260714theme"></script>
+<script src="src/js/controllers/SettingsController.js?v=20260731"></script>
+<script src="src/js/controllers/AIChatController.js?v=20260713app"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => AIChatController.init());
 </script>

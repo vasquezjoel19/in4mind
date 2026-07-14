@@ -3,12 +3,15 @@
  * Login y Registro: layout de dos columnas, animaciones de transición.
  */
 
+@import url('bulb-icon.css');
+
 /* ── Wrapper de la página ── */
 .auth-page {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, var(--clr-bg-auth) 0%, var(--clr-bg-app) 100%);
+  background: var(--app-bg-gradient);
+  background-attachment: fixed;
   color: var(--clr-text-primary);
 }
 
@@ -29,12 +32,6 @@
   font-weight: 700;
   color: var(--clr-text-primary);
   text-decoration: none;
-}
-
-.auth-topbar__brand svg {
-  width: 28px;
-  height: 28px;
-  color: var(--clr-brand-500);
 }
 
 .auth-topbar__links {
@@ -113,7 +110,7 @@
   justify-content: center;
   gap: var(--sp-lg);
   padding: var(--sp-2xl);
-  background: linear-gradient(180deg, var(--clr-brand-700) 0%, var(--clr-brand-900) 100%);
+  background: linear-gradient(180deg, var(--clr-brand-700) 0%, var(--clr-brand-navy) 100%);
   text-align: center;
   color: white;
 }
@@ -294,15 +291,15 @@
 
 .btn--primary {
   width: 100%;
-  background: var(--clr-brand-600);
+  background: var(--clr-accent);
   color: var(--clr-text-on-brand);
-  box-shadow: var(--shadow-btn);
+  box-shadow: none;
 }
 
 .btn--primary:hover {
-  background: var(--clr-brand-700);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(59, 80, 109, 0.35);
+  background: var(--clr-accent-hover);
+  transform: none;
+  box-shadow: none;
 }
 
 .btn--primary:active { transform: translateY(0); }

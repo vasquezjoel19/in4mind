@@ -7,18 +7,38 @@
 
 const QuizzesController = (() => {
 
-  const TYPE_LABELS = {
-    choice:    'Opción múltiple',
-    truefalse: 'Verdadero o Falso',
-    match:     'Pareos',
-  };
+  function _t(k, p, fb) {
+    if (typeof I18n !== 'undefined') return I18n.t(k, p);
+    return fb ?? '';
+  }
+
+  function _typeLabels() {
+    return {
+      choice:    _t('quizzes.typeChoice', null, 'Opción múltiple'),
+      truefalse: _t('quizzes.typeTrueFalse', null, 'Verdadero o Falso'),
+      match:     _t('quizzes.typeMatch', null, 'Pareos'),
+    };
+  }
+
+  function _categories() {
+    return [
+      { id: 'all',         label: _t('tutorial.all', null, 'Todos') },
+      { id: 'web',         label: _t('tutorial.catWeb', null, 'Web') },
+      { id: 'programming', label: _t('tutorial.catProgramming', null, 'Programación') },
+      { id: 'design',      label: _t('tutorial.catDesign', null, 'Diseño') },
+      { id: 'office',      label: _t('tutorial.catOffice', null, 'Office') },
+      { id: 'data',        label: _t('tutorial.catData', null, 'Datos') },
+      { id: 'security',    label: _t('tutorial.catSecurity', null, 'Ciberseguridad') },
+      { id: 'tools',       label: _t('tutorial.catTools', null, 'Herramientas') },
+    ];
+  }
 
   /** Fallback si CourseCurriculum no está cargado */
   const _LEGACY_QUIZZES = [
     {
       id: 'canvas', title: 'Canvas', category: 'design',
       desc: 'Fundamentos de Diseño Digital.',
-      icon: 'https://cdn-icons-png.flaticon.com/512/5968/5968170.png',
+      icon: 'src/img/courses/canva.svg?v=20260713',
       sections: [
         {
           title: 'Conceptos básicos',
@@ -91,7 +111,7 @@ const QuizzesController = (() => {
     {
       id: 'python', title: 'Python', category: 'programming',
       desc: 'Lógica y Automatización.',
-      icon: 'https://cdn-icons-png.flaticon.com/512/5968/5968350.png',
+      icon: 'src/img/courses/python.svg',
       sections: [
         {
           title: 'Sintaxis esencial',
@@ -330,7 +350,7 @@ const QuizzesController = (() => {
     {
       id: 'sql', title: 'SQL', category: 'data',
       desc: 'Consultas y bases de datos relacionales.',
-      icon: 'https://cdn-icons-png.flaticon.com/512/4248/4248443.png',
+      icon: 'src/img/courses/sql.svg',
       sections: [
         {
           title: 'Consultas básicas',
@@ -406,30 +426,23 @@ const QuizzesController = (() => {
   ];
 
   /** @type {QuizDef[]} */
-  const QUIZZES = typeof CourseCurriculum !== 'undefined'
-    ? CourseCurriculum.getAllQuizzes().map(q => {
+  function _getQuizzes() {
+    return typeof CourseCurriculum !== 'undefined'
+      ? CourseCurriculum.getAllQuizzes().map(q => {
         const count = (q.sections || []).reduce((n, s) => n + (s.questions?.length || 0), 0);
         const meta = CourseCurriculum.getCertMeta(q.id);
         return {
           ...q,
-          desc: `Evalúa ${count} temas alineados al tutorial${meta ? ` · ${meta.lessonCount} módulos` : ''}.`,
+          desc: typeof I18n !== 'undefined'
+            ? I18n.t('quizDesc', { n: count, m: meta?.lessonCount ?? 0 })
+            : `Evalúa ${count} temas alineados al curso${meta ? ` · ${meta.lessonCount} módulos` : ''}.`,
         };
       })
-    : _LEGACY_QUIZZES;
+      : _LEGACY_QUIZZES;
+  }
 
   const GENERAL_QUIZ_ID = 'general';
   const GENERAL_QUIZ_ICON = 'https://cdn-icons-png.flaticon.com/512/3976/3976625.png';
-
-  const CATEGORIES = [
-    { id: 'all',         label: 'Todos'        },
-    { id: 'web',         label: 'Web'          },
-    { id: 'programming', label: 'Programación' },
-    { id: 'design',      label: 'Diseño'       },
-    { id: 'office',      label: 'Office'       },
-    { id: 'data',        label: 'Datos'            },
-    { id: 'security',    label: 'Ciberseguridad'   },
-    { id: 'tools',       label: 'Herramientas'     },
-  ];
 
   let _activeFilter  = 'all';
   let _currentQuiz   = null;
@@ -488,10 +501,15 @@ const QuizzesController = (() => {
 
     if (typeof UserProfileService !== 'undefined') {
       const saved = UserProfileService.saveQuizProgress(quizId, correct, total, {
-        title: quiz?.isCertExam ? `Examen: ${quiz?.title || quizId}` : (quiz?.title || quizId),
+        title: quiz?.isCertExam
+          ? _t('quizzes.saveExamTitle', { title: quiz?.title || quizId }, `Examen: ${quiz?.title || quizId}`)
+          : (quiz?.title || quizId),
         icon: quiz?.icon || '',
       });
       _progress[quizId] = saved;
+      if (typeof GamificationService !== 'undefined') {
+        GamificationService.recordActivity('quiz', { quizId });
+      }
 
       if (quiz?.isCertExam && quiz.courseId) {
         const certMeta = typeof CourseCurriculum !== 'undefined'
@@ -502,18 +520,18 @@ const QuizzesController = (() => {
           icon: quiz.icon || '',
           pct,
           desc: certMeta
-            ? `Examen aprobado con ${pct}% (mín. ${UserProfileService.EXAM_CERT_MIN_PCT}%) · Módulos: ${certMeta.modules.join(', ')}`
-            : `Examen práctico aprobado con ${pct}% en ${quiz.title}`,
+            ? _t('quizzes.saveExamDesc', { pct, min: UserProfileService.EXAM_CERT_MIN_PCT, modules: certMeta.modules.join(', ') }, `Examen aprobado con ${pct}% (mín. ${UserProfileService.EXAM_CERT_MIN_PCT}%) · Módulos: ${certMeta.modules.join(', ')}`)
+            : _t('quizzes.saveExamDescShort', { pct, title: quiz.title }, `Examen práctico aprobado con ${pct}% en ${quiz.title}`),
           modules: certMeta?.modules || [],
           levelsCovered: certMeta?.levelsCovered || [],
           lessonCount: certMeta?.lessonCount || 0,
         });
       } else {
         UserProfileService.tryAwardCertification(quizId, {
-          title: `Certificado: ${quiz?.title || quizId}`,
+          title: _t('quizzes.saveCertTitle', { title: quiz?.title || quizId }, `Certificado: ${quiz?.title || quizId}`),
           icon: quiz?.icon || '',
           pct,
-          desc: `Aprobado con ${pct}% en el quiz de ${quiz?.title || quizId}`,
+          desc: _t('quizzes.saveCertDesc', { pct, title: quiz?.title || quizId }, `Aprobado con ${pct}% en el quiz de ${quiz?.title || quizId}`),
         });
       }
     } else {
@@ -530,7 +548,7 @@ const QuizzesController = (() => {
   }
 
   function _buildGeneralQuiz() {
-    const picked = QUIZZES.map(quiz => {
+    const picked = _getQuizzes().map(quiz => {
       const flat = _flattenQuiz(quiz);
       const idx = Math.floor(Math.random() * flat.length);
       const q = flat[idx];
@@ -538,11 +556,11 @@ const QuizzesController = (() => {
     });
     return {
       id: GENERAL_QUIZ_ID,
-      title: 'Conocimiento General',
+      title: _t('quizzes.generalKnowledge', null, 'Conocimiento General'),
       category: 'general',
-      desc: 'Preguntas variadas de todas las herramientas.',
+      desc: _t('quizzes.bannerSub', null, 'Preguntas variadas de todas las herramientas.'),
       icon: GENERAL_QUIZ_ICON,
-      sections: [{ title: 'Todas las áreas', questions: _shuffle(picked) }],
+      sections: [{ title: _t('quizzes.sectionAllAreas', null, 'Todas las áreas'), questions: _shuffle(picked) }],
     };
   }
 
@@ -552,7 +570,7 @@ const QuizzesController = (() => {
       ? CertificationExamData.getAllExams().find(e => e.id === id)
       : null;
     if (certExam) return certExam;
-    return QUIZZES.find(q => q.id === id) ?? null;
+    return _getQuizzes().find(q => q.id === id) ?? null;
   }
 
   function _questionLabel(q) {
@@ -573,16 +591,21 @@ const QuizzesController = (() => {
 
     let lockMsg;
     if (hasCert) {
-      lockMsg = `Certificación obtenida. Puedes reintentar para mejorar (mínimo ${req.examMinPct}% en examen).`;
+      lockMsg = _t('quizzes.certEarnedRetry', { min: req.examMinPct }, `Certificación obtenida. Puedes reintentar para mejorar (mínimo ${req.examMinPct}% en examen).`);
     } else if (req.examUnlocked) {
-      lockMsg = `Examen desbloqueado. Necesitas ≥${req.examMinPct}% para obtener la certificación profesional.`;
+      lockMsg = _t('quizzes.examUnlocked', { min: req.examMinPct }, `Examen desbloqueado. Necesitas ≥${req.examMinPct}% para obtener la certificación profesional.`);
     } else {
       const parts = [];
       if (!req.lessonStats.unlocked) {
-        parts.push(`Lecciones: ${req.lessonStats.completed}/${req.lessonStats.total} con promedio ≥${req.lessonMinAvg}% (actual ${req.lessonStats.avg}%)`);
+        parts.push(_t('quizzes.examLockedLessonsLine', {
+          completed: req.lessonStats.completed,
+          total: req.lessonStats.total,
+          min: req.lessonMinAvg,
+          avg: req.lessonStats.avg,
+        }, `Lecciones: ${req.lessonStats.completed}/${req.lessonStats.total} con promedio ≥${req.lessonMinAvg}% (actual ${req.lessonStats.avg}%)`));
       }
       if (!req.quizPassed) {
-        parts.push(`Quiz: ≥${req.quizMinPct}% requerido (tu mejor: ${req.quizPct}%)`);
+        parts.push(_t('quizzes.examLockedQuizLine', { min: req.quizMinPct, pct: req.quizPct }, `Quiz: ≥${req.quizMinPct}% requerido (tu mejor: ${req.quizPct}%)`));
       }
       lockMsg = parts.join(' · ');
     }
@@ -590,7 +613,7 @@ const QuizzesController = (() => {
     return `
       <article class="quiz-card quiz-card--cert ${req.examUnlocked ? '' : 'quiz-card--locked'} ${hasCert ? 'quiz-card--earned' : ''} anim-fade-up delay-${Math.min(delay + 1, 6)}"
                data-quiz-id="${exam.id}" data-cert-exam="1" role="button" tabindex="0"
-               aria-label="Examen de certificación de ${exam.title}">
+               aria-label="${_t('quizzes.examCardAria', { title: exam.title }, `Examen de certificación de ${exam.title}`)}">
         <div class="quiz-card__header">
           <div class="quiz-card__icon-wrap">
             <img src="${exam.icon}" alt="${exam.title}" loading="lazy" width="22" height="22">
@@ -598,7 +621,7 @@ const QuizzesController = (() => {
           <div>
             <h3 class="quiz-card__title">${exam.title}</h3>
             <p class="quiz-card__desc">${exam.desc}</p>
-            <p class="quiz-card__types">Examen práctico · Aprobación ≥${req.examMinPct}%</p>
+            <p class="quiz-card__types">${_t('quizzes.examPractical', { min: req.examMinPct }, `Examen práctico · Aprobación ≥${req.examMinPct}%`)}</p>
             <p class="quiz-card__lock-msg">${lockMsg}</p>
           </div>
         </div>
@@ -607,10 +630,10 @@ const QuizzesController = (() => {
             <div class="quiz-card__progress-fill" style="width:${pct}%"></div>
           </div>
           <div class="quiz-card__controls">
-            <span class="quiz-card__stat">${_countQuestions(exam)} Preguntas</span>
-            <span class="quiz-card__stat quiz-card__stat--ok">${hasCert ? '🏆 Certificado' : `&#10003; ${pct}%`}</span>
+            <span class="quiz-card__stat">${_t('quizzes.questionsLabel', { n: _countQuestions(exam) }, `${_countQuestions(exam)} Preguntas`)}</span>
+            <span class="quiz-card__stat quiz-card__stat--ok">${hasCert ? _t('quizzes.certEarnedBadge', null, '🏆 Certificado') : `&#10003; ${pct}%`}</span>
             <button type="button" class="btn--quiz-start" data-quiz-id="${exam.id}" ${req.examUnlocked ? '' : 'disabled'}>
-              ${req.examUnlocked ? 'Presentar examen' : 'Bloqueado'}
+              ${req.examUnlocked ? _t('quizzes.presentExam', null, 'Presentar examen') : _t('quizzes.locked', null, 'Bloqueado')}
             </button>
           </div>
         </div>
@@ -622,7 +645,7 @@ const QuizzesController = (() => {
     const exams = CertificationExamData.getAllExams();
     $certExamGrid.innerHTML = exams.length
       ? exams.map((exam, i) => _renderCertExamCard(exam, i)).join('')
-      : `<p style="color:var(--clr-text-muted);font-size:.85rem;grid-column:1/-1">No hay exámenes disponibles.</p>`;
+      : `<p style="color:var(--clr-text-muted);font-size:.85rem;grid-column:1/-1">${_t('quizzes.noExams', null, 'No hay exámenes disponibles.')}</p>`;
 
     $certExamGrid.querySelectorAll('[data-quiz-id]').forEach(el => {
       el.addEventListener('click', e => {
@@ -649,16 +672,17 @@ const QuizzesController = (() => {
     const pct = _getPct(quiz.id);
     const total = _countQuestions(quiz);
     const types = [...new Set(quiz.sections.flatMap(s => s.questions.map(q => q.type)))];
-    const typeHint = types.map(t => TYPE_LABELS[t] || t).join(' · ');
+    const labels = _typeLabels();
+    const typeHint = types.map(t => labels[t] || t).join(' · ');
     const quizMin = UserProfileService?.QUIZ_UNLOCK_EXAM_PCT ?? 70;
     const passed = pct >= quizMin;
     const passHint = passed
-      ? `✓ Quiz aprobado (≥${quizMin}%) — desbloquea certificación junto con las lecciones`
-      : `Meta certificación: ≥${quizMin}% en este quiz`;
+      ? _t('quizzes.quizPassedUnlock', { min: quizMin }, `✓ Quiz aprobado (≥${quizMin}%) — desbloquea certificación junto con las lecciones`)
+      : _t('quizzes.certGoal', { min: quizMin }, `Meta certificación: ≥${quizMin}% en este quiz`);
     return `
       <article class="quiz-card anim-fade-up delay-${Math.min(delay + 1, 6)}"
                data-quiz-id="${quiz.id}" role="button" tabindex="0"
-               aria-label="Iniciar quiz de ${quiz.title}">
+               aria-label="${_t('quizzes.startQuizAria', { title: quiz.title }, `Iniciar quiz de ${quiz.title}`)}">
         <div class="quiz-card__header">
           <div class="quiz-card__icon-wrap">
             <img src="${quiz.icon}" alt="${quiz.title}" loading="lazy" width="22" height="22">
@@ -666,7 +690,7 @@ const QuizzesController = (() => {
           <div>
             <h3 class="quiz-card__title">${quiz.title}</h3>
             <p class="quiz-card__desc">${quiz.desc}</p>
-            <p class="quiz-card__types">${quiz.sections.length} apartados · ${typeHint}</p>
+            <p class="quiz-card__types">${_t('quizzes.sectionsCount', { n: quiz.sections.length, types: typeHint }, `${quiz.sections.length} apartados · ${typeHint}`)}</p>
             <p class="quiz-card__lock-msg ${passed ? 'quiz-card__lock-msg--ok' : ''}">${passHint}</p>
           </div>
         </div>
@@ -675,16 +699,16 @@ const QuizzesController = (() => {
             <div class="quiz-card__progress-fill" style="width:${pct}%"></div>
           </div>
           <div class="quiz-card__controls">
-            <span class="quiz-card__stat">${total} Preguntas</span>
+            <span class="quiz-card__stat">${_t('quizzes.questionsLabel', { n: total }, `${total} Preguntas`)}</span>
             <span class="quiz-card__stat quiz-card__stat--ok">&#10003; ${pct}%</span>
-            <button type="button" class="btn--quiz-start" data-quiz-id="${quiz.id}">Empezar</button>
+            <button type="button" class="btn--quiz-start" data-quiz-id="${quiz.id}">${_t('quizzes.start', null, 'Empezar')}</button>
           </div>
         </div>
       </article>`;
   }
 
   function _renderFilters() {
-    $filtersWrap.innerHTML = CATEGORIES.map(cat => `
+    $filtersWrap.innerHTML = _categories().map(cat => `
       <button type="button" class="quiz-filter ${cat.id === _activeFilter ? 'quiz-filter--active' : ''}"
               data-filter="${cat.id}">${cat.label}</button>
     `).join('');
@@ -700,12 +724,12 @@ const QuizzesController = (() => {
 
   function _renderGrid() {
     const filtered = _activeFilter === 'all'
-      ? QUIZZES
-      : QUIZZES.filter(q => q.category === _activeFilter);
+      ? _getQuizzes()
+      : _getQuizzes().filter(q => q.category === _activeFilter);
 
     $quizGrid.innerHTML = filtered.length
       ? filtered.map((q, i) => _renderCard(q, i)).join('')
-      : `<p style="color:var(--clr-text-muted);font-size:.85rem;grid-column:1/-1">Sin resultados para este filtro.</p>`;
+      : `<p style="color:var(--clr-text-muted);font-size:.85rem;grid-column:1/-1">${_t('quizzes.emptyFilter', null, 'Sin resultados para este filtro.')}</p>`;
 
     $quizGrid.querySelectorAll('[data-quiz-id]').forEach(el => {
       el.addEventListener('click', e => {
@@ -730,7 +754,7 @@ const QuizzesController = (() => {
   }
 
   function _renderContinue() {
-    const inProgress = QUIZZES.filter(q => {
+    const inProgress = _getQuizzes().filter(q => {
       const p = _progress[q.id];
       return p && p.pct > 0 && p.pct < 100;
     }).slice(0, 2);
@@ -745,13 +769,13 @@ const QuizzesController = (() => {
       const p = _progress[q.id];
       return `
         <div class="continue-card" data-quiz-id="${q.id}" role="button" tabindex="0"
-             aria-label="Continuar quiz de ${q.title}">
+             aria-label="${_t('quizzes.continueQuizAria', { title: q.title }, `Continuar quiz de ${q.title}`)}">
           <div class="continue-card__left">
             <img src="${q.icon}" alt="${q.title}" width="28" height="28">
             <div>
               <div class="continue-card__title">${q.desc}</div>
               <div class="continue-card__meta">
-                ${p.correct}/${p.total} Correctas &bull; ${p.pct}%
+                ${_t('quizzes.continueCorrect', { correct: p.correct, total: p.total, pct: p.pct }, `${p.correct}/${p.total} Correctas · ${p.pct}%`)}
               </div>
             </div>
           </div>
@@ -775,6 +799,28 @@ const QuizzesController = (() => {
     $listView.style.display = '';
     $quizView.classList.remove('quiz-view--visible');
     $resultsView.classList.remove('results-view--visible');
+    _renderGrid();
+    _renderContinue();
+    _renderCertExams();
+  }
+
+  function _relocalize() {
+    if (!$filtersWrap) return;
+    _renderFilters();
+    if ($resultsView?.classList.contains('results-view--visible') && _currentQuiz && _answers.length) {
+      _showResults();
+      return;
+    }
+    if ($quizView?.classList.contains('quiz-view--visible') && _currentQuiz) {
+      const savedIdx = _currentQIdx;
+      const savedAnswers = _answers;
+      _currentQuiz = _getQuizById(_currentQuiz.id);
+      _flatQuestions = _flattenQuiz(_currentQuiz);
+      _currentQIdx = Math.min(savedIdx, Math.max(0, _flatQuestions.length - 1));
+      _answers = savedAnswers;
+      _renderQuestion();
+      return;
+    }
     _renderGrid();
     _renderContinue();
     _renderCertExams();
@@ -804,12 +850,18 @@ const QuizzesController = (() => {
         const req = UserProfileService.getCertificationRequirements(quiz.courseId, totalLessons);
         const parts = [];
         if (!req.lessonStats.unlocked) {
-          parts.push(`lecciones ${req.lessonStats.completed}/${req.lessonStats.total} con promedio ≥${req.lessonMinAvg}% (actual ${req.lessonStats.avg}%)`);
+          parts.push(_t('quizzes.examLockedLessons', {
+            completed: req.lessonStats.completed,
+            total: req.lessonStats.total,
+            min: req.lessonMinAvg,
+            avg: req.lessonStats.avg,
+          }, `lecciones ${req.lessonStats.completed}/${req.lessonStats.total} con promedio ≥${req.lessonMinAvg}% (actual ${req.lessonStats.avg}%)`));
         }
         if (!req.quizPassed) {
-          parts.push(`quiz ≥${req.quizMinPct}% (tu mejor: ${req.quizPct}%)`);
+          parts.push(_t('quizzes.examLockedQuiz', { min: req.quizMinPct, pct: req.quizPct }, `quiz ≥${req.quizMinPct}% (tu mejor: ${req.quizPct}%)`));
         }
-        AppShell.showToast(`Examen bloqueado: ${parts.join(' y ')}.`);
+        const prefix = _t('quizzes.examLockedPrefix', null, 'Examen bloqueado');
+        AppShell.showToast(parts.length ? `${prefix}: ${parts.join(_t('quizzes.andJoin', null, ' y '))}.` : prefix);
         return;
       }
       if (!UserProfileService.getCurrentUser()) {
@@ -839,11 +891,14 @@ const QuizzesController = (() => {
     });
 
     $quizFeedback.className = `quiz-feedback quiz-feedback--${correct ? 'correct' : 'wrong'}`;
-    $quizFeedback.innerHTML = `<strong>${correct ? '✓ ¡Correcto!' : '✗ Incorrecto.'}</strong> ${exp}`;
+    $quizFeedback.innerHTML = `<strong>${correct ? _t('quizzes.correctFeedback', null, '✓ ¡Correcto!') : _t('quizzes.wrongFeedback', null, '✗ Incorrecto.')}</strong> ${exp}`;
+    $quizFeedback.classList.remove('is-bouncing');
+    void $quizFeedback.offsetWidth;
+    $quizFeedback.classList.add('is-bouncing');
 
     $btnNext.textContent = _currentQIdx < _flatQuestions.length - 1
-      ? 'Siguiente →'
-      : 'Ver resultados →';
+      ? _t('quizzes.next', null, 'Siguiente →')
+      : _t('quizzes.review', null, 'Ver resultados →');
     $btnNext.classList.add('btn--quiz-next-visible');
   }
 
@@ -853,10 +908,10 @@ const QuizzesController = (() => {
     _answered   = false;
 
     $quizName.textContent = _currentQuiz.isCertExam
-      ? `Examen de certificación: ${_currentQuiz.title}`
+      ? _t('quizzes.examTitle', { title: _currentQuiz.title }, `Examen de certificación: ${_currentQuiz.title}`)
       : _currentQuiz.title;
     $quizSection.textContent = q.sectionTitle || '';
-    $quizType.textContent = TYPE_LABELS[q.type] || q.type;
+    $quizType.textContent = _typeLabels()[q.type] || q.type;
     $quizProgLabel.textContent = `${_currentQIdx + 1} / ${total}`;
     $quizProgressFill.style.width = `${(_currentQIdx / total) * 100}%`;
 
@@ -864,7 +919,7 @@ const QuizzesController = (() => {
     $quizFeedback.className = 'quiz-feedback';
     $quizFeedback.textContent = '';
     $btnNext.classList.remove('btn--quiz-next-visible');
-    $btnNext.textContent = 'Siguiente →';
+    $btnNext.textContent = _t('quizzes.next', null, 'Siguiente →');
 
     if (q.type === 'match') {
       _renderMatchQuestion(q);
@@ -879,7 +934,7 @@ const QuizzesController = (() => {
     const LETTERS = ['A', 'B', 'C', 'D'];
     $quizOptions.className = 'quiz-options';
     $quizOptions.innerHTML = q.opts.map((opt, i) => `
-      <button type="button" class="quiz-option" data-idx="${i}" aria-label="Opción ${LETTERS[i]}: ${opt}">
+      <button type="button" class="quiz-option" data-idx="${i}" aria-label="${_t('quizzes.optionAria', { letter: LETTERS[i], opt }, `Opción ${LETTERS[i]}: ${opt}`)}">
         <span class="quiz-option__letter">${LETTERS[i]}</span>
         <span>${opt}</span>
       </button>
@@ -909,10 +964,10 @@ const QuizzesController = (() => {
     $quizOptions.className = 'quiz-options quiz-options--tf';
     $quizOptions.innerHTML = `
       <button type="button" class="quiz-tf-btn" data-val="true">
-        <span class="quiz-tf-btn__icon">✓</span> Verdadero
+        <span class="quiz-tf-btn__icon">✓</span> ${_t('quizzes.true', null, 'Verdadero')}
       </button>
       <button type="button" class="quiz-tf-btn" data-val="false">
-        <span class="quiz-tf-btn__icon">✗</span> Falso
+        <span class="quiz-tf-btn__icon">✗</span> ${_t('quizzes.false', null, 'Falso')}
       </button>`;
 
     $quizOptions.querySelectorAll('.quiz-tf-btn').forEach(btn => {
@@ -945,19 +1000,19 @@ const QuizzesController = (() => {
     const rights = _shuffle(q.pairs.map(p => p.right));
     $quizOptions.className = 'quiz-options quiz-options--match';
     $quizOptions.innerHTML = `
-      <p class="quiz-match__hint">Selecciona la definición correcta para cada término.</p>
+      <p class="quiz-match__hint">${_t('quizzes.matchHint', null, 'Selecciona la definición correcta para cada término.')}</p>
       <div class="quiz-match__rows">
         ${q.pairs.map((pair, i) => `
           <div class="quiz-match__row">
             <span class="quiz-match__left">${pair.left}</span>
-            <select class="quiz-match__select" data-idx="${i}" aria-label="Pareja para ${pair.left}">
-              <option value="">— Selecciona —</option>
+            <select class="quiz-match__select" data-idx="${i}" aria-label="${_t('quizzes.matchPairAria', { term: pair.left }, `Pareja para ${pair.left}`)}">
+              <option value="">${_t('quizzes.matchSelect', null, '— Selecciona —')}</option>
               ${rights.map(r => `<option value="${r}">${r}</option>`).join('')}
             </select>
           </div>
         `).join('')}
       </div>
-      <button type="button" class="btn--quiz-check" id="quiz-match-check">Comprobar pareos</button>`;
+      <button type="button" class="btn--quiz-check" id="quiz-match-check">${_t('quizzes.check', null, 'Comprobar')}</button>`;
 
     document.getElementById('quiz-match-check')
       ?.addEventListener('click', _checkMatchAnswer);
@@ -971,7 +1026,7 @@ const QuizzesController = (() => {
 
     if (selections.some(v => !v)) {
       $quizFeedback.className = 'quiz-feedback quiz-feedback--wrong';
-      $quizFeedback.innerHTML = '<strong>Completa todos los pareos</strong> antes de comprobar.';
+      $quizFeedback.innerHTML = `<strong>${_t('quizzes.matchCompleteAll', null, 'Completa todos los pareos antes de comprobar.')}</strong>`;
       return;
     }
 
@@ -1026,39 +1081,41 @@ const QuizzesController = (() => {
     $resTotal.textContent   = total;
 
     $resTitle.textContent = pct >= minCertPct
-      ? (isExam ? '¡Certificación obtenida!' : '¡Excelente trabajo!')
+      ? (isExam ? _t('profile.profCert', null, '¡Certificación obtenida!') : _t('quizzes.completed', null, '¡Excelente trabajo!'))
       : pct >= 50
-        ? '¡Buen intento! Sigue practicando.'
-        : 'Necesitas repasar este tema.';
+        ? _t('quizzes.completed', null, '¡Buen intento! Sigue practicando.')
+        : _t('quizzes.resultNeedReview', null, 'Necesitas repasar este tema.');
 
     let subMsg;
     if (gotCert) {
       subMsg = isExam
-        ? `Aprobaste el examen con ${pct}%. ¡Certificación profesional añadida a tu perfil!`
-        : `Completaste el quiz con ${pct}%. ¡Certificado de práctica añadido a tu perfil!`;
+        ? _t('quizzes.resultExamCert', { pct }, `Aprobaste el examen con ${pct}%. ¡Certificación profesional añadida a tu perfil!`)
+        : _t('quizzes.resultQuizCert', { pct }, `Completaste el quiz con ${pct}%. ¡Certificado de práctica añadido a tu perfil!`);
     } else if (isExam) {
-      subMsg = `Necesitas al menos ${minCertPct}% en el examen para la certificación profesional. Obtuviste ${pct}%.`;
+      subMsg = _t('quizzes.resultExamFail', { min: minCertPct, pct }, `Necesitas al menos ${minCertPct}% en el examen para la certificación profesional. Obtuviste ${pct}%.`);
     } else {
       const quizMin = UserProfileService?.QUIZ_UNLOCK_EXAM_PCT || 70;
       if (pct >= quizMin) {
-        subMsg = `¡Aprobaste con ${pct}%! Este resultado cuenta para desbloquear el examen de certificación (junto con las lecciones).`;
+        subMsg = _t('quizzes.resultQuizPass', { pct }, `¡Aprobaste con ${pct}%! Este resultado cuenta para desbloquear el examen de certificación (junto con las lecciones).`);
       } else {
-        subMsg = `Obtuviste ${pct}%. Necesitas ≥${quizMin}% en el quiz para avanzar hacia la certificación profesional.`;
+        subMsg = _t('quizzes.resultQuizFail', { pct, min: quizMin }, `Obtuviste ${pct}%. Necesitas ≥${quizMin}% en el quiz para avanzar hacia la certificación profesional.`);
       }
     }
     $resSub.textContent = subMsg;
 
-    $reviewList.innerHTML = _answers.map((a, i) => `
+    $reviewList.innerHTML = _answers.map((a, i) => {
+      const labels = _typeLabels();
+      return `
       <div class="review-item ${a.correct ? 'review-item--ok' : 'review-item--fail'}">
-        <div class="review-item__meta">${TYPE_LABELS[a.type] || a.type}</div>
+        <div class="review-item__meta">${labels[a.type] || a.type}</div>
         <div class="review-item__q">${i + 1}. ${a.q}</div>
         <div class="review-item__a">
           ${a.correct
-            ? '✓ Correcto'
-            : `✗ Tu respuesta: "${a.chosenLabel}"${a.correctLabel ? ` — Correcta: "${a.correctLabel}"` : ''}`}
+            ? _t('quizzes.correctFeedback', null, '✓ Correcto')
+            : `✗ ${_t('quizzes.wrongFeedback', null, 'Incorrecto.')} "${a.chosenLabel}"${a.correctLabel ? ` — ${_t('quizzes.correctAnswer', null, 'Correcta')}: "${a.correctLabel}"` : ''}`}
         </div>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
 
     _showResultsView();
   }
@@ -1120,6 +1177,8 @@ const QuizzesController = (() => {
         : `${pendingExam}-cert-exam`;
       if (_getQuizById(examId)) _startQuiz(examId);
     }
+
+    window.addEventListener('in4mind-relocalize', _relocalize);
   }
 
   return { init };

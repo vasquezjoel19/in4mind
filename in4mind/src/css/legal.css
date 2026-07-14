@@ -2,11 +2,14 @@
  * IN4MIND — Páginas legales (términos, privacidad, cookies)
  */
 
+@import url('bulb-icon.css');
+
 .legal-page {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--clr-bg-app);
+  background: var(--app-bg-gradient);
+  background-attachment: fixed;
   color: var(--clr-text-primary);
 }
 
@@ -33,12 +36,6 @@
   font-weight: 800;
   color: var(--clr-text-primary);
   text-decoration: none;
-}
-
-.legal-header__brand svg {
-  width: 26px;
-  height: 26px;
-  color: var(--clr-brand-500);
 }
 
 .legal-header__actions {

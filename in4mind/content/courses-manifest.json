@@ -1,0 +1,44 @@
+{
+  "version": 2,
+  "announcements": [
+    {
+      "id": "welcome-2026-07",
+      "title": "Novedades IN4MIND — Julio 2026",
+      "body": "Certificados verificables, metas personalizables, notas en lecciones, auth Supabase y más.",
+      "route": "dashboard.html",
+      "at": 1751750400000
+    },
+    {
+      "id": "welcome-2026",
+      "title": "Novedades en IN4MIND",
+      "body": "Explora rutas de aprendizaje, metas semanales y búsqueda global con Ctrl+K.",
+      "route": "dashboard.html",
+      "at": 1751328000000
+    }
+  ],
+  "courses": [
+    {
+      "id": "python",
+      "badge": "Popular",
+      "featured": true
+    },
+    {
+      "id": "javascript",
+      "badge": "Nuevo",
+      "featured": true
+    },
+    {
+      "id": "cybersecurity",
+      "badge": "Esencial",
+      "featured": true
+    },
+    {
+      "id": "html",
+      "meta": "Fundamentos web"
+    },
+    {
+      "id": "css",
+      "meta": "Diseño responsive"
+    }
+  ]
+}

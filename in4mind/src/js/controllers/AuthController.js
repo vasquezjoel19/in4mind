@@ -23,24 +23,95 @@ const AuthController = (() => {
   let _resetEmail = '';
 
   // ── Copy dinámico del panel izquierdo ──
-  const PANEL_COPY = {
-    login: {
-      title: '¡Bienvenido a IN4MIND!',
-      desc:  'Empieza a entender la tecnología, de forma clara y accesible.',
-    },
-    register: {
-      title: '¡Crea tu cuenta!',
-      desc:  'Únete a nuestra plataforma y descubre el mundo digital.',
-    },
-    forgot: {
-      title: 'Recupera tu acceso',
-      desc:  'Te ayudamos a restablecer tu contraseña de forma segura.',
-    },
-    reset: {
-      title: 'Nueva contraseña',
-      desc:  'Elige una contraseña segura para tu cuenta IN4MIND.',
-    },
-  };
+  function _t(key, params) {
+    return typeof I18n !== 'undefined' ? I18n.t(key, params) : key;
+  }
+
+  function _panelKeys(view) {
+    const keys = {
+      login:    ['auth.panelLoginTitle', 'auth.panelLoginDesc'],
+      register: ['auth.panelRegisterTitle', 'auth.panelRegisterDesc'],
+      forgot:   ['auth.panelForgotTitle', 'auth.panelForgotDesc'],
+      reset:    ['auth.panelResetTitle', 'auth.panelResetDesc'],
+    };
+    return keys[view] || keys.login;
+  }
+
+  function _panelCopy(view) {
+    const [tk, dk] = _panelKeys(view);
+    return { title: _t(tk), desc: _t(dk), titleKey: tk, descKey: dk };
+  }
+
+  function _updatePanelCopy(view) {
+    const copy = _panelCopy(view);
+    if ($leftTitle) {
+      $leftTitle.setAttribute('data-i18n', copy.titleKey);
+      $leftTitle.textContent = copy.title;
+    }
+    if ($leftDesc) {
+      $leftDesc.setAttribute('data-i18n', copy.descKey);
+      $leftDesc.textContent = copy.desc;
+    }
+  }
+
+  function _refreshSubmitLabels() {
+    if ($loginBtn && !$loginBtn.disabled) $loginBtn.textContent = _t('auth.loginBtn');
+    if ($registerBtn && !$registerBtn.disabled) $registerBtn.textContent = _t('auth.registerBtn');
+    if ($forgotBtn && !$forgotBtn.disabled) $forgotBtn.textContent = _t('auth.forgotBtn');
+    if ($resetBtn && !$resetBtn.disabled) $resetBtn.textContent = _t('auth.savePassword');
+  }
+
+  function _onLocaleChange() {
+    _updatePanelCopy(_currentView);
+    _refreshSubmitLabels();
+    if (typeof I18n !== 'undefined') {
+      const scope = document.getElementById('auth-page');
+      if (scope) I18n.applyDom(scope);
+    }
+  }
+
+  function _bindAuthHelp() {
+    const btn = document.getElementById('auth-help-btn');
+    const panel = document.getElementById('auth-help-panel');
+    const close = document.getElementById('auth-help-close');
+    if (!btn || !panel) return;
+
+    function setHelpOpen(open) {
+      panel.classList.toggle('is-open', open);
+      panel.hidden = !open;
+      btn.setAttribute('aria-expanded', String(open));
+      if (open) {
+        close?.focus();
+      } else {
+        btn.focus();
+      }
+    }
+
+    // Siempre cerrado al entrar a login — solo se abre si el usuario pulsa el enlace
+    setHelpOpen(false);
+
+    btn.addEventListener('click', () => {
+      setHelpOpen(!panel.classList.contains('is-open'));
+    });
+
+    close?.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      setHelpOpen(false);
+    });
+
+    panel.addEventListener('click', e => {
+      if (e.target === panel) setHelpOpen(false);
+    });
+
+    panel.querySelector('.auth-help-panel__inner')?.addEventListener('click', e => {
+      e.stopPropagation();
+    });
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && panel.classList.contains('is-open')) setHelpOpen(false);
+    });
+  }
 
   // ────────────────────────────────────────────
   // Utilidades
@@ -155,9 +226,7 @@ const AuthController = (() => {
     _currentView = view;
     _clearErrors();
 
-    const copy = PANEL_COPY[view];
-    $leftTitle.textContent = copy.title;
-    $leftDesc.textContent  = copy.desc;
+    _updatePanelCopy(view);
 
     _hideAllViews();
 
@@ -209,27 +278,30 @@ const AuthController = (() => {
     if (!_validatePassword(passInput)) valid = false;
 
     if (!valid) {
-      _showError($loginError, 'Por favor corrige los campos marcados.');
+      _showError($loginError, _t('auth.errFields'));
       return;
     }
 
     // Estado de carga
     $loginBtn.disabled = true;
-    $loginBtn.textContent = 'Ingresando...';
+    $loginBtn.textContent = _t('auth.loggingIn');
 
-    const result = await DataService.login(emailInput.value, passInput.value);
+    const authFn = typeof AuthService !== 'undefined' ? AuthService.login.bind(AuthService) : DataService.login.bind(DataService);
+    const result = await authFn(emailInput.value, passInput.value);
 
     if (result.ok) {
-      sessionStorage.setItem('in4mind_user', JSON.stringify(result.user));
-      if (typeof UserProfileService !== 'undefined') {
-        UserProfileService.mergeGuestIntoUser(result.user.email);
-        UserProfileService.migrateSessionQuizProgress();
+      if (typeof AuthService === 'undefined') {
+        sessionStorage.setItem('in4mind_user', JSON.stringify(result.user));
+        if (typeof UserProfileService !== 'undefined') {
+          UserProfileService.mergeGuestIntoUser(result.user.email);
+          UserProfileService.migrateSessionQuizProgress();
+        }
       }
       _redirectAfterAuth();
     } else {
-      _showError($loginError, result.error || 'Error al iniciar sesión.');
+      _showError($loginError, result.error || _t('auth.errLogin'));
       $loginBtn.disabled = false;
-      $loginBtn.textContent = 'Inicia Sesión';
+      $loginBtn.textContent = _t('auth.loginBtn');
     }
   }
 
@@ -240,14 +312,17 @@ const AuthController = (() => {
 
     const emailInput = $forgotForm.querySelector('#forgot-email');
     if (!_validateRequired(emailInput) || !_validateEmail(emailInput)) {
-      _showError($forgotError, 'Introduce un correo electrónico válido.');
+      _showError($forgotError, _t('auth.errEmail'));
       return;
     }
 
     $forgotBtn.disabled = true;
-    $forgotBtn.textContent = 'Enviando...';
+    $forgotBtn.textContent = _t('auth.sending');
 
-    const result = await DataService.requestPasswordReset(emailInput.value);
+    const authFn = typeof AuthService !== 'undefined'
+      ? AuthService.requestPasswordReset.bind(AuthService)
+      : DataService.requestPasswordReset.bind(DataService);
+    const result = await authFn(emailInput.value);
 
     if (result.ok) {
       _resetEmail = result.email;
@@ -255,12 +330,12 @@ const AuthController = (() => {
       $forgotForm.hidden = true;
       const msg = $forgotSuccess.querySelector('.auth-success__text');
       if (msg) {
-        msg.textContent = `Si existe una cuenta con ${result.email}, recibirás instrucciones. En esta demo puedes continuar y establecer una nueva contraseña ahora.`;
+        msg.textContent = _t('auth.forgotDemoSuccess', { email: result.email });
       }
     } else {
-      _showError($forgotError, result.error || 'No se pudo procesar la solicitud.');
+      _showError($forgotError, result.error || _t('auth.errProcess'));
       $forgotBtn.disabled = false;
-      $forgotBtn.textContent = 'Enviar enlace';
+      $forgotBtn.textContent = _t('auth.forgotBtn');
     }
   }
 
@@ -282,19 +357,22 @@ const AuthController = (() => {
     }
 
     if (!valid) {
-      _showError($resetError, 'Revisa los campos marcados.');
+      _showError($resetError, _t('auth.errFields'));
       return;
     }
     if (passInput.value !== confirmInput.value) {
       confirmInput.closest('.form-group')?.classList.add('is-invalid');
-      _showError($resetError, 'Las contraseñas no coinciden.');
+      _showError($resetError, _t('auth.errMatch'));
       return;
     }
 
     $resetBtn.disabled = true;
-    $resetBtn.textContent = 'Guardando...';
+    $resetBtn.textContent = _t('auth.saving');
 
-    const result = await DataService.resetPassword(
+    const authFn = typeof AuthService !== 'undefined'
+      ? AuthService.resetPassword.bind(AuthService)
+      : DataService.resetPassword.bind(DataService);
+    const result = await authFn(
       emailInput.value,
       passInput.value,
       confirmInput.value
@@ -306,9 +384,9 @@ const AuthController = (() => {
       const loginEmail = $loginForm.querySelector('#login-email');
       if (loginEmail) loginEmail.value = result.email;
     } else {
-      _showError($resetError, result.error || 'No se pudo actualizar la contraseña.');
+      _showError($resetError, result.error || _t('auth.errUpdatePassword'));
       $resetBtn.disabled = false;
-      $resetBtn.textContent = 'Guardar contraseña';
+      $resetBtn.textContent = _t('auth.savePassword');
     }
   }
 
@@ -317,7 +395,7 @@ const AuthController = (() => {
     if ($forgotSuccess) $forgotSuccess.hidden = true;
     if ($forgotBtn) {
       $forgotBtn.disabled = false;
-      $forgotBtn.textContent = 'Enviar enlace';
+      $forgotBtn.textContent = _t('auth.forgotBtn');
     }
     const loginEmail = $loginForm?.querySelector('#login-email')?.value.trim();
     const forgotEmail = $forgotForm?.querySelector('#forgot-email');
@@ -330,7 +408,7 @@ const AuthController = (() => {
     if ($resetSuccess) $resetSuccess.hidden = true;
     if ($resetBtn) {
       $resetBtn.disabled = false;
-      $resetBtn.textContent = 'Guardar contraseña';
+      $resetBtn.textContent = _t('auth.savePassword');
     }
     switchView('reset', { email: _resetEmail });
   }
@@ -350,26 +428,29 @@ const AuthController = (() => {
     if (!_validatePassword(passInput, 6))                              valid = false;
 
     if (!valid) {
-      _showError($registerError, 'Por favor completa todos los campos correctamente.');
+      _showError($registerError, _t('auth.errFillAll'));
       return;
     }
 
     $registerBtn.disabled = true;
-    $registerBtn.textContent = 'Creando cuenta...';
+    $registerBtn.textContent = _t('auth.creating');
 
-    const result = await DataService.register(nameInput.value, emailInput.value, passInput.value);
+    const authFn = typeof AuthService !== 'undefined' ? AuthService.register.bind(AuthService) : DataService.register.bind(DataService);
+    const result = await authFn(nameInput.value, emailInput.value, passInput.value);
 
     if (result.ok) {
-      sessionStorage.setItem('in4mind_user', JSON.stringify(result.user));
-      if (typeof UserProfileService !== 'undefined') {
-        UserProfileService.mergeGuestIntoUser(result.user.email);
-        UserProfileService.migrateSessionQuizProgress();
+      if (typeof AuthService === 'undefined') {
+        sessionStorage.setItem('in4mind_user', JSON.stringify(result.user));
+        if (typeof UserProfileService !== 'undefined') {
+          UserProfileService.mergeGuestIntoUser(result.user.email);
+          UserProfileService.migrateSessionQuizProgress();
+        }
       }
       _redirectAfterAuth();
     } else {
-      _showError($registerError, result.error || 'Error al registrarse.');
+      _showError($registerError, result.error || _t('auth.errRegister'));
       $registerBtn.disabled = false;
-      $registerBtn.textContent = 'Registrarse';
+      $registerBtn.textContent = _t('auth.registerBtn');
     }
   }
 
@@ -377,8 +458,30 @@ const AuthController = (() => {
   // Inicialización pública
   // ────────────────────────────────────────────
 
+  async function _handleGoogleLogin() {
+    if (typeof AuthService === 'undefined') return;
+    const result = await AuthService.signInWithGoogle();
+    if (result.ok && result.redirecting) return;
+    if (result.ok) {
+      window.location.href = 'dashboard.html';
+      return;
+    }
+    if ($loginError) {
+      $loginError.textContent = result.error || _t('auth.errLogin');
+      $loginError.hidden = false;
+    }
+  }
+
   /** Inicializa el controlador y asocia listeners. */
-  function init() {
+  async function init() {
+    if (typeof AuthService !== 'undefined') {
+      const oauth = await AuthService.restoreOAuthSession();
+      if (oauth.ok) {
+        window.location.href = 'dashboard.html';
+        return;
+      }
+    }
+
     // Redirigir si ya hay sesión
     const existing = sessionStorage.getItem('in4mind_user');
     if (existing) {
@@ -415,6 +518,8 @@ const AuthController = (() => {
 
     // Inicializar vista
     switchView('login');
+    _bindAuthHelp();
+    window.addEventListener('in4mind-locale-change', _onLocaleChange);
 
     // Toggle de vistas
     $toRegister?.addEventListener('click', () => switchView('register'));
@@ -431,6 +536,8 @@ const AuthController = (() => {
     $registerForm?.addEventListener('submit', _handleRegister);
     $forgotForm?.addEventListener('submit',   _handleForgot);
     $resetForm?.addEventListener('submit',    _handleReset);
+
+    document.getElementById('login-google-btn')?.addEventListener('click', _handleGoogleLogin);
 
     // Toggles de contraseña
     document.querySelectorAll('.pwd-toggle').forEach(btn => {

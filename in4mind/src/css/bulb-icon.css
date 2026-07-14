@@ -1,0 +1,124 @@
+/**
+ * IN4MIND — Logo foco outline (line-art oficial)
+ */
+
+.in4mind-bulb {
+  display: block;
+  flex-shrink: 0;
+  color: #1b273c;
+}
+
+html[data-theme="dark"] .in4mind-bulb {
+  color: #e8eef6;
+}
+
+.in4mind-bulb--lg {
+  width: 100%;
+  height: auto;
+  max-width: 220px;
+}
+
+/* Hero landing: foco centrado con tarjetas orbitando */
+.lp-hero-illustration__bulb.in4mind-bulb--lg {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 56%;
+  max-width: none;
+  height: auto;
+  color: #1b273c;
+}
+
+html[data-theme="dark"] .lp-hero-illustration__bulb.in4mind-bulb--lg {
+  color: #d7e4f4;
+}
+
+.in4mind-bulb--md {
+  width: 120px;
+  height: auto;
+}
+
+.in4mind-bulb--sm {
+  display: block;
+}
+
+.sidebar__brand-icon.in4mind-bulb {
+  width: 28px;
+  height: 35px;
+  color: #1b273c;
+}
+
+html[data-theme="dark"] .sidebar__brand-icon.in4mind-bulb {
+  color: #e8eef6;
+}
+
+.lp-logo__icon.in4mind-bulb {
+  width: 34px;
+  height: 42px;
+}
+
+.auth-panel-left__icon.in4mind-bulb {
+  width: 100px;
+  height: auto;
+  color: #ffffff;
+  opacity: 0.95;
+}
+
+.quiz-banner__bulb.in4mind-bulb {
+  width: 120px;
+  height: auto;
+  color: inherit;
+}
+
+/* Fondos oscuros / bandas navy: logo en claro */
+.lp-footer__logo .in4mind-bulb,
+.lp-navy-band .in4mind-bulb,
+.welcome-section__bulb.in4mind-bulb {
+  color: #1b273c;
+}
+
+html[data-theme="dark"] .welcome-section__bulb.in4mind-bulb,
+html[data-theme="dark"] .help-hero__bulb.in4mind-bulb {
+  color: #e8eef6;
+}
+
+.lp-footer__logo .in4mind-bulb {
+  color: #ffffff;
+}
+
+/* Resplandor detrás del foco */
+.welcome-section__glow,
+.help-hero__glow,
+.lp-hero-illustration__glow {
+  background: radial-gradient(circle, rgba(var(--clr-brand-rgb), 0.32) 0%, transparent 70%);
+}
+
+/* Wordmark IN4MIND — modo claro */
+html:not([data-theme="dark"]) .in4mind-wordmark__four {
+  color: var(--clr-brand-500);
+}
+
+html:not([data-theme="dark"]) .sidebar__brand-name,
+html:not([data-theme="dark"]) .lp-logo,
+html:not([data-theme="dark"]) .auth-topbar__brand,
+html:not([data-theme="dark"]) .legal-header__brand {
+  color: var(--clr-text-primary);
+}
+
+html:not([data-theme="dark"]) .lp-footer__logo {
+  color: #fff;
+}
+
+/* Wordmark — modo oscuro */
+html[data-theme="dark"] .in4mind-wordmark__four {
+  color: #6b93c9;
+}
+
+html[data-theme="dark"] .sidebar__brand-name,
+html[data-theme="dark"] .lp-logo,
+html[data-theme="dark"] .auth-topbar__brand,
+html[data-theme="dark"] .legal-header__brand,
+html[data-theme="dark"] .lp-footer__logo {
+  color: #fff;
+}

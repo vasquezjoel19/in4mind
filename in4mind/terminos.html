@@ -1,20 +1,30 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-i18n-title="legal.termsTitle">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Términos de uso de IN4MIND — Plataforma educativa de tecnología.">
-  <title>IN4MIND — Términos de uso</title>
+  <meta name="description" content="T?rminos de uso de IN4MIND ? Plataforma educativa de tecnolog?a.">
+  <title>IN4MIND ? T?rminos de uso</title>
 
   <script src="src/js/controllers/ThemeController.js?v=20260617"></script>
-  <script>ThemeController.initEarly();</script>
+  <script src="src/js/a11y-boot.js?v=20260707"></script>
+  <script src="src/js/locales/es.js?v=20260722"></script>
+  <script src="src/js/locales/en.js?v=20260722"></script>
+  <script src="src/js/locales/zh.js?v=20260801"></script>
+  <script src="src/js/locales/legal-bodies-en.js?v=20260722"></script>
+  <script src="src/js/locales/legal-bodies-zh.js?v=20260801"></script>
+  <script src="src/js/services/I18n.js?v=20260801"></script>
+  <script>ThemeController.initEarly(); I18n.initEarly();</script>
 
-  <link rel="stylesheet" href="src/css/tokens.css?v=20260706">
-  <link rel="stylesheet" href="src/css/base.css?v=20260617">
-  <link rel="stylesheet" href="src/css/theme.css?v=20260706">
-  <link rel="stylesheet" href="src/css/legal.css?v=20260617">
+  <link rel="stylesheet" href="src/css/tokens.css?v=20260702">
+  <link rel="stylesheet" href="src/css/base.css?v=20260714fluid3">
+  <link rel="stylesheet" href="src/css/theme.css?v=20260714bulb2">
+  <link rel="stylesheet" href="src/css/accessibility.css?v=20260707">
+  <link rel="stylesheet" href="src/css/legal.css?v=20260714bulb2">
+  <link rel="stylesheet" href="src/css/settings-modal.css?v=20260714theme">
+  <link rel="stylesheet" href="src/css/i18n.css?v=20260722">
 
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='20' font-size='20'>💡</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='20' font-size='20'>??</text></svg>">
 </head>
 <body>
 
@@ -28,42 +38,45 @@
       IN4MIND
     </a>
     <div class="legal-header__actions">
+      <button type="button" class="in4-other-trigger" data-open-other-menu data-i18n-aria="nav.other">
+        <span data-i18n="nav.other">Otros</span>
+      </button>
       <a class="legal-btn-back" href="index.html">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
-        <span>Volver al inicio</span>
+        <span data-i18n="legal.back">Volver al inicio</span>
       </a>
     </div>
   </header>
 
-  <main class="legal-main">
-    <p class="legal-main__meta">Última actualización: 29 de mayo de 2026</p>
-    <h1>Términos de uso</h1>
+  <main class="legal-main" id="legal-body" data-legal-page="terms">
+    <p class="legal-main__meta">?ltima actualizaci?n: 29 de mayo de 2026</p>
+    <h1>T?rminos de uso</h1>
     <p class="legal-main__intro">
-      Bienvenido a IN4MIND. Al acceder o utilizar nuestra plataforma educativa aceptas estos términos.
-      Léelos con atención antes de registrarte o usar los servicios.
+      Bienvenido a IN4MIND. Al acceder o utilizar nuestra plataforma educativa aceptas estos t?rminos.
+      L?elos con atenci?n antes de registrarte o usar los servicios.
     </p>
 
     <h2>1. Objeto del servicio</h2>
     <p>
-      IN4MIND es una plataforma de aprendizaje en línea que ofrece tutoriales, quizzes, contenidos
-      formativos y un asistente de inteligencia artificial con fines educativos en tecnología,
-      programación, ciberseguridad y áreas afines.
+      IN4MIND es una plataforma de aprendizaje en l?nea que ofrece cursos, quizzes, contenidos
+      formativos y un asistente de inteligencia artificial con fines educativos en tecnolog?a,
+      programaci?n, ciberseguridad y ?reas afines.
     </p>
 
     <h2>2. Registro y cuenta</h2>
     <p>Para acceder a determinadas funciones debes crear una cuenta. Te comprometes a:</p>
     <ul>
-      <li>Proporcionar información veraz y actualizada.</li>
+      <li>Proporcionar informaci?n veraz y actualizada.</li>
       <li>Mantener la confidencialidad de tus credenciales de acceso.</li>
       <li>Notificar de inmediato cualquier uso no autorizado de tu cuenta.</li>
-      <li>No compartir tu cuenta con terceros sin autorización.</li>
+      <li>No compartir tu cuenta con terceros sin autorizaci?n.</li>
     </ul>
 
     <h2>3. Uso permitido</h2>
-    <p>Puedes utilizar IN4MIND para aprendizaje personal, formación profesional y uso en entornos laborales o académicos autorizados. Queda prohibido:</p>
+    <p>Puedes utilizar IN4MIND para aprendizaje personal, formaci?n profesional y uso en entornos laborales o acad?micos autorizados. Queda prohibido:</p>
     <ul>
       <li>Copiar, revender o redistribuir el contenido sin permiso expreso.</li>
-      <li>Intentar acceder a sistemas, datos o áreas restringidas de la plataforma.</li>
+      <li>Intentar acceder a sistemas, datos o ?reas restringidas de la plataforma.</li>
       <li>Utilizar la plataforma para actividades ilegales, fraudulentas o que vulneren derechos de terceros.</li>
       <li>Automatizar el acceso de forma abusiva (scraping, bots no autorizados, etc.).</li>
       <li>Manipular quizzes, progreso o certificaciones de forma fraudulenta.</li>
@@ -71,55 +84,62 @@
 
     <h2>4. Contenido y propiedad intelectual</h2>
     <p>
-      Los textos, diseños, logotipos, vídeos, ejercicios y demás materiales de IN4MIND están protegidos
+      Los textos, dise?os, logotipos, v?deos, ejercicios y dem?s materiales de IN4MIND est?n protegidos
       por derechos de propiedad intelectual. Se te concede una licencia limitada, no exclusiva e intransferible
       para consultar el contenido con fines de aprendizaje dentro de la plataforma.
     </p>
 
     <h2>5. Asistente de IA</h2>
     <p>
-      Las respuestas generadas por el asistente IA tienen carácter orientativo y educativo. No sustituyen
-      asesoramiento profesional, legal ni técnico especializado. Eres responsable de verificar la información
-      antes de aplicarla en entornos de producción o críticos.
+      Las respuestas generadas por el asistente IA tienen car?cter orientativo y educativo. No sustituyen
+      asesoramiento profesional, legal ni t?cnico especializado. Eres responsable de verificar la informaci?n
+      antes de aplicarla en entornos de producci?n o cr?ticos.
     </p>
 
     <h2>6. Disponibilidad y modificaciones</h2>
     <p>
       Nos esforzamos por mantener la plataforma operativa, pero no garantizamos disponibilidad ininterrumpida.
-      Podemos actualizar funciones, contenidos o estos términos. Los cambios relevantes se comunicarán
-      en la plataforma o por correo electrónico cuando proceda.
+      Podemos actualizar funciones, contenidos o estos t?rminos. Los cambios relevantes se comunicar?n
+      en la plataforma o por correo electr?nico cuando proceda.
     </p>
 
-    <h2>7. Limitación de responsabilidad</h2>
+    <h2>7. Limitaci?n de responsabilidad</h2>
     <p>
-      IN4MIND se ofrece «tal cual». En la medida permitida por la ley, no seremos responsables de daños
-      indirectos, pérdida de datos o perjuicios derivados del uso o imposibilidad de uso del servicio,
+      IN4MIND se ofrece ?tal cual?. En la medida permitida por la ley, no seremos responsables de da?os
+      indirectos, p?rdida de datos o perjuicios derivados del uso o imposibilidad de uso del servicio,
       salvo dolo o negligencia grave imputable a IN4MIND.
     </p>
 
-    <h2>8. Suspensión y terminación</h2>
+    <h2>8. Suspensi?n y terminaci?n</h2>
     <p>
-      Podemos suspender o cancelar tu acceso si incumples estos términos o si detectamos actividad
+      Podemos suspender o cancelar tu acceso si incumples estos t?rminos o si detectamos actividad
       que ponga en riesgo la seguridad de la plataforma o de otros usuarios. Puedes dejar de usar
       el servicio en cualquier momento.
     </p>
 
     <h2>9. Ley aplicable</h2>
     <p>
-      Estos términos se rigen por la legislación aplicable en tu jurisdicción de residencia o,
-      en su defecto, por las normas que resulten de aplicación al prestador del servicio.
+      Estos t?rminos se rigen por la legislaci?n aplicable en tu jurisdicci?n de residencia o,
+      en su defecto, por las normas que resulten de aplicaci?n al prestador del servicio.
       Para consultas: <a href="mailto:soporte@in4mind.app">soporte@in4mind.app</a>.
     </p>
 
     <nav class="legal-nav" aria-label="Documentos legales">
-      <a href="terminos.html" class="is-active">Términos de uso</a>
+      <a href="terminos.html" class="is-active">T?rminos de uso</a>
       <a href="privacidad.html">Privacidad</a>
       <a href="cookies.html">Cookies</a>
     </nav>
   </main>
 
-  <footer class="legal-footer">&copy; 2026 IN4MIND. Todos los derechos reservados.</footer>
+  <footer class="legal-footer" data-i18n="legal.footerCopy">&copy; 2026 IN4MIND. Todos los derechos reservados.</footer>
 </div>
 
+<script src="src/js/legal-page.js?v=20260723"></script>
+<script src="src/js/controllers/OtherMenuController.js?v=20260714theme"></script>
+<script src="src/js/other-menu-boot.js?v=20260707"></script>
+
+<script src="src/js/components/In4mindBulb.js?v=20260714bulb2"></script>
+<script src="src/js/services/CursorSpotlight.js?v=20260714fluid4"></script>
+<script>document.addEventListener('DOMContentLoaded',()=>{ if(typeof CursorSpotlight!=='undefined') CursorSpotlight.init({ intensity:'app' }); });</script>
 </body>
 </html>

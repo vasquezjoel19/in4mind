@@ -17,7 +17,7 @@ const AIChatController = (() => {
   let $input, $sendBtn, $status, $configBanner, $userInitial;
 
   const SUGGESTIONS = [
-    { label: 'Plataforma IN4MIND', hint: 'Tutoriales, quizzes y perfil', msg: '¿Cómo utilizo la plataforma IN4MIND: tutoriales, quizzes, dashboard y perfil?' },
+    { label: 'Plataforma IN4MIND', hint: 'Cursos, quizzes y perfil', msg: '¿Cómo utilizo la plataforma IN4MIND: cursos, quizzes, dashboard y perfil?' },
     { label: 'Cursos disponibles', hint: 'Catálogo educativo IN4MIND', msg: '¿Qué cursos puedo estudiar en IN4MIND?' },
     { label: 'Fundamentos de Python', hint: 'Curso IN4MIND de Python', msg: 'Explique los fundamentos de Python según el curso de IN4MIND.' },
     { label: 'Ciberseguridad', hint: 'Phishing, contraseñas y MFA', msg: '¿Qué es el phishing y cómo me protejo según IN4MIND?' },
@@ -121,6 +121,41 @@ const AIChatController = (() => {
 
     $thread.insertBefore(turn, $typingRow);
     _scrollToBottom();
+    return contentEl;
+  }
+
+  function _beginStreamingTurn() {
+    _showThread();
+    const contentEl = _appendTurn('ai', '');
+    contentEl.innerHTML = '<span class="ai-cursor" aria-hidden="true"></span>';
+    contentEl.classList.add('is-streaming');
+    return contentEl;
+  }
+
+  function _updateStreamingContent(contentEl, text, done) {
+    if (!contentEl) return;
+    const html = _renderMarkdown(text || '');
+    contentEl.innerHTML = done
+      ? html
+      : (html + '<span class="ai-cursor" aria-hidden="true"></span>');
+    if (done) contentEl.classList.remove('is-streaming');
+    _scrollToBottom();
+  }
+
+  async function _streamLocal(text, onChunk) {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) {
+      onChunk(text);
+      return text;
+    }
+    const parts = String(text).split(/(\s+)/);
+    let out = '';
+    for (const part of parts) {
+      out += part;
+      onChunk(out);
+      await new Promise(r => setTimeout(r, part.trim() ? 18 : 8));
+    }
+    return text;
   }
 
   function _scrollToBottom() {
@@ -263,15 +298,44 @@ const AIChatController = (() => {
     _showTyping(true);
 
     try {
-      const reply = offTopic
-        ? AIKnowledge.getOffTopicResponse()
-        : await _getReply(trimmed);
+      let reply;
+      const useStream = !offTopic && GroqService.isConfigured() && typeof GroqService.chatStream === 'function';
+
+      if (useStream) {
+        let contentEl = null;
+        try {
+          reply = await GroqService.chatStream(_history, (partial) => {
+            if (!contentEl) {
+              _showTyping(false);
+              contentEl = _beginStreamingTurn();
+            }
+            _updateStreamingContent(contentEl, partial, false);
+          });
+          _showTyping(false);
+          if (!contentEl) contentEl = _beginStreamingTurn();
+          _updateStreamingContent(contentEl, reply, true);
+        } catch (streamErr) {
+          _showTyping(false);
+          contentEl?.closest('.ai-turn')?.remove();
+          throw streamErr;
+        }
+      } else {
+        reply = offTopic
+          ? AIKnowledge.getOffTopicResponse()
+          : await _getReply(trimmed);
+        _showTyping(false);
+        if (offTopic || !GroqService.isConfigured()) {
+          const contentEl = _beginStreamingTurn();
+          await _streamLocal(reply, (partial) => _updateStreamingContent(contentEl, partial, false));
+          _updateStreamingContent(contentEl, reply, true);
+        } else {
+          _appendTurn('ai', reply);
+        }
+      }
 
       if (!offTopic) {
         _history.push({ role: 'assistant', content: reply });
       }
-      _showTyping(false);
-      _appendTurn('ai', reply);
       if ($status) {
         $status.textContent = GroqService.isConfigured()
           ? 'Conectado a Groq IA'

@@ -8,6 +8,10 @@
 
 const SidebarController = (() => {
 
+  function _t(k, p) {
+    return typeof I18n !== 'undefined' ? I18n.t(k, p) : '';
+  }
+
   const STORAGE_KEY = 'in4mind_sidebar_collapsed';
   const DESKTOP_BP  = '(min-width: 901px)';
   const COMPACT_MAX = 1280;
@@ -54,12 +58,7 @@ const SidebarController = (() => {
     const btn = document.getElementById('sidebar-collapse');
     if (btn) {
       btn.setAttribute('aria-expanded', String(!collapsed));
-      btn.setAttribute('aria-label', collapsed ? 'Expandir menú' : 'Colapsar menú');
-    }
-    const topBtn = document.getElementById('sidebar-collapse-top');
-    if (topBtn) {
-      topBtn.setAttribute('aria-expanded', String(!collapsed));
-      topBtn.setAttribute('aria-label', collapsed ? 'Expandir menú' : 'Colapsar menú');
+      btn.setAttribute('aria-label', collapsed ? _t('shell.expandMenu') : _t('shell.collapseMenu'));
     }
   }
 
@@ -170,7 +169,6 @@ const SidebarController = (() => {
     _coreBound = true;
 
     document.getElementById('sidebar-collapse')?.addEventListener('click', toggleCollapse);
-    document.getElementById('sidebar-collapse-top')?.addEventListener('click', toggleCollapse);
     document.getElementById('menu-toggle')?.addEventListener('click', openMobile);
     document.getElementById('sidebar-overlay')?.addEventListener('click', closeMobile);
 
@@ -186,17 +184,18 @@ const SidebarController = (() => {
       const item = e.target.closest('#sidebar a.nav-item[href], #sidebar .nav-item[data-href], #sidebar .nav-item[data-nav]');
       if (!item) return;
 
+      if (item.dataset.nav === 'settings') return;
+
       const href = _navHref(item);
       if (!href) return;
 
-      if (item.tagName === 'A' && item.getAttribute('href')) {
-        if (!_isDesktop()) closeMobile();
-        return;
-      }
-
       e.preventDefault();
       if (!_isDesktop()) closeMobile();
-      window.location.href = href;
+      if (typeof AppShell !== 'undefined' && AppShell.navigateTo) {
+        AppShell.navigateTo(href);
+      } else {
+        window.location.href = href;
+      }
     });
 
     document.addEventListener('keydown', e => {
@@ -204,12 +203,18 @@ const SidebarController = (() => {
       const item = e.target.closest('#sidebar a.nav-item[href], #sidebar .nav-item[data-href], #sidebar .nav-item[data-nav]');
       if (!item) return;
 
+      if (item.dataset.nav === 'settings') return;
+
       const href = _navHref(item);
       if (!href) return;
 
       e.preventDefault();
       if (!_isDesktop()) closeMobile();
-      window.location.href = href;
+      if (typeof AppShell !== 'undefined' && AppShell.navigateTo) {
+        AppShell.navigateTo(href);
+      } else {
+        window.location.href = href;
+      }
     });
   }
 

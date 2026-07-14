@@ -55,7 +55,48 @@ const LessonCheckData = (() => {
     };
   }
 
-  return { getCheck };
+  function _pickLessonIndices(totalLessons, count) {
+    if (totalLessons <= 0) return [];
+    const picked = [];
+    while (picked.length < count) {
+      picked.push(Math.floor(Math.random() * totalLessons));
+    }
+    return picked;
+  }
+
+  /**
+   * Preguntas de comprobación antes de ir al quiz si faltan lecciones.
+   * @param {string} courseId
+   * @param {string[]} completedLessonIds — ids de lecciones ya completadas
+   * @returns {Array<{ q, opts, ans, exp, lessonIndex, lessonTitle }>}
+   */
+  function getQuizGateChecks(courseId, completedLessonIds = []) {
+    const completed = new Set(completedLessonIds);
+    const lessons = typeof TutorialData !== 'undefined'
+      ? TutorialData.getLessons(courseId)
+      : [];
+    if (!lessons.length) return [];
+
+    const uncompletedIndices = lessons
+      .map((l, i) => (!completed.has(l.id) ? i : -1))
+      .filter(i => i >= 0);
+
+    if (!uncompletedIndices.length) return [];
+
+    const indices = completed.size === 0
+      ? _pickLessonIndices(lessons.length, 5)
+      : uncompletedIndices;
+
+    return indices
+      .map(i => {
+        const check = getCheck(courseId, i);
+        if (!check) return null;
+        return { ...check, lessonIndex: i, lessonTitle: lessons[i].title };
+      })
+      .filter(Boolean);
+  }
+
+  return { getCheck, getQuizGateChecks };
 
 })();
 

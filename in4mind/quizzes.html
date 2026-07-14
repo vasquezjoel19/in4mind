@@ -1,36 +1,48 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-i18n-title="meta.quizzesTitle">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="IN4MIND Quizzes — Pon a prueba tus conocimientos de tecnología.">
-  <title>IN4MIND — Quizzes</title>
+  <meta name="description" content="IN4MIND Quizzes ? Pon a prueba tus conocimientos de tecnolog?a.">
+  <title>IN4MIND ? Quizzes</title>
 
-  <!-- Estilos (mismo orden que las otras páginas) -->
+  <!-- Estilos (mismo orden que las otras p?ginas) -->
   <script src="src/js/controllers/ThemeController.js?v=20260617"></script>
-  <script>ThemeController.initEarly();</script>
+  <script src="src/js/a11y-boot.js?v=20260707"></script>
+  <script src="src/js/locales/es.js?v=20260732"></script>
+  <script src="src/js/locales/en.js?v=20260732"></script>
+  <script src="src/js/locales/zh.js?v=20260801"></script>
+  <script src="src/js/locales/curriculum-en.js?v=20260722"></script>
+  <script src="src/js/locales/curriculum-zh.js?v=20260801"></script>
+  <script src="src/js/services/I18n.js?v=20260801"></script>
+  <script>ThemeController.initEarly(); I18n.initEarly();</script>
 
-  <link rel="stylesheet" href="src/css/tokens.css?v=20260706">
-  <link rel="stylesheet" href="src/css/base.css?v=20260617">
-  <link rel="stylesheet" href="src/css/dashboard.css?v=20260704">
+  <link rel="stylesheet" href="src/css/tokens.css?v=20260702">
+  <link rel="stylesheet" href="src/css/base.css?v=20260714fluid3">
+  <link rel="stylesheet" href="src/css/dashboard.css?v=20260713amb">
   <link rel="stylesheet" href="src/css/responsive.css?v=20260613">
-  <link rel="stylesheet" href="src/css/quizzes.css?v=20260708">
-  <link rel="stylesheet" href="src/css/theme.css?v=20260706">
+  <link rel="stylesheet" href="src/css/quizzes.css?v=20260713app">
+  <link rel="stylesheet" href="src/css/theme.css?v=20260714bulb2">
+  <link rel="stylesheet" href="src/css/accessibility.css?v=20260707">
+  <link rel="stylesheet" href="src/css/i18n.css?v=20260722">
+  <link rel="stylesheet" href="src/css/settings-modal.css?v=20260714theme">
+  <link rel="stylesheet" href="src/css/app-features.css?v=20260713app">
+  <link rel="manifest" href="manifest.json">
 
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='20' font-size='20'>💡</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='20' font-size='20'>??</text></svg>">
 </head>
 <body>
 
-<!-- Overlay sidebar móvil -->
+<!-- Overlay sidebar m?vil -->
 <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
 
 <div class="dashboard">
 
-  <!-- ══════════════════════════════════════
+  <!-- --------------------------------------
        SIDEBAR
-       (estructura idéntica a dashboard.html)
-  ══════════════════════════════════════ -->
-  <aside class="sidebar" id="sidebar" role="navigation" aria-label="Menú principal">
+       (estructura id?ntica a dashboard.html)
+  -------------------------------------- -->
+  <aside class="sidebar" id="sidebar" role="navigation" aria-label="Men? principal" data-i18n-aria="shell.mainMenu">
 
     <div class="sidebar__brand">
       <div class="sidebar__brand-main">
@@ -44,7 +56,7 @@
         <span class="sidebar__brand-name">IN4MIND</span>
       </div>
       <button type="button" class="sidebar__collapse-btn" id="sidebar-collapse"
-              aria-label="Colapsar menú" aria-expanded="true">
+              aria-label="Colapsar men?" data-i18n-aria="shell.collapseMenu" aria-expanded="true">
         <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none"
              stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="15 18 9 12 15 6"/>
@@ -53,37 +65,28 @@
     </div>
 
     <!-- Nav generado por QuizzesController (reutiliza DataService) -->
-    <ul class="sidebar__nav" id="sidebar-nav" role="menubar" aria-label="Navegación principal"></ul>
+    <ul class="sidebar__nav" id="sidebar-nav" role="menubar" aria-label="Navegaci?n principal" data-i18n-aria="shell.mainNav"></ul>
 
     <div class="sidebar__footer">
-      <ul id="sidebar-footer" role="menubar" aria-label="Opciones de cuenta"></ul>
+      <ul id="sidebar-footer" role="menubar" aria-label="Opciones de cuenta" data-i18n-aria="shell.accountOptions"></ul>
     </div>
   </aside>
 
-  <!-- ══════════════════════════════════════
-       ÁREA PRINCIPAL
-  ══════════════════════════════════════ -->
+  <!-- --------------------------------------
+       ?REA PRINCIPAL
+  -------------------------------------- -->
   <div class="main-area">
 
     <!-- Top Bar -->
     <header class="topbar" role="banner">
       <button class="menu-toggle icon-btn" id="menu-toggle"
-              aria-label="Abrir menú" aria-expanded="false">
+              aria-label="Abrir men?" data-i18n-aria="shell.openMenu" aria-expanded="false">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
              stroke="currentColor" stroke-width="2"
              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <line x1="3" y1="12" x2="21" y2="12"/>
           <line x1="3" y1="6"  x2="21" y2="6"/>
           <line x1="3" y1="18" x2="21" y2="18"/>
-        </svg>
-      </button>
-
-      <button type="button" class="icon-btn sidebar-top-toggle" id="sidebar-collapse-top"
-              aria-label="Colapsar menú" aria-expanded="true">
-        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="3" width="18" height="18" rx="2"/>
-          <line x1="9" y1="3" x2="9" y2="21"/>
         </svg>
       </button>
 
@@ -95,12 +98,13 @@
           <line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
         <input class="search-bar__input" type="search" id="search-input"
-               placeholder="Búsqueda de tutoriales, temas u otros..."
-               aria-label="Buscar">
+               placeholder="B?squeda de cursos, temas u otros..."
+               data-i18n-placeholder="shell.searchDashboard"
+               aria-label="Buscar" data-i18n-aria="shell.searchDashboardAria">
       </div>
 
       <div class="topbar__actions">
-        <button class="icon-btn" aria-label="Ayuda">
+        <a class="icon-btn" href="help.html" aria-label="Ayuda" data-i18n-aria="shell.help">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
                stroke="currentColor" stroke-width="2"
                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -108,8 +112,8 @@
             <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/>
             <line x1="12" y1="17" x2="12.01" y2="17"/>
           </svg>
-        </button>
-        <button class="icon-btn" aria-label="Notificaciones">
+        </a>
+        <button class="icon-btn" aria-label="Notificaciones" data-i18n-aria="shell.notifications">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
                stroke="currentColor" stroke-width="2"
                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -117,26 +121,27 @@
             <path d="M13.73 21a2 2 0 01-3.46 0"/>
           </svg>
         </button>
-        <a class="avatar" id="avatar" href="profile.html" aria-label="Ir a mi perfil">U</a>
+        <a class="avatar" id="avatar" href="profile.html" aria-label="Ir a mi perfil" data-i18n-aria="shell.myProfile">U</a>
       </div>
     </header>
 
     <!-- Contenido principal -->
     <main class="content-area">
 
-      <!-- ══════════════════════════════════════
+      <!-- --------------------------------------
            VISTA 1: LISTADO DE QUIZZES
-      ══════════════════════════════════════ -->
+      -------------------------------------- -->
       <div id="quizzes-list-view">
 
         <!-- Banner -->
         <section class="quiz-banner" aria-labelledby="quiz-banner-title">
           <div class="quiz-banner__info">
-            <h1 class="quiz-banner__title" id="quiz-banner-title">
+            <h1 class="quiz-banner__title" id="quiz-banner-title" data-i18n="quizzes.bannerTitle">
               Pon a prueba tus conocimientos con Quizzes
             </h1>
-            <p class="quiz-banner__sub">Pon a prueba lo que sabes de todas las herramientas en un solo quiz.</p>
-            <button class="btn--course" id="quiz-banner-btn" style="padding:0 var(--sp-lg);height:38px;font-size:.875rem;">
+            <p class="quiz-banner__sub" data-i18n="quizzes.bannerSub">Eval?a lo aprendido en cada curso y obt?n certificaciones.</p>
+            <button class="btn--course" id="quiz-banner-btn" style="padding:0 var(--sp-lg);height:38px;font-size:.875rem;"
+                    data-i18n="quizzes.generalKnowledge">
               Conocimiento General
             </button>
           </div>
@@ -152,42 +157,42 @@
           </div>
         </section>
 
-        <!-- Sección: Elige un tema -->
+        <!-- Secci?n: Elige un tema -->
         <section class="quizzes-section anim-fade-up delay-1"
                  aria-labelledby="quiz-section-title">
           <div class="quizzes-section-header">
-            <h2 class="section-header__title" id="quiz-section-title">Elige un tema</h2>
-            <div id="quiz-filters" class="quiz-filters" role="group" aria-label="Filtrar por categoría">
+            <h2 class="section-header__title" id="quiz-section-title" data-i18n="quizzes.pickTopic">Elige un tema</h2>
+            <div id="quiz-filters" class="quiz-filters" role="group" aria-label="Filtrar por categor?a" data-i18n-aria="tutorial.all">
               <!-- Generado por QuizzesController -->
             </div>
           </div>
 
-          <div class="quiz-grid" id="quiz-grid" role="list" aria-label="Quizzes disponibles">
+          <div class="quiz-grid" id="quiz-grid" role="list" aria-label="Quizzes disponibles" data-i18n-aria="quizzes.bannerTitle">
             <!-- Tarjetas generadas por QuizzesController -->
-            <p style="color:var(--clr-text-muted);font-size:.85rem;">Cargando quizzes…</p>
+            <p style="color:var(--clr-text-muted);font-size:.85rem;" data-i18n="common.loadingQuizzes">Cargando quizzes?</p>
           </div>
         </section>
 
-        <!-- Sección: Continuar -->
+        <!-- Secci?n: Continuar -->
         <section class="continue-section anim-fade-up delay-2"
                  aria-labelledby="continue-section-title">
-          <h2 class="section-header__title" id="continue-section-title">Continuar</h2>
+          <h2 class="section-header__title" id="continue-section-title" data-i18n="quizzes.continue">Continuar</h2>
           <div class="continue-grid" id="quiz-continue-grid" role="list"
-               aria-label="Quizzes en progreso">
+               aria-label="Quizzes en progreso" data-i18n-aria="quizzes.continue">
             <!-- Generado por QuizzesController -->
           </div>
         </section>
 
-        <!-- Sección: Exámenes de certificación -->
+        <!-- Secci?n: Ex?menes de certificaci?n -->
         <section class="quizzes-section cert-exams-section anim-fade-up delay-3"
                  aria-labelledby="cert-exams-title">
           <div class="quizzes-section-header">
             <div>
-              <h2 class="section-header__title" id="cert-exams-title">Exámenes de certificación</h2>
-              <p class="cert-exams-sub">Requisitos: lecciones ≥80% de promedio · quiz ≥70% · examen final ≥80% para certificación profesional.</p>
+              <h2 class="section-header__title" id="cert-exams-title" data-i18n="quizzes.certExams">Ex?menes de certificaci?n</h2>
+              <p class="cert-exams-sub" data-i18n="quizzes.certReq">Requisitos: lecciones =80%, quiz =70%, examen =80%.</p>
             </div>
           </div>
-          <div class="quiz-grid" id="cert-exam-grid" role="list" aria-label="Exámenes de certificación">
+          <div class="quiz-grid" id="cert-exam-grid" role="list" aria-label="Ex?menes de certificaci?n" data-i18n-aria="quizzes.certExams">
             <!-- Generado por QuizzesController -->
           </div>
         </section>
@@ -196,23 +201,23 @@
       <!-- /quizzes-list-view -->
 
 
-      <!-- ══════════════════════════════════════
+      <!-- --------------------------------------
            VISTA 2: QUIZ INTERACTIVO
-      ══════════════════════════════════════ -->
+      -------------------------------------- -->
       <div class="quiz-view" id="quizzes-quiz-view" role="main"
-           aria-label="Quiz en curso">
+           aria-label="Quiz en curso" data-i18n-aria="quizzes.bannerTitle">
 
         <div class="quiz-interactive-card">
 
           <!-- Cabecera -->
           <div class="quiz-interactive-top">
-            <button class="btn--back" id="quiz-btn-back" aria-label="Volver al listado">
+            <button class="btn--back" id="quiz-btn-back" aria-label="Volver al listado" data-i18n-aria="quizzes.backList">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
                    stroke="currentColor" stroke-width="2.5"
                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <polyline points="15 18 9 12 15 6"/>
               </svg>
-              Volver
+              <span data-i18n="quizzes.backList">Volver al listado</span>
             </button>
             <span class="quiz-interactive-name" id="quiz-active-name">Quiz</span>
             <span class="quiz-interactive-prog" id="quiz-active-prog">1 / 3</span>
@@ -221,7 +226,7 @@
           <!-- Barra de progreso -->
           <div class="quiz-progress-bar" role="progressbar"
                aria-valuemin="0" aria-valuemax="100"
-               aria-label="Progreso del quiz">
+               aria-label="Progreso del quiz" data-i18n-aria="quizzes.score">
             <div class="quiz-progress-bar__fill" id="quiz-active-progress-fill" style="width:0%"></div>
           </div>
 
@@ -236,57 +241,57 @@
 
           <!-- Opciones -->
           <div class="quiz-options" id="quiz-active-options"
-               role="group" aria-label="Opciones de respuesta">
-            <!-- Generadas dinámicamente -->
+               role="group" aria-label="Opciones de respuesta" data-i18n-aria="quizzes.check">
+            <!-- Generadas din?micamente -->
           </div>
 
           <!-- Feedback -->
           <div class="quiz-feedback" id="quiz-active-feedback" role="alert" aria-live="polite"></div>
 
           <!-- Siguiente -->
-          <button class="btn--quiz-next" id="quiz-btn-next">Siguiente →</button>
+          <button class="btn--quiz-next" id="quiz-btn-next" data-i18n="quizzes.next">Siguiente ?</button>
 
         </div>
       </div>
       <!-- /quizzes-quiz-view -->
 
 
-      <!-- ══════════════════════════════════════
+      <!-- --------------------------------------
            VISTA 3: RESULTADOS
-      ══════════════════════════════════════ -->
+      -------------------------------------- -->
       <div class="results-view" id="quizzes-results-view"
-           role="main" aria-label="Resultados del quiz">
+           role="main" aria-label="Resultados del quiz" data-i18n-aria="quizzes.completed">
 
         <div class="results-card">
 
-          <!-- Círculo de puntuación -->
-          <div class="results-score-circle" aria-label="Puntuación final">
+          <!-- C?rculo de puntuaci?n -->
+          <div class="results-score-circle" aria-label="Puntuaci?n final" data-i18n-aria="quizzes.score">
             <span class="results-score-circle__pct" id="results-pct">0%</span>
-            <span class="results-score-circle__label">Puntaje</span>
+            <span class="results-score-circle__label" data-i18n="quizzes.score">Puntaje</span>
           </div>
 
-          <h2 class="results-title" id="results-title">¡Quiz completado!</h2>
+          <h2 class="results-title" id="results-title" data-i18n="quizzes.completed">?Quiz completado!</h2>
           <p  class="results-sub"   id="results-sub"></p>
 
           <!-- Stats -->
           <div class="results-stats">
             <div class="results-stat">
               <div class="results-stat__val" id="results-correct">0</div>
-              <div class="results-stat__label">Correctas</div>
+              <div class="results-stat__label" data-i18n="quizzes.correct">Correctas</div>
             </div>
             <div class="results-stat">
               <div class="results-stat__val" id="results-wrong">0</div>
-              <div class="results-stat__label">Incorrectas</div>
+              <div class="results-stat__label" data-i18n="quizzes.incorrect">Incorrectas</div>
             </div>
             <div class="results-stat">
               <div class="results-stat__val" id="results-total">0</div>
-              <div class="results-stat__label">Total</div>
+              <div class="results-stat__label" data-i18n="quizzes.total">Total</div>
             </div>
           </div>
 
-          <!-- Revisión de respuestas -->
+          <!-- Revisi?n de respuestas -->
           <div class="results-review" id="results-review"
-               aria-label="Revisión de respuestas"></div>
+               aria-label="Revisi?n de respuestas" data-i18n-aria="quizzes.review"></div>
 
           <!-- Acciones -->
           <div class="results-actions">
@@ -298,11 +303,12 @@
                 <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
                 <polyline points="9 22 9 12 15 12 15 22"/>
               </svg>
-              Inicio
+              <span data-i18n="quizzes.backHome">Volver al inicio</span>
             </button>
             <button class="btn--course" id="results-btn-retry"
-                    style="padding:0 var(--sp-lg);height:38px;font-size:.875rem;">
-              Intentar de nuevo
+                    style="padding:0 var(--sp-lg);height:38px;font-size:.875rem;"
+                    data-i18n="quizzes.retry">
+              Reintentar
             </button>
           </div>
 
@@ -315,19 +321,42 @@
 
 </div><!-- /dashboard -->
 
-<!-- ══════════════════════════════════════
+<!-- --------------------------------------
      SCRIPTS
-     Mismo orden que las otras páginas:
-     DataService → controlador de página
-══════════════════════════════════════ -->
-<script src="src/js/services/DataService.js?v=20260704"></script>
+     Mismo orden que las otras p?ginas:
+     DataService ? controlador de p?gina
+-------------------------------------- -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="src/js/config/supabase.config.js"></script>
+<script src="src/js/components/In4mindBulb.js?v=20260714bulb2"></script>
+<script src="src/js/i18n-boot.js?v=20260722"></script>
+<script src="src/js/data/courseFactory.js?v=20260902"></script>
+<script src="src/js/data/extendedCourses.js?v=20260702d"></script>
+<script src="src/js/locales/extended-course-locales.js?v=20260904"></script>
+<script src="src/js/data/extendedCourseLocales.js?v=20260904"></script>
+<script src="src/js/data/CourseCurriculum.js?v=20260706c"></script>
+<script src="src/js/services/DataService.js?v=20260902"></script>
 <script src="src/js/services/UserProfileService.js?v=20260708"></script>
-<script src="src/js/services/AppShell.js?v=20260704"></script>
-<script src="src/js/data/CourseCurriculum.js?v=20260709"></script>
-<script src="src/js/data/TutorialData.js?v=20260709"></script>
-<script src="src/js/data/CertificationExamData.js?v=20260708"></script>
-<script src="src/js/controllers/SidebarController.js?v=20260613"></script>
-<script src="src/js/controllers/QuizzesController.js?v=20260708"></script>
+<script src="src/js/data/LearningPathsData.js?v=20260706c"></script>
+<script src="src/js/services/ContentLoader.js?v=20260706d"></script>
+<script src="src/js/services/GamificationService.js?v=20260706d"></script>
+<script src="src/js/services/VideoProgressService.js?v=20260706c"></script>
+<script src="src/js/services/GlobalSearchService.js?v=20260706c"></script>
+<script src="src/js/services/NotificationService.js?v=20260706d"></script>
+<script src="src/js/services/CertificateShare.js?v=20260706c"></script>
+<script src="src/js/services/AIUserContext.js?v=20260706c"></script>
+<script src="src/js/services/AccessibilityService.js?v=20260707"></script>
+<script src="src/js/controllers/AppFeatures.js?v=20260706d"></script>
+<script src="src/js/services/CursorSpotlight.js?v=20260714fluid4"></script>
+<script src="src/js/services/AppShell.js?v=20260714spot"></script>
+<script src="src/js/data/TutorialData.js?v=20260902"></script>
+<script src="src/js/data/CertificationExamData.js?v=20260903"></script>
+<script src="src/js/controllers/SidebarController.js?v=20260713app"></script>
+<script src="src/js/services/AuthService.js?v=20260706"></script>
+<script src="src/js/services/DataExportService.js?v=20260706"></script>
+<script src="src/js/controllers/OtherMenuController.js?v=20260714theme"></script>
+<script src="src/js/controllers/SettingsController.js?v=20260731"></script>
+<script src="src/js/controllers/QuizzesController.js?v=20260713app"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     try {

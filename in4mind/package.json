@@ -1,0 +1,14 @@
+{
+  "name": "in4mind",
+  "version": "1.0.0",
+  "private": true,
+  "description": "IN4MIND — plataforma educativa estática (HTML/CSS/JS + API Node en Vercel)",
+  "scripts": {
+    "build": "node scripts/generate-config.js",
+    "test": "node tests/dataservice.test.js && node tests/dashboard_features.test.js",
+    "start": "npx --yes serve -l 8080 ."
+  },
+  "engines": {
+    "node": "20.x"
+  }
+}

@@ -3,7 +3,7 @@
  * Normalización global y tipografía base.
  */
 
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -20,11 +20,113 @@ html {
 body {
   font-family: var(--font-body);
   background-color: var(--clr-bg-app);
+  background-image: var(--app-bg-gradient);
+  background-attachment: fixed;
+  background-size: 140% 140%;
   color: var(--clr-text-primary);
   line-height: 1.6;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "kern" 1, "liga" 1;
+  position: relative;
+}
+
+body:not(.landing-body) {
+  animation: in4AppBgDrift 36s ease-in-out infinite alternate;
+}
+
+@keyframes in4AppBgDrift {
+  from { background-position: 0% 0%; }
+  to   { background-position: 100% 40%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:not(.landing-body) {
+    animation: none;
+    background-size: cover;
+    background-position: center;
+  }
+}
+
+/* ── Global cursor: fluid WebGL glass (Lusion-style) + CSS fallback ── */
+.in4-cursor-spotlight {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.in4-cursor-spotlight.is-active {
+  opacity: 1;
+}
+
+.in4-cursor-spotlight--fluid {
+  mix-blend-mode: soft-light;
+  opacity: 0.9;
+}
+
+.in4-cursor-spotlight--fluid canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* CSS fallback if WebGL fails */
+.in4-cursor-spotlight--css {
+  background: radial-gradient(
+    700px circle at var(--spot-x, 50%) var(--spot-y, 40%),
+    rgba(255, 255, 255, 0.55) 0%,
+    rgba(180, 210, 240, 0.32) 16%,
+    rgba(107, 147, 201, 0.24) 32%,
+    rgba(13, 148, 136, 0.1) 48%,
+    transparent 68%
+  );
+  mix-blend-mode: screen;
+}
+
+.in4-cursor-spotlight--css.in4-cursor-spotlight--soft {
+  background: radial-gradient(
+    580px circle at var(--spot-x, 50%) var(--spot-y, 40%),
+    rgba(255, 255, 255, 0.35) 0%,
+    rgba(150, 190, 230, 0.22) 18%,
+    rgba(74, 118, 178, 0.16) 36%,
+    transparent 66%
+  );
+}
+
+html[data-theme="dark"] .in4-cursor-spotlight--fluid {
+  mix-blend-mode: screen;
+  opacity: 0.75;
+}
+
+html[data-theme="dark"] .in4-cursor-spotlight--css {
+  background: radial-gradient(
+    720px circle at var(--spot-x, 50%) var(--spot-y, 40%),
+    rgba(255, 255, 255, 0.45) 0%,
+    rgba(160, 200, 240, 0.32) 18%,
+    rgba(107, 147, 201, 0.28) 34%,
+    rgba(20, 184, 166, 0.14) 50%,
+    transparent 70%
+  );
+}
+
+@media (max-width: 768px), (prefers-reduced-motion: reduce) {
+  .in4-cursor-spotlight {
+    display: none !important;
+  }
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.028;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 /* ── Tipografía ── */
@@ -32,6 +134,7 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
   line-height: 1.2;
   font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 a {
@@ -100,6 +203,33 @@ ul, ol {
 .anim-fade-in   { animation: fadeIn   var(--dur-med)  var(--ease) both; }
 .anim-slide-left{ animation: slideInLeft var(--dur-slow) var(--ease) both; }
 
+/* ── Transición entre páginas (shell) ── */
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes pageFadeOut {
+  from { opacity: 1; transform: none; }
+  to   { opacity: 0; transform: translateY(-6px); }
+}
+
+.main-area.page-enter {
+  animation: pageFadeIn 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.main-area.page-exit {
+  animation: pageFadeOut 0.22s ease forwards;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .main-area.page-enter,
+  .main-area.page-exit {
+    animation: none !important;
+  }
+}
+
 /* ── Staggered delays ── */
 .delay-1 { animation-delay: 50ms; }
 .delay-2 { animation-delay: 100ms; }
@@ -113,3 +243,18 @@ ul, ol {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--clr-border); border-radius: var(--rad-pill); }
 ::-webkit-scrollbar-thumb:hover { background: var(--clr-brand-300); }
+
+@media (prefers-reduced-motion: reduce) {
+  .course-card:hover,
+  .recent-card:hover,
+  .lp-feature-card:hover,
+  .lp-guide-card:hover,
+  .quiz-card:hover,
+  .continue-card:hover,
+  .tut-video-card:hover,
+  .tut-lesson-card:hover,
+  .tut-topic-item:hover,
+  .tut-grid-card:hover {
+    transform: none;
+  }
+}

@@ -9,7 +9,7 @@
    BANNER
 ══════════════════════════════════════════ */
 .quiz-banner {
-  background: linear-gradient(135deg, var(--clr-bg-banner) 0%, var(--clr-bg-input) 100%);
+  background: var(--clr-bg-card);
   border-radius: var(--rad-xl);
   padding: var(--sp-xl) var(--sp-xl);
   display: flex;
@@ -113,25 +113,26 @@
 
 /* ── Tarjeta individual ── */
 .quiz-card {
-  background: linear-gradient(135deg, var(--clr-bg-banner) 0%, var(--clr-bg-input) 100%);
-  border-radius: var(--rad-xl);
+  background: var(--clr-bg-card);
+  border-radius: var(--rad-lg);
   padding: var(--sp-md) var(--sp-md) var(--sp-sm);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   min-height: 148px;
-  border: 1.5px solid transparent;
-  box-shadow: var(--shadow-card);
+  border: 1px solid var(--clr-border);
+  box-shadow: none;
   cursor: pointer;
-  transition: transform var(--dur-fast) var(--ease),
-              box-shadow var(--dur-fast) var(--ease),
-              border-color var(--dur-fast) var(--ease);
+  transition:
+    transform var(--dur-med) var(--ease),
+    box-shadow var(--dur-med) var(--ease),
+    border-color var(--dur-fast) var(--ease);
 }
 
 .quiz-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
-  border-color: var(--clr-brand-300);
+  box-shadow: var(--shadow-card-hover);
+  border-color: rgba(var(--clr-accent-rgb), 0.4);
 }
 
 .quiz-card--active {
@@ -156,12 +157,14 @@
   justify-content: center;
   flex-shrink: 0;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.07);
+  overflow: hidden;
 }
 
 .quiz-card__icon-wrap img {
-  width: 22px;
-  height: 22px;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .quiz-card__title {
@@ -255,7 +258,7 @@
 }
 
 .continue-card {
-  background: linear-gradient(135deg, var(--clr-bg-banner) 0%, var(--clr-bg-input) 100%);
+  background: var(--clr-bg-card);
   border-radius: var(--rad-lg);
   padding: var(--sp-md) var(--sp-lg);
   display: flex;
@@ -263,12 +266,16 @@
   justify-content: space-between;
   border: 1px solid var(--clr-border);
   cursor: pointer;
-  transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+  transition:
+    transform var(--dur-med) var(--ease),
+    box-shadow var(--dur-med) var(--ease),
+    border-color var(--dur-fast) var(--ease);
 }
 
 .continue-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-card-hover);
+  border-color: rgba(var(--clr-accent-rgb), 0.4);
 }
 
 .continue-card__left {
@@ -492,6 +499,7 @@
   background: #f0fdf4;
   border-color: #16a34a;
   color: #14532d;
+  animation: quizOptionPop 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .quiz-option--reveal .quiz-option__letter {
@@ -652,6 +660,58 @@
   background: #fef2f2;
   border: 1px solid #fca5a5;
   color: #7f1d1d;
+}
+
+.quiz-feedback.is-bouncing.quiz-feedback--correct {
+  animation: quizBounceOk 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.quiz-feedback.is-bouncing.quiz-feedback--wrong {
+  animation: quizBounceBad 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes quizBounceOk {
+  0% { transform: scale(0.94); opacity: 0.5; }
+  55% { transform: scale(1.03); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+@keyframes quizBounceBad {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(3px); }
+}
+
+.quiz-option--wrong,
+.quiz-tf-btn--wrong,
+.quiz-match__select--fail {
+  animation: quizBounceBad 0.4s ease;
+}
+
+.quiz-tf-btn--reveal,
+.quiz-match__select--ok {
+  animation: quizOptionPop 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes quizOptionPop {
+  0% { transform: scale(0.97); }
+  60% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quiz-feedback.is-bouncing.quiz-feedback--correct,
+  .quiz-feedback.is-bouncing.quiz-feedback--wrong,
+  .quiz-option--reveal,
+  .quiz-option--wrong,
+  .quiz-tf-btn--wrong,
+  .quiz-tf-btn--reveal,
+  .quiz-match__select--ok,
+  .quiz-match__select--fail {
+    animation: none !important;
+  }
 }
 
 /* Botón siguiente */
@@ -912,3 +972,4 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+

@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "node",
+  "framework": null,
   "installCommand": "npm install --prefix in4mind",
   "buildCommand": "npm run build --prefix in4mind",
   "outputDirectory": "in4mind",

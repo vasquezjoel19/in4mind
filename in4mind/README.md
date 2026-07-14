@@ -70,15 +70,15 @@ Si el deploy falla con *“No python entrypoint found”*, el proyecto en Vercel
 marcado como Python/Flask/FastAPI. Corrige esto antes de redeployar:
 
 1. Vercel → Project → **Settings → General → Build & Development Settings**
-2. **Framework Preset** → **Other** (o Node). **Override** activado.
-3. **Root Directory** (recomendado): `in4mind`  
+2. **Framework Preset** → **Other** (Override). **No** uses Python ni Node server.
+3. **Root Directory** (recomendado): `in4mind` (minúsculas)  
    - Alternativa: Root vacío; el `vercel.json` de la raíz usa `outputDirectory: in4mind`.
 4. Build Command: `npm run build` · Install: `npm install` · Output: vacío (con Root = `in4mind`).
 5. Variables opcionales: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `GROQ_API_KEY`.
-6. **Redeploy** (Deployments → ⋮ → Redeploy) tras guardar settings y push a `main`.
+6. **Redeploy** el commit más reciente de `main` tras guardar settings.
 
-El repo fuerza el preset Node con `"framework": "node"` en `vercel.json`
-(no Python) y `engines.node` = `20.x` en `package.json`.
+El repo declara `"framework": null` (= Other) en `vercel.json`. Las APIs en
+`api/*.js` siguen siendo funciones Node; el sitio en sí es estático HTML/CSS/JS.
 
 ### Credenciales de prueba
 

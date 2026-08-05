@@ -450,7 +450,12 @@ const QuizzesController = (() => {
   let _currentQIdx   = 0;
   let _answers       = [];
   let _answered      = false;
+  /** Estado local de intentos (síncrono, localStorage). */
   let _progress      = {};
+  /** Mejores puntajes traídos de Supabase (asíncrono). */
+  let _cloudProgress = {};
+  /** Semilla del intento en curso: fija el barajado y permite reanudar igual. */
+  let _seed          = 0;
 
   let $listView, $quizView, $resultsView;
   let $filtersWrap, $quizGrid, $continueGrid, $certExamGrid;
@@ -471,7 +476,14 @@ const QuizzesController = (() => {
     return quiz.sections.reduce((n, s) => n + s.questions.length, 0);
   }
 
-  function _flattenQuiz(quiz) {
+  /**
+   * Aplana el quiz aleatorizando las respuestas. La semilla hace el barajado
+   * reproducible, así reanudar un intento muestra exactamente lo mismo.
+   */
+  function _flattenQuiz(quiz, seed) {
+    if (typeof QuizRandomizer !== 'undefined') {
+      return QuizRandomizer.prepare(quiz, seed);
+    }
     const flat = [];
     quiz.sections.forEach((sec, si) => {
       sec.questions.forEach(q => {
@@ -481,22 +493,43 @@ const QuizzesController = (() => {
     return flat;
   }
 
+  /**
+   * El estado local es síncrono y siempre está disponible; el de la nube llega
+   * después y sólo aporta el mejor puntaje histórico.
+   *
+   * `UserProfileService.getQuizProgress()` es `async`: antes se asignaba la
+   * promesa directamente a `_progress`, por lo que la barra de cada tarjeta
+   * quedaba siempre en 0 %.
+   */
   function _loadProgress() {
-    if (typeof UserProfileService !== 'undefined') {
-      UserProfileService.migrateSessionQuizProgress();
-      _progress = UserProfileService.getQuizProgress();
-      return;
-    }
-    try {
-      const raw = sessionStorage.getItem('in4mind_quiz_progress');
-      _progress = raw ? JSON.parse(raw) : {};
-    } catch {
-      _progress = {};
+    _progress = typeof QuizProgressService !== 'undefined'
+      ? QuizProgressService.getAll()
+      : {};
+
+    if (typeof UserProfileService === 'undefined') return;
+
+    Promise.resolve(UserProfileService.migrateSessionQuizProgress())
+      .then(() => UserProfileService.getQuizProgress())
+      .then(cloud => {
+        _cloudProgress = cloud || {};
+        if ($listView && $listView.style.display !== 'none') {
+          _renderGrid();
+          _renderContinue();
+          _renderCertExams();
+        }
+      })
+      .catch(() => { /* sin nube: el estado local basta */ });
+  }
+
+  /** Refresca la vista local tras cambiar el estado de un quiz. */
+  function _reloadLocalProgress() {
+    if (typeof QuizProgressService !== 'undefined') {
+      _progress = QuizProgressService.getAll();
     }
   }
 
   function _saveProgress(quizId, correct, total) {
-    const quiz = _getQuizById(quizId);
+    const quiz = _currentQuiz && _currentQuiz.id === quizId ? _currentQuiz : _getQuizById(quizId);
     const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
 
     if (typeof UserProfileService !== 'undefined') {
@@ -506,7 +539,11 @@ const QuizzesController = (() => {
           : (quiz?.title || quizId),
         icon: quiz?.icon || '',
       });
-      _progress[quizId] = saved;
+      // `saveQuizProgress` es async: se refresca el caché de nube cuando resuelva.
+      Promise.resolve(saved)
+        .then(row => { if (row) _cloudProgress[quizId] = row; })
+        .catch(() => { /* el estado local ya quedó guardado */ });
+
       if (typeof GamificationService !== 'undefined') {
         GamificationService.recordActivity('quiz', { quizId });
       }
@@ -535,37 +572,65 @@ const QuizzesController = (() => {
         });
       }
     } else {
-      _progress[quizId] = { correct, total, pct };
+      _cloudProgress[quizId] = { correct, total, pct, bestPct: pct };
     }
-
-    try {
-      sessionStorage.setItem('in4mind_quiz_progress', JSON.stringify(_progress));
-    } catch { /* ignore */ }
   }
 
+  /**
+   * % completado que alimenta la barra de la tarjeta: cuánto del quiz llevó
+   * contestado el usuario, no cuánto acertó.
+   */
   function _getPct(id) {
-    return _progress[id]?.pct ?? 0;
+    const local = _progress[id];
+    if (local?.completed) return 100;
+    if (local?.answered > 0) return local.completionPct;
+    // Sin avance local: si ya lo completó antes (nube), la barra va llena.
+    return _cloudProgress[id] ? 100 : 0;
   }
 
-  function _buildGeneralQuiz() {
+  /** Mejor puntaje histórico (nube o último intento terminado en local). */
+  function _getScorePct(id) {
+    const cloud = _cloudProgress[id];
+    const local = _progress[id];
+    return Math.max(
+      cloud?.bestPct ?? cloud?.pct ?? 0,
+      local?.completed ? (local.scorePct || 0) : 0
+    );
+  }
+
+  function _buildGeneralQuiz(seed) {
+    const rand = typeof QuizRandomizer !== 'undefined'
+      ? QuizRandomizer._rng(seed || 1)
+      : Math.random;
     const picked = _getQuizzes().map(quiz => {
-      const flat = _flattenQuiz(quiz);
-      const idx = Math.floor(Math.random() * flat.length);
-      const q = flat[idx];
+      const flat = [];
+      quiz.sections.forEach(sec => sec.questions.forEach(q => flat.push(q)));
+      if (!flat.length) return null;
+      const q = flat[Math.floor(rand() * flat.length)];
       return { ...q, q: `[${quiz.title}] ${q.q}` };
-    });
+    }).filter(Boolean);
+
+    const order = typeof QuizRandomizer !== 'undefined'
+      ? QuizRandomizer._shuffle(picked, rand)
+      : _shuffle(picked);
+
     return {
       id: GENERAL_QUIZ_ID,
       title: _t('quizzes.generalKnowledge', null, 'Conocimiento General'),
       category: 'general',
       desc: _t('quizzes.bannerSub', null, 'Preguntas variadas de todas las herramientas.'),
       icon: GENERAL_QUIZ_ICON,
-      sections: [{ title: _t('quizzes.sectionAllAreas', null, 'Todas las áreas'), questions: _shuffle(picked) }],
+      sections: [{ title: _t('quizzes.sectionAllAreas', null, 'Todas las áreas'), questions: order }],
     };
   }
 
-  function _getQuizById(id) {
-    if (id === GENERAL_QUIZ_ID) return _buildGeneralQuiz();
+  /**
+   * @param {string} id
+   * @param {number} [seed] necesaria para que el quiz general se recomponga
+   *                        igual al reanudar un intento guardado.
+   */
+  function _getQuizById(id, seed) {
+    if (id === GENERAL_QUIZ_ID) return _buildGeneralQuiz(seed);
     const certExam = typeof CertificationExamData !== 'undefined'
       ? CertificationExamData.getAllExams().find(e => e.id === id)
       : null;
@@ -588,6 +653,9 @@ const QuizzesController = (() => {
     const hasCert = typeof UserProfileService !== 'undefined'
       && UserProfileService.hasExamCertification(exam.courseId);
     const pct = _getPct(exam.id);
+    const scorePct = _getScorePct(exam.id);
+    const resumable = typeof QuizProgressService !== 'undefined'
+      && QuizProgressService.isResumable(exam.id);
 
     let lockMsg;
     if (hasCert) {
@@ -629,11 +697,14 @@ const QuizzesController = (() => {
           <div class="quiz-card__progress-bg">
             <div class="quiz-card__progress-fill" style="width:${pct}%"></div>
           </div>
+          ${resumable ? `<p class="quiz-card__resume">${_t('quizzes.resumeHint', { pct }, `En curso · ${pct}% completado`)}</p>` : ''}
           <div class="quiz-card__controls">
             <span class="quiz-card__stat">${_t('quizzes.questionsLabel', { n: _countQuestions(exam) }, `${_countQuestions(exam)} Preguntas`)}</span>
-            <span class="quiz-card__stat quiz-card__stat--ok">${hasCert ? _t('quizzes.certEarnedBadge', null, '🏆 Certificado') : `&#10003; ${pct}%`}</span>
+            <span class="quiz-card__stat quiz-card__stat--ok">${hasCert ? _t('quizzes.certEarnedBadge', null, '🏆 Certificado') : `&#10003; ${scorePct}%`}</span>
             <button type="button" class="btn--quiz-start" data-quiz-id="${exam.id}" ${req.examUnlocked ? '' : 'disabled'}>
-              ${req.examUnlocked ? _t('quizzes.presentExam', null, 'Presentar examen') : _t('quizzes.locked', null, 'Bloqueado')}
+              ${req.examUnlocked
+                ? (resumable ? _t('quizzes.resume', null, 'Continuar') : _t('quizzes.presentExam', null, 'Presentar examen'))
+                : _t('quizzes.locked', null, 'Bloqueado')}
             </button>
           </div>
         </div>
@@ -670,12 +741,15 @@ const QuizzesController = (() => {
 
   function _renderCard(quiz, delay = 0) {
     const pct = _getPct(quiz.id);
+    const scorePct = _getScorePct(quiz.id);
+    const resumable = typeof QuizProgressService !== 'undefined'
+      && QuizProgressService.isResumable(quiz.id);
     const total = _countQuestions(quiz);
     const types = [...new Set(quiz.sections.flatMap(s => s.questions.map(q => q.type)))];
     const labels = _typeLabels();
     const typeHint = types.map(t => labels[t] || t).join(' · ');
     const quizMin = UserProfileService?.QUIZ_UNLOCK_EXAM_PCT ?? 70;
-    const passed = pct >= quizMin;
+    const passed = scorePct >= quizMin;
     const passHint = passed
       ? _t('quizzes.quizPassedUnlock', { min: quizMin }, `✓ Quiz aprobado (≥${quizMin}%) — desbloquea certificación junto con las lecciones`)
       : _t('quizzes.certGoal', { min: quizMin }, `Meta certificación: ≥${quizMin}% en este quiz`);
@@ -698,10 +772,13 @@ const QuizzesController = (() => {
           <div class="quiz-card__progress-bg">
             <div class="quiz-card__progress-fill" style="width:${pct}%"></div>
           </div>
+          ${resumable ? `<p class="quiz-card__resume">${_t('quizzes.resumeHint', { pct }, `En curso · ${pct}% completado`)}</p>` : ''}
           <div class="quiz-card__controls">
             <span class="quiz-card__stat">${_t('quizzes.questionsLabel', { n: total }, `${total} Preguntas`)}</span>
-            <span class="quiz-card__stat quiz-card__stat--ok">&#10003; ${pct}%</span>
-            <button type="button" class="btn--quiz-start" data-quiz-id="${quiz.id}">${_t('quizzes.start', null, 'Empezar')}</button>
+            <span class="quiz-card__stat quiz-card__stat--ok">&#10003; ${scorePct}%</span>
+            <button type="button" class="btn--quiz-start" data-quiz-id="${quiz.id}">
+              ${resumable ? _t('quizzes.resume', null, 'Continuar') : _t('quizzes.start', null, 'Empezar')}
+            </button>
           </div>
         </div>
       </article>`;
@@ -756,7 +833,7 @@ const QuizzesController = (() => {
   function _renderContinue() {
     const inProgress = _getQuizzes().filter(q => {
       const p = _progress[q.id];
-      return p && p.pct > 0 && p.pct < 100;
+      return p && !p.completed && p.answered > 0 && p.answered < p.total;
     }).slice(0, 2);
 
     if (!inProgress.length) {
@@ -773,9 +850,9 @@ const QuizzesController = (() => {
           <div class="continue-card__left">
             <img src="${q.icon}" alt="${q.title}" width="28" height="28">
             <div>
-              <div class="continue-card__title">${q.desc}</div>
+              <div class="continue-card__title">${q.title}</div>
               <div class="continue-card__meta">
-                ${_t('quizzes.continueCorrect', { correct: p.correct, total: p.total, pct: p.pct }, `${p.correct}/${p.total} Correctas · ${p.pct}%`)}
+                ${_t('quizzes.continueAnswered', { answered: p.answered, total: p.total, pct: p.completionPct }, `${p.answered}/${p.total} respondidas · ${p.completionPct}% completado`)}
               </div>
             </div>
           </div>
@@ -814,8 +891,8 @@ const QuizzesController = (() => {
     if ($quizView?.classList.contains('quiz-view--visible') && _currentQuiz) {
       const savedIdx = _currentQIdx;
       const savedAnswers = _answers;
-      _currentQuiz = _getQuizById(_currentQuiz.id);
-      _flatQuestions = _flattenQuiz(_currentQuiz);
+      _currentQuiz = _getQuizById(_currentQuiz.id, _seed);
+      _flatQuestions = _flattenQuiz(_currentQuiz, _seed);
       _currentQIdx = Math.min(savedIdx, Math.max(0, _flatQuestions.length - 1));
       _answers = savedAnswers;
       _renderQuestion();
@@ -830,6 +907,26 @@ const QuizzesController = (() => {
     $listView.style.display = 'none';
     $resultsView.classList.remove('results-view--visible');
     $quizView.classList.add('quiz-view--visible');
+    _publishShareContext();
+  }
+
+  /** Enlace exacto al quiz que se está resolviendo. */
+  function _publishShareContext() {
+    if (typeof ShareService === 'undefined') return;
+    if (!_currentQuiz) {
+      ShareService.setContext({ page: 'quizzes.html', title: 'IN4MIND — Quizzes' });
+      return;
+    }
+    ShareService.setContext({
+      page: 'quizzes.html',
+      params: _currentQuiz.isCertExam
+        ? { exam: _currentQuiz.courseId }
+        : { quiz: _currentQuiz.id },
+      title: _currentQuiz.title,
+      text: _currentQuiz.desc,
+    });
+    const url = ShareService.buildUrl();
+    if (url && url !== window.location.href) window.history.replaceState({}, '', url);
   }
 
   function _showResultsView() {
@@ -870,13 +967,133 @@ const QuizzesController = (() => {
       }
     }
 
-    _currentQuiz   = quiz;
-    _flatQuestions = _flattenQuiz(quiz);
-    _currentQIdx   = 0;
-    _answers       = [];
+    const resumable = typeof QuizProgressService !== 'undefined'
+      && QuizProgressService.isResumable(id);
+
+    if (resumable) {
+      const saved = QuizProgressService.get(id);
+      _askResumeOrRestart(quiz, saved);
+      return;
+    }
+
+    _beginQuiz(quiz, null);
+  }
+
+  /**
+   * Arranca un intento. Si llega `saved`, se reanuda con la misma semilla para
+   * que las preguntas y el orden de respuestas sean idénticos a los de antes.
+   */
+  function _beginQuiz(quiz, saved) {
+    _seed = saved?.seed ?? (typeof QuizProgressService !== 'undefined'
+      ? QuizProgressService.newSeed()
+      : Date.now());
+
+    // El quiz general se recompone desde la semilla; los demás son estables.
+    const def = quiz.id === GENERAL_QUIZ_ID ? _getQuizById(quiz.id, _seed) : quiz;
+
+    _currentQuiz   = def;
+    _flatQuestions = _flattenQuiz(def, _seed);
+    _answers       = saved?.answers ?? [];
+    _currentQIdx   = saved
+      ? Math.min(_answers.length, Math.max(0, _flatQuestions.length - 1))
+      : 0;
     _answered      = false;
+
     _showQuizView();
     _renderQuestion();
+    _persistAttempt();
+  }
+
+  /** Guarda el avance del intento en curso (localStorage, síncrono). */
+  function _persistAttempt() {
+    if (typeof QuizProgressService === 'undefined' || !_currentQuiz) return;
+    QuizProgressService.save(_currentQuiz.id, {
+      seed:       _seed,
+      currentIdx: _currentQIdx,
+      total:      _flatQuestions.length,
+      answers:    _answers,
+      isCertExam: Boolean(_currentQuiz.isCertExam),
+      title:      _currentQuiz.title,
+      icon:       _currentQuiz.icon,
+    });
+    _reloadLocalProgress();
+  }
+
+  /** Modal: continuar donde lo dejó o empezar de nuevo. */
+  function _askResumeOrRestart(quiz, saved) {
+    const pct = saved?.completionPct ?? 0;
+    const answered = saved?.answered ?? 0;
+    const total = saved?.total ?? _countQuestions(quiz);
+
+    let overlay = document.getElementById('quiz-resume-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'quiz-resume-overlay';
+      overlay.className = 'quiz-resume-overlay';
+      overlay.innerHTML = `
+        <div class="quiz-resume-modal" role="dialog" aria-modal="true"
+             aria-labelledby="quiz-resume-title" aria-describedby="quiz-resume-desc">
+          <h2 class="quiz-resume-modal__title" id="quiz-resume-title"></h2>
+          <p class="quiz-resume-modal__desc" id="quiz-resume-desc"></p>
+          <div class="quiz-resume-modal__bar" aria-hidden="true">
+            <div class="quiz-resume-modal__fill" id="quiz-resume-fill"></div>
+          </div>
+          <div class="quiz-resume-modal__actions">
+            <button type="button" class="btn--quiz-check" id="quiz-resume-continue"></button>
+            <button type="button" class="quiz-resume-modal__restart" id="quiz-resume-restart"></button>
+          </div>
+          <button type="button" class="quiz-resume-modal__cancel" id="quiz-resume-cancel"></button>
+        </div>`;
+      document.body.appendChild(overlay);
+    }
+
+    overlay.querySelector('#quiz-resume-title').textContent =
+      _t('quizzes.resumeTitle', null, '¿Continuar donde lo dejaste?');
+    overlay.querySelector('#quiz-resume-desc').textContent =
+      _t('quizzes.resumeDesc', { title: quiz.title, answered, total, pct },
+        `Tienes ${answered} de ${total} preguntas respondidas en ${quiz.title} (${pct}% completado).`);
+    overlay.querySelector('#quiz-resume-fill').style.width = `${pct}%`;
+    overlay.querySelector('#quiz-resume-continue').textContent =
+      _t('quizzes.resumeContinue', null, 'Continuar');
+    overlay.querySelector('#quiz-resume-restart').textContent =
+      _t('quizzes.resumeRestart', null, 'Iniciar de nuevo');
+    overlay.querySelector('#quiz-resume-cancel').textContent =
+      _t('common.cancel', null, 'Cancelar');
+
+    const close = () => {
+      overlay.hidden = true;
+      document.removeEventListener('keydown', onKey);
+    };
+    const onKey = e => { if (e.key === 'Escape') close(); };
+
+    // Se reemplazan los nodos para no acumular listeners entre aperturas.
+    const rebind = (id, handler) => {
+      const old = overlay.querySelector(`#${id}`);
+      const fresh = old.cloneNode(true);
+      old.replaceWith(fresh);
+      fresh.addEventListener('click', handler);
+      return fresh;
+    };
+
+    const continueBtn = rebind('quiz-resume-continue', () => {
+      close();
+      _beginQuiz(quiz, saved);
+    });
+    rebind('quiz-resume-restart', () => {
+      close();
+      QuizProgressService.clear(quiz.id);
+      _reloadLocalProgress();
+      _beginQuiz(quiz, null);
+    });
+    rebind('quiz-resume-cancel', () => {
+      close();
+      _showListView();
+    });
+
+    overlay.onclick = e => { if (e.target === overlay) close(); };
+    document.addEventListener('keydown', onKey);
+    overlay.hidden = false;
+    continueBtn.focus();
   }
 
   function _showFeedback(correct, exp, chosenLabel, correctLabel) {
@@ -891,7 +1108,9 @@ const QuizzesController = (() => {
     });
 
     $quizFeedback.className = `quiz-feedback quiz-feedback--${correct ? 'correct' : 'wrong'}`;
-    $quizFeedback.innerHTML = `<strong>${correct ? _t('quizzes.correctFeedback', null, '✓ ¡Correcto!') : _t('quizzes.wrongFeedback', null, '✗ Incorrecto.')}</strong> ${exp}`;
+    $quizFeedback.innerHTML = correct
+      ? `<strong>${_t('quizzes.correctFeedback', null, '✓ ¡Correcto!')}</strong> ${_escape(exp)}`
+      : _studyMeHtml(q, chosenLabel, correctLabel, exp);
     $quizFeedback.classList.remove('is-bouncing');
     void $quizFeedback.offsetWidth;
     $quizFeedback.classList.add('is-bouncing');
@@ -900,6 +1119,51 @@ const QuizzesController = (() => {
       ? _t('quizzes.next', null, 'Siguiente →')
       : _t('quizzes.review', null, 'Ver resultados →');
     $btnNext.classList.add('btn--quiz-next-visible');
+
+    _persistAttempt();
+  }
+
+  function _escape(str) {
+    return String(str ?? '').replace(/[&<>"']/g, c => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
+  }
+
+  /**
+   * Retroalimentación educativa al fallar: qué respondió, cuál era la correcta
+   * y por qué. Se muestra antes de poder avanzar a la siguiente pregunta.
+   */
+  function _studyMeHtml(q, chosenLabel, correctLabel, exp) {
+    const rows = [];
+
+    if (chosenLabel) {
+      rows.push(`
+        <div class="study-me__row study-me__row--wrong">
+          <span class="study-me__label">${_t('quizzes.yourAnswer', null, 'Tu respuesta')}</span>
+          <span class="study-me__value">${_escape(chosenLabel)}</span>
+        </div>`);
+    }
+    if (correctLabel) {
+      rows.push(`
+        <div class="study-me__row study-me__row--ok">
+          <span class="study-me__label">${_t('quizzes.correctAnswer', null, 'Correcta')}</span>
+          <span class="study-me__value">${_escape(correctLabel)}</span>
+        </div>`);
+    }
+
+    return `
+      <div class="study-me">
+        <div class="study-me__head">
+          <span class="study-me__badge">${_t('quizzes.studyMe', null, 'Study Me')}</span>
+          <strong class="study-me__title">${_t('quizzes.wrongFeedback', null, '✗ Incorrecto.')}</strong>
+        </div>
+        <div class="study-me__rows">${rows.join('')}</div>
+        <p class="study-me__why">
+          <span class="study-me__why-label">${_t('quizzes.whyLabel', null, '¿Por qué?')}</span>
+          ${_escape(exp || _t('quizzes.noExplanation', null, 'Repasa este tema en la lección correspondiente.'))}
+        </p>
+        <p class="study-me__hint">${_t('quizzes.studyMeHint', null, 'Lee la explicación antes de continuar: la próxima vez la reconocerás.')}</p>
+      </div>`;
   }
 
   function _renderQuestion() {
@@ -997,7 +1261,9 @@ const QuizzesController = (() => {
   }
 
   function _renderMatchQuestion(q) {
-    const rights = _shuffle(q.pairs.map(p => p.right));
+    // `rights` viene ya barajado por QuizRandomizer con la semilla del intento,
+    // así el desplegable conserva el mismo orden al reanudar.
+    const rights = q.rights || _shuffle(q.pairs.map(p => p.right));
     $quizOptions.className = 'quiz-options quiz-options--match';
     $quizOptions.innerHTML = `
       <p class="quiz-match__hint">${_t('quizzes.matchHint', null, 'Selecciona la definición correcta para cada término.')}</p>
@@ -1061,9 +1327,12 @@ const QuizzesController = (() => {
   function _showResults() {
     const correct = _answers.filter(a => a.correct).length;
     const total   = _answers.length;
-    const pct     = Math.round((correct / total) * 100);
+    const pct     = total > 0 ? Math.round((correct / total) * 100) : 0;
 
     _saveProgress(_currentQuiz.id, correct, total);
+    // El intento queda marcado como terminado: la tarjeta muestra 100 % y el
+    // quiz deja de ofrecer "continuar".
+    _persistAttempt();
 
     const isExam = Boolean(_currentQuiz.isCertExam);
     const certRef = isExam ? _currentQuiz.courseId : _currentQuiz.id;
@@ -1154,22 +1423,42 @@ const QuizzesController = (() => {
     _renderContinue();
     _renderCertExams();
 
-    document.getElementById('quiz-btn-back')?.addEventListener('click', _showListView);
+    document.getElementById('quiz-btn-back')?.addEventListener('click', () => {
+      _persistAttempt();
+      _showListView();
+    });
     $btnNext?.addEventListener('click', _nextQuestion);
     document.getElementById('results-btn-home')?.addEventListener('click', _showListView);
-    document.getElementById('results-btn-retry')
-      ?.addEventListener('click', () => _startQuiz(_currentQuiz.id));
+    document.getElementById('results-btn-retry')?.addEventListener('click', () => {
+      if (!_currentQuiz) return;
+      // Reintentar siempre parte de cero: se descarta el intento terminado.
+      if (typeof QuizProgressService !== 'undefined') {
+        QuizProgressService.clear(_currentQuiz.id);
+        _reloadLocalProgress();
+      }
+      _beginQuiz(_currentQuiz, null);
+    });
     document.getElementById('quiz-banner-btn')
       ?.addEventListener('click', () => _startQuiz(GENERAL_QUIZ_ID));
 
-    const pendingQuiz = sessionStorage.getItem('in4mind_open_quiz');
+    // Guardar al salir: cerrar pestaña, navegar a otra página o pasar a segundo
+    // plano en móvil (donde `beforeunload`/`pagehide` no siempre disparan).
+    window.addEventListener('pagehide', _persistAttempt);
+    window.addEventListener('beforeunload', _persistAttempt);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') _persistAttempt();
+    });
+
+    // Enlace compartido: ?quiz=python o ?exam=python
+    const urlParams = new URLSearchParams(window.location.search);
+    const pendingQuiz = urlParams.get('quiz') || sessionStorage.getItem('in4mind_open_quiz');
     if (pendingQuiz) {
       sessionStorage.removeItem('in4mind_open_quiz');
       if (_getQuizById(pendingQuiz)) _startQuiz(pendingQuiz);
       else _startQuiz(GENERAL_QUIZ_ID);
     }
 
-    const pendingExam = sessionStorage.getItem('in4mind_open_exam');
+    const pendingExam = urlParams.get('exam') || sessionStorage.getItem('in4mind_open_exam');
     if (pendingExam) {
       sessionStorage.removeItem('in4mind_open_exam');
       const examId = typeof CertificationExamData !== 'undefined'

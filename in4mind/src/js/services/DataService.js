@@ -190,6 +190,9 @@ const DataService = (() => {
         resolve({
           ok: true,
           email: normalized,
+          // El token se entrega para que AuthService pueda incluirlo en el
+          // enlace del correo que envía la función serverless.
+          token,
           registered: Boolean(_users[normalized]),
         });
       }, 900);

@@ -3,7 +3,7 @@
  * Login y Registro: layout de dos columnas, animaciones de transición.
  */
 
-@import url('bulb-icon.css');
+@import url('bulb-icon.css?v=20260805');
 
 /* ── Wrapper de la página ── */
 .auth-page {
@@ -254,15 +254,47 @@
 
 .form-group__pwd-toggle:hover { color: var(--clr-link); }
 
+/* Fila: recordar datos + contraseña olvidada */
+.auth-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-sm);
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.auth-remember {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: var(--clr-text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.auth-remember__box {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--clr-brand-600);
+  cursor: pointer;
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.auth-remember__note {
+  font-size: 0.7rem;
+  color: var(--clr-text-muted);
+  line-height: 1.4;
+  margin-bottom: var(--sp-md);
+}
+
 /* Enlace de contraseña olvidada */
 .auth-forgot {
   font-size: 0.78rem;
   color: var(--clr-text-secondary);
   text-align: right;
-  display: block;
-  width: 100%;
-  margin-top: -var(--sp-sm);
-  margin-bottom: var(--sp-md);
   padding: 0;
   border: none;
   background: none;

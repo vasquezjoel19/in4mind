@@ -20,6 +20,7 @@ const AuthController = (() => {
   let $toRegister, $toLogin, $toForgot, $backToLogin, $backFromReset;
   let $loginError, $registerError, $forgotError, $resetError;
   let $forgotSuccess, $resetSuccess;
+  let $rememberBox;
   let _resetEmail = '';
 
   // ── Copy dinámico del panel izquierdo ──
@@ -247,7 +248,28 @@ const AuthController = (() => {
   // Submit handlers
   // ────────────────────────────────────────────
 
+  /**
+   * Abre la vista de restablecer si se llegó desde el enlace del correo
+   * (`login.html?view=reset&email=...`).
+   */
+  function _applyDeepLink() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('view') !== 'reset') return;
+    const email = params.get('email') || '';
+    if (email) _resetEmail = email;
+    _openResetView();
+  }
+
   function _redirectAfterAuth() {
+    // Prioridad: el contenido compartido al que el usuario intentaba entrar.
+    if (typeof AuthGuard !== 'undefined') {
+      const next = AuthGuard.consumeRedirect();
+      if (next) {
+        window.location.replace(next);
+        return;
+      }
+    }
+
     const destination = sessionStorage.getItem('in4mind_open_destination');
     if (destination === 'ai') {
       sessionStorage.removeItem('in4mind_open_destination');
@@ -286,12 +308,14 @@ const AuthController = (() => {
     $loginBtn.disabled = true;
     $loginBtn.textContent = _t('auth.loggingIn');
 
+    const remember = Boolean($rememberBox?.checked);
     const authFn = typeof AuthService !== 'undefined' ? AuthService.login.bind(AuthService) : DataService.login.bind(DataService);
-    const result = await authFn(emailInput.value, passInput.value);
+    const result = await authFn(emailInput.value, passInput.value, remember);
 
     if (result.ok) {
       if (typeof AuthService === 'undefined') {
-        sessionStorage.setItem('in4mind_user', JSON.stringify(result.user));
+        if (typeof SessionStore !== 'undefined') SessionStore.persist(result.user, remember);
+        else sessionStorage.setItem('in4mind_user', JSON.stringify(result.user));
         if (typeof UserProfileService !== 'undefined') {
           UserProfileService.mergeGuestIntoUser(result.user.email);
           UserProfileService.migrateSessionQuizProgress();
@@ -330,8 +354,14 @@ const AuthController = (() => {
       $forgotForm.hidden = true;
       const msg = $forgotSuccess.querySelector('.auth-success__text');
       if (msg) {
-        msg.textContent = _t('auth.forgotDemoSuccess', { email: result.email });
+        // Sólo se afirma que se envió el correo cuando realmente se envió.
+        msg.textContent = result.delivered
+          ? _t('auth.forgotSent', { email: result.email })
+          : _t('auth.forgotNotSent', { email: result.email });
       }
+      // Sin proveedor de correo, el usuario puede continuar en este dispositivo.
+      const nextBtn = document.getElementById('forgot-to-reset');
+      if (nextBtn) nextBtn.hidden = Boolean(result.delivered);
     } else {
       _showError($forgotError, result.error || _t('auth.errProcess'));
       $forgotBtn.disabled = false;
@@ -474,18 +504,23 @@ const AuthController = (() => {
 
   /** Inicializa el controlador y asocia listeners. */
   async function init() {
-    if (typeof AuthService !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    // Si se llega desde el enlace del correo, la vista de restablecer manda
+    // aunque haya una sesión abierta.
+    const isResetLink = params.get('view') === 'reset';
+
+    if (typeof AuthService !== 'undefined' && !isResetLink) {
       const oauth = await AuthService.restoreOAuthSession();
       if (oauth.ok) {
-        window.location.href = 'dashboard.html';
+        _redirectAfterAuth();
         return;
       }
     }
 
-    // Redirigir si ya hay sesión
+    // Redirigir si ya hay sesión (SessionStore ya rehidrató "Recordar datos")
     const existing = sessionStorage.getItem('in4mind_user');
-    if (existing) {
-      window.location.href = 'dashboard.html';
+    if (existing && !isResetLink) {
+      _redirectAfterAuth();
       return;
     }
 
@@ -515,9 +550,23 @@ const AuthController = (() => {
     $resetError   = document.getElementById('reset-error');
     $forgotSuccess= document.getElementById('forgot-success');
     $resetSuccess = document.getElementById('reset-success');
+    $rememberBox  = document.getElementById('login-remember');
+
+    // "Recordar datos": restaurar la preferencia y precargar el correo.
+    if (typeof SessionStore !== 'undefined') {
+      const remembered = SessionStore.getRememberedEmail();
+      if ($rememberBox) $rememberBox.checked = SessionStore.isRemembered() || Boolean(remembered);
+      const loginEmail = $loginForm?.querySelector('#login-email');
+      if (loginEmail && remembered && !loginEmail.value) {
+        loginEmail.value = remembered;
+        // El foco va a la contraseña: el correo ya está puesto.
+        $loginForm.querySelector('#login-password')?.focus();
+      }
+    }
 
     // Inicializar vista
     switchView('login');
+    _applyDeepLink();
     _bindAuthHelp();
     window.addEventListener('in4mind-locale-change', _onLocaleChange);
 

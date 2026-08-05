@@ -24,7 +24,9 @@ const CertificationExamData = (() => {
         opts: ['Elegir fuentes aleatorias', 'Aplicar Brand Kit y plantilla base', 'Exportar sin revisar márgenes', 'Usar solo elementos gratuitos sin guía'],
         ans: 1, exp: 'Brand Kit + plantilla garantiza consistencia antes de personalizar.' },
       { type: 'truefalse', q: 'Para impresión profesional conviene exportar en PDF con sangrado si la imprenta lo solicita.',
-        ans: true, exp: 'PDF mantiene calidad y permite sangrados para corte en imprenta.' },
+        ans: true, exp: 'PDF mantiene calidad y permite sangrados para corte en imprenta.',
+        qFalse: 'Para impresión profesional conviene exportar en JPG de baja resolución para que el archivo pese menos.',
+        expFalse: 'La imprenta necesita PDF con sangrado y alta resolución; un JPG ligero pierde calidad y no permite el corte.'  },
       { type: 'choice', q: 'Un compañero edita el mismo diseño en tiempo real. ¿Qué función de Canva lo permite?',
         opts: ['Solo descarga local', 'Colaboración en la nube con enlace', 'Exportar a Word', 'Modo offline sin sync'],
         ans: 1, exp: 'Canva permite colaboración simultánea vía enlace compartido.' },
@@ -53,7 +55,9 @@ const CertificationExamData = (() => {
         opts: ['Copiar capas sueltas', 'Componente maestro con instancias', 'Rasterizar la barra', 'Exportar solo PNG'],
         ans: 1, exp: 'Componentes con instancias permiten cambios centralizados.' },
       { type: 'truefalse', q: 'Constraints permiten que elementos se adapten al redimensionar frames.',
-        ans: true, exp: 'Constraints definen anclaje y comportamiento responsive dentro del frame.' },
+        ans: true, exp: 'Constraints definen anclaje y comportamiento responsive dentro del frame.',
+        qFalse: 'Los constraints fijan el tamaño del frame e impiden que sus elementos se adapten al redimensionarlo.',
+        expFalse: 'Los constraints definen el anclaje de cada elemento para que responda al cambiar el tamaño del frame.'  },
       { type: 'choice', q: 'Un botón debe alinear icono y texto con espaciado uniforme al cambiar copy. ¿Qué aplicas?',
         opts: ['Posicionamiento manual pixel a pixel', 'Auto Layout con padding y gap', 'Outline stroke', 'Flatten layers'],
         ans: 1, exp: 'Auto Layout distribuye hijos automáticamente al cambiar contenido.' },
@@ -82,7 +86,9 @@ const CertificationExamData = (() => {
         ],
         exp: 'Elegir la estructura correcta simplifica lógica y rendimiento.' },
       { type: 'truefalse', q: 'La indentación en Python forma parte de la sintaxis del bloque.',
-        ans: true, exp: 'Python usa indentación para delimitar bloques de código.' },
+        ans: true, exp: 'Python usa indentación para delimitar bloques de código.',
+        qFalse: 'En Python la indentación es sólo un estilo visual: los bloques se delimitan con llaves.',
+        expFalse: 'Python no usa llaves: la indentación define el bloque y un error de sangrado rompe el programa.'  },
       { type: 'choice', q: 'Lees un CSV y procesas filas. ¿Qué módulo es más adecuado?',
         opts: ['csv', 'tkinter', 'socket', 'random'],
         ans: 0, exp: 'El módulo csv está pensado para archivos separados por delimitadores.' },
@@ -111,7 +117,9 @@ const CertificationExamData = (() => {
         ],
         exp: 'Estos bloques son base del JS moderno en frontend.' },
       { type: 'truefalse', q: 'addEventListener permite registrar múltiples handlers para el mismo evento.',
-        ans: true, exp: 'A diferencia de onclick, puedes añadir varios listeners.' },
+        ans: true, exp: 'A diferencia de onclick, puedes añadir varios listeners.',
+        qFalse: 'addEventListener sustituye el handler anterior cada vez que se registra uno nuevo para el mismo evento.',
+        expFalse: 'Ese es el comportamiento de onclick; addEventListener acumula todos los listeners registrados.'  },
       { type: 'choice', q: 'Fetch devuelve datos de una API. ¿Qué patrón es correcto?',
         opts: ['fetch(url).then(r => r.json()).then(data => ...)', 'fetch(url).json inmediato sin then', 'XMLHttpRequest obligatorio', 'Solo WebSockets'],
         ans: 0, exp: 'fetch retorna Promise; hay que parsear json en cadena then/async.' },
@@ -140,7 +148,9 @@ const CertificationExamData = (() => {
         ],
         exp: 'HTML semántico mejora accesibilidad y mantenibilidad.' },
       { type: 'truefalse', q: 'Un documento HTML5 válido debe incluir <!DOCTYPE html>.',
-        ans: true, exp: 'DOCTYPE activa modo estándar en navegadores modernos.' },
+        ans: true, exp: 'DOCTYPE activa modo estándar en navegadores modernos.',
+        qFalse: 'En HTML5 el doctype es opcional y puede omitirse sin consecuencias.',
+        expFalse: 'Sin doctype el navegador entra en quirks mode y aplica reglas antiguas de renderizado.'  },
       { type: 'choice', q: 'Formulario envía email y contraseña. ¿Qué atributo ayuda en móvil?',
         opts: ['type="email" y type="password"', 'type="text" para todo', 'readonly en submit', 'iframe oculto'],
         ans: 0, exp: 'Tipos nativos activan teclados y validación básica del navegador.' },
@@ -169,7 +179,9 @@ const CertificationExamData = (() => {
         ],
         exp: 'Flex + Grid + tokens cubren la mayoría de layouts modernos.' },
       { type: 'truefalse', q: 'box-sizing: border-box incluye padding y border en el width declarado.',
-        ans: true, exp: 'border-box simplifica cálculos de tamaño en componentes.' },
+        ans: true, exp: 'border-box simplifica cálculos de tamaño en componentes.',
+        qFalse: 'Con box-sizing: border-box el padding y el borde se suman al width declarado.',
+        expFalse: 'Eso es content-box, el valor por defecto; border-box incluye padding y borde dentro del width.'  },
       { type: 'choice', q: 'Grid con sidebar fijo y contenido fluido. ¿Qué enfoque?',
         opts: ['grid-template-columns: 240px 1fr', 'display: inline solamente', 'font-size en px únicamente', 'tablas HTML para layout'],
         ans: 0, exp: 'Grid define columnas fijas + fracción flexible eficientemente.' },
@@ -198,7 +210,9 @@ const CertificationExamData = (() => {
         ],
         exp: 'Dominar estos comandos cubre colaboración diaria.' },
       { type: 'truefalse', q: 'Un Pull Request permite revisión antes de fusionar cambios.',
-        ans: true, exp: 'PRs documentan cambios y habilitan code review.' },
+        ans: true, exp: 'PRs documentan cambios y habilitan code review.',
+        qFalse: 'Un Pull Request fusiona los cambios de inmediato y la revisión se hace después.',
+        expFalse: 'El PR abre el cambio a revisión y sólo se integra cuando se aprueba y se confirma la fusión.'  },
       { type: 'choice', q: 'Conflicto de merge en README. ¿Qué haces?',
         opts: ['Resolver marcadores en local, commit y push', 'Ignorar y force push', 'Clonar de nuevo sin resolver', 'Eliminar rama main'],
         ans: 0, exp: 'Los conflictos se resuelven editando archivos y completando el merge.' },
@@ -227,7 +241,9 @@ const CertificationExamData = (() => {
         ],
         exp: 'Estas funciones resuelven análisis empresarial frecuente.' },
       { type: 'truefalse', q: 'Referencia $B$2 es absoluta: no cambia al copiar la fórmula.',
-        ans: true, exp: 'El símbolo $ fija fila/columna en referencias.' },
+        ans: true, exp: 'El símbolo $ fija fila/columna en referencias.',
+        qFalse: 'La referencia $B$2 es relativa y se desplaza al copiar la fórmula a otras celdas.',
+        expFalse: 'El signo $ ancla columna y fila: $B$2 apunta siempre a la misma celda al copiarla.'  },
       { type: 'choice', q: 'Gráfico debe actualizarse al añadir filas en tabla. ¿Qué conviene?',
         opts: ['Convertir rango en Tabla de Excel (Ctrl+T)', 'Copiar valores estáticos', 'Insertar imagen del gráfico', 'Ocultar filas nuevas'],
         ans: 0, exp: 'Las Tablas expanden referencias automáticamente.' },
@@ -256,7 +272,9 @@ const CertificationExamData = (() => {
         ],
         exp: 'Maestras y vistas de presentador mejoran calidad al exponer.' },
       { type: 'truefalse', q: 'Demasiadas transiciones distintas por slide distraen al público.',
-        ans: true, exp: 'Consistencia visual mantiene foco en el mensaje.' },
+        ans: true, exp: 'Consistencia visual mantiene foco en el mensaje.',
+        qFalse: 'Aplicar una transición distinta a cada diapositiva mantiene despierta la atención del público.',
+        expFalse: 'El cambio constante de efecto compite con el mensaje; conviene una transición sobria y coherente.'  },
       { type: 'choice', q: 'Gráfico debe reflejar datos Excel vinculados. ¿Qué haces?',
         opts: ['Insertar gráfico vinculado y actualizar datos', 'Captura PNG estática sin enlace', 'Escanear gráfico impreso', 'Redibujar a mano'],
         ans: 0, exp: 'Vincular datos mantiene gráficos actualizados automáticamente.' },
@@ -285,7 +303,9 @@ const CertificationExamData = (() => {
         ],
         exp: 'Consultas analíticas combinan JOIN + GROUP BY + HAVING.' },
       { type: 'truefalse', q: 'Una clave primaria identifica de forma única cada fila.',
-        ans: true, exp: 'PRIMARY KEY garantiza unicidad e integridad referencial.' },
+        ans: true, exp: 'PRIMARY KEY garantiza unicidad e integridad referencial.',
+        qFalse: 'Una clave primaria puede repetirse en varias filas siempre que no contenga valores nulos.',
+        expFalse: 'La clave primaria es única por definición: no admite duplicados ni valores nulos.'  },
       { type: 'choice', q: 'Evitar inyección SQL en app web. ¿Qué práctica?',
         opts: ['Consultas parametrizadas / prepared statements', 'Concatenar input del usuario en SQL crudo', 'Dar permisos admin al usuario final', 'Publicar credenciales en repo'],
         ans: 0, exp: 'Parámetros separan datos de la instrucción SQL.' },
@@ -314,7 +334,9 @@ const CertificationExamData = (() => {
         ],
         exp: 'Defensa en profundidad combina varios controles.' },
       { type: 'truefalse', q: 'Usar la misma contraseña en todos los servicios aumenta el riesgo de credential stuffing.',
-        ans: true, exp: 'Una filtración compromete múltiples cuentas si reutilizas claves.' },
+        ans: true, exp: 'Una filtración compromete múltiples cuentas si reutilizas claves.',
+        qFalse: 'Usar la misma contraseña en todos los servicios protege frente al credential stuffing.',
+        expFalse: 'Es justo lo contrario: si se filtra una, los atacantes la prueban automáticamente en el resto de servicios.'  },
       { type: 'choice', q: 'USB desconocido en parking. ¿Qué haces?',
         opts: ['No conectarlo; entregar a seguridad IT', 'Conectarlo en PC corporativa', 'Abrir archivos .exe', 'Formatearlo en tu laptop personal'],
         ans: 0, exp: 'USB drop attacks explotan curiosidad para infectar sistemas.' },
@@ -379,9 +401,13 @@ const CertificationExamData = (() => {
       let round = 0;
       while (pool.length < CERT_EXAM_MAX && round < 8) {
         CourseFactory.buildExamQuestions(title || courseId).forEach((q, i) => {
+          const suffix = round === 0 && i < 6 ? '' : ` (evaluación ${round + 1}.${i + 1})`;
           add([{
             ...q,
-            q: round === 0 && i < 6 ? q.q : `${q.q} (evaluación ${round + 1}.${i + 1})`,
+            q: `${q.q}${suffix}`,
+            // La variante falsa lleva el mismo sufijo para que ambas polaridades
+            // se lean igual sea cual sea la que salga.
+            ...(q.qFalse ? { qFalse: `${q.qFalse}${suffix}` } : {}),
           }]);
         });
         round += 1;
@@ -420,6 +446,9 @@ const CertificationExamData = (() => {
           q: `Documentar el trabajo en «${mod}» con ${t} facilita colaboración y mantenimiento.`,
           ans: true,
           exp: 'La trazabilidad es clave en entornos profesionales.',
+          // Variante falsa: sin ella la respuesta correcta sería siempre "Verdadero".
+          qFalse: `Documentar el trabajo en «${mod}» con ${t} sólo genera burocracia y no ayuda al mantenimiento.`,
+          expFalse: 'Sin documentación cada cambio obliga a reconstruir el contexto desde cero y el mantenimiento se encarece.',
         };
       } else {
         candidate = {
@@ -439,7 +468,9 @@ const CertificationExamData = (() => {
         seen.add(key);
         pool.push(candidate);
       } else {
-        candidate.q = `${candidate.q} [${pool.length + 1}]`;
+        const tag = ` [${pool.length + 1}]`;
+        candidate.q = `${candidate.q}${tag}`;
+        if (candidate.qFalse) candidate.qFalse = `${candidate.qFalse}${tag}`;
         seen.add(candidate.q.toLowerCase());
         pool.push(candidate);
       }

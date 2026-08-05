@@ -36,15 +36,27 @@ const AuthService = (() => {
     return { name: name || user.user_metadata?.name };
   }
 
-  async function _persistSession(user) {
-    sessionStorage.setItem('in4mind_user', JSON.stringify(user));
+  /**
+   * @param {object} user
+   * @param {boolean|null} remember  true si el usuario marcó "Recordar datos"
+   */
+  async function _persistSession(user, remember = null) {
+    if (typeof SessionStore !== 'undefined') {
+      SessionStore.persist(user, remember);
+    } else {
+      sessionStorage.setItem('in4mind_user', JSON.stringify(user));
+    }
+    // El avance de quizzes hecho como invitado pasa a la cuenta.
+    if (typeof QuizProgressService !== 'undefined') {
+      QuizProgressService.mergeGuestInto(user.email);
+    }
     if (typeof UserProfileService !== 'undefined') {
       UserProfileService.mergeGuestIntoUser(user.email);
       UserProfileService.migrateSessionQuizProgress();
     }
   }
 
-  async function login(email, password) {
+  async function login(email, password, remember = false) {
     const em = email.trim().toLowerCase();
 
     if (_sb) {
@@ -53,7 +65,7 @@ const AuthService = (() => {
         if (!error && data?.user) {
           const meta = await _upsertProfile(data.user);
           const user = _sessionUser(data.user, meta.name);
-          await _persistSession(user);
+          await _persistSession(user, remember);
           return { ok: true, user };
         }
         if (error?.message?.includes('Invalid login')) {
@@ -63,11 +75,11 @@ const AuthService = (() => {
     }
 
     const result = await DataService.login(em, password);
-    if (result.ok) await _persistSession(result.user);
+    if (result.ok) await _persistSession(result.user, remember);
     return result;
   }
 
-  async function register(name, email, password) {
+  async function register(name, email, password, remember = false) {
     const em = email.trim().toLowerCase();
     const displayName = name.trim();
 
@@ -81,7 +93,7 @@ const AuthService = (() => {
         if (!error && data?.user) {
           await _upsertProfile(data.user, displayName);
           const user = _sessionUser(data.user, displayName);
-          await _persistSession(user);
+          await _persistSession(user, remember);
           return { ok: true, user };
         }
         if (error?.message?.includes('already registered')) {
@@ -91,22 +103,53 @@ const AuthService = (() => {
     }
 
     const result = await DataService.register(displayName, em, password);
-    if (result.ok) await _persistSession(result.user);
+    if (result.ok) await _persistSession(result.user, remember);
     return result;
   }
 
+  /**
+   * Envía el correo de recuperación a la dirección que escribió el usuario.
+   *
+   * Orden de intento:
+   *  1. Supabase Auth — envía el correo y devuelve al usuario a login.html.
+   *  2. `/api/auth/request-reset` — función serverless con proveedor de correo.
+   *  3. Sin ninguno configurado se informa con claridad; antes se simulaba un
+   *     envío que en realidad nunca ocurría.
+   */
   async function requestPasswordReset(email) {
     const em = email.trim().toLowerCase();
 
     if (_sb) {
       try {
-        const redirectTo = `${window.location.origin}${window.location.pathname.replace(/[^/]+$/, '')}login.html`;
+        const base = `${window.location.origin}${window.location.pathname.replace(/[^/]+$/, '')}`;
+        const redirectTo = `${base}login.html?view=reset`;
         const { error } = await _sb.auth.resetPasswordForEmail(em, { redirectTo });
-        if (!error) return { ok: true, email: em };
-      } catch { /* fallback */ }
+        if (!error) return { ok: true, email: em, delivered: true, via: 'supabase' };
+      } catch { /* se intenta el endpoint propio */ }
     }
 
-    return DataService.requestPasswordReset(em);
+    // Genera el token local que validará `resetPassword` y lo manda al backend.
+    const local = await DataService.requestPasswordReset(em);
+    if (!local.ok) return local;
+
+    try {
+      const res = await fetch('/api/auth/request-reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: em, token: local.token }),
+      });
+      if (res.ok) return { ok: true, email: em, delivered: true, via: 'api' };
+
+      const data = await res.json().catch(() => ({}));
+      if (data.error === 'RESET_EMAIL_NOT_CONFIGURED' || res.status === 404) {
+        // Sin proveedor de correo: se permite continuar en el mismo dispositivo,
+        // pero se dice explícitamente que no se envió ningún correo.
+        return { ok: true, email: em, delivered: false, reason: 'not_configured' };
+      }
+      return { ok: true, email: em, delivered: false, reason: 'send_failed' };
+    } catch {
+      return { ok: true, email: em, delivered: false, reason: 'offline' };
+    }
   }
 
   async function resetPassword(email, password, confirm) {
@@ -131,7 +174,8 @@ const AuthService = (() => {
     if (!user) return { ok: false, error: _t('auth.errLogin', null, 'Sin sesión.') };
 
     user = { ...user, name: trimmed };
-    sessionStorage.setItem('in4mind_user', JSON.stringify(user));
+    if (typeof SessionStore !== 'undefined') SessionStore.persist(user);
+    else sessionStorage.setItem('in4mind_user', JSON.stringify(user));
 
     if (_sb) {
       try {
@@ -155,7 +199,12 @@ const AuthService = (() => {
     if (_sb) {
       try { await _sb.auth.signOut(); } catch { /* ignore */ }
     }
-    sessionStorage.removeItem('in4mind_user');
+    if (typeof SessionStore !== 'undefined') {
+      // Se conserva el correo recordado para precargar el formulario.
+      SessionStore.clear({ keepEmail: true });
+    } else {
+      sessionStorage.removeItem('in4mind_user');
+    }
   }
 
   async function getSession() {

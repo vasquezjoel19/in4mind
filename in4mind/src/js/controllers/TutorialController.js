@@ -787,6 +787,9 @@ const TutorialController = (() => {
     $detailView.style.display = 'none';
     $listView.style.display = 'block';
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    _currentCourse = null;
+    _publishShareContext('list');
+    _syncDeepLinkUrl();
   }
 
   function _currentView() {
@@ -812,6 +815,26 @@ const TutorialController = (() => {
     } else {
       _renderGrid(query);
     }
+  }
+
+  /** Publica lo que se está viendo para que "Compartir" arme el enlace exacto. */
+  function _publishShareContext(view) {
+    if (typeof ShareService === 'undefined') return;
+    if (!_currentCourse) {
+      ShareService.setContext({ page: 'tutorial.html', title: 'IN4MIND' });
+      return;
+    }
+    const params = { course: _currentCourse.id };
+    if (view === 'lesson') params.lesson = _currentLessonIdx + 1;
+
+    ShareService.setContext({
+      page: 'tutorial.html',
+      params,
+      title: view === 'lesson' && _currentLessons[_currentLessonIdx]
+        ? `${_currentCourse.title} — ${_currentLessons[_currentLessonIdx].title}`
+        : _currentCourse.title,
+      text: _currentCourse.desc,
+    });
   }
 
   function _showDetail(courseId, openFirstLesson = false) {
@@ -923,6 +946,8 @@ const TutorialController = (() => {
     $lessonView.style.display = 'none';
     $detailView.style.display = 'block';
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    _publishShareContext('detail');
+    _syncDeepLinkUrl();
 
     if (openFirstLesson && _currentLessons.length) _showLesson(0);
   }
@@ -1177,9 +1202,23 @@ const TutorialController = (() => {
     $detailView.style.display = 'none';
     $lessonView.style.display = 'block';
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    _publishShareContext('lesson');
+    _syncDeepLinkUrl();
 
     if (opts.autoplayVideo && lesson.resources?.video?.startsWith('http')) {
       requestAnimationFrame(() => _openInlineVideo(lesson.resources.video, true));
+    }
+  }
+
+  /**
+   * Refleja la vista actual en la barra de direcciones sin recargar, para que
+   * copiar la URL o recargar lleve al mismo sitio.
+   */
+  function _syncDeepLinkUrl() {
+    if (typeof ShareService === 'undefined') return;
+    const url = ShareService.buildUrl();
+    if (url && url !== window.location.href) {
+      window.history.replaceState({}, '', url);
     }
   }
 
@@ -1360,6 +1399,12 @@ const TutorialController = (() => {
     if (previewCourse) {
       sessionStorage.removeItem('in4mind_open_course');
       _showDetail(previewCourse);
+
+      // Enlace compartido a una lección concreta: ?course=python&lesson=3
+      const lessonParam = parseInt(params.get('lesson'), 10);
+      if (Number.isInteger(lessonParam) && lessonParam >= 1) {
+        _showLesson(Math.min(lessonParam, _currentLessons.length) - 1);
+      }
     }
 
     window.addEventListener('in4mind-relocalize', _relocalize);

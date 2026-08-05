@@ -1,15 +1,17 @@
 /**
- * IN4MIND — Logo foco outline (line-art oficial)
+ * IN4MIND — Logo foco line-art (marca oficial)
+ * El SVG traza todo con currentColor: basta fijar `color` en cada contexto
+ * para obtener las tres variantes de marca (navy, blanco, negro).
  */
 
 .in4mind-bulb {
   display: block;
   flex-shrink: 0;
-  color: #1b273c;
+  color: var(--clr-brand-navy);
 }
 
 html[data-theme="dark"] .in4mind-bulb {
-  color: #e8eef6;
+  color: #f2f6fb;
 }
 
 .in4mind-bulb--lg {
@@ -27,11 +29,11 @@ html[data-theme="dark"] .in4mind-bulb {
   width: 56%;
   max-width: none;
   height: auto;
-  color: #1b273c;
+  color: var(--clr-brand-navy);
 }
 
 html[data-theme="dark"] .lp-hero-illustration__bulb.in4mind-bulb--lg {
-  color: #d7e4f4;
+  color: #f2f6fb;
 }
 
 .in4mind-bulb--md {
@@ -46,11 +48,11 @@ html[data-theme="dark"] .lp-hero-illustration__bulb.in4mind-bulb--lg {
 .sidebar__brand-icon.in4mind-bulb {
   width: 28px;
   height: 35px;
-  color: #1b273c;
+  color: var(--clr-brand-navy);
 }
 
 html[data-theme="dark"] .sidebar__brand-icon.in4mind-bulb {
-  color: #e8eef6;
+  color: #f2f6fb;
 }
 
 .lp-logo__icon.in4mind-bulb {
@@ -71,20 +73,20 @@ html[data-theme="dark"] .sidebar__brand-icon.in4mind-bulb {
   color: inherit;
 }
 
-/* Fondos oscuros / bandas navy: logo en claro */
+/* Fondos oscuros / bandas navy: logo en claro para conservar contraste */
 .lp-footer__logo .in4mind-bulb,
-.lp-navy-band .in4mind-bulb,
-.welcome-section__bulb.in4mind-bulb {
-  color: #1b273c;
+.lp-navy-band .in4mind-bulb {
+  color: #ffffff;
+}
+
+.welcome-section__bulb.in4mind-bulb,
+.help-hero__bulb.in4mind-bulb {
+  color: var(--clr-brand-navy);
 }
 
 html[data-theme="dark"] .welcome-section__bulb.in4mind-bulb,
 html[data-theme="dark"] .help-hero__bulb.in4mind-bulb {
-  color: #e8eef6;
-}
-
-.lp-footer__logo .in4mind-bulb {
-  color: #ffffff;
+  color: #f2f6fb;
 }
 
 /* Resplandor detrás del foco */

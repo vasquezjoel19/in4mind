@@ -2,7 +2,7 @@
  * IN4MIND — Modo oscuro + botón de tema global
  */
 
-@import url('bulb-icon.css');
+@import url('bulb-icon.css?v=20260805');
 
 /* ── Transición suave al cambiar tema ── */
 html.theme-transition,
@@ -260,8 +260,66 @@ html[data-theme="dark"] .quiz-tf-btn:hover:not(:disabled) {
   background: var(--clr-bg-banner);
 }
 
-html[data-theme="dark"] .quiz-option__marker {
+/* La clase real es `__letter`; `__marker` no existe en el marcado, por lo que
+   en modo oscuro la letra quedaba con el `background:#fff` del CSS base y el
+   texto en gris claro: prácticamente invisible. */
+html[data-theme="dark"] .quiz-option__letter {
   background: var(--clr-bg-input);
+  border-color: var(--clr-border);
+  color: var(--clr-text-primary);
+}
+
+/* Estados revelados en oscuro: el CSS base fija colores de texto claros
+   (#14532d / #7f1d1d) pensados para fondos claros. */
+html[data-theme="dark"] .quiz-option--reveal,
+html[data-theme="dark"] .quiz-tf-btn--reveal {
+  background: rgba(22, 163, 74, 0.18);
+  border-color: #22c55e;
+  color: #bbf7d0;
+}
+
+html[data-theme="dark"] .quiz-option--wrong,
+html[data-theme="dark"] .quiz-tf-btn--wrong {
+  background: rgba(220, 38, 38, 0.18);
+  border-color: #ef4444;
+  color: #fecaca;
+}
+
+html[data-theme="dark"] .quiz-option--reveal .quiz-option__letter {
+  background: #22c55e;
+  border-color: #22c55e;
+  color: #052e16;
+}
+
+html[data-theme="dark"] .quiz-option--wrong .quiz-option__letter {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: #450a0a;
+}
+
+html[data-theme="dark"] .quiz-feedback--correct {
+  background: rgba(22, 163, 74, 0.15);
+  border-color: #22c55e;
+  color: #dcfce7;
+}
+
+html[data-theme="dark"] .quiz-feedback--wrong {
+  background: rgba(220, 38, 38, 0.15);
+  border-color: #ef4444;
+  color: #fee2e2;
+}
+
+html[data-theme="dark"] .study-me__row--ok   { color: #bbf7d0; }
+html[data-theme="dark"] .study-me__row--wrong { color: #fecaca; }
+html[data-theme="dark"] .study-me__badge {
+  background: var(--clr-brand-600);
+  color: #fff;
+}
+
+html[data-theme="dark"] .quiz-resume-modal {
+  background: var(--clr-bg-card);
+  border-color: var(--clr-border);
+  color: var(--clr-text-primary);
 }
 
 html[data-theme="dark"] .quiz-filter {

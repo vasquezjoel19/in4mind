@@ -22,9 +22,16 @@ const AppShell = (() => {
 
   function clearSession() {
     SESSION_KEYS.forEach(k => sessionStorage.removeItem(k));
+    // También la sesión recordada, si no el usuario "cerraría sesión" y
+    // SessionStore.restore() lo volvería a dejar dentro al recargar.
+    if (typeof SessionStore !== 'undefined') SessionStore.clear({ keepEmail: true });
   }
 
   function logout() {
+    if (typeof AuthService !== 'undefined') {
+      // Cierra también la sesión de Supabase; no se espera para no bloquear.
+      Promise.resolve(AuthService.logout()).catch(() => {});
+    }
     clearSession();
     window.location.replace('login.html');
   }

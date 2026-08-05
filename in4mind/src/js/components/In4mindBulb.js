@@ -1,8 +1,11 @@
 'use strict';
 
 /**
- * IN4MIND — Logo oficial: foco outline + circuito + base (line-art).
- * Coincide con la marca (trazo uniforme, nodos, rosca). Color vía currentColor.
+ * IN4MIND — Logo oficial: foco line-art con circuito interior y rosca.
+ *
+ * Todo el trazo usa `currentColor`, así que las tres variantes de marca
+ * (navy sobre claro, blanco sobre oscuro, negro sobre blanco) salen sólo con
+ * cambiar `color` en CSS; no hay que mantener copias del SVG.
  */
 const In4mindBulb = (() => {
 
@@ -12,30 +15,39 @@ const In4mindBulb = (() => {
     return `in4b${_uid}`;
   }
 
+  /** Nodos del circuito (centros). */
+  const NODES = [
+    { cx: 33, cy: 30 },
+    { cx: 49, cy: 26 },
+    { cx: 56, cy: 43 },
+    { cx: 30, cy: 47 },
+  ];
+
   /**
-   * viewBox 80×100 — silueta abierta, 3 trazas con nodos, 4 hilos de base.
-   * stroke-width relativo al viewBox para que escale limpio.
+   * viewBox 80×100 — cristal cerrado, circuito de 4 nodos y rosca de 3 bandas.
+   * `id` se acepta por firma estable aunque este trazo no necesite <defs>.
    */
-  function _mark(id) {
+  function _mark(id) { // eslint-disable-line no-unused-vars
     return `
-      <g class="in4mind-bulb__mark" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
-        <!-- Cristal (abierto en el cuello) -->
-        <path class="in4mind-bulb__glass" d="M24 67C15 59.5 11 49 11 37C11 21.5 22 9.5 40 9.5S69 21.5 69 37c0 12-4 22.5-13 30"/>
+      <g class="in4mind-bulb__mark" fill="none" stroke="currentColor"
+         stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round">
 
-        <!-- Trazas / circuito (3 ramas + nodos) -->
-        <path class="in4mind-bulb__trace" d="M16.5 39.5H28.5L36 28"/>
-        <path class="in4mind-bulb__trace" d="M30.5 43.5L47.5 22.5"/>
-        <path class="in4mind-bulb__trace" d="M40 64.5V47.5l10.5-9 5-8"/>
+        <!-- Cristal: casquete circular + hombros que cierran en el cuello -->
+        <path class="in4mind-bulb__glass"
+              d="M30 70V66c0-4-3-7-5.5-9.5A26 26 0 1 1 55.5 56.5C53 59 50 62 50 66v4Z"/>
 
-        <circle class="in4mind-bulb__node" cx="36" cy="28" r="3.7" fill="currentColor" stroke="none"/>
-        <circle class="in4mind-bulb__node" cx="47.5" cy="22.5" r="3.7" fill="currentColor" stroke="none"/>
-        <circle class="in4mind-bulb__node" cx="55.5" cy="30.5" r="3.7" fill="currentColor" stroke="none"/>
+        <!-- Circuito -->
+        <path class="in4mind-bulb__trace" d="M14.5 41.5H24.5L33 30"/>
+        <path class="in4mind-bulb__trace" d="M49 26L30 47"/>
+        <path class="in4mind-bulb__trace" d="M56 43L46 54V70"/>
 
-        <!-- Base / rosca -->
-        <path class="in4mind-bulb__base" d="M26.5 71.5c5.2 2.3 21.8 2.3 27 0"/>
-        <path class="in4mind-bulb__base" d="M28.5 77.5c4.6 2 18.4 2 23 0"/>
-        <path class="in4mind-bulb__base" d="M31.5 83.5c3.6 1.6 13.4 1.6 17 0"/>
-        <path class="in4mind-bulb__base" d="M34.5 89.5c2.6 1.2 8.4 1.2 11 0"/>
+        ${NODES.map(n => `<circle class="in4mind-bulb__node" cx="${n.cx}" cy="${n.cy}" r="3.6"/>`).join('\n        ')}
+
+        <!-- Rosca: tres bandas y contacto inferior -->
+        <path class="in4mind-bulb__base" d="M28.5 75.5H51.5"/>
+        <path class="in4mind-bulb__base" d="M29.5 82H50.5"/>
+        <path class="in4mind-bulb__base" d="M31.5 88.5H48.5"/>
+        <path class="in4mind-bulb__base" d="M35.5 93.5q4.5 4 9 0"/>
       </g>`;
   }
 

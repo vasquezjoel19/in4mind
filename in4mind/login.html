@@ -8,17 +8,17 @@
 
   <script src="src/js/controllers/ThemeController.js?v=20260617"></script>
   <script src="src/js/a11y-boot.js?v=20260707"></script>
-  <script src="src/js/locales/es.js?v=20260722"></script>
-  <script src="src/js/locales/en.js?v=20260722"></script>
-  <script src="src/js/locales/zh.js?v=20260801"></script>
+  <script src="src/js/locales/es.js?v=20260805"></script>
+  <script src="src/js/locales/en.js?v=20260805"></script>
+  <script src="src/js/locales/zh.js?v=20260805"></script>
   <script src="src/js/services/I18n.js?v=20260801"></script>
   <script>ThemeController.initEarly(); I18n.initEarly();</script>
 
   <link rel="stylesheet" href="src/css/tokens.css?v=20260702">
   <link rel="stylesheet" href="src/css/base.css?v=20260714fluid3">
-  <link rel="stylesheet" href="src/css/auth.css?v=20260714bulb2">
+  <link rel="stylesheet" href="src/css/auth.css?v=20260805">
   <link rel="stylesheet" href="src/css/i18n.css?v=20260726">
-  <link rel="stylesheet" href="src/css/theme.css?v=20260714bulb2">
+  <link rel="stylesheet" href="src/css/theme.css?v=20260805">
   <link rel="stylesheet" href="src/css/accessibility.css?v=20260707">
   <link rel="stylesheet" href="src/css/settings-modal.css?v=20260714theme">
 
@@ -131,7 +131,16 @@
               <span class="field-error" data-i18n="auth.errPassword">La contraseña debe tener al menos 6 caracteres.</span>
             </div>
 
-            <button type="button" class="auth-forgot" id="to-forgot" data-i18n="auth.forgotLink">?Olvidaste la contraseña?</button>
+            <div class="auth-row">
+              <label class="auth-remember" for="login-remember">
+                <input type="checkbox" id="login-remember" class="auth-remember__box">
+                <span data-i18n="auth.rememberMe">Recordar mis datos</span>
+              </label>
+              <button type="button" class="auth-forgot" id="to-forgot" data-i18n="auth.forgotLink">?Olvidaste la contraseña?</button>
+            </div>
+            <p class="auth-remember__note" data-i18n="auth.rememberNote">
+              Mantiene tu sesión iniciada en este dispositivo. Nunca guardamos tu contraseña.
+            </p>
 
             <button type="submit" class="btn btn--primary" id="login-btn" data-i18n="auth.loginBtn">
               Inicia Sesión
@@ -352,14 +361,18 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="src/js/config/supabase.config.js"></script>
-<script src="src/js/components/In4mindBulb.js?v=20260714bulb2"></script>
+<script src="src/js/components/In4mindBulb.js?v=20260805"></script>
 <script src="src/js/i18n-boot.js?v=20260722"></script>
-<script src="src/js/services/DataService.js?v=20260722"></script>
+<script src="src/js/services/QuizProgressService.js?v=20260805"></script>
+<script src="src/js/services/QuizRandomizer.js?v=20260805"></script>
+<script src="src/js/services/SessionStore.js?v=20260805"></script>
+<script src="src/js/services/ShareService.js?v=20260805"></script>
+<script src="src/js/services/DataService.js?v=20260805"></script>
 <script src="src/js/services/DataExportService.js?v=20260706"></script>
-<script src="src/js/services/AuthService.js?v=20260706"></script>
+<script src="src/js/services/AuthService.js?v=20260805"></script>
 <script src="src/js/controllers/OtherMenuController.js?v=20260714theme"></script>
 <script src="src/js/other-menu-boot.js?v=20260707"></script>
-<script src="src/js/controllers/AuthController.js?v=20260734"></script>
+<script src="src/js/controllers/AuthController.js?v=20260805"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => { void AuthController.init(); });
 </script>

@@ -4,7 +4,7 @@
  */
 
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
-@import url('bulb-icon.css');
+@import url('bulb-icon.css?v=20260805');
 
 :root {
   --lp-primary:       var(--clr-brand-500, #4a76b2);

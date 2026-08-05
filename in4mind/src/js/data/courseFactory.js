@@ -26,6 +26,7 @@ const CourseFactory = (() => {
       choiceExp: (mod, t) => `Dominar ${mod.toLowerCase()} mejora resultados con ${t}.`,
       tfQ: (mod, t) => `${mod} es relevante para usar ${t} de forma efectiva en contexto real.`,
       tfExp: 'Los fundamentos s?lidos reducen errores y retrabajo.',
+      tfExpFalse: 'Los pasos del módulo son la práctica concreta: omitirlos deja el aprendizaje sin aplicación real.',
       matchQ: (t) => `Relaciona concepto y funci?n en ${t}:`,
       matchPairs: [
         { left: 'Planificaci?n', right: 'Definir objetivo y alcance' },
@@ -47,6 +48,7 @@ const CourseFactory = (() => {
       choiceExp: (mod, t) => `Mastering ${mod.toLowerCase()} improves outcomes with ${t}.`,
       tfQ: (mod, t) => `${mod} is relevant for using ${t} effectively in real-world contexts.`,
       tfExp: 'Solid fundamentals reduce errors and rework.',
+      tfExpFalse: 'The module steps are the hands-on part: skipping them leaves the learning without real application.',
       matchQ: (t) => `Match concept and function in ${t}:`,
       matchPairs: [
         { left: 'Planning', right: 'Define goal and scope' },
@@ -68,6 +70,7 @@ const CourseFactory = (() => {
       choiceExp: (mod, t) => `\u6388\u63a7${mod}\u53ef\u63d0\u5347\u4f7f\u7528 ${t} \u7684\u6548\u679c\u3002`,
       tfQ: (mod, t) => `${mod} \u5bf9\u4e8e\u5728\u5b9e\u9645\u73af\u5883\u4e2d\u6709\u6548\u4f7f\u7528 ${t} \u5f88\u91cd\u8981\u3002`,
       tfExp: '\u624e\u5b9e\u7684\u57fa\u7840\u53ef\u51cf\u5c11\u9519\u8bef\u548c\u8fd4\u5de5\u3002',
+      tfExpFalse: '\u6a21\u5757\u4e2d\u7684\u6b65\u9aa4\u662f\u5177\u4f53\u5b9e\u8df5\uff1a\u8df3\u8fc7\u5b83\u4eec\u4f1a\u4f7f\u5b66\u4e60\u65e0\u6cd5\u843d\u5730\u3002',
       matchQ: (t) => `\u5c06 ${t} \u4e2d\u7684\u6982\u5ff5\u4e0e\u529f\u80fd\u914d\u5bf9\uff1a`,
       matchPairs: [
         { left: '\u89c4\u5212', right: '\u5b9a\u4e49\u76ee\u6807\u4e0e\u8303\u56f4' },
@@ -87,7 +90,9 @@ const CourseFactory = (() => {
       c1opts: ['Improvisar sin plan', 'Planificar, ejecutar con est?ndares y validar entregables', 'Copiar sin adaptar contexto', 'Omitir pruebas finales'],
       c1exp: 'La planificaci?n y validaci?n reducen riesgo en entregas reales.',
       tf1q: (t) => `Documentar decisiones al trabajar con ${t} facilita mantenimiento y colaboraci?n.`,
+      tf1qFalse: (t) => `Documentar decisiones al trabajar con ${t} sólo ralentiza al equipo y no aporta al mantenimiento.`,
       tf1exp: 'La trazabilidad es clave en entornos profesionales.',
+      tf1expFalse: 'Sin documentar decisiones, cada cambio obliga a reconstruir el contexto desde cero.',
       m1q: 'Relaciona etapa y control de calidad:',
       m1pairs: [
         { left: 'Requisitos', right: 'Alinear expectativas' },
@@ -100,7 +105,9 @@ const CourseFactory = (() => {
       c2opts: ['Ignorar el problema', 'Estandarizar proceso, plantillas y revisi?n por pares', 'Cambiar herramienta sin an?lisis', 'Eliminar controles de calidad'],
       c2exp: 'La estandarizaci?n reduce variabilidad entre personas y proyectos.',
       tf2q: 'La mejora continua requiere medir resultados y ajustar el proceso.',
+      tf2qFalse: 'La mejora continua se basa en la intuición del equipo, sin necesidad de medir resultados.',
       tf2exp: 'Sin m?tricas no hay mejora objetiva.',
+      tf2expFalse: 'Sin medir resultados no hay forma de saber si el cambio mejoró o empeoró el proceso.',
       m2q: 'Relaciona pr?ctica y beneficio:',
       m2pairs: [
         { left: 'Checklist', right: 'Reducir omisiones' },
@@ -117,7 +124,9 @@ const CourseFactory = (() => {
       c1opts: ['Improvise without a plan', 'Plan, execute with standards, and validate deliverables', 'Copy without adapting to context', 'Skip final testing'],
       c1exp: 'Planning and validation reduce risk in real deliveries.',
       tf1q: (t) => `Documenting decisions when working with ${t} makes maintenance and collaboration easier.`,
+      tf1qFalse: (t) => `Documenting decisions when working with ${t} only slows the team down and does not help maintenance.`,
       tf1exp: 'Traceability is key in professional environments.',
+      tf1expFalse: 'Without documented decisions, every change forces the team to rebuild the context from scratch.',
       m1q: 'Match stage and quality control:',
       m1pairs: [
         { left: 'Requirements', right: 'Align expectations' },
@@ -130,7 +139,9 @@ const CourseFactory = (() => {
       c2opts: ['Ignore the problem', 'Standardize process, templates, and peer review', 'Change tools without analysis', 'Remove quality controls'],
       c2exp: 'Standardization reduces variability across people and projects.',
       tf2q: 'Continuous improvement requires measuring results and adjusting the process.',
+      tf2qFalse: 'Continuous improvement relies on the team intuition, with no need to measure results.',
       tf2exp: 'Without metrics there is no objective improvement.',
+      tf2expFalse: 'Without measuring results there is no way to tell whether a change improved or hurt the process.',
       m2q: 'Match practice and benefit:',
       m2pairs: [
         { left: 'Checklist', right: 'Reduce omissions' },
@@ -147,7 +158,9 @@ const CourseFactory = (() => {
       c1opts: ['\u65e0\u8ba1\u5212\u5373\u5174\u53d1\u6325', '\u89c4\u5212\u3001\u6309\u6807\u51c6\u6267\u884c\u5e76\u9a8c\u8bc1\u4ea4\u4ed8\u7269', '\u7167\u642c\u800c\u4e0d\u7ed3\u5408\u60c5\u5883', '\u8df3\u8fc7\u6700\u7ec8\u6d4b\u8bd5'],
       c1exp: '\u89c4\u5212\u4e0e\u9a8c\u8bc1\u53ef\u964d\u4f4e\u771f\u5b9e\u4ea4\u4ed8\u4e2d\u7684\u98ce\u9669\u3002',
       tf1q: (t) => `\u5728\u4f7f\u7528 ${t} \u65f6\u8bb0\u5f55\u51b3\u7b56\u6709\u52a9\u4e8e\u7ef4\u62a4\u4e0e\u534f\u4f5c\u3002`,
+      tf1qFalse: (t) => `\u5728\u4f7f\u7528 ${t} \u65f6\uff0c\u8bb0\u5f55\u51b3\u7b56\u53ea\u4f1a\u62d6\u6162\u56e2\u961f\uff0c\u5bf9\u7ef4\u62a4\u6ca1\u6709\u5e2e\u52a9\u3002`,
       tf1exp: '\u53ef\u8ffd\u6eaf\u6027\u5728\u4e13\u4e1a\u73af\u5883\u4e2d\u81f3\u5173\u91cd\u8981\u3002',
+      tf1expFalse: '\u4e0d\u8bb0\u5f55\u51b3\u7b56\uff0c\u6bcf\u6b21\u53d8\u66f4\u90fd\u9700\u8981\u4ece\u5934\u91cd\u5efa\u4e0a\u4e0b\u6587\u3002',
       m1q: '\u5c06\u9636\u6bb5\u4e0e\u8d28\u91cf\u63a7\u5236\u914d\u5bf9\uff1a',
       m1pairs: [
         { left: '\u9700\u6c42', right: '\u5bf9\u9f50\u671f\u671b' },
@@ -160,7 +173,9 @@ const CourseFactory = (() => {
       c2opts: ['\u5ffd\u7565\u95ee\u9898', '\u6807\u51c6\u5316\u6d41\u7a0b\u3001\u6a21\u677f\u4e0e\u540c\u884c\u8bc4\u5ba1', '\u672a\u5206\u6790\u5c31\u66f4\u6362\u5de5\u5177', '\u53d6\u6d88\u8d28\u91cf\u63a7\u5236'],
       c2exp: '\u6807\u51c6\u5316\u53ef\u51cf\u5c11\u4eba\u5458\u4e0e\u9879\u76ee\u4e4b\u95f4\u7684\u5dee\u5f02\u3002',
       tf2q: '\u6301\u7eed\u6539\u8fdb\u9700\u8981\u8861\u91cf\u7ed3\u679c\u5e76\u8c03\u6574\u6d41\u7a0b\u3002',
+      tf2qFalse: '\u6301\u7eed\u6539\u8fdb\u53ea\u9760\u76f4\u89c9\u5373\u53ef\uff0c\u65e0\u9700\u8861\u91cf\u7ed3\u679c\u3002',
       tf2exp: '\u6ca1\u6709\u6307\u6807\u5c31\u6ca1\u6709\u5ba2\u89c2\u6539\u8fdb\u3002',
+      tf2expFalse: '\u4e0d\u8861\u91cf\u7ed3\u679c\uff0c\u5c31\u65e0\u6cd5\u5224\u65ad\u53d8\u66f4\u662f\u6539\u5584\u8fd8\u662f\u6076\u5316\u4e86\u6d41\u7a0b\u3002',
       m2q: '\u5c06\u5b9e\u8df5\u4e0e\u6536\u76ca\u914d\u5bf9\uff1a',
       m2pairs: [
         { left: '\u68c0\u67e5\u6e05\u5355', right: '\u51cf\u5c11\u9057\u6f0f' },
@@ -186,7 +201,9 @@ const CourseFactory = (() => {
       ],
       m1exp: 'Un ciclo completo asegura aprendizaje y calidad.',
       tf1q: (t) => `${t} aporta m?s valor cuando se integra en un flujo de trabajo documentado.`,
+      tf1qFalse: (t) => `Usar ${t} basta por sí solo, sin necesidad de integrarlo en un flujo de trabajo documentado.`,
       tf1exp: 'La herramienta sola no sustituye buenas pr?cticas.',
+      tf1expFalse: 'Sin documentar decisiones, cada cambio obliga a reconstruir el contexto desde cero.',
       c2q: (t) => `Debes capacitar a un equipo nuevo en ${t}. ?Qu? estrategia es m?s efectiva?`,
       c2opts: ['Solo documentaci?n sin pr?ctica', 'Plantillas, ejercicios guiados y revisi?n por pares', 'Dejar que cada uno improvise', 'Saltar fundamentos'],
       c2exp: 'La pr?ctica estructurada acelera adopci?n homog?nea.',
@@ -215,7 +232,9 @@ const CourseFactory = (() => {
       ],
       m1exp: 'A complete cycle ensures learning and quality.',
       tf1q: (t) => `${t} adds more value when integrated into a documented workflow.`,
+      tf1qFalse: (t) => `Using ${t} is enough on its own, with no need to integrate it into a documented workflow.`,
       tf1exp: 'The tool alone does not replace good practices.',
+      tf1expFalse: 'The tool alone does not organise the work: value appears when it is part of a documented workflow.',
       c2q: (t) => `You must train a new team on ${t}. Which strategy is most effective?`,
       c2opts: ['Documentation only, no practice', 'Templates, guided exercises, and peer review', 'Let everyone improvise', 'Skip fundamentals'],
       c2exp: 'Structured practice accelerates consistent adoption.',
@@ -244,7 +263,9 @@ const CourseFactory = (() => {
       ],
       m1exp: '\u5b8c\u6574\u5468\u671f\u786e\u4fdd\u5b66\u4e60\u4e0e\u8d28\u91cf\u3002',
       tf1q: (t) => `${t} \u878d\u5165\u6709\u6587\u6863\u7684\u5de5\u4f5c\u6d41\u7a0b\u65f6\u4ef7\u503c\u66f4\u9ad8\u3002`,
+      tf1qFalse: (t) => `\u53ea\u8981\u4f7f\u7528 ${t}\uff0c\u5c31\u4e0d\u9700\u8981\u6709\u6587\u6863\u7684\u5de5\u4f5c\u6d41\u7a0b\u3002`,
       tf1exp: '\u5de5\u5177\u672c\u8eab\u65e0\u6cd5\u66ff\u4ee3\u826f\u597d\u5b9e\u8df5\u3002',
+      tf1expFalse: '\u4e0d\u8bb0\u5f55\u51b3\u7b56\uff0c\u6bcf\u6b21\u53d8\u66f4\u90fd\u9700\u8981\u4ece\u5934\u91cd\u5efa\u4e0a\u4e0b\u6587\u3002',
       c2q: (t) => `\u4f60\u9700\u8981\u57f9\u8bad\u65b0\u56e2\u961f\u4f7f\u7528 ${t}\u3002\u54ea\u79cd\u7b56\u7565\u6700\u6709\u6548\uff1f`,
       c2opts: ['\u53ea\u6709\u6587\u6863\u3001\u6ca1\u6709\u7ec3\u4e60', '\u6a21\u677f\u3001\u5f15\u5bfc\u7ec3\u4e60\u4e0e\u540c\u884c\u8bc4\u5ba1', '\u8ba9\u6bcf\u4eba\u5373\u5174\u53d1\u6325', '\u8df3\u8fc7\u57fa\u7840'],
       c2exp: '\u7ed3\u6784\u5316\u7ec3\u4e60\u53ef\u52a0\u901f\u4e00\u81f4\u91c7\u7528\u3002',
@@ -292,6 +313,14 @@ const CourseFactory = (() => {
         ? `「${module.title}」中的步骤对有效使用 ${t} 很重要。`
         : `Los pasos de «${module.title}» son relevantes para usar ${t} de forma efectiva.`);
 
+    // Variante falsa del mismo enunciado: permite que la respuesta correcta
+    // alterne entre Verdadero y Falso en lugar de ser siempre Verdadero.
+    const tfQFalse = module.quizTfFalse || (loc === 'en'
+      ? `The steps in «${module.title}» are decorative and can be skipped when using ${t}.`
+      : loc === 'zh'
+        ? `「${module.title}」中的步骤只是装饰，使用 ${t} 时可以跳过。`
+        : `Los pasos de «${module.title}» son decorativos y pueden omitirse al usar ${t}.`);
+
     let matchPairs = module.quizPairs;
     if (!matchPairs && Array.isArray(module.steps) && module.steps.length >= 4) {
       matchPairs = module.steps.slice(0, 4).map((step, i) => {
@@ -319,6 +348,8 @@ const CourseFactory = (() => {
           q: tfQ,
           ans: module.quizTfAns !== false,
           exp: module.quizTfExp || p.tfExp,
+          qFalse: tfQFalse,
+          expFalse: module.quizTfExpFalse || p.tfExpFalse,
         },
         {
           type: 'match',
@@ -339,7 +370,8 @@ const CourseFactory = (() => {
         title: p.sec1Title(t),
         questions: [
           { type: 'choice', q: p.c1q(t), opts: p.c1opts, ans: 1, exp: p.c1exp },
-          { type: 'truefalse', q: p.tf1q(t), ans: true, exp: p.tf1exp },
+          { type: 'truefalse', q: p.tf1q(t), ans: true, exp: p.tf1exp,
+            qFalse: p.tf1qFalse(t), expFalse: p.tf1expFalse },
           { type: 'match', q: p.m1q, pairs: p.m1pairs, exp: p.m1exp },
         ],
       },
@@ -347,7 +379,8 @@ const CourseFactory = (() => {
         title: p.sec2Title(t),
         questions: [
           { type: 'choice', q: p.c2q(t), opts: p.c2opts, ans: 1, exp: p.c2exp },
-          { type: 'truefalse', q: p.tf2q, ans: true, exp: p.tf2exp },
+          { type: 'truefalse', q: p.tf2q, ans: true, exp: p.tf2exp,
+            qFalse: p.tf2qFalse, expFalse: p.tf2expFalse },
           { type: 'match', q: p.m2q, pairs: p.m2pairs, exp: p.m2exp },
         ],
       },
@@ -399,7 +432,8 @@ const CourseFactory = (() => {
     return [
       { type: 'choice', q: p.c1q(t), opts: p.c1opts, ans: 1, exp: p.c1exp },
       { type: 'match', q: p.m1q(t), pairs: p.m1pairs, exp: p.m1exp },
-      { type: 'truefalse', q: p.tf1q(t), ans: true, exp: p.tf1exp },
+      { type: 'truefalse', q: p.tf1q(t), ans: true, exp: p.tf1exp,
+            qFalse: p.tf1qFalse(t), expFalse: p.tf1expFalse },
       { type: 'choice', q: p.c2q(t), opts: p.c2opts, ans: 1, exp: p.c2exp },
       { type: 'match', q: p.m2q, pairs: p.m2pairs, exp: p.m2exp },
       { type: 'choice', q: p.c3q(t), opts: p.c3opts, ans: 1, exp: p.c3exp },

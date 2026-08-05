@@ -1,6 +1,6 @@
 /**
- * Genera supabase.config.js en build a partir de variables de entorno.
- * Groq: configure src/js/config/groq.config.js manualmente (ver INTEGRACION_GROQ.md).
+ * Genera supabase.config.js y groq.config.js en build a partir de variables de entorno.
+ * Sin GROQ_API_KEY en el entorno, se respeta el groq.config.js manual (ver INTEGRACION_GROQ.md).
  */
 'use strict';
 
@@ -39,4 +39,39 @@ const _sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 `);
 
 console.log('[build] Supabase URL:', supabaseUrl ? 'OK' : 'FALTA');
-console.log('[build] Groq: use src/js/config/groq.config.js (no se genera en build)');
+
+/*
+ * Groq: la clave NUNCA se escribe aquí. El navegador llama a /api/groq/chat y es
+ * la función serverless la que usa GROQ_API_KEY. Este archivo solo lleva ajustes
+ * públicos (modelo y parámetros) para que el <script> de las páginas resuelva.
+ * Si ya existe un groq.config.js local (con clave, para desarrollo) se respeta.
+ */
+const groqConfigPath = path.join(CONFIG_DIR, 'groq.config.js');
+
+if (fs.existsSync(groqConfigPath)) {
+  console.log('[build] Groq: groq.config.js local existente — no se sobrescribe');
+} else {
+  const groqModel = env('GROQ_MODEL', 'llama-3.3-70b-versatile');
+  const groqMaxTokens = Number(env('GROQ_MAX_TOKENS', '1200')) || 1200;
+  const groqTemperatureRaw = Number(env('GROQ_TEMPERATURE', '0.45'));
+  const groqTemperature = Number.isFinite(groqTemperatureRaw) ? groqTemperatureRaw : 0.45;
+
+  write('groq.config.js', `/**
+ * IN4MIND — Groq (generado en build). Sin secretos: la API Key vive en el
+ * servidor (GROQ_API_KEY) y solo la usa /api/groq/chat.
+ */
+'use strict';
+
+const GroqConfig = {
+  API_KEY: '',
+  USE_PROXY: true,
+  MODEL: ${JSON.stringify(groqModel)},
+  API_URL: 'https://api.groq.com/openai/v1/chat/completions',
+  MAX_TOKENS: ${groqMaxTokens},
+  TEMPERATURE: ${groqTemperature},
+};
+`);
+}
+
+console.log('[build] Groq: la clave la resuelve /api/groq/chat con GROQ_API_KEY');
+console.log('[build] Groq API Key en el entorno:', env('GROQ_API_KEY') ? 'OK' : 'FALTA (asistente en modo local)');

@@ -262,7 +262,7 @@ const AIChatController = (() => {
   function _errorMessage(err) {
     const code = err?.message || '';
     if (code === 'GROQ_API_KEY_MISSING') {
-      return '**Configuración requerida**\n\nPara activar Groq IA, inserte su API Key en el archivo `src/js/config/groq.config.js`.\n\n- Visite https://console.groq.com/keys\n- Reemplace el valor de `API_KEY`\n- Recargue esta página con Ctrl + Shift + R';
+      return '**Configuración requerida**\n\nPara activar Groq IA, defina la variable `GROQ_API_KEY` en Vercel (Settings → Environment Variables) y vuelva a desplegar.\n\n- Obtenga la clave en https://console.groq.com/keys\n- La clave permanece en el servidor: nunca se expone en el navegador\n- Recargue esta página con Ctrl + Shift + R';
     }
     if (code === 'GROQ_API_KEY_INVALID') {
       return '**Credencial no válida**\n\nLa API Key configurada fue rechazada. Verifique que la clave sea correcta y que no haya expirado en la consola de Groq.';
@@ -395,7 +395,8 @@ const AIChatController = (() => {
       }
       $userInitial = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
 
-      _checkConfigBanner();
+      if ($status) $status.textContent = 'Verificando asistente…';
+      GroqService.init().then(_checkConfigBanner).catch(_checkConfigBanner);
       _renderSuggestions();
       _renderRecentSidebar();
 

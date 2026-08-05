@@ -1,0 +1,9 @@
+# Secretos — nunca subir al repo (Groq/GitHub revocan claves expuestas)
+.env
+.env.*
+!.env.example
+in4mind/src/js/config/groq.config.js
+
+# Dependencias y artefactos
+node_modules/
+.vercel/

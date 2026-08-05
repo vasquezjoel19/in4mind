@@ -236,14 +236,20 @@ const AIChatController = (() => {
     });
   }
 
+  function _t(key, fallback) {
+    const value = typeof I18n !== 'undefined' ? I18n.t(key) : '';
+    return value && value !== key ? value : fallback;
+  }
+
+  function _statusText() {
+    return GroqService.isConfigured()
+      ? _t('ai.connected', 'Conectado a Groq IA')
+      : _t('ai.localMode', 'Modo local');
+  }
+
   function _checkConfigBanner() {
-    if (!GroqService.isConfigured()) {
-      $configBanner?.classList.add('is-visible');
-      if ($status) $status.textContent = 'Modo local — configure Groq API Key';
-    } else {
-      $configBanner?.classList.remove('is-visible');
-      if ($status) $status.textContent = 'Conectado a Groq IA';
-    }
+    $configBanner?.classList.toggle('is-visible', !GroqService.isConfigured());
+    if ($status) $status.textContent = _statusText();
   }
 
   async function _getReply(userMessage) {
@@ -281,7 +287,7 @@ const AIChatController = (() => {
     $sendBtn.disabled = true;
     $input.value = '';
     _autoResizeInput();
-    if ($status) $status.textContent = 'Generando respuesta…';
+    if ($status) $status.textContent = _t('ai.generating', 'Generando respuesta…');
 
     _appendTurn('user', trimmed);
     _saveRecent(trimmed);
@@ -336,16 +342,12 @@ const AIChatController = (() => {
       if (!offTopic) {
         _history.push({ role: 'assistant', content: reply });
       }
-      if ($status) {
-        $status.textContent = GroqService.isConfigured()
-          ? 'Conectado a Groq IA'
-          : 'Modo local — configure Groq API Key';
-      }
+      if ($status) $status.textContent = _statusText();
     } catch (err) {
       _showTyping(false);
       if (!offTopic) _history.pop();
       _appendTurn('ai', _errorMessage(err));
-      if ($status) $status.textContent = 'Error en la solicitud';
+      if ($status) $status.textContent = _t('ai.error', 'Error en la solicitud');
       console.error('[IN4MIND IA / Groq]', err);
     } finally {
       _isLoading = false;
@@ -361,11 +363,7 @@ const AIChatController = (() => {
       $thread.style.display = 'none';
     }
     if ($welcome) $welcome.style.display = 'flex';
-    if ($status) {
-      $status.textContent = GroqService.isConfigured()
-        ? 'Conectado a Groq IA'
-        : 'Modo local — configure Groq API Key';
-    }
+    if ($status) $status.textContent = _statusText();
     $input?.focus();
   }
 

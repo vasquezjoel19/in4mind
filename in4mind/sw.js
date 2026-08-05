@@ -1,4 +1,4 @@
-const CACHE_NAME = 'in4mind-v3';
+const CACHE_NAME = 'in4mind-v4';
 const CONTENT_CACHE = 'in4mind-content-v1';
 
 const PRECACHE = [

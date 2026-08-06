@@ -1102,7 +1102,9 @@ const QuizzesController = (() => {
       q:            _questionLabel(q),
       type:         q.type,
       correct,
-      chosenLabel:  chosenLabel || (correct ? 'Correcto' : 'Incorrecto'),
+      chosenLabel:  chosenLabel || (correct
+        ? _t('quizzes.correctAnswer', null, 'Correcta')
+        : _t('quizzes.wrongFeedback', null, 'Incorrecto.')),
       correctLabel: correctLabel || '',
       exp,
     });
@@ -1252,12 +1254,11 @@ const QuizzesController = (() => {
       if (btnVal === val && !correct) btn.classList.add('quiz-tf-btn--wrong');
     });
 
-    _showFeedback(
-      correct,
-      q.exp,
-      val ? 'Verdadero' : 'Falso',
-      q.ans ? 'Verdadero' : 'Falso'
-    );
+    const label = v => (v
+      ? _t('quizzes.true', null, 'Verdadero')
+      : _t('quizzes.false', null, 'Falso'));
+
+    _showFeedback(correct, q.exp, label(val), label(q.ans));
   }
 
   function _renderMatchQuestion(q) {

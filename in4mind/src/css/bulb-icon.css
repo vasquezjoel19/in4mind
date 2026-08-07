@@ -104,7 +104,8 @@ html:not([data-theme="dark"]) .in4mind-wordmark__four {
 html:not([data-theme="dark"]) .sidebar__brand-name,
 html:not([data-theme="dark"]) .lp-logo,
 html:not([data-theme="dark"]) .auth-topbar__brand,
-html:not([data-theme="dark"]) .legal-header__brand {
+html:not([data-theme="dark"]) .legal-header__brand,
+html:not([data-theme="dark"]) .verify-topbar__brand {
   color: var(--clr-text-primary);
 }
 
@@ -121,6 +122,7 @@ html[data-theme="dark"] .sidebar__brand-name,
 html[data-theme="dark"] .lp-logo,
 html[data-theme="dark"] .auth-topbar__brand,
 html[data-theme="dark"] .legal-header__brand,
+html[data-theme="dark"] .verify-topbar__brand,
 html[data-theme="dark"] .lp-footer__logo {
   color: #fff;
 }

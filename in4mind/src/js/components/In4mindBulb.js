@@ -24,24 +24,29 @@ const In4mindBulb = (() => {
   ];
 
   /**
-   * viewBox 80×100 — cristal cerrado, circuito de 4 nodos y rosca de 3 bandas.
-   * `id` se acepta por firma estable aunque este trazo no necesite <defs>.
+   * viewBox 80×100 — cristal con hueco de entrada del circuito, 4 nodos
+   * sólidos y rosca de 3 bandas. `id` se acepta por firma estable.
+   *
+   * Los nodos llevan fill/stroke como atributos (no CSS) para que
+   * `faviconDataUri()` los serialice bien al sustituir currentColor.
    */
   function _mark(id) { // eslint-disable-line no-unused-vars
     return `
       <g class="in4mind-bulb__mark" fill="none" stroke="currentColor"
          stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round">
 
-        <!-- Cristal: casquete circular + hombros que cierran en el cuello -->
+        <!-- Cristal partido: hueco a y≈41.5 donde entra el trazo del circuito -->
         <path class="in4mind-bulb__glass"
-              d="M30 70V66c0-4-3-7-5.5-9.5A26 26 0 1 1 55.5 56.5C53 59 50 62 50 66v4Z"/>
+              d="M30 70V66c0-4-3-7-5.5-9.5A26 26 0 0 1 15.2 37.2"/>
+        <path class="in4mind-bulb__glass"
+              d="M15.2 45.8A26 26 0 1 0 55.5 56.5C53 59 50 62 50 66v4H30"/>
 
-        <!-- Circuito -->
-        <path class="in4mind-bulb__trace" d="M14.5 41.5H24.5L33 30"/>
+        <!-- Circuito: el trazo izquierdo nace en el borde del cristal -->
+        <path class="in4mind-bulb__trace" d="M15.2 41.5H24.5L33 30"/>
         <path class="in4mind-bulb__trace" d="M49 26L30 47"/>
         <path class="in4mind-bulb__trace" d="M56 43L46 54V70"/>
 
-        ${NODES.map(n => `<circle class="in4mind-bulb__node" cx="${n.cx}" cy="${n.cy}" r="3.6"/>`).join('\n        ')}
+        ${NODES.map(n => `<circle class="in4mind-bulb__node" cx="${n.cx}" cy="${n.cy}" r="5.2" fill="currentColor" stroke="none"/>`).join('\n        ')}
 
         <!-- Rosca: tres bandas y contacto inferior -->
         <path class="in4mind-bulb__base" d="M28.5 75.5H51.5"/>
@@ -115,7 +120,7 @@ const In4mindBulb = (() => {
 
   function mountWordmarks() {
     document.querySelectorAll('.sidebar__brand-name').forEach(_injectWordmark);
-    document.querySelectorAll('.lp-logo, .auth-topbar__brand, .legal-header__brand, .lp-footer__logo')
+    document.querySelectorAll('.lp-logo, .auth-topbar__brand, .legal-header__brand, .lp-footer__logo, .verify-topbar__brand')
       .forEach(_injectWordmark);
   }
 
@@ -125,6 +130,7 @@ const In4mindBulb = (() => {
     _replaceSvg('.lp-logo__icon', () => small('lp-logo__icon', 34, 42));
     _replaceSvg('.auth-topbar__brand svg', () => small('', 28, 35));
     _replaceSvg('.legal-header__brand svg', () => small('', 26, 33));
+    _replaceSvg('.verify-topbar__brand svg', () => small('', 26, 33));
     _replaceSvg('.lp-footer__logo svg', () => small('', 28, 35));
     _replaceSvg('.lp-loader__icon', () => small('lp-loader__icon', 36, 45));
 

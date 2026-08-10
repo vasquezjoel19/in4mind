@@ -20,13 +20,13 @@ const AuthBackdrop = (() => {
      */
     dark: {
       blend: 'lighter',
-      alpha: 0.26,
+      alpha: 0.28,
       stops: [
-        [13, 148, 136],
-        [32, 178, 170],
-        [74, 118, 178],
-        [107, 147, 201],
-        [147, 180, 217],
+        [20, 184, 166],
+        [46, 196, 182],
+        [64, 150, 220],
+        [93, 169, 233],
+        [138, 188, 210],
       ],
     },
     /**
@@ -36,19 +36,22 @@ const AuthBackdrop = (() => {
      */
     light: {
       blend: 'source-over',
-      alpha: 0.4,
+      alpha: 0.46,
       stops: [
         [13, 148, 136],
-        [19, 126, 150],
-        [45, 88, 146],
-        [64, 105, 163],
-        [110, 148, 200],
+        [13, 130, 155],
+        [42, 96, 165],
+        [61, 100, 153],
+        [93, 140, 205],
       ],
     },
   };
 
   /** Puntos por línea. Suficientes para que la curva se vea continua. */
   const SEGMENTS = 46;
+
+  /** Grosor de trazo: por debajo de ~1.5 la cinta se diluye en el fondo claro. */
+  const LINE_WIDTH = 1.7;
 
   /** Más allá de 1.5× el coste sube sin diferencia visible en líneas finas. */
   const MAX_DPR = 1.5;
@@ -103,7 +106,7 @@ const AuthBackdrop = (() => {
     const skin = _dark ? THEMES.dark : THEMES.light;
     _ctx.clearRect(0, 0, _w, _h);
     _ctx.globalCompositeOperation = skin.blend;
-    _ctx.lineWidth = 1.1;
+    _ctx.lineWidth = LINE_WIDTH;
 
     for (let i = 0; i < _lines; i++) {
       const t = i / (_lines - 1);

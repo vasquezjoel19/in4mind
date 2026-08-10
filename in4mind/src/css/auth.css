@@ -71,7 +71,7 @@ html[data-theme="dark"] .auth-bg::before {
 }
 
 html[data-theme="dark"] .auth-bg__canvas {
-  opacity: 0.88;
+  opacity: 0.9;
 }
 
 /* Viñeta: aclara los bordes en claro y los oscurece en oscuro. */

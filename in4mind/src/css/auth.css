@@ -12,12 +12,17 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(165deg, #0f1829 0%, var(--clr-brand-navy) 48%, #16233a 100%);
-  color: #eef3fa;
+  background: var(--app-bg-gradient);
+  background-attachment: fixed;
+  color: var(--clr-text-primary);
 }
 
-/* Evita destellos claros al hacer overscroll sobre el fondo oscuro. */
-body:has(.auth-page) {
+html[data-theme="dark"] .auth-page {
+  background: linear-gradient(165deg, #0f1829 0%, var(--clr-brand-navy) 48%, #16233a 100%);
+}
+
+/* Evita destellos al hacer overscroll sobre el fondo oscuro. */
+html[data-theme="dark"] body:has(.auth-page) {
   background-color: #0f1829;
 }
 
@@ -25,6 +30,9 @@ body:has(.auth-page) {
  * Fondo animado: la cinta se pinta en el canvas y el CSS aporta el halo de
  * color por detrás y la viñeta por delante, para que la tarjeta destaque.
  * Va fija al viewport, así que no se mueve al hacer scroll.
+ *
+ * El canvas se repinta con la paleta del tema activo (ver AuthBackdrop.js);
+ * aquí sólo se acompañan las capas de CSS.
  */
 .auth-bg {
   position: fixed;
@@ -43,9 +51,15 @@ body:has(.auth-page) {
 .auth-bg::before {
   inset: -12%;
   background:
+    radial-gradient(ellipse 58% 45% at 24% 38%, rgba(13, 148, 136, 0.1) 0%, transparent 62%),
+    radial-gradient(ellipse 55% 50% at 76% 64%, rgba(74, 118, 178, 0.12) 0%, transparent 64%);
+  filter: blur(24px);
+}
+
+html[data-theme="dark"] .auth-bg::before {
+  background:
     radial-gradient(ellipse 58% 45% at 24% 38%, rgba(13, 148, 136, 0.22) 0%, transparent 62%),
     radial-gradient(ellipse 55% 50% at 76% 64%, rgba(74, 118, 178, 0.24) 0%, transparent 64%);
-  filter: blur(24px);
 }
 
 .auth-bg__canvas {
@@ -53,11 +67,20 @@ body:has(.auth-page) {
   inset: 0;
   width: 100%;
   height: 100%;
+  opacity: 0.95;
+}
+
+html[data-theme="dark"] .auth-bg__canvas {
   opacity: 0.88;
 }
 
+/* Viñeta: aclara los bordes en claro y los oscurece en oscuro. */
 .auth-bg::after {
   inset: 0;
+  background: radial-gradient(ellipse 74% 64% at 50% 50%, transparent 30%, rgba(244, 246, 251, 0.62) 100%);
+}
+
+html[data-theme="dark"] .auth-bg::after {
   background: radial-gradient(ellipse 72% 62% at 50% 50%, transparent 28%, rgba(8, 13, 24, 0.6) 100%);
 }
 
@@ -127,51 +150,22 @@ body:has(.auth-page) {
 }
 
 /*
- * Barra superior sobre el fondo oscuro: los controles heredaban colores
- * pensados para fondo claro, así que aquí se invierten a vidrio esmerilado.
+ * En oscuro los controles flotan sobre el navy animado: vidrio esmerilado en
+ * lugar de la tarjeta sólida, que ahí se recorta demasiado.
  */
-.auth-topbar__brand,
-.auth-topbar__links {
-  color: #f2f6fb;
-}
-
-.auth-help-btn {
-  color: var(--clr-brand-300);
-}
-
-.auth-help-btn:hover {
-  color: #d8e8fa;
-  text-decoration-color: var(--clr-brand-400);
-}
-
-.auth-btn-home,
-.auth-page .in4-other-trigger {
+html[data-theme="dark"] .auth-btn-home,
+html[data-theme="dark"] .auth-page .in4-other-trigger {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.22);
-  color: #f2f6fb;
   box-shadow: none;
   backdrop-filter: blur(8px);
 }
 
-.auth-btn-home:hover,
-.auth-page .in4-other-trigger:hover {
+html[data-theme="dark"] .auth-btn-home:hover,
+html[data-theme="dark"] .auth-page .in4-other-trigger:hover {
   background: rgba(255, 255, 255, 0.18);
   border-color: rgba(255, 255, 255, 0.4);
   color: #ffffff;
-}
-
-.auth-page .lang-switcher {
-  color: rgba(242, 246, 251, 0.72);
-}
-
-.auth-page .lang-switcher__btn {
-  color: rgba(242, 246, 251, 0.6);
-}
-
-.auth-page .lang-switcher__btn:hover,
-.auth-page .lang-switcher__btn--active {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.16);
 }
 
 /* ── Centro de la tarjeta ── */
@@ -189,11 +183,16 @@ body:has(.auth-page) {
   width: min(1000px, 100%);
   min-height: 580px;
   background: var(--clr-bg-card);
-  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--rad-2xl);
   overflow: hidden;
-  box-shadow: 0 32px 80px -24px rgba(6, 11, 22, 0.7), 0 2px 10px rgba(6, 11, 22, 0.3);
+  box-shadow: var(--shadow-auth);
   animation: fadeInUp var(--dur-slow) var(--ease) both;
+}
+
+/* Sobre el navy animado la tarjeta necesita más separación del fondo. */
+html[data-theme="dark"] .auth-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 32px 80px -24px rgba(6, 11, 22, 0.7), 0 2px 10px rgba(6, 11, 22, 0.3);
 }
 
 /* ── Panel izquierdo (branding) ── */
@@ -491,16 +490,16 @@ body:has(.auth-page) {
   text-align: center;
   padding: var(--sp-md);
   font-size: 0.78rem;
-  color: rgba(242, 246, 251, 0.6);
+  color: var(--clr-text-secondary);
 }
 
 .auth-bottom a {
-  color: var(--clr-brand-300);
+  color: var(--clr-link);
   text-decoration: none;
   transition: color var(--dur-fast);
 }
 
-.auth-bottom a:hover { color: #ffffff; }
+.auth-bottom a:hover { color: var(--clr-link-hover); }
 
 /* ── Alertas de formulario (login / registro) ── */
 .auth-alert {

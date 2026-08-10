@@ -7,12 +7,58 @@
 
 /* ── Wrapper de la página ── */
 .auth-page {
+  position: relative;
+  isolation: isolate;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--app-bg-gradient);
-  background-attachment: fixed;
-  color: var(--clr-text-primary);
+  background: linear-gradient(165deg, #0f1829 0%, var(--clr-brand-navy) 48%, #16233a 100%);
+  color: #eef3fa;
+}
+
+/* Evita destellos claros al hacer overscroll sobre el fondo oscuro. */
+body:has(.auth-page) {
+  background-color: #0f1829;
+}
+
+/*
+ * Fondo animado: la cinta se pinta en el canvas y el CSS aporta el halo de
+ * color por detrás y la viñeta por delante, para que la tarjeta destaque.
+ * Va fija al viewport, así que no se mueve al hacer scroll.
+ */
+.auth-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.auth-bg::before,
+.auth-bg::after {
+  content: '';
+  position: absolute;
+}
+
+.auth-bg::before {
+  inset: -12%;
+  background:
+    radial-gradient(ellipse 58% 45% at 24% 38%, rgba(13, 148, 136, 0.22) 0%, transparent 62%),
+    radial-gradient(ellipse 55% 50% at 76% 64%, rgba(74, 118, 178, 0.24) 0%, transparent 64%);
+  filter: blur(24px);
+}
+
+.auth-bg__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.88;
+}
+
+.auth-bg::after {
+  inset: 0;
+  background: radial-gradient(ellipse 72% 62% at 50% 50%, transparent 28%, rgba(8, 13, 24, 0.6) 100%);
 }
 
 /* ── Barra superior ── */
@@ -80,6 +126,54 @@
   .auth-topbar__links { display: none; }
 }
 
+/*
+ * Barra superior sobre el fondo oscuro: los controles heredaban colores
+ * pensados para fondo claro, así que aquí se invierten a vidrio esmerilado.
+ */
+.auth-topbar__brand,
+.auth-topbar__links {
+  color: #f2f6fb;
+}
+
+.auth-help-btn {
+  color: var(--clr-brand-300);
+}
+
+.auth-help-btn:hover {
+  color: #d8e8fa;
+  text-decoration-color: var(--clr-brand-400);
+}
+
+.auth-btn-home,
+.auth-page .in4-other-trigger {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #f2f6fb;
+  box-shadow: none;
+  backdrop-filter: blur(8px);
+}
+
+.auth-btn-home:hover,
+.auth-page .in4-other-trigger:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+}
+
+.auth-page .lang-switcher {
+  color: rgba(242, 246, 251, 0.72);
+}
+
+.auth-page .lang-switcher__btn {
+  color: rgba(242, 246, 251, 0.6);
+}
+
+.auth-page .lang-switcher__btn:hover,
+.auth-page .lang-switcher__btn--active {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.16);
+}
+
 /* ── Centro de la tarjeta ── */
 .auth-center {
   flex: 1;
@@ -95,9 +189,10 @@
   width: min(1000px, 100%);
   min-height: 580px;
   background: var(--clr-bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--rad-2xl);
   overflow: hidden;
-  box-shadow: var(--shadow-auth);
+  box-shadow: 0 32px 80px -24px rgba(6, 11, 22, 0.7), 0 2px 10px rgba(6, 11, 22, 0.3);
   animation: fadeInUp var(--dur-slow) var(--ease) both;
 }
 
@@ -110,7 +205,9 @@
   justify-content: center;
   gap: var(--sp-lg);
   padding: var(--sp-2xl);
-  background: linear-gradient(180deg, var(--clr-brand-700) 0%, var(--clr-brand-navy) 100%);
+  background:
+    radial-gradient(ellipse 95% 55% at 20% 8%, rgba(13, 148, 136, 0.38) 0%, transparent 62%),
+    linear-gradient(180deg, var(--clr-brand-700) 0%, var(--clr-brand-navy) 100%);
   text-align: center;
   color: white;
 }
@@ -394,16 +491,16 @@
   text-align: center;
   padding: var(--sp-md);
   font-size: 0.78rem;
-  color: var(--clr-text-secondary);
+  color: rgba(242, 246, 251, 0.6);
 }
 
 .auth-bottom a {
-  color: var(--clr-link);
+  color: var(--clr-brand-300);
   text-decoration: none;
   transition: color var(--dur-fast);
 }
 
-.auth-bottom a:hover { color: var(--clr-link-hover); }
+.auth-bottom a:hover { color: #ffffff; }
 
 /* ── Alertas de formulario (login / registro) ── */
 .auth-alert {

@@ -63,26 +63,41 @@ const QuizRandomizer = (() => {
   }
 
   /**
-   * Elige la polaridad del enunciado. Si el dato no trae variante falsa
-   * (`qFalse`), se conserva el enunciado original tal cual: es preferible una
-   * pregunta sin aleatorizar a una afirmación negada automáticamente, que en
-   * español produce frases incorrectas.
+   * Elige la polaridad del enunciado V/F para que la respuesta correcta no sea
+   * siempre "Verdadero". Si hay variante (`qFalse`), la usa; si no, genera una
+   * negación automática cuando hace falta invertir.
    */
+  function _autoNegateStatement(text) {
+    const base = String(text || '').trim().replace(/\?+$/, '').trim();
+    if (!base) return text;
+    const lower = base.charAt(0).toLowerCase() + base.slice(1);
+    return `No es cierto que ${lower}.`;
+  }
+
   function _randomizeTrueFalse(q, rand) {
     const hasVariant = typeof q.qFalse === 'string' && q.qFalse.trim().length > 0;
-    if (!hasVariant) return { ...q, polarity: 'original' };
 
-    // Sólo tiene sentido invertir si el enunciado base es verdadero.
-    if (q.ans !== true) return { ...q, polarity: 'original' };
+    if (hasVariant && q.ans === true) {
+      if (rand() < 0.5) return { ...q, polarity: 'original' };
+      return {
+        ...q,
+        q:        q.qFalse,
+        ans:      false,
+        exp:      q.expFalse || q.exp,
+        polarity: 'negated',
+      };
+    }
 
+    // Sin variante explícita: 50% mantiene el enunciado, 50% lo invierte.
     if (rand() < 0.5) return { ...q, polarity: 'original' };
 
+    const invertedQ = q.qFalse || _autoNegateStatement(q.q);
     return {
       ...q,
-      q:        q.qFalse,
-      ans:      false,
+      q:        invertedQ,
+      ans:      !q.ans,
       exp:      q.expFalse || q.exp,
-      polarity: 'negated',
+      polarity: 'flipped',
     };
   }
 

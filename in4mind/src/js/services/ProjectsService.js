@@ -1,0 +1,168 @@
+/**
+ * IN4MIND — ProjectsService
+ * Proyectos de aprendizaje estilo ChatGPT Projects, vinculados al flujo IN4MIND.
+ */
+
+'use strict';
+
+const ProjectsService = (() => {
+
+  const KEY = 'in4mind_projects';
+
+  const COLORS = ['#6366F1', '#EC4899', '#14B8A6', '#F59E0B', '#8B5CF6', '#EF4444', '#0EA5E9'];
+
+  function _userSuffix() {
+    try {
+      const raw = sessionStorage.getItem('in4mind_user') || localStorage.getItem('in4mind_user');
+      const email = raw ? (JSON.parse(raw).email || '') : '';
+      return email.toLowerCase() || 'guest';
+    } catch {
+      return 'guest';
+    }
+  }
+
+  function _scopedKey() {
+    return `${KEY}:${_userSuffix()}`;
+  }
+
+  function _readAll() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(_scopedKey()) || '{}');
+      return (parsed && typeof parsed === 'object') ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+
+  function _writeAll(map) {
+    try {
+      localStorage.setItem(_scopedKey(), JSON.stringify(map));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  function _id() {
+    return `proj_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
+  }
+
+  function _taskId() {
+    return `task_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
+  }
+
+  function getAll() {
+    return Object.values(_readAll()).sort((a, b) => {
+      if (Boolean(b.pinned) !== Boolean(a.pinned)) return b.pinned ? 1 : -1;
+      return (b.updatedAt || 0) - (a.updatedAt || 0);
+    });
+  }
+
+  function get(id) {
+    return _readAll()[id] || null;
+  }
+
+  function save(data) {
+    const map = _readAll();
+    const now = Date.now();
+    const id = data.id || _id();
+    const existing = map[id] || {};
+
+    map[id] = {
+      id,
+      title:       (data.title || existing.title || 'Nuevo proyecto').trim(),
+      description: (data.description ?? existing.description ?? '').trim(),
+      color:       data.color || existing.color || COLORS[Math.floor(Math.random() * COLORS.length)],
+      icon:        data.icon || existing.icon || '📁',
+      courseId:    data.courseId ?? existing.courseId ?? null,
+      quizId:      data.quizId ?? existing.quizId ?? null,
+      noteIds:     Array.isArray(data.noteIds) ? data.noteIds : (existing.noteIds || []),
+      tasks:       Array.isArray(data.tasks) ? data.tasks : (existing.tasks || []),
+      pinned:      Boolean(data.pinned ?? existing.pinned),
+      createdAt:   existing.createdAt || now,
+      updatedAt:   now,
+    };
+    _writeAll(map);
+    return map[id];
+  }
+
+  function remove(id) {
+    const map = _readAll();
+    if (!(id in map)) return false;
+    delete map[id];
+    return _writeAll(map);
+  }
+
+  function togglePin(id) {
+    const p = get(id);
+    if (!p) return null;
+    return save({ id, pinned: !p.pinned });
+  }
+
+  function addTask(projectId, text) {
+    const p = get(projectId);
+    if (!p || !text?.trim()) return null;
+    const tasks = [...(p.tasks || []), { id: _taskId(), text: text.trim(), done: false }];
+    return save({ id: projectId, tasks });
+  }
+
+  function toggleTask(projectId, taskId) {
+    const p = get(projectId);
+    if (!p) return null;
+    const tasks = (p.tasks || []).map(t =>
+      t.id === taskId ? { ...t, done: !t.done } : t
+    );
+    return save({ id: projectId, tasks });
+  }
+
+  function removeTask(projectId, taskId) {
+    const p = get(projectId);
+    if (!p) return null;
+    const tasks = (p.tasks || []).filter(t => t.id !== taskId);
+    return save({ id: projectId, tasks });
+  }
+
+  function linkNote(projectId, noteId) {
+    const p = get(projectId);
+    if (!p || !noteId) return null;
+    const noteIds = [...new Set([...(p.noteIds || []), noteId])];
+    if (typeof NotesService !== 'undefined') {
+      NotesService.saveNote({ id: noteId, projectId });
+    }
+    return save({ id: projectId, noteIds });
+  }
+
+  function search(query) {
+    const q = String(query || '').trim().toLowerCase();
+    if (!q) return getAll();
+    return getAll().filter(p => {
+      const hay = [p.title, p.description, ...(p.tasks || []).map(t => t.text)].join(' ').toLowerCase();
+      return hay.includes(q);
+    });
+  }
+
+  function getProgress(project) {
+    const tasks = project?.tasks || [];
+    if (!tasks.length) return 0;
+    const done = tasks.filter(t => t.done).length;
+    return Math.round((done / tasks.length) * 100);
+  }
+
+  return {
+    COLORS,
+    getAll,
+    get,
+    save,
+    remove,
+    togglePin,
+    addTask,
+    toggleTask,
+    removeTask,
+    linkNote,
+    search,
+    getProgress,
+  };
+
+})();
+
+if (typeof module !== 'undefined') module.exports = ProjectsService;

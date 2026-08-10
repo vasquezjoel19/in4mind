@@ -1,96 +1,59 @@
 'use strict';
 
 /**
- * IN4MIND — Logo oficial: foco line-art con circuito interior y rosca.
+ * IN4MIND — Logo oficial (imagen de marca).
  *
- * Todo el trazo usa `currentColor`, así que las tres variantes de marca
- * (navy sobre claro, blanco sobre oscuro, negro sobre blanco) salen sólo con
- * cambiar `color` en CSS; no hay que mantener copias del SVG.
+ * El logo vive como PNG en `src/img/brand/`. En pantalla se pinta con
+ * `mask-image` + `background-color: currentColor` (ver `bulb-icon.css`), así que
+ * una sola imagen sirve para las tres variantes de marca —navy sobre claro,
+ * blanco sobre oscuro, teal de respaldo— sin mantener copias por tema ni idioma.
  */
 const In4mindBulb = (() => {
 
-  let _uid = 0;
-  function _gid() {
-    _uid += 1;
-    return `in4b${_uid}`;
-  }
-
-  /** Nodos del circuito (centros). */
-  const NODES = [
-    { cx: 33, cy: 30 },
-    { cx: 49, cy: 26 },
-    { cx: 56, cy: 43 },
-    { cx: 30, cy: 47 },
-  ];
+  const BRAND_DIR = 'src/img/brand';
+  const FAVICON   = `${BRAND_DIR}/favicon-64.png`;
+  const TOUCH_ICON = `${BRAND_DIR}/apple-touch-icon.png`;
 
   /**
-   * viewBox 80×100 — cristal con hueco de entrada del circuito, 4 nodos
-   * sólidos y rosca de 3 bandas. `id` se acepta por firma estable.
-   *
-   * Los nodos llevan fill/stroke como atributos (no CSS) para que
-   * `faviconDataUri()` los serialice bien al sustituir currentColor.
+   * Marca como elemento enmascarado. El tamaño viaja en custom properties, no
+   * en `width`/`height` en línea, para que cualquier regla CSS del contexto
+   * (p. ej. `.ai-welcome__logo .ai-welcome__bulb`) siga teniendo prioridad.
    */
-  function _mark(id) { // eslint-disable-line no-unused-vars
-    return `
-      <g class="in4mind-bulb__mark" fill="none" stroke="currentColor"
-         stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round">
-
-        <!-- Cristal partido: hueco a y≈41.5 donde entra el trazo del circuito -->
-        <path class="in4mind-bulb__glass"
-              d="M30 70V66c0-4-3-7-5.5-9.5A26 26 0 0 1 15.2 37.2"/>
-        <path class="in4mind-bulb__glass"
-              d="M15.2 45.8A26 26 0 1 0 55.5 56.5C53 59 50 62 50 66v4H30"/>
-
-        <!-- Circuito: el trazo izquierdo nace en el borde del cristal -->
-        <path class="in4mind-bulb__trace" d="M15.2 41.5H24.5L33 30"/>
-        <path class="in4mind-bulb__trace" d="M49 26L30 47"/>
-        <path class="in4mind-bulb__trace" d="M56 43L46 54V70"/>
-
-        ${NODES.map(n => `<circle class="in4mind-bulb__node" cx="${n.cx}" cy="${n.cy}" r="5.2" fill="currentColor" stroke="none"/>`).join('\n        ')}
-
-        <!-- Rosca: tres bandas y contacto inferior -->
-        <path class="in4mind-bulb__base" d="M28.5 75.5H51.5"/>
-        <path class="in4mind-bulb__base" d="M29.5 82H50.5"/>
-        <path class="in4mind-bulb__base" d="M31.5 88.5H48.5"/>
-        <path class="in4mind-bulb__base" d="M35.5 93.5q4.5 4 9 0"/>
-      </g>`;
-  }
-
-  function _svg(extraClass, w, h) {
-    const id = _gid();
+  function _mark(extraClass, w, h) {
     const cls = ['in4mind-bulb', extraClass].filter(Boolean).join(' ');
-    const sizeAttrs = w && h ? ` width="${w}" height="${h}"` : '';
-    return `<svg class="${cls}"${sizeAttrs} viewBox="0 0 80 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${_mark(id)}</svg>`;
+    const style = (w && h) ? ` style="--bulb-w:${w}px;--bulb-h:${h}px"` : '';
+    return `<span class="${cls}"${style} aria-hidden="true"></span>`;
   }
 
   function large(extraClass = '') {
-    return _svg(['in4mind-bulb--lg', extraClass].filter(Boolean).join(' '));
+    return _mark(['in4mind-bulb--lg', extraClass].filter(Boolean).join(' '));
   }
 
   function medium(extraClass = '') {
-    return _svg(['in4mind-bulb--md', extraClass].filter(Boolean).join(' '));
+    return _mark(['in4mind-bulb--md', extraClass].filter(Boolean).join(' '));
   }
 
   function small(extraClass = '', w = 28, h = 35) {
-    return _svg(['in4mind-bulb--sm', extraClass].filter(Boolean).join(' '), w, h);
+    return _mark(['in4mind-bulb--sm', extraClass].filter(Boolean).join(' '), w, h);
   }
 
+  /** Ruta del favicon. Se mantiene el nombre histórico por compatibilidad. */
   function faviconDataUri() {
-    const inner = _mark('fav').replace(/currentColor/g, '#1b273c');
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 100" fill="none">${inner}</svg>`
-      .replace(/\s+/g, ' ')
-      .trim();
-    return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+    return FAVICON;
   }
 
-  function _replaceSvg(selector, factory) {
+  /**
+   * Sustituye el marcador de cada contexto por la marca.
+   * Es idempotente: si ya se montó, no vuelve a tocar el nodo.
+   */
+  function _replaceMark(selector, factory) {
     document.querySelectorAll(selector).forEach(el => {
-      if (el.tagName !== 'svg') {
-        const svg = el.querySelector('svg');
-        if (svg) svg.outerHTML = factory();
-        return;
-      }
-      el.outerHTML = factory();
+      if (el.classList.contains('in4mind-bulb')) return;
+      const target = el.tagName.toLowerCase() === 'svg'
+        ? el
+        : el.querySelector('svg, .in4mind-bulb');
+      if (!target || target.classList.contains('in4mind-bulb')) return;
+      target.outerHTML = factory();
     });
   }
 
@@ -124,31 +87,47 @@ const In4mindBulb = (() => {
       .forEach(_injectWordmark);
   }
 
+  /** Favicon e icono de pantalla de inicio apuntando a los PNG de marca. */
+  function mountIcons() {
+    let fav = document.querySelector('link[rel="icon"]');
+    if (!fav) {
+      fav = document.createElement('link');
+      fav.rel = 'icon';
+      document.head.appendChild(fav);
+    }
+    fav.type = 'image/png';
+    fav.href = FAVICON;
+
+    if (!document.querySelector('link[rel="apple-touch-icon"]')) {
+      const touch = document.createElement('link');
+      touch.rel = 'apple-touch-icon';
+      touch.href = TOUCH_ICON;
+      document.head.appendChild(touch);
+    }
+  }
+
   function mount() {
-    _uid = 0;
-    _replaceSvg('.sidebar__brand-icon', () => small('sidebar__brand-icon', 28, 35));
-    _replaceSvg('.lp-logo__icon', () => small('lp-logo__icon', 34, 42));
-    _replaceSvg('.auth-topbar__brand svg', () => small('', 28, 35));
-    _replaceSvg('.legal-header__brand svg', () => small('', 26, 33));
-    _replaceSvg('.verify-topbar__brand svg', () => small('', 26, 33));
-    _replaceSvg('.lp-footer__logo svg', () => small('', 28, 35));
-    _replaceSvg('.lp-loader__icon', () => small('lp-loader__icon', 36, 45));
+    _replaceMark('.sidebar__brand-icon', () => small('sidebar__brand-icon', 28, 35));
+    _replaceMark('.lp-logo__icon', () => small('lp-logo__icon', 34, 42));
+    _replaceMark('.auth-topbar__brand svg', () => small('', 28, 35));
+    _replaceMark('.legal-header__brand svg', () => small('', 26, 33));
+    _replaceMark('.verify-topbar__brand svg', () => small('', 26, 33));
+    _replaceMark('.lp-footer__logo svg', () => small('', 28, 35));
+    _replaceMark('.lp-loader__icon', () => small('lp-loader__icon', 36, 45));
 
-    _replaceSvg('.welcome-section__bulb', () => large('welcome-section__bulb'));
-    _replaceSvg('.lp-hero-illustration__bulb', () => large('lp-hero-illustration__bulb'));
-    _replaceSvg('.help-hero__bulb', () => large('help-hero__bulb help-hero__svg'));
+    _replaceMark('.welcome-section__bulb', () => large('welcome-section__bulb'));
+    _replaceMark('.lp-hero-illustration__bulb', () => large('lp-hero-illustration__bulb'));
+    _replaceMark('.help-hero__bulb', () => large('help-hero__bulb help-hero__svg'));
 
-    _replaceSvg('.auth-panel-left__icon', () => large('auth-panel-left__icon'));
-    _replaceSvg('.quiz-banner__graphic svg', () => medium('quiz-banner__bulb'));
-    _replaceSvg('.ai-welcome__bulb', () => small('ai-welcome__bulb', 34, 42));
+    _replaceMark('.auth-panel-left__icon', () => large('auth-panel-left__icon'));
+    _replaceMark('.quiz-banner__graphic svg', () => medium('quiz-banner__bulb'));
+    _replaceMark('.ai-welcome__bulb', () => small('ai-welcome__bulb', 34, 42));
 
-    const fav = document.querySelector('link[rel="icon"]');
-    if (fav) fav.href = faviconDataUri();
-
+    mountIcons();
     mountWordmarks();
   }
 
-  return { large, medium, small, faviconDataUri, wordmarkHtml, mountWordmarks, mount };
+  return { large, medium, small, faviconDataUri, wordmarkHtml, mountWordmarks, mountIcons, mount };
 
 })();
 

@@ -5,11 +5,8 @@
  *  - sin "Recordar datos" → sessionStorage (se pierde al cerrar la pestaña)
  *  - con "Recordar datos" → además localStorage, y al abrir la app se rehidrata
  *
- * Decisión de seguridad: **nunca se guarda la contraseña**. Recordar los datos
- * persiste la *sesión* (y el correo, para precargar el formulario), que es lo
- * que hacen Gmail, GitHub o cualquier app seria. Guardar la contraseña en
- * localStorage la dejaría legible ante cualquier XSS o para quien tenga acceso
- * al equipo, sin ninguna ventaja funcional sobre persistir la sesión.
+ * Decisión de seguridad: la contraseña solo se guarda si el usuario marca
+ * "Recordar mis datos", codificada en localStorage del dispositivo (no en la nube).
  *
  * El resto del código sigue leyendo `sessionStorage.getItem('in4mind_user')`
  * como siempre: `restore()` se ejecuta al arrancar y repuebla esa clave, así no
@@ -23,6 +20,15 @@ const SessionStore = (() => {
   const USER_KEY     = 'in4mind_user';
   const REMEMBER_KEY = 'in4mind_remember';
   const EMAIL_KEY    = 'in4mind_remember_email';
+  const PWD_KEY      = 'in4mind_remember_pwd';
+
+  function _encodePwd(pwd) {
+    try { return btoa(unescape(encodeURIComponent(pwd))); } catch { return ''; }
+  }
+
+  function _decodePwd(raw) {
+    try { return decodeURIComponent(escape(atob(raw))); } catch { return ''; }
+  }
 
   function isRemembered() {
     try {
@@ -36,6 +42,17 @@ const SessionStore = (() => {
   function getRememberedEmail() {
     try {
       return localStorage.getItem(EMAIL_KEY) || '';
+    } catch {
+      return '';
+    }
+  }
+
+  /** Contraseña recordada (solo si el usuario marcó "Recordar mis datos"). */
+  function getRememberedPassword() {
+    if (!isRemembered()) return '';
+    try {
+      const raw = localStorage.getItem(PWD_KEY);
+      return raw ? _decodePwd(raw) : '';
     } catch {
       return '';
     }
@@ -65,7 +82,12 @@ const SessionStore = (() => {
    * @param {object} user
    * @param {boolean|null} remember  null = conservar la preferencia actual
    */
-  function persist(user, remember = null) {
+  /**
+   * @param {object} user
+   * @param {boolean|null} remember
+   * @param {string|null} [password] solo se guarda si remember es true
+   */
+  function persist(user, remember = null, password = null) {
     if (!user) return;
     const raw = JSON.stringify(user);
     try {
@@ -78,25 +100,31 @@ const SessionStore = (() => {
         localStorage.setItem(REMEMBER_KEY, '1');
         localStorage.setItem(USER_KEY, raw);
         if (user.email) localStorage.setItem(EMAIL_KEY, user.email);
+        if (password) localStorage.setItem(PWD_KEY, _encodePwd(password));
       } else {
         localStorage.removeItem(REMEMBER_KEY);
         localStorage.removeItem(USER_KEY);
         localStorage.removeItem(EMAIL_KEY);
+        localStorage.removeItem(PWD_KEY);
       }
     } catch { /* sin espacio: la sesión de pestaña sigue funcionando */ }
   }
 
   /** Cierre de sesión: borra la sesión persistida pero conserva el correo. */
-  function clear({ keepEmail = true } = {}) {
+  function clear({ keepEmail = true, keepPassword = true } = {}) {
     try {
       sessionStorage.removeItem(USER_KEY);
       localStorage.removeItem(USER_KEY);
       localStorage.removeItem(REMEMBER_KEY);
       if (!keepEmail) localStorage.removeItem(EMAIL_KEY);
+      if (!keepPassword) localStorage.removeItem(PWD_KEY);
     } catch { /* ignore */ }
   }
 
-  return { restore, persist, clear, isRemembered, getRememberedEmail, USER_KEY };
+  return {
+    restore, persist, clear, isRemembered,
+    getRememberedEmail, getRememberedPassword, USER_KEY,
+  };
 
 })();
 

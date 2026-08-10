@@ -1,7 +1,7 @@
 // Subir la versión invalida el precaché tras cada despliegue: si no, los
 // usuarios que ya tienen el service worker instalado seguirían con el HTML
 // anterior y no recibirían los scripts nuevos.
-const CACHE_NAME = 'in4mind-v4';
+const CACHE_NAME = 'in4mind-v5';
 const CONTENT_CACHE = 'in4mind-content-v1';
 
 const PRECACHE = [
@@ -12,6 +12,8 @@ const PRECACHE = [
   './dashboard.html',
   './tutorial.html',
   './quizzes.html',
+  './notes.html',
+  './projects.html',
   './ai.html',
   './profile.html',
   './help.html',
@@ -21,9 +23,17 @@ const PRECACHE = [
   './src/css/base.css',
   './src/css/dashboard.css',
   './src/css/theme.css',
+  './src/css/bulb-icon.css',
+  './src/css/notes.css',
+  './src/css/projects.css',
   './src/css/accessibility.css',
   './src/css/app-features.css',
+  './src/img/brand/in4mind-logo.png',
+  './src/img/brand/in4mind-logo-black.png',
+  './src/img/brand/in4mind-logo-white.png',
+  './src/img/brand/favicon-64.png',
   './src/js/a11y-boot.js',
+  './src/js/components/In4mindBulb.js',
   './src/js/services/DataService.js',
   './src/js/services/AppShell.js',
   './src/js/services/ContentLoader.js',

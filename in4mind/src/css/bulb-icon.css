@@ -1,13 +1,37 @@
 /**
- * IN4MIND — Logo foco line-art (marca oficial)
- * El SVG traza todo con currentColor: basta fijar `color` en cada contexto
- * para obtener las tres variantes de marca (navy, blanco, negro).
+ * IN4MIND — Logo oficial (marca)
+ *
+ * El logo es una imagen (`src/img/brand/in4mind-logo-black.png`) aplicada como
+ * máscara: lo que se ve es `currentColor` recortado con su silueta. Así basta
+ * fijar `color` en cada contexto para obtener las variantes de marca (navy,
+ * blanco, teal) sin duplicar archivos por tema.
  */
 
 .in4mind-bulb {
   display: block;
   flex-shrink: 0;
   color: var(--clr-brand-navy);
+  aspect-ratio: 564 / 768;
+  background-color: currentColor;
+  -webkit-mask-image: url('../img/brand/in4mind-logo-black.png');
+          mask-image: url('../img/brand/in4mind-logo-black.png');
+  -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+          mask-position: center;
+  -webkit-mask-size: contain;
+          mask-size: contain;
+}
+
+/* Sin soporte de máscaras: se pinta el PNG teal tal cual. */
+@supports not ((-webkit-mask-image: url('#')) or (mask-image: url('#'))) {
+  .in4mind-bulb {
+    background-color: transparent;
+    background-image: url('../img/brand/in4mind-logo.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+  }
 }
 
 html[data-theme="dark"] .in4mind-bulb {
@@ -43,6 +67,8 @@ html[data-theme="dark"] .lp-hero-illustration__bulb.in4mind-bulb--lg {
 
 .in4mind-bulb--sm {
   display: block;
+  width: var(--bulb-w, 28px);
+  height: var(--bulb-h, 35px);
 }
 
 .sidebar__brand-icon.in4mind-bulb {

@@ -24,18 +24,18 @@ in4mind/src/js/config/groq.config.js
 Reemplace la línea:
 
 ```javascript
-API_KEY: 'gsk_PEGAR_TU_API_KEY_AQUI',
+API_KEY: 'TU_API_KEY_DE_GROQ',
 ```
 
-Por su clave real:
+Por su clave real, la que copió en el paso 1:
 
 ```javascript
-API_KEY: 'gsk_suClaveRealAqui',
+API_KEY: 'gsk_...su_clave...',
 ```
 
 Guarde el archivo.
 
-> **Importante:** No comparta ni suba esta clave a repositorios públicos. Para producción, use un backend que oculte la key.
+> **Importante:** `groq.config.js` está en `.gitignore` justamente para que la clave no llegue al repositorio. No la escriba nunca en `groq.config.example.js` ni en esta guía, y no la comparta. Para producción, use un backend que oculte la key.
 
 ---
 

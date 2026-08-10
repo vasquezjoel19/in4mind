@@ -7,7 +7,7 @@
 
 const GroqConfig = {
   /** Obtén tu clave en: https://console.groq.com/keys */
-  API_KEY: 'gsk_TU_API_KEY_AQUI',
+  API_KEY: 'TU_API_KEY_DE_GROQ',
 
   /** Modelos recomendados: llama-3.3-70b-versatile | llama-3.1-8b-instant */
   MODEL: 'llama-3.3-70b-versatile',

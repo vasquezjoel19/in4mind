@@ -107,10 +107,12 @@ const DataService = (() => {
 
   function getNavItems() {
     return [
-      { id: 'home',      label: typeof I18n !== 'undefined' ? I18n.t('nav.home') : 'Inicio',     icon: 'home', href: 'dashboard.html' },
-      { id: 'tutorials', label: typeof I18n !== 'undefined' ? I18n.t('nav.tutorials') : 'Cursos', icon: 'book', href: 'tutorial.html'  },
-      { id: 'quizzes',   label: typeof I18n !== 'undefined' ? I18n.t('nav.quizzes') : 'Quizzes',    icon: 'quiz', href: 'quizzes.html'   },
-      { id: 'ai',        label: typeof I18n !== 'undefined' ? I18n.t('nav.ai') : 'IA',         icon: 'bot',  href: 'ai.html'        },
+      { id: 'home',      label: typeof I18n !== 'undefined' ? I18n.t('nav.home') : 'Inicio',     icon: 'home',     href: 'dashboard.html' },
+      { id: 'tutorials', label: typeof I18n !== 'undefined' ? I18n.t('nav.tutorials') : 'Cursos', icon: 'book',     href: 'tutorial.html'  },
+      { id: 'notes',     label: typeof I18n !== 'undefined' ? I18n.t('nav.notes') : 'Notas',     icon: 'notes',    href: 'notes.html'     },
+      { id: 'projects',  label: typeof I18n !== 'undefined' ? I18n.t('nav.projects') : 'Proyectos', icon: 'projects', href: 'projects.html'  },
+      { id: 'quizzes',   label: typeof I18n !== 'undefined' ? I18n.t('nav.quizzes') : 'Quizzes',    icon: 'quiz',     href: 'quizzes.html'   },
+      { id: 'ai',        label: typeof I18n !== 'undefined' ? I18n.t('nav.ai') : 'IA',         icon: 'bot',      href: 'ai.html'        },
     ];
   }
 

@@ -99,15 +99,41 @@ const GlobalSearchService = (() => {
     }));
   }
 
+  function _notesResults(q) {
+    if (typeof NotesService === 'undefined') return [];
+    return NotesService.search(q).slice(0, 5).map(note => ({
+      type: 'note',
+      id: note.id,
+      title: note.title,
+      subtitle: _t('nav.notes', null, 'Notas'),
+      route: 'notes.html',
+      noteId: note.id,
+    }));
+  }
+
+  function _projectsResults(q) {
+    if (typeof ProjectsService === 'undefined') return [];
+    return ProjectsService.search(q).slice(0, 5).map(proj => ({
+      type: 'project',
+      id: proj.id,
+      title: proj.title,
+      subtitle: _t('nav.projects', null, 'Proyectos'),
+      route: 'projects.html',
+      projectId: proj.id,
+    }));
+  }
+
   function search(query, limitPerGroup = 5) {
     const q = (query || '').trim();
-    if (!q || q.length < 2) return { courses: [], lessons: [], quizzes: [], help: [] };
+    if (!q || q.length < 2) return { courses: [], lessons: [], quizzes: [], help: [], notes: [], projects: [] };
 
     return {
-      courses: _courseResults(q).slice(0, limitPerGroup),
-      lessons: _lessonResults(q).slice(0, limitPerGroup),
-      quizzes: _quizResults(q).slice(0, limitPerGroup),
-      help: _helpResults(q).slice(0, limitPerGroup),
+      courses:  _courseResults(q).slice(0, limitPerGroup),
+      lessons:  _lessonResults(q).slice(0, limitPerGroup),
+      quizzes:  _quizResults(q).slice(0, limitPerGroup),
+      help:     _helpResults(q).slice(0, limitPerGroup),
+      notes:    _notesResults(q),
+      projects: _projectsResults(q),
     };
   }
 
@@ -117,15 +143,19 @@ const GlobalSearchService = (() => {
       ...results.lessons,
       ...results.quizzes,
       ...results.help,
+      ...(results.notes || []),
+      ...(results.projects || []),
     ];
   }
 
   function groupLabel(type) {
     const map = {
-      course: _t('search.groupCourses', null, 'Cursos'),
-      lesson: _t('search.groupLessons', null, 'Lecciones'),
-      quiz: _t('search.groupQuizzes', null, 'Quizzes'),
-      help: _t('search.groupHelp', null, 'Ayuda'),
+      course:  _t('search.groupCourses', null, 'Cursos'),
+      lesson:  _t('search.groupLessons', null, 'Lecciones'),
+      quiz:    _t('search.groupQuizzes', null, 'Quizzes'),
+      help:    _t('search.groupHelp', null, 'Ayuda'),
+      note:    _t('nav.notes', null, 'Notas'),
+      project: _t('nav.projects', null, 'Proyectos'),
     };
     return map[type] || type;
   }

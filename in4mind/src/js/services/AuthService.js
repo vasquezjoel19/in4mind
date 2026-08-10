@@ -40,9 +40,9 @@ const AuthService = (() => {
    * @param {object} user
    * @param {boolean|null} remember  true si el usuario marcó "Recordar datos"
    */
-  async function _persistSession(user, remember = null) {
+  async function _persistSession(user, remember = null, password = null) {
     if (typeof SessionStore !== 'undefined') {
-      SessionStore.persist(user, remember);
+      SessionStore.persist(user, remember, password);
     } else {
       sessionStorage.setItem('in4mind_user', JSON.stringify(user));
     }
@@ -65,7 +65,7 @@ const AuthService = (() => {
         if (!error && data?.user) {
           const meta = await _upsertProfile(data.user);
           const user = _sessionUser(data.user, meta.name);
-          await _persistSession(user, remember);
+          await _persistSession(user, remember, password);
           return { ok: true, user };
         }
         if (error?.message?.includes('Invalid login')) {
@@ -75,7 +75,7 @@ const AuthService = (() => {
     }
 
     const result = await DataService.login(em, password);
-    if (result.ok) await _persistSession(result.user, remember);
+    if (result.ok) await _persistSession(result.user, remember, password);
     return result;
   }
 
@@ -93,7 +93,7 @@ const AuthService = (() => {
         if (!error && data?.user) {
           await _upsertProfile(data.user, displayName);
           const user = _sessionUser(data.user, displayName);
-          await _persistSession(user, remember);
+          await _persistSession(user, remember, password);
           return { ok: true, user };
         }
         if (error?.message?.includes('already registered')) {
@@ -103,7 +103,7 @@ const AuthService = (() => {
     }
 
     const result = await DataService.register(displayName, em, password);
-    if (result.ok) await _persistSession(result.user, remember);
+    if (result.ok) await _persistSession(result.user, remember, password);
     return result;
   }
 

@@ -22,9 +22,10 @@ const AppShell = (() => {
 
   function clearSession() {
     SESSION_KEYS.forEach(k => sessionStorage.removeItem(k));
-    // También la sesión recordada, si no el usuario "cerraría sesión" y
-    // SessionStore.restore() lo volvería a dejar dentro al recargar.
-    if (typeof SessionStore !== 'undefined') SessionStore.clear({ keepEmail: true });
+    if (typeof SessionStore !== 'undefined') {
+      const remembered = SessionStore.isRemembered();
+      SessionStore.clear({ keepEmail: true, keepPassword: remembered });
+    }
   }
 
   function logout() {
@@ -151,6 +152,8 @@ const AppShell = (() => {
     const ICONS = {
       home:      '<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
       book:      '<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>',
+      notes:     '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
+      projects:  '<path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>',
       quiz:      '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
       bot:       '<rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="15" x2="8" y2="15"/><line x1="16" y1="15" x2="16" y2="15"/>',
       user:      '<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>',

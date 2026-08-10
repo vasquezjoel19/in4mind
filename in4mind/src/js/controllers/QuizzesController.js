@@ -697,6 +697,7 @@ const QuizzesController = (() => {
           <div class="quiz-card__progress-bg">
             <div class="quiz-card__progress-fill" style="width:${pct}%"></div>
           </div>
+          ${pct > 0 && pct < 100 ? `<p class="quiz-card__pct">${pct}%</p>` : ''}
           ${resumable ? `<p class="quiz-card__resume">${_t('quizzes.resumeHint', { pct }, `En curso · ${pct}% completado`)}</p>` : ''}
           <div class="quiz-card__controls">
             <span class="quiz-card__stat">${_t('quizzes.questionsLabel', { n: _countQuestions(exam) }, `${_countQuestions(exam)} Preguntas`)}</span>
@@ -772,6 +773,7 @@ const QuizzesController = (() => {
           <div class="quiz-card__progress-bg">
             <div class="quiz-card__progress-fill" style="width:${pct}%"></div>
           </div>
+          ${pct > 0 && pct < 100 ? `<p class="quiz-card__pct">${pct}%</p>` : ''}
           ${resumable ? `<p class="quiz-card__resume">${_t('quizzes.resumeHint', { pct }, `En curso · ${pct}% completado`)}</p>` : ''}
           <div class="quiz-card__controls">
             <span class="quiz-card__stat">${_t('quizzes.questionsLabel', { n: total }, `${total} Preguntas`)}</span>

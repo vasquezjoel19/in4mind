@@ -19,6 +19,8 @@ const SidebarController = (() => {
   const NAV_ROUTES = {
     home:      'dashboard.html',
     tutorials: 'tutorial.html',
+    notes:     'notes.html',
+    projects:  'projects.html',
     quizzes:   'quizzes.html',
     ai:        'ai.html',
   };

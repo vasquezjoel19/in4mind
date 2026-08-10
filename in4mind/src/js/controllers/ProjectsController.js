@@ -1,0 +1,293 @@
+/**
+ * IN4MIND — ProjectsController
+ * Proyectos de aprendizaje con tareas, notas vinculadas y progreso.
+ */
+
+'use strict';
+
+const ProjectsController = (() => {
+
+  let _query = '';
+  let _activeId = null;
+
+  let $grid, $detail, $search, $listView, $detailView;
+
+  function _t(k, p, fb) {
+    if (typeof I18n !== 'undefined') return I18n.t(k, p);
+    return fb ?? '';
+  }
+
+  function _escape(str) {
+    return String(str ?? '').replace(/[&<>"']/g, c => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
+  }
+
+  function _courseTitle(courseId) {
+    if (!courseId || typeof DataService === 'undefined') return '';
+    return DataService.getCourses().find(c => c.id === courseId)?.title || courseId;
+  }
+
+  function _publishShareContext(projectId = null) {
+    if (typeof ShareService === 'undefined') return;
+    ShareService.setContext({
+      page: 'projects.html',
+      params: projectId ? { project: projectId } : {},
+      title: _t('projects.pageTitle', null, 'Mis Proyectos — IN4MIND'),
+    });
+  }
+
+  function _showList() {
+    _activeId = null;
+    $listView?.classList.remove('projects-view--hidden');
+    $detailView?.classList.add('projects-view--hidden');
+    _publishShareContext();
+    _renderGrid();
+  }
+
+  function _showDetail(id) {
+    _activeId = id;
+    $listView?.classList.add('projects-view--hidden');
+    $detailView?.classList.remove('projects-view--hidden');
+    _renderDetail(id);
+    _publishShareContext(id);
+    const url = new URL(window.location.href);
+    url.searchParams.set('project', id);
+    window.history.replaceState({}, '', url);
+  }
+
+  function _renderGrid() {
+    if (!$grid) return;
+    const projects = ProjectsService.search(_query);
+
+    if (!projects.length) {
+      $grid.innerHTML = `
+        <div class="projects-empty">
+          <p>${_t('projects.empty', null, 'Organiza tu aprendizaje en proyectos.')}</p>
+          <button type="button" class="btn--course" id="projects-empty-create">${_t('projects.newProject', null, 'Nuevo proyecto')}</button>
+        </div>`;
+      document.getElementById('projects-empty-create')?.addEventListener('click', _createProject);
+      return;
+    }
+
+    $grid.innerHTML = projects.map(p => {
+      const pct = ProjectsService.getProgress(p);
+      const taskCount = (p.tasks || []).length;
+      return `
+        <article class="projects-card" style="--proj-color:${p.color}"
+                 data-project-id="${p.id}" role="button" tabindex="0">
+          <div class="projects-card__top">
+            <span class="projects-card__icon">${p.icon || '📁'}</span>
+            ${p.pinned ? '<span class="projects-card__pin">★</span>' : ''}
+          </div>
+          <h3 class="projects-card__title">${_escape(p.title)}</h3>
+          <p class="projects-card__desc">${_escape(p.description || _t('projects.noDesc', null, 'Sin descripción'))}</p>
+          ${p.courseId ? `<span class="projects-card__course">${_escape(_courseTitle(p.courseId))}</span>` : ''}
+          <div class="projects-card__progress">
+            <div class="projects-card__progress-fill" style="width:${pct}%"></div>
+          </div>
+          <footer class="projects-card__foot">
+            <span>${taskCount} ${_t('projects.tasks', null, 'tareas')}</span>
+            <span>${pct}%</span>
+          </footer>
+        </article>`;
+    }).join('') + `
+      <button type="button" class="projects-card projects-card--new" id="projects-grid-new">
+        <span>＋</span>
+        <span>${_t('projects.newProject', null, 'Nuevo proyecto')}</span>
+      </button>`;
+
+    $grid.querySelectorAll('[data-project-id]').forEach(el => {
+      el.addEventListener('click', () => _showDetail(el.dataset.projectId));
+    });
+    document.getElementById('projects-grid-new')?.addEventListener('click', _createProject);
+  }
+
+  function _renderDetail(id) {
+    const p = ProjectsService.get(id);
+    if (!p || !$detail) return;
+
+    const pct = ProjectsService.getProgress(p);
+    const linkedNotes = (p.noteIds || [])
+      .map(nid => typeof NotesService !== 'undefined' ? NotesService.getNote(nid) : null)
+      .filter(Boolean);
+
+    const courses = typeof DataService !== 'undefined' ? DataService.getCourses() : [];
+    const courseOptions = courses.map(c =>
+      `<option value="${c.id}" ${p.courseId === c.id ? 'selected' : ''}>${_escape(c.title)}</option>`
+    ).join('');
+
+    $detail.innerHTML = `
+      <header class="projects-detail__head">
+        <button type="button" class="btn--back" id="projects-back">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          ${_t('projects.back', null, 'Volver')}
+        </button>
+        <button type="button" class="btn--quiz-share" id="projects-detail-share" data-share aria-label="Compartir">↗</button>
+      </header>
+
+      <div class="projects-detail__hero" style="--proj-color:${p.color}">
+        <span class="projects-detail__icon">${p.icon || '📁'}</span>
+        <input class="projects-detail__title" id="proj-title" value="${_escape(p.title)}" aria-label="Título">
+        <textarea class="projects-detail__desc" id="proj-desc" rows="2" placeholder="${_t('projects.descPlaceholder', null, 'Describe tu proyecto…')}">${_escape(p.description)}</textarea>
+        <div class="projects-detail__meta">
+          <label class="projects-detail__label">${_t('projects.linkedCourse', null, 'Curso vinculado')}</label>
+          <select id="proj-course" class="projects-detail__select">
+            <option value="">${_t('projects.noCourse', null, '— Ninguno —')}</option>
+            ${courseOptions}
+          </select>
+        </div>
+        <div class="projects-detail__progress">
+          <div class="projects-detail__progress-fill" style="width:${pct}%"></div>
+        </div>
+        <span class="projects-detail__pct">${pct}% ${_t('projects.complete', null, 'completado')}</span>
+      </div>
+
+      <section class="projects-detail__section">
+        <div class="projects-detail__section-head">
+          <h2>${_t('projects.tasksTitle', null, 'Tareas')}</h2>
+        </div>
+        <ul class="projects-tasks" id="proj-tasks">
+          ${(p.tasks || []).map(t => `
+            <li class="projects-task ${t.done ? 'projects-task--done' : ''}" data-task-id="${t.id}">
+              <button type="button" class="projects-task__check" aria-label="Completar">${t.done ? '✓' : ''}</button>
+              <span class="projects-task__text">${_escape(t.text)}</span>
+              <button type="button" class="projects-task__remove" aria-label="Eliminar">×</button>
+            </li>`).join('')}
+        </ul>
+        <form class="projects-task-form" id="proj-task-form">
+          <input type="text" id="proj-task-input" placeholder="${_t('projects.addTask', null, 'Añadir tarea…')}" maxlength="200">
+          <button type="submit" class="btn--course">${_t('common.add', null, 'Añadir')}</button>
+        </form>
+      </section>
+
+      <section class="projects-detail__section">
+        <div class="projects-detail__section-head">
+          <h2>${_t('projects.notesTitle', null, 'Notas del proyecto')}</h2>
+          <button type="button" class="btn--course" id="proj-add-note">${_t('notes.newNote', null, 'Nueva nota')}</button>
+        </div>
+        <div class="projects-notes-grid" id="proj-notes">
+          ${linkedNotes.length
+            ? linkedNotes.map(n => `
+              <a class="projects-note-chip" href="notes.html?note=${n.id}" style="--note-color:${n.color}">
+                <strong>${_escape(n.title)}</strong>
+                <span>${_escape(n.preview || '')}</span>
+              </a>`).join('')
+            : `<p class="projects-notes-empty">${_t('projects.noNotes', null, 'Sin notas vinculadas.')}</p>`}
+        </div>
+      </section>
+
+      <div class="projects-detail__actions">
+        <button type="button" class="btn--course" id="proj-save">${_t('common.save', null, 'Guardar')}</button>
+        ${p.courseId ? `<a class="btn--outline" href="tutorial.html?course=${p.courseId}">${_t('projects.openCourse', null, 'Abrir curso')}</a>` : ''}
+        <button type="button" class="projects-detail__delete" id="proj-delete">${_t('common.delete', null, 'Eliminar')}</button>
+      </div>`;
+
+    document.getElementById('projects-back')?.addEventListener('click', _showList);
+
+    document.getElementById('proj-task-form')?.addEventListener('submit', e => {
+      e.preventDefault();
+      const input = document.getElementById('proj-task-input');
+      if (!input?.value.trim()) return;
+      ProjectsService.addTask(id, input.value.trim());
+      input.value = '';
+      _renderDetail(id);
+      _renderGrid();
+    });
+
+    $detail.querySelectorAll('.projects-task__check').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const taskId = btn.closest('[data-task-id]')?.dataset.taskId;
+        if (taskId) {
+          ProjectsService.toggleTask(id, taskId);
+          _renderDetail(id);
+          _renderGrid();
+        }
+      });
+    });
+
+    $detail.querySelectorAll('.projects-task__remove').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const taskId = btn.closest('[data-task-id]')?.dataset.taskId;
+        if (taskId) {
+          ProjectsService.removeTask(id, taskId);
+          _renderDetail(id);
+          _renderGrid();
+        }
+      });
+    });
+
+    document.getElementById('proj-save')?.addEventListener('click', () => {
+      ProjectsService.save({
+        id,
+        title: document.getElementById('proj-title')?.value,
+        description: document.getElementById('proj-desc')?.value,
+        courseId: document.getElementById('proj-course')?.value || null,
+      });
+      AppShell.showToast(_t('projects.saved', null, 'Proyecto guardado'));
+      _renderGrid();
+    });
+
+    document.getElementById('proj-delete')?.addEventListener('click', () => {
+      if (!confirm(_t('projects.deleteConfirm', null, '¿Eliminar este proyecto?'))) return;
+      ProjectsService.remove(id);
+      _showList();
+      AppShell.showToast(_t('projects.deleted', null, 'Proyecto eliminado'));
+    });
+
+    document.getElementById('proj-add-note')?.addEventListener('click', () => {
+      if (typeof NotesService === 'undefined') return;
+      const note = NotesService.saveNote({
+        title: `${p.title} — ${_t('notes.untitled', null, 'Nota')}`,
+        content: '',
+        projectId: id,
+        courseId: p.courseId,
+      });
+      if (note) {
+        ProjectsService.linkNote(id, note.id);
+        window.location.href = `notes.html?note=${note.id}`;
+      }
+    });
+  }
+
+  function _createProject() {
+    const title = prompt(_t('projects.namePrompt', null, 'Nombre del proyecto:'));
+    if (!title?.trim()) return;
+    const p = ProjectsService.save({ title: title.trim(), description: '', icon: '🚀' });
+    _showDetail(p.id);
+    _renderGrid();
+  }
+
+  function init() {
+    $grid = document.getElementById('projects-grid');
+    $detail = document.getElementById('projects-detail');
+    $search = document.getElementById('projects-search');
+    $listView = document.getElementById('projects-list-view');
+    $detailView = document.getElementById('projects-detail-view');
+
+    _renderGrid();
+    _publishShareContext();
+
+    const params = new URLSearchParams(window.location.search);
+    const openProject = params.get('project');
+    if (openProject && ProjectsService.get(openProject)) _showDetail(openProject);
+
+    document.getElementById('projects-new-btn')?.addEventListener('click', _createProject);
+    document.getElementById('projects-btn-share')?.addEventListener('click', () => ShareService?.share());
+
+    $search?.addEventListener('input', () => {
+      _query = $search.value.trim();
+      _renderGrid();
+    });
+
+    window.addEventListener('in4mind-locale-change', () => {
+      if (_activeId) _renderDetail(_activeId);
+      else _renderGrid();
+    });
+  }
+
+  return { init };
+
+})();
+
+if (typeof module !== 'undefined') module.exports = ProjectsController;

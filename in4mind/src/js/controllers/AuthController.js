@@ -314,7 +314,7 @@ const AuthController = (() => {
 
     if (result.ok) {
       if (typeof AuthService === 'undefined') {
-        if (typeof SessionStore !== 'undefined') SessionStore.persist(result.user, remember);
+        if (typeof SessionStore !== 'undefined') SessionStore.persist(result.user, remember, passInput.value);
         else sessionStorage.setItem('in4mind_user', JSON.stringify(result.user));
         if (typeof UserProfileService !== 'undefined') {
           UserProfileService.mergeGuestIntoUser(result.user.email);
@@ -552,15 +552,23 @@ const AuthController = (() => {
     $resetSuccess = document.getElementById('reset-success');
     $rememberBox  = document.getElementById('login-remember');
 
-    // "Recordar datos": restaurar la preferencia y precargar el correo.
+    // "Recordar datos": restaurar correo, contraseña y preferencia guardados.
     if (typeof SessionStore !== 'undefined') {
       const remembered = SessionStore.getRememberedEmail();
       if ($rememberBox) $rememberBox.checked = SessionStore.isRemembered() || Boolean(remembered);
       const loginEmail = $loginForm?.querySelector('#login-email');
+      const loginPass = $loginForm?.querySelector('#login-password');
       if (loginEmail && remembered && !loginEmail.value) {
         loginEmail.value = remembered;
-        // El foco va a la contraseña: el correo ya está puesto.
-        $loginForm.querySelector('#login-password')?.focus();
+      }
+      if (loginPass && SessionStore.isRemembered()) {
+        const savedPwd = SessionStore.getRememberedPassword();
+        if (savedPwd && !loginPass.value) loginPass.value = savedPwd;
+      }
+      if (loginEmail?.value && loginPass?.value) {
+        loginPass.focus();
+      } else if (loginEmail?.value) {
+        loginPass?.focus();
       }
     }
 

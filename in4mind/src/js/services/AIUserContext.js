@@ -43,6 +43,16 @@ const AIUserContext = (() => {
       lines.push(`Racha: ${g.streak} días. Meta semanal: ${g.weekly.lessons}/${g.weekly.lessonGoal} lecciones.`);
     }
 
+    if (typeof AdaptiveQuizEngine !== 'undefined') {
+      try {
+        const mem = AdaptiveQuizEngine.getMemorySnapshot({ weakLimit: 5 });
+        if (mem.weak_topics?.length) {
+          lines.push(`Temas débiles: ${mem.weak_topics.join(', ')}`);
+        }
+        lines.push(`Nivel de mastery promedio: ${Math.round((mem.mastery_level || 0.5) * 100)}%`);
+      } catch { /* ignore */ }
+    }
+
     return lines.join('\n');
   }
 

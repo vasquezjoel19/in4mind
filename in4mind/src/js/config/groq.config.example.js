@@ -9,8 +9,8 @@ const GroqConfig = {
   /** Obtén tu clave en: https://console.groq.com/keys */
   API_KEY: 'TU_API_KEY_DE_GROQ',
 
-  /** Modelos recomendados: llama-3.3-70b-versatile | llama-3.1-8b-instant */
-  MODEL: 'llama-3.3-70b-versatile',
+  /** Modelos recomendados: llama-3.1-8b-instant (rápido / feedback) | llama-3.3-70b-versatile */
+  MODEL: 'llama-3.1-8b-instant',
 
   API_URL: 'https://api.groq.com/openai/v1/chat/completions',
   MAX_TOKENS: 1200,

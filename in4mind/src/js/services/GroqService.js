@@ -192,7 +192,50 @@ DIRECTRICES
     return full.trim();
   }
 
-  return { chat, chatStream, isConfigured, buildSystemPrompt: _buildSystemPrompt };
+  /**
+   * Completions ligeras (p. ej. feedback de quiz). No usa el system prompt largo del chat.
+   * @param {{ system: string, user: string, model?: string, max_tokens?: number, temperature?: number }} opts
+   * @returns {Promise<string>}
+   */
+  async function complete(opts) {
+    if (!isConfigured()) {
+      throw new Error('GROQ_API_KEY_MISSING');
+    }
+    const cfg = _config();
+    if (!cfg) throw new Error('GROQ_API_KEY_MISSING');
+
+    const response = await fetch(cfg.API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${cfg.API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: opts.model || cfg.MODEL || 'llama-3.1-8b-instant',
+        messages: [
+          { role: 'system', content: String(opts.system || '') },
+          { role: 'user', content: String(opts.user || '') },
+        ],
+        max_tokens: opts.max_tokens ?? 120,
+        temperature: opts.temperature ?? 0.35,
+      }),
+    });
+
+    if (!response.ok) {
+      const errBody = await response.text().catch(() => '');
+      if (response.status === 401 || response.status === 403) {
+        throw new Error('GROQ_API_KEY_INVALID');
+      }
+      throw new Error(`GROQ_HTTP_${response.status}: ${errBody.slice(0, 200)}`);
+    }
+
+    const data = await response.json();
+    const reply = data.choices?.[0]?.message?.content?.trim();
+    if (!reply) throw new Error('GROQ_EMPTY_RESPONSE');
+    return reply;
+  }
+
+  return { chat, chatStream, complete, isConfigured, buildSystemPrompt: _buildSystemPrompt };
 
 })();
 

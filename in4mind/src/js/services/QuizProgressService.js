@@ -106,6 +106,11 @@ const QuizProgressService = (() => {
       title:       state.title || quizId,
       icon:        state.icon || '',
       completed:   answered >= state.total,
+      /** Orden adaptativo (uids) + meta del AdaptiveQuizEngine. */
+      adaptiveOrder: Array.isArray(state.adaptiveOrder) ? state.adaptiveOrder : undefined,
+      adaptiveMeta:  state.adaptiveMeta && typeof state.adaptiveMeta === 'object'
+        ? state.adaptiveMeta
+        : undefined,
       updatedAt:   Date.now(),
     };
     return _writeAll(map);

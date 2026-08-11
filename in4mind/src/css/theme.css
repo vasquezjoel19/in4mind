@@ -1484,6 +1484,28 @@ html[data-theme="dark"] .settings-modal__panel {
   border-color: var(--clr-border);
 }
 
+html[data-theme="dark"] .study-me__adaptive {
+  background: rgba(var(--clr-brand-rgb), 0.18);
+  border-color: rgba(var(--clr-brand-rgb), 0.35);
+}
+
+html[data-theme="dark"] .study-me__adaptive-label {
+  color: var(--clr-brand-400);
+}
+
+html[data-theme="dark"] .quiz-adaptive-note {
+  color: var(--clr-text-secondary);
+}
+
+html[data-theme="dark"] .quiz-ai-feedback {
+  background: rgba(46, 196, 182, 0.12);
+  border-color: rgba(46, 196, 182, 0.3);
+}
+
+html[data-theme="dark"] .quiz-ai-feedback__label {
+  color: var(--clr-accent-lt, #5eead4);
+}
+
 /* Wordmark: el 4 debe conservar el azul del foco (sobre span { color: inherit }) */
 html[data-theme="dark"] span.in4mind-wordmark__four {
   color: #4a76b2;

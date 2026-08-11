@@ -456,6 +456,8 @@ const QuizzesController = (() => {
   let _cloudProgress = {};
   /** Semilla del intento en curso: fija el barajado y permite reanudar igual. */
   let _seed          = 0;
+  /** Meta del motor adaptativo (dificultad objetivo, racha, reviews). */
+  let _adaptiveMeta  = null;
 
   let $listView, $quizView, $resultsView;
   let $filtersWrap, $quizGrid, $continueGrid, $certExamGrid;
@@ -477,10 +479,25 @@ const QuizzesController = (() => {
   }
 
   /**
-   * Aplana el quiz una sola vez por intento. El array en `_flatQuestions` es
-   * el estado local barajado: re-renderizar nunca vuelve a llamar a prepare.
+   * Aplana el quiz una sola vez por intento. Con AdaptiveQuizEngine activo
+   * (quizzes normales) el orden se personaliza por mastery; los exámenes de
+   * certificación conservan sólo el barajado determinista de QuizRandomizer.
    */
-  function _flattenQuiz(quiz, seed) {
+  function _flattenQuiz(quiz, seed, saved) {
+    const useAdaptive = typeof AdaptiveQuizEngine !== 'undefined'
+      && AdaptiveQuizEngine.isEnabledForQuiz(quiz);
+
+    if (useAdaptive) {
+      const built = AdaptiveQuizEngine.buildAttempt(quiz, seed, {
+        savedOrder: saved?.adaptiveOrder,
+        savedMeta:  saved?.adaptiveMeta,
+      });
+      _adaptiveMeta = built.meta || { enabled: true, targetDiff: 2, streak: 0, recent: [], reviewTopics: [] };
+      return built.questions;
+    }
+
+    _adaptiveMeta = null;
+
     if (typeof QuizRandomizer !== 'undefined') {
       return QuizRandomizer.prepare(quiz, seed);
     }
@@ -893,8 +910,16 @@ const QuizzesController = (() => {
     if ($quizView?.classList.contains('quiz-view--visible') && _currentQuiz) {
       const savedIdx = _currentQIdx;
       const savedAnswers = _answers;
+      const savedAdaptive = _adaptiveMeta?.enabled
+        ? {
+            adaptiveOrder: typeof AdaptiveQuizEngine !== 'undefined'
+              ? AdaptiveQuizEngine.serializeOrder(_flatQuestions)
+              : undefined,
+            adaptiveMeta: _adaptiveMeta,
+          }
+        : null;
       _currentQuiz = _getQuizById(_currentQuiz.id, _seed);
-      _flatQuestions = _flattenQuiz(_currentQuiz, _seed);
+      _flatQuestions = _flattenQuiz(_currentQuiz, _seed, savedAdaptive);
       _currentQIdx = Math.min(savedIdx, Math.max(0, _flatQuestions.length - 1));
       _answers = savedAnswers;
       _renderQuestion();
@@ -994,7 +1019,7 @@ const QuizzesController = (() => {
     const def = quiz.id === GENERAL_QUIZ_ID ? _getQuizById(quiz.id, _seed) : quiz;
 
     _currentQuiz   = def;
-    _flatQuestions = _flattenQuiz(def, _seed);
+    _flatQuestions = _flattenQuiz(def, _seed, saved);
     _answers       = saved?.answers ?? [];
     _currentQIdx   = saved
       ? Math.min(_answers.length, Math.max(0, _flatQuestions.length - 1))
@@ -1009,7 +1034,7 @@ const QuizzesController = (() => {
   /** Guarda el avance del intento en curso (localStorage, síncrono). */
   function _persistAttempt() {
     if (typeof QuizProgressService === 'undefined' || !_currentQuiz) return;
-    QuizProgressService.save(_currentQuiz.id, {
+    const payload = {
       seed:       _seed,
       currentIdx: _currentQIdx,
       total:      _flatQuestions.length,
@@ -1017,7 +1042,19 @@ const QuizzesController = (() => {
       isCertExam: Boolean(_currentQuiz.isCertExam),
       title:      _currentQuiz.title,
       icon:       _currentQuiz.icon,
-    });
+    };
+    if (_adaptiveMeta?.enabled && typeof AdaptiveQuizEngine !== 'undefined') {
+      payload.adaptiveOrder = AdaptiveQuizEngine.serializeOrder(_flatQuestions);
+      payload.adaptiveMeta = {
+        targetDiff: _adaptiveMeta.targetDiff,
+        streak: _adaptiveMeta.streak,
+        recent: _adaptiveMeta.recent,
+        reviewTopics: _adaptiveMeta.reviewTopics,
+        accuracy: _adaptiveMeta.accuracy,
+        enabled: true,
+      };
+    }
+    QuizProgressService.save(_currentQuiz.id, payload);
     _reloadLocalProgress();
   }
 
@@ -1109,12 +1146,31 @@ const QuizzesController = (() => {
         : _t('quizzes.wrongFeedback', null, 'Incorrecto.')),
       correctLabel: correctLabel || '',
       exp,
+      topicKey:     q.topicKey || null,
+      difficulty:   q.difficulty || null,
     });
+
+    let adaptiveHint = null;
+    if (_adaptiveMeta?.enabled && typeof AdaptiveQuizEngine !== 'undefined') {
+      const result = AdaptiveQuizEngine.rebalanceAfterAnswer(
+        _flatQuestions,
+        _currentQIdx,
+        correct,
+        _adaptiveMeta,
+        _currentQuiz?.id
+      );
+      _flatQuestions = result.questions;
+      _adaptiveMeta = result.meta;
+      adaptiveHint = result.hint || q.adaptiveHint || null;
+    }
 
     $quizFeedback.className = `quiz-feedback quiz-feedback--${correct ? 'correct' : 'wrong'}`;
     $quizFeedback.innerHTML = correct
-      ? `<strong>${_t('quizzes.correctFeedback', null, '✓ ¡Correcto!')}</strong> ${_escape(exp)}`
-      : _studyMeHtml(q, chosenLabel, correctLabel, exp);
+      ? `<strong>${_t('quizzes.correctFeedback', null, '✓ ¡Correcto!')}</strong> ${_escape(exp)}
+         ${_adaptiveMeta?.enabled && _adaptiveMeta.streak >= 2
+           ? `<p class="quiz-adaptive-note">${_escape(_t('quizzes.adaptiveHarder', null, 'Subiendo dificultad: vas con buena racha.'))}</p>`
+           : ''}`
+      : _studyMeHtml(q, chosenLabel, correctLabel, exp, adaptiveHint);
     $quizFeedback.classList.remove('is-bouncing');
     void $quizFeedback.offsetWidth;
     $quizFeedback.classList.add('is-bouncing');
@@ -1125,6 +1181,49 @@ const QuizzesController = (() => {
     $btnNext.classList.add('btn--quiz-next-visible');
 
     _persistAttempt();
+
+    if (!correct) {
+      _requestAiFeedback(q, chosenLabel, correctLabel, exp);
+    }
+  }
+
+  /**
+   * Feedback Groq + memoria (async). El Study Me local ya está visible;
+   * la IA rellena el bloque `#quiz-ai-feedback` cuando responde.
+   */
+  function _requestAiFeedback(q, chosenLabel, correctLabel, exp) {
+    if (typeof QuizAIFeedbackService === 'undefined' || !QuizAIFeedbackService.isAvailable()) {
+      return;
+    }
+    const slot = $quizFeedback?.querySelector('#quiz-ai-feedback');
+    if (!slot) return;
+
+    slot.hidden = false;
+    slot.classList.add('is-loading');
+    slot.innerHTML = `<span class="quiz-ai-feedback__label">${_escape(_t('quizzes.aiTutor', null, 'Tutor IA'))}</span>
+      <p class="quiz-ai-feedback__text">${_escape(_t('quizzes.aiThinking', null, 'Personalizando la explicación…'))}</p>`;
+
+    const requestId = `${_currentQuiz?.id || 'q'}:${_currentQIdx}:${Date.now()}`;
+    slot.dataset.requestId = requestId;
+
+    QuizAIFeedbackService.explainError({
+      question: _questionLabel(q),
+      userAnswer: chosenLabel || '',
+      correctAnswer: correctLabel || '',
+      explanation: exp || '',
+      topic: q.sectionTitle || q.topicKey || '',
+      quizId: _currentQuiz?.id,
+    }).then(text => {
+      if (!text || !$quizFeedback?.contains(slot) || slot.dataset.requestId !== requestId) return;
+      slot.classList.remove('is-loading');
+      slot.innerHTML = `<span class="quiz-ai-feedback__label">${_escape(_t('quizzes.aiTutor', null, 'Tutor IA'))}</span>
+        <p class="quiz-ai-feedback__text">${_escape(text)}</p>`;
+    }).catch(() => {
+      if (!$quizFeedback?.contains(slot) || slot.dataset.requestId !== requestId) return;
+      slot.hidden = true;
+      slot.classList.remove('is-loading');
+      slot.innerHTML = '';
+    });
   }
 
   function _escape(str) {
@@ -1137,7 +1236,7 @@ const QuizzesController = (() => {
    * Retroalimentación educativa al fallar: qué respondió, cuál era la correcta
    * y por qué. Se muestra antes de poder avanzar a la siguiente pregunta.
    */
-  function _studyMeHtml(q, chosenLabel, correctLabel, exp) {
+  function _studyMeHtml(q, chosenLabel, correctLabel, exp, adaptiveHint) {
     const rows = [];
 
     if (chosenLabel) {
@@ -1155,6 +1254,13 @@ const QuizzesController = (() => {
         </div>`);
     }
 
+    const hintBlock = adaptiveHint
+      ? `<p class="study-me__adaptive">
+           <span class="study-me__adaptive-label">${_t('quizzes.adaptiveReview', null, 'Repaso dirigido')}</span>
+           ${_escape(adaptiveHint)}
+         </p>`
+      : '';
+
     return `
       <div class="study-me">
         <div class="study-me__head">
@@ -1166,8 +1272,17 @@ const QuizzesController = (() => {
           <span class="study-me__why-label">${_t('quizzes.whyLabel', null, '¿Por qué?')}</span>
           ${_escape(exp || _t('quizzes.noExplanation', null, 'Repasa este tema en la lección correspondiente.'))}
         </p>
+        ${hintBlock}
         <p class="study-me__hint">${_t('quizzes.studyMeHint', null, 'Lee la explicación antes de continuar: la próxima vez la reconocerás.')}</p>
+        <div class="quiz-ai-feedback" id="quiz-ai-feedback" hidden></div>
       </div>`;
+  }
+
+  function _diffLabel(level) {
+    const n = Math.round(Number(level) || 2);
+    if (n <= 1) return _t('quizzes.diffEasy', null, 'Fácil');
+    if (n >= 3) return _t('quizzes.diffHard', null, 'Difícil');
+    return _t('quizzes.diffMedium', null, 'Media');
   }
 
   function _renderQuestion() {
@@ -1179,7 +1294,13 @@ const QuizzesController = (() => {
       ? _t('quizzes.examTitle', { title: _currentQuiz.title }, `Examen de certificación: ${_currentQuiz.title}`)
       : _currentQuiz.title;
     $quizSection.textContent = q.sectionTitle || '';
-    $quizType.textContent = _typeLabels()[q.type] || q.type;
+
+    const typeLabel = _typeLabels()[q.type] || q.type;
+    const badges = [typeLabel];
+    if (q.difficulty) badges.push(_diffLabel(q.difficulty));
+    if (q.isReview) badges.push(_t('quizzes.adaptiveReviewBadge', null, 'Repaso'));
+    $quizType.textContent = badges.join(' · ');
+
     $quizProgLabel.textContent = `${_currentQIdx + 1} / ${total}`;
     $quizProgressFill.style.width = `${(_currentQIdx / total) * 100}%`;
 

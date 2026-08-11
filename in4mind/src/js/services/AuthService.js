@@ -50,6 +50,9 @@ const AuthService = (() => {
     if (typeof QuizProgressService !== 'undefined') {
       QuizProgressService.mergeGuestInto(user.email);
     }
+    if (typeof AdaptiveQuizEngine !== 'undefined') {
+      AdaptiveQuizEngine.mergeGuestInto(user.email);
+    }
     if (typeof UserProfileService !== 'undefined') {
       UserProfileService.mergeGuestIntoUser(user.email);
       UserProfileService.migrateSessionQuizProgress();

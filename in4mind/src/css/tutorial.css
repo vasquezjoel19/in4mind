@@ -1727,7 +1727,7 @@ svg.tut-star,
   .tut-banner { flex-direction: column; }
   .tut-banner__graphic { display: none; }
   .tut-banner__title { font-size: 1.6rem; }
-  .tut-cards-grid { grid-template-columns: repeat(2, 1fr); }
+  .tut-cards-grid { grid-template-columns: 1fr; }
   .tut-actions { justify-content: flex-start; flex-wrap: wrap; }
   .tut-about { flex-direction: column; }
   .tut-btn-more { margin-top: 0; }

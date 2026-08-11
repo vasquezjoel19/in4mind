@@ -1,9 +1,10 @@
 /**
- * IN4MIND — Responsive / pantalla dividida (Snap, ventanas estrechas)
- * Complementa dashboard.css, tutorial.css, quizzes.css y ai.css
+ * IN4MIND — Responsive / móvil / Snap
+ * Complementa dashboard, tutorial, quizzes, ai, notes, projects, guided.
+ * Breakpoint shell móvil = 900px (alineado con el drawer del sidebar).
  */
 
-/* ── Evitar desbordes horizontales en ventanas estrechas ── */
+/* ── Evitar desbordes horizontales ── */
 html {
   overflow-x: clip;
 }
@@ -36,9 +37,15 @@ body:not(.landing-body) {
   flex-shrink: 0;
 }
 
+img,
+video,
+iframe,
+svg {
+  max-width: 100%;
+}
+
 /* ══════════════════════════════════════════
    ESCRITORIO COMPACTO (901px – 1280px)
-   Mitad de pantalla, Snap lateral, etc.
 ══════════════════════════════════════════ */
 @media (max-width: 1280px) and (min-width: 901px) {
   :root {
@@ -77,7 +84,6 @@ body:not(.landing-body) {
     min-width: 200px;
   }
 
-  /* Tutoriales */
   .tut-cards-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -86,12 +92,10 @@ body:not(.landing-body) {
     grid-template-columns: 1fr;
   }
 
-  /* Quizzes */
   .quiz-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  /* IA */
   .main-area--ai {
     height: 100dvh;
     max-height: 100dvh;
@@ -149,9 +153,13 @@ body:not(.landing-body) {
 }
 
 /* ══════════════════════════════════════════
-   MÓVIL / VENTANA MUY ESTRECHA (≤900px)
+   TABLET / MÓVIL ANCHO (≤900px) — shell drawer
 ══════════════════════════════════════════ */
 @media (max-width: 900px) {
+  :root {
+    --shell-pad-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px));
+  }
+
   .dashboard {
     min-height: 100dvh;
   }
@@ -173,11 +181,65 @@ body:not(.landing-body) {
   .tut-cards-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .course-card {
+    width: min(240px, 72vw);
+    height: auto;
+    min-height: 132px;
+  }
+
+  .recent-card {
+    width: min(200px, 68vw);
+  }
+
+  .carousel-track {
+    gap: var(--sp-sm);
+    padding-bottom: 4px;
+  }
+
+  .welcome-section__title {
+    font-size: clamp(1.25rem, 5vw, 1.55rem);
+  }
+
+  .quiz-interactive-card,
+  .results-card {
+    padding: var(--sp-md);
+  }
+
+  .quiz-interactive-top {
+    flex-wrap: wrap;
+    gap: var(--sp-sm);
+  }
+
+  .quiz-interactive-prog {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .quiz-resume-modal {
+    width: min(420px, calc(100vw - 32px));
+    margin: 16px;
+  }
+
+  .notes-grid,
+  .projects-grid,
+  .gp-grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  }
+
+  .prof-stats,
+  .prof-grid {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
+/* ══════════════════════════════════════════
+   MÓVIL (≤720px)
+══════════════════════════════════════════ */
 @media (max-width: 720px) {
   .tut-cards-grid,
-  .quiz-grid {
+  .quiz-grid,
+  .continue-grid {
     grid-template-columns: 1fr;
   }
 
@@ -196,19 +258,144 @@ body:not(.landing-body) {
   .ai-topbar__actions .ai-btn-ghost svg {
     margin: 0;
   }
+
+  .ai-composer {
+    flex-wrap: wrap;
+  }
+
+  .ai-composer textarea {
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+
+  .prof-stats,
+  .prof-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .notes-page-header,
+  .projects-page-header,
+  .gp-page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .notes-page-header__actions,
+  .projects-page-header__actions,
+  .gp-page-header__actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .notes-page-header__actions .btn,
+  .projects-page-header__actions .btn,
+  .gp-page-header__actions .btn {
+    flex: 1 1 auto;
+  }
 }
 
+/* ══════════════════════════════════════════
+   TELÉFONO REGULAR (≤600px)
+══════════════════════════════════════════ */
 @media (max-width: 600px) {
+  .content-area {
+    padding: var(--sp-md) var(--sp-sm) calc(var(--sp-xl) + var(--shell-pad-bottom));
+  }
+
   .course-card {
-    width: min(260px, 85vw);
+    width: min(260px, 82vw);
   }
 
   .carousel-track--expanded {
     grid-template-columns: 1fr;
   }
+
+  .carousel-track--expanded .course-card {
+    width: 100%;
+  }
+
+  .section-header__title {
+    font-size: 0.95rem;
+  }
+
+  .btn--course,
+  .btn--quiz-start,
+  .btn--quiz-check,
+  .btn--quiz-next {
+    min-height: 44px;
+  }
+
+  .quiz-option {
+    min-height: 48px;
+    padding: 12px 14px;
+  }
+
+  .quiz-filter-bar {
+    gap: 6px;
+  }
+
+  .quiz-filter {
+    font-size: 0.75rem;
+    padding: 6px 10px;
+  }
+
+  .gchat__panel {
+    max-height: calc(100dvh - var(--shell-pad-bottom) - 96px);
+  }
+
+  .settings-modal__panel {
+    width: min(100vw - 16px, 520px);
+    max-height: calc(100dvh - 24px);
+  }
+
+  .help-faq__answer {
+    padding-left: 0;
+  }
 }
 
-/* Preferencia: menos animaciones si el usuario lo pide */
+/* ══════════════════════════════════════════
+   TELÉFONO ESTRECHO (≤430px)
+══════════════════════════════════════════ */
+@media (max-width: 430px) {
+  .welcome-section {
+    grid-template-columns: 1fr;
+    gap: var(--sp-sm);
+  }
+
+  .welcome-section__illustration {
+    display: none;
+  }
+
+  .topbar__brand-name,
+  .sidebar__brand-name {
+    font-size: 0.95rem;
+  }
+
+  .app-bottom-nav__item {
+    font-size: 0.58rem;
+    padding: 6px 2px;
+    gap: 1px;
+  }
+
+  .app-bottom-nav__item svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .quiz-interactive-name {
+    font-size: 0.95rem;
+  }
+
+  .btn--back span {
+    display: none;
+  }
+
+  .gp-card__lock {
+    max-width: 100%;
+  }
+}
+
+/* Preferencia: menos animaciones */
 @media (prefers-reduced-motion: reduce) {
   .sidebar,
   .main-area,

@@ -38,6 +38,7 @@ html {
 
 body.landing-body {
   margin: 0;
+  overflow-x: clip;
   font-family: var(--lp-font);
   color: var(--lp-text);
   background-color: var(--clr-bg-app);
@@ -1113,7 +1114,7 @@ a.lp-feature-card--link {
 @media (max-width: 640px) {
   .lp-courses-wrap { padding: 40px 0 48px; }
   .lp-courses-slide {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
     gap: 10px;
     padding: 14px;
   }
@@ -1987,6 +1988,11 @@ a.lp-guide-card {
   .lp-hero__actions { justify-content: center; }
   .lp-hero__content { padding-bottom: 24px; }
   .lp-hero__visual { order: -1; padding-top: 36px; }
+  .lp-hero__visual {
+    overflow: hidden;
+    padding: 24px 8px 28px;
+  }
+
   .lp-hero-illustration { width: min(320px, 88vw); }
 
   .lp-float-card {
@@ -2012,12 +2018,12 @@ a.lp-guide-card {
     font-size: 0.68rem;
   }
 
-  .lp-float-card--py     { top: 2%;  left: 0; }
-  .lp-float-card--shield { top: 6%;  right: -2%; }
-  .lp-float-card--ai     { top: 40%; right: -4%; }
-  .lp-float-card--code   { bottom: 8%; left: 0; }
+  .lp-float-card--py     { top: 2%;  left: 2%; }
+  .lp-float-card--shield { top: 6%;  right: 2%; }
+  .lp-float-card--ai     { top: 40%; right: 0; }
+  .lp-float-card--code   { bottom: 8%; left: 2%; }
   .lp-float-card--quiz   { bottom: 12%; right: 2%; }
-  .lp-float-card--data   { top: 38%; left: -4%; }
+  .lp-float-card--data   { top: 38%; left: 0; }
 
   .lp-features__grid { grid-template-columns: 1fr; }
   .lp-feature-card:first-child { grid-column: span 1; text-align: center; }

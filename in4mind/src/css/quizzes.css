@@ -922,6 +922,34 @@
   .quiz-options--tf { grid-template-columns: 1fr; }
   .quiz-match__row { grid-template-columns: 1fr; gap: var(--sp-xs); }
   .btn--quiz-check { width: 100%; }
+
+  .quiz-interactive-card {
+    padding: var(--sp-md);
+  }
+
+  .quiz-interactive-top {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .quiz-interactive-name {
+    flex: 1 1 140px;
+    min-width: 0;
+    font-size: 1rem;
+  }
+
+  .quiz-interactive-prog {
+    margin-left: 0;
+  }
+
+  .quiz-resume-modal__actions {
+    flex-direction: column;
+  }
+
+  .quiz-resume-modal__actions .btn--quiz-check,
+  .quiz-resume-modal__restart {
+    width: 100%;
+  }
 }
 
 /* ══════════════════════════════════════════

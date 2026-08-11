@@ -576,6 +576,18 @@ body.settings-modal-open > *:not(#settings-overlay) {
     flex-direction: column;
     text-align: center;
   }
+
+  .settings-modal__panel {
+    width: calc(100vw - 12px);
+    max-height: calc(100dvh - 12px);
+    border-radius: var(--rad-lg);
+  }
+
+  .settings-goals-row,
+  .settings-field-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
 html[data-theme="dark"] .settings-modal {

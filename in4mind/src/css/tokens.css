@@ -125,6 +125,9 @@
   --sidebar-w:           220px;
   --sidebar-w-collapsed: 72px;
   --topbar-h:            64px;
+  /* Altura de la bottom nav móvil (sin safe-area); el padding usa --shell-pad-bottom. */
+  --bottom-nav-h:        64px;
+  --shell-pad-bottom:    0px;
 
   color-scheme: light;
 }

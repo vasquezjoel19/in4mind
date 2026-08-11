@@ -171,9 +171,26 @@ const SidebarController = (() => {
     if (_coreBound) return;
     _coreBound = true;
 
-    document.getElementById('sidebar-collapse')?.addEventListener('click', toggleCollapse);
-    document.getElementById('menu-toggle')?.addEventListener('click', openMobile);
+    document.getElementById('sidebar-collapse')?.addEventListener('click', () => {
+      if (!_isDesktop()) {
+        closeMobile();
+        return;
+      }
+      toggleCollapse();
+    });
+    document.getElementById('menu-toggle')?.addEventListener('click', () => {
+      const sidebar = document.getElementById('sidebar');
+      if (sidebar?.classList.contains('is-open')) closeMobile();
+      else openMobile();
+    });
     document.getElementById('sidebar-overlay')?.addEventListener('click', closeMobile);
+
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Escape') return;
+      if (!_isDesktop() && document.getElementById('sidebar')?.classList.contains('is-open')) {
+        closeMobile();
+      }
+    });
 
     _desktopMq.addEventListener('change', _onBreakpointChange);
     window.addEventListener('resize', _onResize);

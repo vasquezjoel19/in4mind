@@ -286,10 +286,12 @@
   background: rgba(var(--clr-brand-rgb), 0.08);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .app-bottom-nav { display: flex; }
   .main-area,
-  .content-area { padding-bottom: 72px !important; }
+  .content-area {
+    padding-bottom: calc(var(--shell-pad-bottom) + 12px) !important;
+  }
 }
 
 /* ── Onboarding ── */

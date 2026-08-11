@@ -545,18 +545,18 @@ html[data-theme="dark"] .gchat__unread {
 
 /* ── Móvil ── */
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   /* La barra inferior de navegación ocupa el borde: la burbuja sube. */
   .gchat {
     right: var(--sp-md, 16px);
-    bottom: calc(78px + env(safe-area-inset-bottom));
+    bottom: calc(var(--shell-pad-bottom, 78px) + 12px);
   }
 }
 
 @media (max-width: 640px) {
   .gchat__panel {
     width: calc(100vw - 24px);
-    height: min(70vh, calc(100vh - 160px));
+    height: min(70dvh, calc(100dvh - var(--shell-pad-bottom, 80px) - 88px));
   }
 
   .gchat__launcher-label {

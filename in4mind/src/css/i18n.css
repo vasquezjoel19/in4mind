@@ -196,4 +196,23 @@ html[data-theme="dark"] .auth-help-panel {
     width: 100%;
     justify-content: flex-end;
   }
+
+  .auth-help-panel {
+    align-items: flex-end;
+    padding: var(--sp-sm);
+    padding-bottom: max(var(--sp-sm), env(safe-area-inset-bottom, 0px));
+  }
+
+  .auth-help-panel__inner {
+    width: 100%;
+    max-height: min(88dvh, 640px);
+    overflow-y: auto;
+    border-radius: var(--rad-xl) var(--rad-xl) var(--rad-md) var(--rad-md);
+    padding: var(--sp-lg) var(--sp-md);
+  }
+
+  .auth-help-btn {
+    min-height: 44px;
+    padding: 8px 4px;
+  }
 }

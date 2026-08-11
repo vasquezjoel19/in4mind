@@ -823,8 +823,9 @@ a.avatar:visited {
 ══════════════════════════════════════════ */
 .course-card {
   flex-shrink: 0;
-  width: 270px;
-  height: 148px;
+  width: min(270px, 78vw);
+  height: auto;
+  min-height: 148px;
   border-radius: var(--rad-lg);
   padding: var(--sp-md);
   background: var(--clr-bg-card);
@@ -950,8 +951,9 @@ a.avatar:visited {
 ══════════════════════════════════════════ */
 .recent-card {
   flex-shrink: 0;
-  width: 220px;
-  height: 108px;
+  width: min(220px, 70vw);
+  height: auto;
+  min-height: 108px;
   border-radius: var(--rad-lg);
   padding: var(--sp-md);
   background: var(--clr-brand-800);
@@ -1243,8 +1245,11 @@ html.sidebar-collapsed .nav-item::after {
 
 @media (max-width: 900px) {
   html.sidebar-collapsed .sidebar {
-    width: var(--sidebar-w);
-    padding: var(--sp-xl) var(--sp-md);
+    width: min(280px, 86vw);
+    padding:
+      max(var(--sp-lg), env(safe-area-inset-top, 0px))
+      var(--sp-md)
+      max(var(--sp-lg), env(safe-area-inset-bottom, 0px));
   }
 
   html.sidebar-collapsed .main-area {
@@ -1262,7 +1267,7 @@ html.sidebar-collapsed .nav-item::after {
 
   html.sidebar-collapsed .nav-item {
     justify-content: flex-start;
-    padding: 10px var(--sp-md);
+    padding: 12px var(--sp-md);
     gap: var(--sp-sm);
   }
 
@@ -1270,24 +1275,69 @@ html.sidebar-collapsed .nav-item::after {
     display: none;
   }
 
-  .sidebar__collapse-btn {
-    display: none;
-  }
-
   .sidebar {
-    transform: translateX(-100%);
+    width: min(280px, 86vw);
+    max-width: 320px;
+    transform: translateX(-105%);
+    z-index: 960;
+    padding:
+      max(var(--sp-lg), env(safe-area-inset-top, 0px))
+      var(--sp-md)
+      max(var(--sp-lg), env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    box-shadow: none;
   }
 
   .sidebar.is-open {
     transform: translateX(0);
+    box-shadow: 12px 0 40px rgba(0, 0, 0, 0.28);
+  }
+
+  .sidebar-overlay {
+    z-index: 950;
+    background: rgba(0, 0, 0, 0.48);
   }
 
   .sidebar-overlay.is-visible {
     display: block;
-    top: var(--topbar-h);
+    top: 0;
   }
 
-  .menu-toggle { display: flex; }
+  .menu-toggle {
+    display: flex;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+  }
+
+  /* En móvil el botón de colapsar cierra el drawer. */
+  .sidebar__collapse-btn {
+    display: flex;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--rad-md);
+    background: var(--clr-bg-input);
+    color: var(--clr-text-primary);
+  }
+
+  .sidebar__collapse-btn svg {
+    transform: rotate(180deg);
+  }
+
+  .sidebar__nav {
+    gap: 4px;
+  }
+
+  .nav-item {
+    min-height: 44px;
+    font-size: 0.92rem;
+  }
+
+  .sidebar__footer .nav-item {
+    min-height: 44px;
+  }
 
   .main-area {
     margin-left: 0;
@@ -1300,6 +1350,9 @@ html.sidebar-collapsed .nav-item::after {
   .topbar {
     padding: 0 var(--sp-md);
     gap: var(--sp-sm);
+    position: sticky;
+    top: 0;
+    z-index: 80;
   }
 
   .search-bar {
@@ -1403,11 +1456,13 @@ html.sidebar-collapsed .nav-item::after {
 /* Toast global (favoritos, guardados, etc.) */
 .app-toast {
   position: fixed;
-  bottom: 24px;
+  bottom: calc(24px + var(--shell-pad-bottom, 0px));
   left: 50%;
   transform: translateX(-50%) translateY(12px);
   z-index: 9999;
   padding: 0.65rem 1.25rem;
+  max-width: min(92vw, 420px);
+  text-align: center;
   background: var(--clr-brand-800);
   color: #fff;
   font-size: 0.875rem;

@@ -29,6 +29,12 @@ const AppShell = (() => {
   }
 
   function logout() {
+    if (typeof GlobalChatService !== 'undefined') {
+      try {
+        GlobalChatService.disconnect();
+        GlobalChatService.resetAuth();
+      } catch { /* ignore */ }
+    }
     if (typeof AuthService !== 'undefined') {
       // Cierra también la sesión de Supabase; no se espera para no bloquear.
       Promise.resolve(AuthService.logout()).catch(() => {});
@@ -229,6 +235,12 @@ const AppShell = (() => {
 
     if (typeof CursorSpotlight !== 'undefined') {
       CursorSpotlight.init({ intensity: 'app' });
+    }
+
+    // El chat se monta solo y se inyecta en el body, así que basta con
+    // llamarlo desde aquí para tenerlo en todas las páginas del shell.
+    if (typeof GlobalChatController !== 'undefined') {
+      void GlobalChatController.init();
     }
 
     const main = document.querySelector('.main-area');

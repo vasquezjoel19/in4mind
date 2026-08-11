@@ -1,7 +1,7 @@
 // Subir la versión invalida el precaché tras cada despliegue: si no, los
 // usuarios que ya tienen el service worker instalado seguirían con el HTML
 // anterior y no recibirían los scripts nuevos.
-const CACHE_NAME = 'in4mind-v6';
+const CACHE_NAME = 'in4mind-v8';
 const CONTENT_CACHE = 'in4mind-content-v1';
 
 const PRECACHE = [
@@ -28,6 +28,7 @@ const PRECACHE = [
   './src/css/projects.css',
   './src/css/accessibility.css',
   './src/css/app-features.css',
+  './src/css/global-chat.css',
   './src/img/brand/in4mind-logo.png',
   './src/img/brand/in4mind-logo-black.png',
   './src/img/brand/in4mind-logo-white.png',
@@ -36,6 +37,8 @@ const PRECACHE = [
   './src/js/components/In4mindBulb.js',
   './src/js/services/DataService.js',
   './src/js/services/AppShell.js',
+  './src/js/services/GlobalChatService.js',
+  './src/js/controllers/GlobalChatController.js',
   './src/js/services/ContentLoader.js',
 ];
 

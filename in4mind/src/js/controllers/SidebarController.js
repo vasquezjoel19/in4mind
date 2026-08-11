@@ -21,6 +21,7 @@ const SidebarController = (() => {
     tutorials: 'tutorial.html',
     notes:     'notes.html',
     projects:  'projects.html',
+    guided:    'guided-projects.html',
     quizzes:   'quizzes.html',
     ai:        'ai.html',
   };

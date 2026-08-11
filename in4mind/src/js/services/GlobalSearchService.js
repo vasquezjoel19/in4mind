@@ -123,9 +123,26 @@ const GlobalSearchService = (() => {
     }));
   }
 
+  function _guidedResults(q) {
+    if (typeof GuidedProjectsData === 'undefined') return [];
+    return GuidedProjectsData.getAll()
+      .filter(p => _match([p.title, p.summary, p.quizId, p.difficulty].join(' '), q))
+      .slice(0, 5)
+      .map(p => ({
+        type: 'guided',
+        id: p.id,
+        title: p.title,
+        subtitle: _t('nav.guided', null, 'Guiados'),
+        route: `guided-projects.html?project=${encodeURIComponent(p.id)}`,
+        projectId: p.id,
+      }));
+  }
+
   function search(query, limitPerGroup = 5) {
     const q = (query || '').trim();
-    if (!q || q.length < 2) return { courses: [], lessons: [], quizzes: [], help: [], notes: [], projects: [] };
+    if (!q || q.length < 2) {
+      return { courses: [], lessons: [], quizzes: [], help: [], notes: [], projects: [], guided: [] };
+    }
 
     return {
       courses:  _courseResults(q).slice(0, limitPerGroup),
@@ -134,6 +151,7 @@ const GlobalSearchService = (() => {
       help:     _helpResults(q).slice(0, limitPerGroup),
       notes:    _notesResults(q),
       projects: _projectsResults(q),
+      guided:   _guidedResults(q),
     };
   }
 
@@ -145,6 +163,7 @@ const GlobalSearchService = (() => {
       ...results.help,
       ...(results.notes || []),
       ...(results.projects || []),
+      ...(results.guided || []),
     ];
   }
 
@@ -156,6 +175,7 @@ const GlobalSearchService = (() => {
       help:    _t('search.groupHelp', null, 'Ayuda'),
       note:    _t('nav.notes', null, 'Notas'),
       project: _t('nav.projects', null, 'Proyectos'),
+      guided:  _t('nav.guided', null, 'Guiados'),
     };
     return map[type] || type;
   }

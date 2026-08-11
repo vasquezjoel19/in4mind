@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es" data-i18n-title="meta.guidedTitle" data-requires-auth>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="IN4MIND — Proyectos guiados paso a paso.">
+  <title>IN4MIND — Proyectos guiados</title>
+
+  <script src="src/js/controllers/ThemeController.js?v=20260617"></script>
+  <script src="src/js/a11y-boot.js?v=20260707"></script>
+  <script src="src/js/locales/es.js?v=20260811guided"></script>
+  <script src="src/js/locales/en.js?v=20260811guided"></script>
+  <script src="src/js/locales/zh.js?v=20260811guided"></script>
+  <script src="src/js/locales/curriculum-en.js?v=20260806"></script>
+  <script src="src/js/locales/curriculum-zh.js?v=20260806"></script>
+  <script src="src/js/services/I18n.js?v=20260801"></script>
+  <script>ThemeController.initEarly(); I18n.initEarly();</script>
+
+  <link rel="stylesheet" href="src/css/tokens.css?v=20260702">
+  <link rel="stylesheet" href="src/css/base.css?v=20260714fluid3">
+  <link rel="stylesheet" href="src/css/dashboard.css?v=20260713amb">
+  <link rel="stylesheet" href="src/css/responsive.css?v=20260613">
+  <link rel="stylesheet" href="src/css/guided-projects.css?v=20260811guided">
+  <link rel="stylesheet" href="src/css/theme.css?v=20260810logo">
+  <link rel="stylesheet" href="src/css/accessibility.css?v=20260707">
+  <link rel="stylesheet" href="src/css/i18n.css?v=20260722">
+  <link rel="stylesheet" href="src/css/settings-modal.css?v=20260714theme">
+  <link rel="stylesheet" href="src/css/app-features.css?v=20260713app">
+  <link rel="stylesheet" href="src/css/global-chat.css?v=20260811chat2">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="64x64" href="src/img/brand/favicon-64.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="src/img/brand/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="src/img/brand/favicon-16.png">
+  <link rel="apple-touch-icon" href="src/img/brand/apple-touch-icon.png">
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
+
+<div class="dashboard">
+  <aside class="sidebar" id="sidebar" role="navigation" aria-label="Menú principal" data-i18n-aria="shell.mainMenu">
+    <div class="sidebar__brand">
+      <div class="sidebar__brand-main">
+        <svg class="sidebar__brand-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/>
+          <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0018 8 6 6 0 006 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 018.91 14"/>
+        </svg>
+        <span class="sidebar__brand-name">IN4MIND</span>
+      </div>
+      <button type="button" class="sidebar__collapse-btn" id="sidebar-collapse" aria-label="Colapsar menú" data-i18n-aria="shell.collapseMenu" aria-expanded="true">
+        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+    </div>
+    <ul class="sidebar__nav" id="sidebar-nav" role="menubar" aria-label="Navegación principal" data-i18n-aria="shell.mainNav"></ul>
+    <div class="sidebar__footer">
+      <ul id="sidebar-footer" role="menubar" aria-label="Opciones de cuenta" data-i18n-aria="shell.accountOptions"></ul>
+    </div>
+  </aside>
+
+  <div class="main-area">
+    <header class="topbar" role="banner">
+      <button class="menu-toggle icon-btn" id="menu-toggle" aria-label="Abrir menú" data-i18n-aria="shell.openMenu" aria-expanded="false">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="search-bar" role="search">
+        <svg class="search-bar__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="search-bar__input" type="search" id="gp-search" placeholder="Buscar proyectos guiados…" data-i18n-placeholder="guided.searchPlaceholder" aria-label="Buscar proyectos guiados" data-i18n-aria="guided.searchAria">
+      </div>
+      <div class="topbar__actions">
+        <button type="button" class="btn--quiz-share" id="gp-btn-share" data-share aria-label="Compartir" data-i18n-aria="share.guided">↗</button>
+        <a class="icon-btn" href="help.html" aria-label="Ayuda" data-i18n-aria="shell.help">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </a>
+        <a class="avatar" id="avatar" href="profile.html" aria-label="Ir a mi perfil" data-i18n-aria="shell.myProfile">U</a>
+      </div>
+    </header>
+
+    <main class="content-area">
+      <div id="gp-list-view">
+        <div class="gp-page-header anim-fade-up">
+          <div class="gp-page-header__brand">
+            <span class="in4mind-bulb gp-page-header__logo" aria-hidden="true"></span>
+            <div>
+              <h1 data-i18n="guided.pageTitle">Proyectos guiados</h1>
+              <p data-i18n="guided.pageSub">Practica paso a paso. Se desbloquean con más de 80% en el quiz del tema.</p>
+            </div>
+          </div>
+        </div>
+        <p class="gp-lock-banner" id="gp-lock-banner" hidden role="status"></p>
+        <div class="gp-grid anim-fade-up delay-1" id="gp-grid" role="list" aria-label="Proyectos guiados" data-i18n-aria="guided.pageTitle"></div>
+      </div>
+
+      <div id="gp-step-view" class="gp-view--hidden">
+        <div class="gp-step-shell">
+          <div class="gp-step-topbar">
+            <button type="button" class="btn--ghost" id="gp-back" data-i18n="guided.back">← Volver</button>
+            <div class="gp-step-topbar__copy">
+              <h2 id="gp-step-title">Proyecto</h2>
+              <p id="gp-step-meta"></p>
+            </div>
+            <div class="gp-step-progress" aria-label="Progreso del proyecto">
+              <div class="gp-step-progress__track"><span id="gp-step-progress-fill" style="width:0%"></span></div>
+              <span class="gp-step-progress__label" id="gp-step-prog-label">0%</span>
+            </div>
+          </div>
+
+          <div class="gp-step-layout">
+            <nav class="gp-stepnav" id="gp-step-list" aria-label="Pasos del proyecto" data-i18n-aria="guided.stepsNav"></nav>
+
+            <section class="gp-panel" aria-labelledby="gp-instructions-label">
+              <div class="gp-panel__head" id="gp-instructions-label" data-i18n="guided.instructions">Instrucciones</div>
+              <div class="gp-panel__body">
+                <p class="gp-instructions" id="gp-instructions"></p>
+                <p class="gp-hint" id="gp-hint" hidden></p>
+              </div>
+            </section>
+
+            <section class="gp-panel" aria-labelledby="gp-workspace-label">
+              <div class="gp-panel__head" id="gp-workspace-label" data-i18n="guided.workspace">Tu respuesta</div>
+              <div class="gp-panel__body" style="padding:0;display:flex;flex-direction:column;">
+                <textarea class="gp-workspace" id="gp-workspace" rows="16" spellcheck="false"></textarea>
+              </div>
+            </section>
+          </div>
+
+          <div class="gp-step-actions">
+            <button type="button" class="btn--ghost" id="gp-btn-prev" data-i18n="guided.prev">Anterior</button>
+            <button type="button" class="btn--ghost" id="gp-btn-save" data-i18n="guided.save">Guardar</button>
+            <button type="button" class="btn--course" id="gp-btn-complete" data-i18n="guided.completeStep">Marcar paso como hecho</button>
+            <button type="button" class="btn--course" id="gp-btn-next" data-i18n="guided.next">Siguiente</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="src/js/config/supabase.config.js"></script>
+<script src="src/js/components/In4mindBulb.js?v=20260810logo"></script>
+<script src="src/js/i18n-boot.js?v=20260722"></script>
+<script src="src/js/data/courseFactory.js?v=20260805"></script>
+<script src="src/js/data/extendedCourses.js?v=20260702d"></script>
+<script src="src/js/locales/extended-course-locales.js?v=20260904"></script>
+<script src="src/js/data/extendedCourseLocales.js?v=20260904"></script>
+<script src="src/js/data/CourseCurriculum.js?v=20260805"></script>
+<script src="src/js/data/GuidedProjectsData.js?v=20260811guided"></script>
+<script src="src/js/services/SessionStore.js?v=20260807"></script>
+<script src="src/js/services/ShareService.js?v=20260805"></script>
+<script src="src/js/services/DataService.js?v=20260811guided"></script>
+<script src="src/js/services/UserProfileService.js?v=20260811progress"></script>
+<script src="src/js/services/QuizProgressService.js?v=20260805"></script>
+<script src="src/js/services/GuidedProjectsService.js?v=20260811guided"></script>
+<script src="src/js/services/GlobalSearchService.js?v=20260811guided"></script>
+<script src="src/js/services/AccessibilityService.js?v=20260707"></script>
+<script src="src/js/controllers/AppFeatures.js?v=20260706d"></script>
+<script src="src/js/services/GlobalChatService.js?v=20260811chat2"></script>
+<script src="src/js/controllers/GlobalChatController.js?v=20260811chat2"></script>
+<script src="src/js/services/AppShell.js?v=20260811guided"></script>
+<script src="src/js/controllers/SidebarController.js?v=20260811guided"></script>
+<script src="src/js/services/AuthService.js?v=20260807"></script>
+<script src="src/js/controllers/OtherMenuController.js?v=20260714theme"></script>
+<script src="src/js/controllers/SettingsController.js?v=20260731"></script>
+<script src="src/js/controllers/GuidedProjectsController.js?v=20260811guided"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    try { AppShell.initPage('guided'); } catch (e) { console.error(e); AppShell.setupAvatar(); }
+    try { GuidedProjectsController.init(); } catch (e) { console.error(e); }
+  });
+</script>
+
+</body>
+</html>

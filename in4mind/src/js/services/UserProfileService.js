@@ -57,10 +57,13 @@ const UserProfileService = (() => {
   // ── Usuario actual ───────────────────────────────────────────
   function getCurrentUser() {
     try {
-      // Primero intenta sessionStorage (compatibilidad con AuthController existente)
-      const stored = sessionStorage.getItem('in4mind_user');
-      if (stored) return JSON.parse(stored);
-      return null;
+      // sessionStorage primero (compatibilidad con AuthController existente);
+      // localStorage después, porque con «recordar datos» esa es la copia que
+      // existe hasta que SessionStore.restore() repuebla la sesión, y las
+      // claves locales de progreso se calculan a partir del correo.
+      const stored = sessionStorage.getItem('in4mind_user')
+        || localStorage.getItem('in4mind_user');
+      return stored ? JSON.parse(stored) : null;
     } catch {
       return null;
     }
@@ -170,9 +173,14 @@ const UserProfileService = (() => {
   // FAVORITOS
   // ════════════════════════════════════════════════════════════
 
+  /**
+   * Clave local por usuario. Sin sesión se cae a `guest` en vez de devolver
+   * null: así el avance de quien aún no ha entrado no se pierde, y al iniciar
+   * sesión sigue existiendo un espejo del que tirar.
+   */
   function _profileStorageKey(suffix) {
     const email = getCurrentUser()?.email?.toLowerCase();
-    return email ? `in4mind_${suffix}_${email}` : null;
+    return `in4mind_${suffix}_${email || 'guest'}`;
   }
 
   function _readLocalList(key) {
@@ -412,9 +420,38 @@ const UserProfileService = (() => {
   // HISTORIAL DE VISITAS
   // ════════════════════════════════════════════════════════════
 
+  function _localVisits() {
+    return _readLocalList(_profileStorageKey('visits')).map(_normalizeItem);
+  }
+
+  /** Deja constancia de la visita en el dispositivo antes de intentar la nube. */
+  function _recordLocalVisit(item) {
+    const key = _profileStorageKey('visits');
+    const entry = _normalizeItem({ ...item, visitedAt: Date.now() });
+    const rest = _localVisits()
+      .filter(v => !(v.refId === entry.refId && v.type === entry.type));
+    _writeLocalList(key, [entry, ...rest].slice(0, MAX_VISITS));
+  }
+
+  /** Une nube y dispositivo quedándose con la visita más reciente de cada ref. */
+  function _mergeVisits(...lists) {
+    const byRef = new Map();
+    lists.flat().forEach(visit => {
+      const refKey = `${visit.type}:${visit.refId}`;
+      const current = byRef.get(refKey);
+      if (!current || (visit.visitedAt || 0) > (current.visitedAt || 0)) byRef.set(refKey, visit);
+    });
+    return [...byRef.values()]
+      .sort((a, b) => (b.visitedAt || 0) - (a.visitedAt || 0))
+      .slice(0, MAX_VISITS);
+  }
+
   async function recordVisit(item) {
+    _recordLocalVisit(item);
+    _cache.visits = null;
+
     const userId = await getCurrentUserId();
-    if (!userId) return;
+    if (!userId) { _notify(); return; }
 
     // UPSERT: si ya existe la visita, actualiza visited_at
     await _sb.from('visit_history').upsert({
@@ -434,23 +471,31 @@ const UserProfileService = (() => {
 
   async function getRecentVisits(limit = 9) {
     if (_cache.visits) return _cache.visits.slice(0, limit);
+
+    const local = _localVisits();
     const userId = await getCurrentUserId();
-    if (!userId) return [];
+    let cloud = [];
 
-    const { data, error } = await _sb
-      .from('visit_history')
-      .select('*')
-      .eq('user_id', userId)
-      .order('visited_at', { ascending: false })
-      .limit(MAX_VISITS);
+    if (userId) {
+      const { data, error } = await _sb
+        .from('visit_history')
+        .select('*')
+        .eq('user_id', userId)
+        .order('visited_at', { ascending: false })
+        .limit(MAX_VISITS);
 
-    if (error) { console.error('getRecentVisits:', error); return []; }
+      if (error) console.error('getRecentVisits:', error);
+      else {
+        cloud = (data || []).map(row => ({
+          ..._rowToItem(row),
+          visitedAt: new Date(row.visited_at).getTime(),
+        }));
+      }
+    }
 
-    _cache.visits = (data || []).map(row => ({
-      ..._rowToItem(row),
-      visitedAt: new Date(row.visited_at).getTime(),
-    }));
-
+    // Sin sesión en la nube, o con ella caída, el historial local es el único
+    // que queda: devolverlo vacío borraba de la vista cursos ya empezados.
+    _cache.visits = _mergeVisits(cloud, local);
     return _cache.visits.slice(0, limit);
   }
 
@@ -458,11 +503,50 @@ const UserProfileService = (() => {
   // PROGRESO DE QUIZZES
   // ════════════════════════════════════════════════════════════
 
-  async function saveQuizProgress(quizId, correct, total, meta = {}) {
-    const userId = await getCurrentUserId();
-    if (!userId) return null;
+  function _localQuizProgress() {
+    try {
+      return JSON.parse(localStorage.getItem(_profileStorageKey('quiz_results')) || '{}') || {};
+    } catch {
+      return {};
+    }
+  }
 
-    const pct  = total > 0 ? Math.round((correct / total) * 100) : 0;
+  function _mergeLocalQuiz(quizId, entry) {
+    const all = _localQuizProgress();
+    all[quizId] = { ...(all[quizId] || {}), ...entry };
+    try {
+      localStorage.setItem(_profileStorageKey('quiz_results'), JSON.stringify(all));
+    } catch { /* ignore */ }
+    return all[quizId];
+  }
+
+  async function saveQuizProgress(quizId, correct, total, meta = {}) {
+    const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
+    const title = meta.title || quizId;
+
+    // El resultado se ancla en el dispositivo antes de tocar la red. Si la
+    // sesión de Supabase no resuelve, el intento seguía existiendo para el
+    // usuario pero no dejaba rastro en ninguna parte de la app.
+    const localPrev = _localQuizProgress()[quizId];
+    const localBest = Math.max(localPrev?.bestPct || 0, pct);
+    const localAttempts = (localPrev?.attempts || 0) + 1;
+    _mergeLocalQuiz(quizId, {
+      correct,
+      total,
+      pct,
+      bestPct:     localBest,
+      attempts:    localAttempts,
+      title,
+      icon:        meta.icon || localPrev?.icon || '',
+      completedAt: Date.now(),
+    });
+    _cache.quizProgress = null;
+
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      _notify();
+      return { correct, total, pct, bestPct: localBest, attempts: localAttempts, title, icon: meta.icon || '' };
+    }
 
     // Obtener mejor pct anterior
     const { data: prev } = await _sb
@@ -472,13 +556,13 @@ const UserProfileService = (() => {
       .eq('quiz_id', quizId)
       .single();
 
-    const bestPct  = Math.max(prev?.best_pct || 0, pct);
-    const attempts = (prev?.attempts || 0) + 1;
+    const bestPct  = Math.max(prev?.best_pct || 0, pct, localBest);
+    const attempts = Math.max((prev?.attempts || 0) + 1, localAttempts);
 
     const row = {
       user_id:      userId,
       quiz_id:      quizId,
-      title:        meta.title || quizId,
+      title,
       icon_url:     meta.icon  || '',
       correct,
       total,
@@ -492,6 +576,7 @@ const UserProfileService = (() => {
     await _sb.from('quiz_progress')
       .upsert(row, { onConflict: 'user_id,quiz_id' });
 
+    _mergeLocalQuiz(quizId, { bestPct, attempts, completedAt: Date.now() });
     _cache.quizProgress = null;
     _notify();
 
@@ -500,30 +585,34 @@ const UserProfileService = (() => {
 
   async function getQuizProgress() {
     if (_cache.quizProgress) return _cache.quizProgress;
+
+    // El espejo local es la base; la nube solo pisa lo que tenga mejor marca.
+    const map = { ..._localQuizProgress() };
     const userId = await getCurrentUserId();
-    if (!userId) return {};
 
-    const { data, error } = await _sb
-      .from('quiz_progress')
-      .select('*')
-      .eq('user_id', userId);
+    if (userId) {
+      const { data, error } = await _sb
+        .from('quiz_progress')
+        .select('*')
+        .eq('user_id', userId);
 
-    if (error) { console.error('getQuizProgress:', error); return {}; }
-
-    // Convertir array a objeto { quizId: { ... } } igual que antes
-    const map = {};
-    (data || []).forEach(row => {
-      map[row.quiz_id] = {
-        correct:     row.correct,
-        total:       row.total,
-        pct:         row.pct,
-        bestPct:     row.best_pct,
-        attempts:    row.attempts,
-        title:       row.title,
-        icon:        row.icon_url,
-        completedAt: new Date(row.completed_at).getTime(),
-      };
-    });
+      if (error) console.error('getQuizProgress:', error);
+      else {
+        (data || []).forEach(row => {
+          const local = map[row.quiz_id];
+          map[row.quiz_id] = {
+            correct:     row.correct,
+            total:       row.total,
+            pct:         row.pct,
+            bestPct:     Math.max(row.best_pct || 0, local?.bestPct || 0),
+            attempts:    Math.max(row.attempts || 0, local?.attempts || 0),
+            title:       row.title,
+            icon:        row.icon_url,
+            completedAt: new Date(row.completed_at).getTime(),
+          };
+        });
+      }
+    }
 
     _cache.quizProgress = map;
     return map;
@@ -549,11 +638,14 @@ const UserProfileService = (() => {
   // PROGRESO DE LECCIONES
   // ════════════════════════════════════════════════════════════
 
-  const LESSON_LOCAL_KEY = 'in4mind_lesson_local';
+  /** Por usuario: dos cuentas en el mismo equipo no comparten lecciones. */
+  function _lessonLocalKey() {
+    return _profileStorageKey('lesson_local');
+  }
 
   function _getLessonLocal() {
     try {
-      return JSON.parse(localStorage.getItem(LESSON_LOCAL_KEY) || '{}');
+      return JSON.parse(localStorage.getItem(_lessonLocalKey()) || '{}') || {};
     } catch {
       return {};
     }
@@ -563,7 +655,7 @@ const UserProfileService = (() => {
     const all = _getLessonLocal();
     all[courseId] = { ...(all[courseId] || {}), ...map };
     try {
-      localStorage.setItem(LESSON_LOCAL_KEY, JSON.stringify(all));
+      localStorage.setItem(_lessonLocalKey(), JSON.stringify(all));
     } catch { /* ignore */ }
   }
 
@@ -572,11 +664,42 @@ const UserProfileService = (() => {
     return _getLessonLocal()[courseId] || {};
   }
 
-  async function saveLessonProgress(courseId, lessonId, pct, meta = {}) {
-    const userId = await getCurrentUserId();
-    if (!userId) return null;
+  /**
+   * Cursos con lecciones registradas en este dispositivo y su actividad más
+   * reciente. Permite listar cursos a medias sin saber de antemano cuáles son,
+   * que es lo que hace falta cuando la nube todavía no tiene las visitas.
+   * @returns {Object<string, number>} courseId → timestamp
+   */
+  function getLessonProgressCourseIds() {
+    const out = {};
+    Object.entries(_getLessonLocal()).forEach(([courseId, lessons]) => {
+      const stamps = Object.values(lessons || {}).map(lesson => lesson.completedAt || 0);
+      out[courseId] = stamps.length ? Math.max(...stamps) : 0;
+    });
+    return out;
+  }
 
+  async function saveLessonProgress(courseId, lessonId, pct, meta = {}) {
     const score = Math.max(0, Math.min(100, Math.round(pct)));
+    const title = meta.title || lessonId;
+
+    // Primero el espejo local. Antes esta función salía aquí mismo cuando no
+    // había usuario de Supabase, así que una lección terminada sin sesión en
+    // la nube no quedaba registrada en ningún sitio y el panel de «continúa
+    // donde lo dejaste» se veía vacío pese a haber avance real.
+    const localPrev = getLessonProgressSync(courseId)[lessonId];
+    const localBest = Math.max(localPrev?.pct || 0, score);
+    const localAttempts = (localPrev?.attempts || 0) + 1;
+    _mergeLessonLocal(courseId, {
+      [lessonId]: { pct: localBest, title, attempts: localAttempts, completedAt: Date.now() },
+    });
+    _cache.lessonProgress = null;
+
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      _notify();
+      return { pct: localBest, attempts: localAttempts, title };
+    }
 
     // Obtener pct anterior para no bajar el mejor resultado
     const { data: prev } = await _sb
@@ -587,14 +710,14 @@ const UserProfileService = (() => {
       .eq('lesson_id', lessonId)
       .single();
 
-    const bestPct  = Math.max(prev?.pct || 0, score);
-    const attempts = (prev?.attempts || 0) + 1;
+    const bestPct  = Math.max(prev?.pct || 0, score, localBest);
+    const attempts = Math.max((prev?.attempts || 0) + 1, localAttempts);
 
     await _sb.from('lesson_progress').upsert({
       user_id:      userId,
       course_id:    courseId,
       lesson_id:    lessonId,
-      title:        meta.title || lessonId,
+      title,
       pct:          bestPct,
       attempts,
       completed_at: new Date().toISOString(),
@@ -603,16 +726,17 @@ const UserProfileService = (() => {
 
     _cache.lessonProgress = null;
     _mergeLessonLocal(courseId, {
-      [lessonId]: { pct: bestPct, title: meta.title || lessonId, attempts },
+      [lessonId]: { pct: bestPct, title, attempts, completedAt: Date.now() },
     });
     _notify();
 
-    return { pct: bestPct, attempts, title: meta.title || lessonId };
+    return { pct: bestPct, attempts, title };
   }
 
   async function getLessonProgress(courseId) {
+    const local = getLessonProgressSync(courseId);
     const userId = await getCurrentUserId();
-    if (!userId) return {};
+    if (!userId) return local;
 
     const { data, error } = await _sb
       .from('lesson_progress')
@@ -620,7 +744,7 @@ const UserProfileService = (() => {
       .eq('user_id',  userId)
       .eq('course_id', courseId);
 
-    if (error) { console.error('getLessonProgress:', error); return {}; }
+    if (error) { console.error('getLessonProgress:', error); return local; }
 
     const map = {};
     (data || []).forEach(row => {
@@ -633,7 +757,8 @@ const UserProfileService = (() => {
     });
 
     _mergeLessonLocal(courseId, map);
-    return map;
+    // La nube manda donde hay fila, pero lo que solo existe aquí no se tira.
+    return { ...local, ...map };
   }
 
   async function getCourseLessonStats(courseId, totalLessons = 0) {
@@ -994,6 +1119,7 @@ const UserProfileService = (() => {
     saveLessonProgress,
     getLessonProgress,
     getLessonProgressSync,
+    getLessonProgressCourseIds,
     getCourseLessonStats,
 
     // Certificaciones

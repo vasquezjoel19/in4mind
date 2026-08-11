@@ -342,20 +342,32 @@ const DashboardController = (() => {
 
   function _renderResumeCard(item, delay = 0) {
     const meta = [];
+    if (item.pendingQuiz) {
+      meta.push(_t('dashboard.resumeQuizOpen', { pct: item.pendingQuiz.pct }, `Quiz en curso · ${item.pendingQuiz.pct}%`));
+    }
     if (item.lessonsCompleted) {
       meta.push(_t('dashboard.resumeLessons', { n: item.lessonsCompleted }, `${item.lessonsCompleted} lecciones`));
     }
     if (item.quizPct != null) {
       meta.push(_t('dashboard.resumeQuizScore', { pct: item.quizPct }, `Quiz ${item.quizPct}%`));
     }
+    if (item.pendingVideo && !item.pendingQuiz) {
+      meta.push(_t('dashboard.resumeVideoOpen', null, 'Vídeo a medias'));
+    }
+    // Un intento a medias se retoma en su quiz; el resto abre el curso.
+    const target = item.pendingQuiz
+      ? `data-route="quizzes.html?quiz=${encodeURIComponent(item.pendingQuiz.quizId)}"`
+      : `data-course="${item.courseId}"`;
     return `
       <article class="resume-card anim-fade-up delay-${Math.min(delay + 1, 6)}"
-               data-course="${item.courseId}" role="button" tabindex="0"
+               ${target} role="button" tabindex="0"
                aria-label="${_t('dashboard.continueItemAria', { title: item.title }, `Continuar ${item.title}`)}">
         <div class="resume-card__top">
           <div class="resume-card__course">
             <div class="resume-card__icon-wrap">
-              <img src="${item.icon}" alt="${item.title}" loading="lazy" width="26" height="26">
+              ${item.icon
+                ? `<img src="${item.icon}" alt="${item.title}" loading="lazy" width="26" height="26">`
+                : _uiIcon('quiz')}
             </div>
             <div class="resume-card__copy">
               <span class="resume-card__eyebrow">${item.lastLessonTitle
@@ -454,7 +466,8 @@ const DashboardController = (() => {
   function _buildQuickActions(stats, resumeItems, context = {}) {
     const { affinity, topCourse, quizProgress } = context;
     const segment = _getTimeSegment();
-    const primaryResume = resumeItems[0];
+    // Un quiz suelto no sirve de foco: las acciones rápidas abren un curso.
+    const primaryResume = resumeItems.find(item => item.courseId);
     const focusCourse = primaryResume
       ? { id: primaryResume.courseId, title: primaryResume.title, progressPct: primaryResume.progressPct }
       : topCourse
@@ -616,33 +629,115 @@ const DashboardController = (() => {
     ];
   }
 
+  const EXAM_ID_SUFFIX = '-cert-exam';
+  /** Quizzes que no cuelgan de ningún curso del catálogo. */
+  const STANDALONE_QUIZ_IDS = ['general'];
+
+  /** Curso al que pertenece un quiz o un examen de certificación. */
+  function _courseIdForQuiz(quizId) {
+    if (!quizId || STANDALONE_QUIZ_IDS.includes(quizId)) return null;
+    return quizId.endsWith(EXAM_ID_SUFFIX)
+      ? quizId.slice(0, -EXAM_ID_SUFFIX.length)
+      : quizId;
+  }
+
+  /**
+   * Reúne toda señal de avance sin terminar, no solo las visitas.
+   *
+   * Las fuentes locales pesan tanto como las remotas: si Supabase no responde,
+   * o el usuario aún no tiene fila en `profiles`, las visitas y los quizzes de
+   * la nube llegan vacíos y la sección se quedaba en blanco aunque hubiera
+   * lecciones, intentos de quiz o vídeos a medias en el dispositivo.
+   *
+   * @returns {Map<string, {ts:number, quizAttempt:object|null, video:boolean}>}
+   */
+  function _collectCourseActivity(visits, quizProgress) {
+    const activity = new Map();
+
+    const touch = (courseId, ts, patch) => {
+      if (!courseId) return;
+      const entry = activity.get(courseId) || { ts: 0, quizAttempt: null, video: false };
+      if ((ts || 0) > entry.ts) entry.ts = ts || 0;
+      if (patch) Object.assign(entry, patch);
+      activity.set(courseId, entry);
+    };
+
+    (visits || []).forEach(visit => {
+      if (visit.type === 'course') touch(visit.refId, visit.visitedAt);
+    });
+
+    Object.entries(quizProgress || {}).forEach(([quizId, quiz]) => {
+      touch(_courseIdForQuiz(quizId), quiz?.completedAt);
+    });
+
+    if (typeof QuizProgressService !== 'undefined') {
+      Object.values(QuizProgressService.getAll()).forEach(attempt => {
+        if (attempt.completed || !attempt.answered) return;
+        touch(_courseIdForQuiz(attempt.quizId), attempt.updatedAt, { quizAttempt: attempt });
+      });
+    }
+
+    if (typeof UserProfileService.getLessonProgressCourseIds === 'function') {
+      Object.entries(UserProfileService.getLessonProgressCourseIds()).forEach(([courseId, ts]) => {
+        touch(courseId, ts);
+      });
+    }
+
+    if (typeof VideoProgressService !== 'undefined' && VideoProgressService.getInProgressCourses) {
+      Object.entries(VideoProgressService.getInProgressCourses()).forEach(([courseId, ts]) => {
+        touch(courseId, ts, { video: true });
+      });
+    }
+
+    return activity;
+  }
+
+  /**
+   * Intentos a medias que no pertenecen a ningún curso del catálogo: el quiz
+   * general o exámenes de cursos retirados. Al filtrar por curso se caían de
+   * la lista y no había forma de retomarlos desde el panel.
+   */
+  function _buildLooseQuizItems(courses) {
+    if (typeof QuizProgressService === 'undefined') return [];
+
+    return Object.values(QuizProgressService.getAll())
+      .filter(attempt => !attempt.completed && attempt.answered > 0)
+      .filter(attempt => !_courseById(_courseIdForQuiz(attempt.quizId), courses))
+      .map(attempt => ({
+        courseId: null,
+        title: attempt.title || attempt.quizId,
+        icon: attempt.icon || '',
+        progressPct: attempt.completionPct || 0,
+        lessonsCompleted: 0,
+        lastLessonTitle: null,
+        quizPct: null,
+        pendingQuiz: { quizId: attempt.quizId, pct: attempt.completionPct },
+        pendingVideo: false,
+        ts: attempt.updatedAt || 0,
+        visitedLabel: UserProfileService.formatVisitDate(attempt.updatedAt || Date.now()),
+      }));
+  }
+
   async function _buildResumeItems(courses, visits, quizProgress) {
-    const recentCourseVisits = visits.filter(v => v.type === 'course' && v.refId);
-    const courseIds = [];
+    const ranked = [..._collectCourseActivity(visits, quizProgress).entries()]
+      .map(([courseId, signal]) => ({ courseId, signal, course: _courseById(courseId, courses) }))
+      .filter(entry => entry.course)
+      .sort((a, b) => b.signal.ts - a.signal.ts)
+      .slice(0, 4);
 
-    recentCourseVisits.forEach(visit => {
-      if (!courseIds.includes(visit.refId)) courseIds.push(visit.refId);
-    });
-    Object.keys(quizProgress || {}).forEach(courseId => {
-      if (!courseIds.includes(courseId)) courseIds.push(courseId);
-    });
-
-    const scopedIds = courseIds.slice(0, 4);
-    const cards = await Promise.all(scopedIds.map(async (courseId) => {
-      const course = _courseById(courseId, courses);
-      if (!course) return null;
-
+    const cards = await Promise.all(ranked.map(async ({ courseId, signal, course }) => {
       const syncLessonMap = UserProfileService.getLessonProgressSync(courseId);
       const asyncLessonMap = await UserProfileService.getLessonProgress(courseId);
       const lessonMap = Object.keys(asyncLessonMap || {}).length ? asyncLessonMap : syncLessonMap;
       const lessonEntries = Object.values(lessonMap).sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0));
       const lastLesson = lessonEntries[0] || null;
       const quiz = quizProgress?.[courseId] || null;
-      const visit = recentCourseVisits.find(v => v.refId === courseId) || null;
+      const attempt = signal.quizAttempt;
       const lessonAvg = lessonEntries.length
         ? Math.round(lessonEntries.reduce((sum, lesson) => sum + (lesson.pct || 0), 0) / lessonEntries.length)
         : 0;
       const progressPct = Math.max(lessonAvg, quiz?.bestPct || quiz?.pct || 0);
+      const ts = signal.ts || lastLesson?.completedAt || quiz?.completedAt || 0;
 
       return {
         courseId,
@@ -652,13 +747,18 @@ const DashboardController = (() => {
         lessonsCompleted: lessonEntries.length,
         lastLessonTitle: lastLesson?.title || null,
         quizPct: quiz?.bestPct ?? quiz?.pct ?? null,
-        visitedLabel: UserProfileService.formatVisitDate(
-          visit?.visitedAt || lastLesson?.completedAt || quiz?.completedAt || Date.now()
-        ),
+        pendingQuiz: attempt
+          ? { quizId: attempt.quizId, pct: attempt.completionPct }
+          : null,
+        pendingVideo: Boolean(signal.video),
+        ts,
+        visitedLabel: UserProfileService.formatVisitDate(ts || Date.now()),
       };
     }));
 
-    return cards.filter(Boolean);
+    return [...cards.filter(Boolean), ..._buildLooseQuizItems(courses)]
+      .sort((a, b) => (b.ts || 0) - (a.ts || 0))
+      .slice(0, 4);
   }
 
   function _buildRecommendedCourses(courses, visits, favorites, saved, context = {}) {

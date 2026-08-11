@@ -216,6 +216,8 @@ const LOCALE_ZH = {
     resumeCta: '继续',
     resumeLessons: '已记录 {n} 节课',
     resumeQuizScore: '测验 {pct}%',
+    resumeQuizOpen: '测验未完成 · {pct}%',
+    resumeVideoOpen: '视频未看完',
     resumeLastLesson: '最近课时：{title}',
     resumeRecentVisit: '最近活动',
     resumeNoProgress: '开始你的第一模块并记录学习进度。',

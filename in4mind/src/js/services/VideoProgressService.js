@@ -3,6 +3,10 @@
 const VideoProgressService = (() => {
 
   const KEY = 'in4mind_video_progress';
+  /** Por debajo de esto el vídeo apenas arrancó: no cuenta como pendiente. */
+  const MIN_RESUME_SECONDS = 5;
+  /** A partir de aquí se considera visto, aunque no llegara al final exacto. */
+  const NEAR_END_RATIO = 0.95;
 
   function _read() {
     try {
@@ -46,9 +50,27 @@ const VideoProgressService = (() => {
     return `${m}:${String(r).padStart(2, '0')}`;
   }
 
+  /**
+   * Cursos con algún vídeo empezado y sin terminar, con la marca de tiempo más
+   * reciente de cada uno. El dashboard lo usa para poder ofrecer «continuar»
+   * aunque la visita al curso nunca llegara a registrarse en la nube.
+   * @returns {Object<string, number>} courseId → updatedAt
+   */
+  function getInProgressCourses() {
+    const out = {};
+    Object.entries(_read()).forEach(([key, entry]) => {
+      if (!entry || (entry.seconds || 0) < MIN_RESUME_SECONDS) return;
+      if (entry.duration && entry.seconds >= entry.duration * NEAR_END_RATIO) return;
+      const courseId = key.split('::')[0];
+      if (!courseId) return;
+      out[courseId] = Math.max(out[courseId] || 0, entry.updatedAt || 0);
+    });
+    return out;
+  }
+
   function getResumeLabel(courseId, lessonId, videoId) {
     const pos = getPosition(courseId, lessonId, videoId);
-    if (!pos || pos.seconds < 5) return null;
+    if (!pos || pos.seconds < MIN_RESUME_SECONDS) return null;
     const t = typeof I18n !== 'undefined'
       ? I18n.t('video.resumeAt', { time: formatTime(pos.seconds) })
       : `Continuar en ${formatTime(pos.seconds)}`;
@@ -58,6 +80,7 @@ const VideoProgressService = (() => {
   return {
     savePosition,
     getPosition,
+    getInProgressCourses,
     formatTime,
     getResumeLabel,
   };

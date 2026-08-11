@@ -219,6 +219,8 @@ const LOCALE_ES = {
     resumeCta: 'Continuar',
     resumeLessons: '{n} lecciones registradas',
     resumeQuizScore: 'Quiz {pct}%',
+    resumeQuizOpen: 'Quiz a medias · {pct}%',
+    resumeVideoOpen: 'Vídeo sin terminar',
     resumeLastLesson: 'Última lección: {title}',
     resumeRecentVisit: 'Actividad reciente',
     resumeNoProgress: 'Empieza tu primer módulo y registra tu avance.',

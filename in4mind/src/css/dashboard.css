@@ -631,6 +631,13 @@ a.avatar:visited {
   object-fit: contain;
 }
 
+/* Quizzes sueltos no traen imagen de curso: se dibuja un icono en su lugar. */
+.resume-card__icon-wrap svg {
+  width: 24px;
+  height: 24px;
+  color: var(--clr-brand-600);
+}
+
 .resume-card__copy {
   min-width: 0;
 }

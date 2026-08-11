@@ -61,7 +61,7 @@
   font-family: var(--font-display);
   font-size: 1.3rem;
   font-weight: 800;
-  color: var(--clr-brand-navy);
+  color: var(--clr-brand-ink);
   white-space: nowrap;
   transition: opacity var(--dur-med) var(--ease), width var(--dur-med) var(--ease);
 }
@@ -130,7 +130,7 @@ a.nav-item {
 
 .nav-item:hover {
   background: rgba(var(--clr-brand-rgb), 0.1);
-  color: var(--clr-brand-700);
+  color: var(--clr-brand-ink);
 }
 
 .nav-item.nav-item--active {
@@ -343,7 +343,7 @@ a.avatar:visited {
 .welcome-section__title {
   font-size: 2rem;
   font-weight: 800;
-  color: var(--clr-brand-navy);
+  color: var(--clr-brand-ink);
   margin-bottom: var(--sp-xs);
 }
 
@@ -430,7 +430,7 @@ a.avatar:visited {
   font-family: var(--font-display);
   font-size: 1.7rem;
   font-weight: 800;
-  color: var(--clr-brand-navy);
+  color: var(--clr-brand-ink);
   line-height: 1;
 }
 
@@ -500,7 +500,7 @@ a.avatar:visited {
 .quick-action-card--quiz .quick-action-card__icon { background: rgba(59, 130, 246, 0.14); color: #2563eb; }
 .quick-action-card--ai .quick-action-card__icon { background: rgba(99, 102, 241, 0.14); color: #4f46e5; }
 .quick-action-card--saved .quick-action-card__icon,
-.quick-action-card--profile .quick-action-card__icon { background: rgba(27, 39, 60, 0.08); color: var(--clr-brand-navy); }
+.quick-action-card--profile .quick-action-card__icon { background: rgba(27, 39, 60, 0.08); color: var(--clr-brand-ink); }
 
 .quick-action-card__body {
   min-width: 0;
@@ -541,14 +541,14 @@ a.avatar:visited {
 
 .quick-action-card__hint--saved {
   background: rgba(27, 39, 60, 0.08);
-  color: var(--clr-brand-navy);
+  color: var(--clr-brand-ink);
 }
 
 .quick-action-card__title {
   margin: 0 0 4px;
   font-size: 0.98rem;
   font-weight: 700;
-  color: var(--clr-brand-navy);
+  color: var(--clr-brand-ink);
 }
 
 .quick-action-card__sub {
@@ -656,7 +656,7 @@ a.avatar:visited {
   margin: 0;
   font-size: 1rem;
   font-weight: 700;
-  color: var(--clr-brand-navy);
+  color: var(--clr-brand-ink);
 }
 
 .resume-card__percent {
@@ -724,7 +724,7 @@ a.avatar:visited {
   margin: 0 0 4px;
   font-size: 0.96rem;
   font-weight: 700;
-  color: var(--clr-brand-navy);
+  color: var(--clr-brand-ink);
 }
 
 .empty-state-panel__desc {
@@ -750,7 +750,7 @@ a.avatar:visited {
   font-family: var(--font-display);
   font-size: 1.125rem;
   font-weight: 700;
-  color: var(--clr-brand-navy);
+  color: var(--clr-brand-ink);
 }
 
 .section-header__sub {
@@ -774,7 +774,7 @@ a.avatar:visited {
 }
 
 .section-header__link:hover {
-  color: var(--clr-brand-700);
+  color: var(--clr-brand-ink);
   text-decoration: underline;
 }
 
@@ -1074,7 +1074,7 @@ a.avatar:visited {
   font-family: var(--font-display);
   font-size: 1.3rem;
   font-weight: 800;
-  color: var(--clr-brand-navy);
+  color: var(--clr-brand-ink);
 }
 
 .dashboard-promo__sub {
@@ -1149,7 +1149,7 @@ a.avatar:visited {
   font-family: var(--font-display);
   font-size: 1rem;
   font-weight: 700;
-  color: var(--clr-brand-navy);
+  color: var(--clr-brand-ink);
   transition: text-shadow var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 

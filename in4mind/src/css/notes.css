@@ -18,7 +18,7 @@
 .notes-page-header__logo.in4mind-bulb {
   width: 38px;
   height: auto;
-  color: var(--clr-brand-navy);
+  color: var(--clr-brand-ink);
 }
 
 html[data-theme="dark"] .notes-page-header__logo.in4mind-bulb {

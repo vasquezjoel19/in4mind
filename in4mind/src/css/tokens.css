@@ -50,6 +50,8 @@
   --clr-link-hover:     #2a4060;
   --clr-tag-bg:         #e8f0fa;
   --clr-tag-text:       #2a4060;
+  /* Tinta de marca para texto/iconos (en oscuro se aclara; navy se queda para fondos). */
+  --clr-brand-ink:      #1b273c;
 
   /* ── Bordes ── */
   --clr-border:     rgba(27, 39, 60, 0.1);
@@ -133,11 +135,12 @@ html[data-theme="dark"] {
 
   --clr-brand-900: #1b273c;
   --clr-brand-800: #1f3049;
+  /* 700 se usa en fondos/gradientes; el texto de marca usa --clr-brand-ink. */
   --clr-brand-700: #2a4060;
   --clr-brand-600: #4a7aa8;
   --clr-brand-500: #5DA9E9;
   --clr-brand-400: #8ABCD2;
-  --clr-brand-300: #7CA4BC;
+  --clr-brand-300: #b4ccd4;
   --clr-brand-200: #64748b;
 
   --clr-accent:       #2EC4B6;
@@ -164,12 +167,13 @@ html[data-theme="dark"] {
 
   --clr-text-primary:   #F2F2F2;
   --clr-text-secondary: #CBD5E1;
-  --clr-text-muted:     #8B94A3;
+  --clr-text-muted:     #A0AAB8;
   --clr-text-on-brand:  #F8FAFC;
   --clr-link:           #8ABCD2;
   --clr-link-hover:     #B4CCD4;
   --clr-tag-bg:         #243b52;
   --clr-tag-text:       #CBD5E1;
+  --clr-brand-ink:      #E8EEF6;
 
   --clr-border:    #3d5a73;
   --clr-border-lt: #4a6a85;

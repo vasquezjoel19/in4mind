@@ -457,7 +457,7 @@ svg.tut-star,
   height: 22px;
   border-radius: 50%;
   background: var(--clr-bg-banner);
-  color: var(--clr-brand-700);
+  color: var(--clr-brand-ink);
   font-size: 0.7rem;
   font-weight: 700;
   display: flex;
@@ -498,7 +498,7 @@ svg.tut-star,
   font-family: var(--font-display);
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--clr-brand-700);
+  color: var(--clr-brand-ink);
   margin-bottom: var(--sp-xs);
   padding-left: var(--sp-xs);
   border-left: 3px solid var(--clr-brand-500);
@@ -692,7 +692,7 @@ svg.tut-star,
   padding: 3px 8px;
   border-radius: var(--rad-pill);
   background: rgba(59, 130, 246, 0.15);
-  color: var(--clr-brand-700);
+  color: var(--clr-brand-ink);
 }
 
 .lesson-w3__video-actions {
@@ -795,7 +795,7 @@ svg.tut-star,
   padding: 4px 12px;
   border-radius: var(--rad-pill);
   background: var(--clr-bg-banner);
-  color: var(--clr-brand-700);
+  color: var(--clr-brand-ink);
 }
 
 .lesson-badge--time {

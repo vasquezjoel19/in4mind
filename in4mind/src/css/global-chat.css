@@ -72,7 +72,7 @@
   padding: 0 6px;
   border-radius: var(--rad-pill, 999px);
   background: var(--clr-accent);
-  color: var(--clr-brand-navy);
+  color: #0f172a;
   font-size: 0.7rem;
   font-weight: 800;
   line-height: 20px;

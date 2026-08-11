@@ -322,6 +322,46 @@ html[data-theme="dark"] .quiz-resume-modal {
   color: var(--clr-text-primary);
 }
 
+html[data-theme="dark"] .quiz-resume-modal__title {
+  color: var(--clr-text-primary);
+}
+
+html[data-theme="dark"] .quiz-resume-modal__desc {
+  color: var(--clr-text-secondary);
+}
+
+html[data-theme="dark"] .quiz-resume-modal__bar {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+html[data-theme="dark"] .quiz-resume-modal__restart,
+html[data-theme="dark"] .btn--ghost {
+  background: var(--clr-bg-input);
+  color: var(--clr-text-primary);
+  border-color: var(--clr-border-lt);
+}
+
+html[data-theme="dark"] .quiz-resume-modal__restart:hover,
+html[data-theme="dark"] .btn--ghost:hover:not(:disabled) {
+  border-color: var(--clr-brand-400);
+  color: var(--clr-brand-300);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+html[data-theme="dark"] .quiz-resume-modal__cancel {
+  color: var(--clr-text-secondary);
+}
+
+html[data-theme="dark"] .quiz-match__left {
+  color: var(--clr-brand-ink);
+}
+
+html[data-theme="dark"] .quiz-match__select {
+  background: var(--clr-bg-input);
+  color: var(--clr-text-primary);
+  border-color: var(--clr-border);
+}
+
 html[data-theme="dark"] .quiz-filter {
   background: var(--clr-bg-card);
   border-color: var(--clr-border);
@@ -337,21 +377,25 @@ html[data-theme="dark"] .quiz-filter.quiz-filter--active {
 html[data-theme="dark"] .quiz-option--correct {
   background: rgba(22, 163, 74, 0.15);
   border-color: #16a34a;
+  color: #bbf7d0;
 }
 
 html[data-theme="dark"] .quiz-option--wrong {
   background: rgba(220, 38, 38, 0.12);
   border-color: #dc2626;
+  color: #fecaca;
 }
 
 html[data-theme="dark"] .quiz-tf-btn--correct {
   background: rgba(22, 163, 74, 0.15);
   border-color: #16a34a;
+  color: #bbf7d0;
 }
 
 html[data-theme="dark"] .quiz-tf-btn--wrong {
   background: rgba(220, 38, 38, 0.12);
   border-color: #dc2626;
+  color: #fecaca;
 }
 
 /* ══════════════════════════════════════
@@ -1415,6 +1459,29 @@ html[data-theme="dark"] .prof-item {
 
 html[data-theme="dark"] .prof-modal {
   background: rgba(0, 0, 0, 0.55);
+}
+
+html[data-theme="dark"] .prof-btn--ghost {
+  color: var(--clr-text-primary);
+  border-color: var(--clr-border-lt);
+  background: var(--clr-bg-input);
+}
+
+html[data-theme="dark"] .prof-btn--ghost:hover {
+  border-color: var(--clr-brand-400);
+  color: var(--clr-brand-300);
+}
+
+html[data-theme="dark"] .cookie-consent__btn--ghost {
+  color: var(--clr-text-primary);
+  border-color: var(--clr-border-lt);
+}
+
+html[data-theme="dark"] .settings-modal,
+html[data-theme="dark"] .settings-modal__panel {
+  background: var(--clr-bg-card);
+  color: var(--clr-text-primary);
+  border-color: var(--clr-border);
 }
 
 /* Wordmark: el 4 debe conservar el azul del foco (sobre span { color: inherit }) */

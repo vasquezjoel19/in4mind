@@ -52,7 +52,7 @@
 }
 
 .auth-help-btn:hover {
-  color: var(--clr-brand-700);
+  color: var(--clr-brand-ink);
   text-decoration: underline;
   text-underline-offset: 3px;
   text-decoration-color: var(--clr-brand-400);

@@ -73,7 +73,7 @@ html, body { height: 100%; overflow: hidden; }
 
 .ai-btn-ghost:hover {
   border-color: var(--clr-brand-300);
-  color: var(--clr-brand-700);
+  color: var(--clr-brand-ink);
   background: var(--clr-bg-banner);
 }
 
@@ -234,7 +234,7 @@ html, body { height: 100%; overflow: hidden; }
 
 .ai-turn__avatar--user {
   background: var(--clr-bg-input);
-  color: var(--clr-brand-700);
+  color: var(--clr-brand-ink);
   border: 1px solid var(--clr-border);
 }
 

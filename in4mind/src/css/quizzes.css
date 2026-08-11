@@ -405,7 +405,7 @@
 
 .quiz-badge--section {
   background: var(--clr-bg-banner);
-  color: var(--clr-brand-700);
+  color: var(--clr-brand-ink);
   border: 1px solid var(--clr-brand-200);
 }
 
@@ -600,7 +600,7 @@
 .quiz-match__left {
   font-size: 0.88rem;
   font-weight: 700;
-  color: var(--clr-brand-700);
+  color: var(--clr-brand-ink);
   font-family: var(--font-display);
 }
 
@@ -1135,7 +1135,7 @@
 
 .quiz-resume-modal__restart {
   background: transparent;
-  color: var(--clr-brand-700);
+  color: var(--clr-brand-ink);
   border: 1.5px solid var(--clr-border);
   padding: 10px var(--sp-lg);
   border-radius: var(--rad-md);

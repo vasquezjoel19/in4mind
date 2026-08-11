@@ -477,8 +477,8 @@ const QuizzesController = (() => {
   }
 
   /**
-   * Aplana el quiz aleatorizando las respuestas. La semilla hace el barajado
-   * reproducible, así reanudar un intento muestra exactamente lo mismo.
+   * Aplana el quiz una sola vez por intento. El array en `_flatQuestions` es
+   * el estado local barajado: re-renderizar nunca vuelve a llamar a prepare.
    */
   function _flattenQuiz(quiz, seed) {
     if (typeof QuizRandomizer !== 'undefined') {
@@ -486,8 +486,8 @@ const QuizzesController = (() => {
     }
     const flat = [];
     quiz.sections.forEach((sec, si) => {
-      sec.questions.forEach(q => {
-        flat.push({ ...q, sectionTitle: sec.title, sectionIndex: si });
+      sec.questions.forEach((q, qi) => {
+        flat.push({ ...q, sectionTitle: sec.title, sectionIndex: si, sourceIndex: qi });
       });
     });
     return flat;
@@ -1199,44 +1199,71 @@ const QuizzesController = (() => {
   }
 
   function _renderChoiceQuestion(q) {
-    const LETTERS = ['A', 'B', 'C', 'D'];
+    const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
+    // `options` viene ya barajado y congelado en el estado del intento.
+    const options = Array.isArray(q.options) && q.options.length
+      ? q.options
+      : (q.opts || []).map((text, i) => ({ id: `o${i}`, text }));
+
     $quizOptions.className = 'quiz-options';
-    $quizOptions.innerHTML = q.opts.map((opt, i) => `
-      <button type="button" class="quiz-option" data-idx="${i}" aria-label="${_t('quizzes.optionAria', { letter: LETTERS[i], opt }, `Opción ${LETTERS[i]}: ${opt}`)}">
-        <span class="quiz-option__letter">${LETTERS[i]}</span>
-        <span>${opt}</span>
+    $quizOptions.innerHTML = options.map((opt, i) => `
+      <button type="button" class="quiz-option" data-opt-id="${_escape(opt.id)}"
+              aria-label="${_t('quizzes.optionAria', { letter: LETTERS[i] || String(i + 1), opt: opt.text }, `Opción ${LETTERS[i] || i + 1}: ${opt.text}`)}">
+        <span class="quiz-option__letter">${LETTERS[i] || String(i + 1)}</span>
+        <span>${_escape(opt.text)}</span>
       </button>
     `).join('');
 
     $quizOptions.querySelectorAll('.quiz-option').forEach(btn => {
-      btn.addEventListener('click', () => _selectChoice(parseInt(btn.dataset.idx, 10)));
+      btn.addEventListener('click', () => _selectChoice(btn.dataset.optId));
     });
   }
 
-  function _selectChoice(idx) {
+  function _selectChoice(optId) {
     if (_answered) return;
     _answered = true;
     const q = _flatQuestions[_currentQIdx];
-    const correct = idx === q.ans;
+    const options = Array.isArray(q.options) && q.options.length
+      ? q.options
+      : (q.opts || []).map((text, i) => ({ id: `o${i}`, text }));
 
-    $quizOptions.querySelectorAll('.quiz-option').forEach((btn, i) => {
+    // Validación por id estable, nunca por posición en pantalla.
+    const answerId = q.answerId != null
+      ? q.answerId
+      : options[Number.isInteger(q.ans) ? q.ans : 0]?.id;
+    const chosen = options.find(o => o.id === optId);
+    const correctOpt = options.find(o => o.id === answerId);
+    const correct = Boolean(chosen && correctOpt && chosen.id === correctOpt.id);
+
+    $quizOptions.querySelectorAll('.quiz-option').forEach(btn => {
       btn.disabled = true;
-      if (i === q.ans) btn.classList.add('quiz-option--reveal');
-      if (i === idx && !correct) btn.classList.add('quiz-option--wrong');
+      if (btn.dataset.optId === answerId) btn.classList.add('quiz-option--reveal');
+      if (btn.dataset.optId === optId && !correct) btn.classList.add('quiz-option--wrong');
     });
 
-    _showFeedback(correct, q.exp, q.opts[idx], q.opts[q.ans]);
+    _showFeedback(correct, q.exp, chosen?.text || '', correctOpt?.text || '');
   }
 
   function _renderTrueFalseQuestion(q) {
+    // Orden fijado en el estado al cargar; si falta (contenido viejo), se baraja una vez.
+    const order = Array.isArray(q.tfOrder) && q.tfOrder.length === 2
+      ? q.tfOrder
+      : (typeof QuizRandomizer !== 'undefined'
+        ? QuizRandomizer._shuffle([true, false], QuizRandomizer._rng(_seed || 1))
+        : _shuffle([true, false]));
+    q.tfOrder = order;
+
+    const label = v => (v
+      ? _t('quizzes.true', null, 'Verdadero')
+      : _t('quizzes.false', null, 'Falso'));
+    const icon = v => (v ? '✓' : '✗');
+
     $quizOptions.className = 'quiz-options quiz-options--tf';
-    $quizOptions.innerHTML = `
-      <button type="button" class="quiz-tf-btn" data-val="true">
-        <span class="quiz-tf-btn__icon">✓</span> ${_t('quizzes.true', null, 'Verdadero')}
+    $quizOptions.innerHTML = order.map(val => `
+      <button type="button" class="quiz-tf-btn" data-val="${val}">
+        <span class="quiz-tf-btn__icon">${icon(val)}</span> ${label(val)}
       </button>
-      <button type="button" class="quiz-tf-btn" data-val="false">
-        <span class="quiz-tf-btn__icon">✗</span> ${_t('quizzes.false', null, 'Falso')}
-      </button>`;
+    `).join('');
 
     $quizOptions.querySelectorAll('.quiz-tf-btn').forEach(btn => {
       btn.addEventListener('click', () => _selectTrueFalse(btn.dataset.val === 'true'));
@@ -1247,6 +1274,7 @@ const QuizzesController = (() => {
     if (_answered) return;
     _answered = true;
     const q = _flatQuestions[_currentQIdx];
+    // Comparación por valor booleano, no por posición del botón.
     const correct = val === q.ans;
 
     $quizOptions.querySelectorAll('.quiz-tf-btn').forEach(btn => {
@@ -1264,19 +1292,21 @@ const QuizzesController = (() => {
   }
 
   function _renderMatchQuestion(q) {
-    // `rights` viene ya barajado por QuizRandomizer con la semilla del intento,
-    // así el desplegable conserva el mismo orden al reanudar.
-    const rights = q.rights || _shuffle(q.pairs.map(p => p.right));
+    // `rights` y `pairs` vienen ya barajados y congelados en el estado del intento.
+    const rights = q.rights || (typeof QuizRandomizer !== 'undefined'
+      ? QuizRandomizer._shuffle(q.pairs.map(p => p.right), QuizRandomizer._rng(_seed || 1))
+      : _shuffle(q.pairs.map(p => p.right)));
     $quizOptions.className = 'quiz-options quiz-options--match';
     $quizOptions.innerHTML = `
       <p class="quiz-match__hint">${_t('quizzes.matchHint', null, 'Selecciona la definición correcta para cada término.')}</p>
       <div class="quiz-match__rows">
-        ${q.pairs.map((pair, i) => `
+        ${q.pairs.map(pair => `
           <div class="quiz-match__row">
-            <span class="quiz-match__left">${pair.left}</span>
-            <select class="quiz-match__select" data-idx="${i}" aria-label="${_t('quizzes.matchPairAria', { term: pair.left }, `Pareja para ${pair.left}`)}">
+            <span class="quiz-match__left">${_escape(pair.left)}</span>
+            <select class="quiz-match__select" data-pair-id="${_escape(pair.id || pair.left)}"
+                    aria-label="${_t('quizzes.matchPairAria', { term: pair.left }, `Pareja para ${pair.left}`)}">
               <option value="">${_t('quizzes.matchSelect', null, '— Selecciona —')}</option>
-              ${rights.map(r => `<option value="${r}">${r}</option>`).join('')}
+              ${rights.map(r => `<option value="${_escape(r)}">${_escape(r)}</option>`).join('')}
             </select>
           </div>
         `).join('')}
@@ -1291,20 +1321,28 @@ const QuizzesController = (() => {
     if (_answered) return;
     const q = _flatQuestions[_currentQIdx];
     const selects = $quizOptions.querySelectorAll('.quiz-match__select');
-    const selections = [...selects].map(s => s.value);
+    const byId = new Map(q.pairs.map(p => [String(p.id || p.left), p]));
 
-    if (selections.some(v => !v)) {
+    const selections = [...selects].map(sel => ({
+      pairId: sel.dataset.pairId,
+      value: sel.value,
+      pair: byId.get(sel.dataset.pairId),
+    }));
+
+    if (selections.some(s => !s.value)) {
       $quizFeedback.className = 'quiz-feedback quiz-feedback--wrong';
       $quizFeedback.innerHTML = `<strong>${_t('quizzes.matchCompleteAll', null, 'Completa todos los pareos antes de comprobar.')}</strong>`;
       return;
     }
 
     _answered = true;
-    const correct = q.pairs.every((p, i) => selections[i] === p.right);
+    // Validación por valor de la definición de cada par, no por índice visual.
+    const correct = selections.every(s => s.pair && s.value === s.pair.right);
 
-    selects.forEach((sel, i) => {
+    selects.forEach(sel => {
       sel.disabled = true;
-      sel.classList.add(selections[i] === q.pairs[i].right
+      const pair = byId.get(sel.dataset.pairId);
+      sel.classList.add(pair && sel.value === pair.right
         ? 'quiz-match__select--ok'
         : 'quiz-match__select--fail');
     });
@@ -1313,7 +1351,7 @@ const QuizzesController = (() => {
     _showFeedback(
       correct,
       q.exp,
-      selections.join(', '),
+      selections.map(s => s.value).join(', '),
       summary
     );
   }

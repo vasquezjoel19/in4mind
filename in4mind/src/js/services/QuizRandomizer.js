@@ -1,18 +1,15 @@
 /**
  * IN4MIND — QuizRandomizer
  *
- * Convierte la definición estática de un quiz en una presentación aleatorizada
- * pero *reproducible*: a partir de una misma semilla siempre sale el mismo
- * barajado, lo que permite reanudar un intento a medias sin cambiar las preguntas.
+ * Una sola pasada Fisher–Yates semillada al cargar el intento. El resultado
+ * queda congelado en cada pregunta (`options`, `answerId`, `tfOrder`, `pairs`,
+ * `rights`), así re-renderizar o reanudar no vuelve a barajar.
  *
- * Qué se aleatoriza:
- *  - Opción múltiple → orden de las opciones (y se recalcula el índice correcto).
- *  - Pareos          → orden de las filas y orden del desplegable de definiciones.
- *  - Verdadero/Falso → polaridad: si el enunciado trae una variante falsa
- *                      (`qFalse`), se muestra una u otra al azar.
- *
- * Sin esto la app era predecible: en el contenido base la respuesta correcta de
- * opción múltiple era casi siempre la segunda opción, y en V/F siempre "Verdadero".
+ * Qué se aleatoriza (siempre con la misma semilla):
+ *  - Orden de las preguntas (y con él la secuencia de tipos/metodologías).
+ *  - Opciones de opción múltiple (identidad estable por `id`, no por índice).
+ *  - Filas y definiciones de pareos.
+ *  - Polaridad V/F y posición de los botones Verdadero/Falso.
  */
 
 'use strict';
@@ -20,10 +17,10 @@
 const QuizRandomizer = (() => {
 
   /**
-   * PRNG determinista (mulberry32). Math.random() no sirve aquí porque no se
-   * puede sembrar y la presentación debe ser reproducible al reanudar.
+   * PRNG determinista (mulberry32). Math.random() no sirve: no se puede
+   * sembrar y la presentación debe ser reproducible al reanudar.
    * @param {number} seed
-   * @returns {() => number} función que devuelve [0, 1)
+   * @returns {() => number} [0, 1)
    */
   function _rng(seed) {
     let a = seed >>> 0;
@@ -46,27 +43,6 @@ const QuizRandomizer = (() => {
     return a;
   }
 
-  /**
-   * Baraja las opciones y recalcula el índice de la respuesta correcta.
-   * Se baraja un array de índices para no depender de que los textos sean únicos.
-   */
-  function _randomizeChoice(q, rand) {
-    const opts = Array.isArray(q.opts) ? q.opts : [];
-    if (opts.length < 2) return { ...q };
-
-    const order = _shuffle(opts.map((_, i) => i), rand);
-    return {
-      ...q,
-      opts: order.map(i => opts[i]),
-      ans:  order.indexOf(q.ans),
-    };
-  }
-
-  /**
-   * Elige la polaridad del enunciado V/F para que la respuesta correcta no sea
-   * siempre "Verdadero". Si hay variante (`qFalse`), la usa; si no, genera una
-   * negación automática cuando hace falta invertir.
-   */
   function _autoNegateStatement(text) {
     const base = String(text || '').trim().replace(/\?+$/, '').trim();
     if (!base) return text;
@@ -74,57 +50,95 @@ const QuizRandomizer = (() => {
     return `No es cierto que ${lower}.`;
   }
 
-  function _randomizeTrueFalse(q, rand) {
-    const hasVariant = typeof q.qFalse === 'string' && q.qFalse.trim().length > 0;
+  /**
+   * Opción múltiple: cada opción lleva un `id` estable (`o0`… desde el
+   * contenido fuente). Tras el shuffle la validación usa `answerId`, nunca
+   * la posición en pantalla.
+   */
+  function _randomizeChoice(q, rand) {
+    const raw = Array.isArray(q.opts) ? q.opts : [];
+    if (!raw.length) return { ...q, options: [], answerId: null };
 
-    if (hasVariant && q.ans === true) {
-      if (rand() < 0.5) return { ...q, polarity: 'original' };
-      return {
-        ...q,
-        q:        q.qFalse,
-        ans:      false,
-        exp:      q.expFalse || q.exp,
-        polarity: 'negated',
-      };
-    }
+    const options = raw.map((text, i) => ({
+      id: `o${i}`,
+      text: String(text),
+    }));
+    const answerId = options[Number.isInteger(q.ans) ? q.ans : 0]?.id || options[0].id;
+    const shuffled = _shuffle(options, rand);
 
-    // Sin variante explícita: 50% mantiene el enunciado, 50% lo invierte.
-    if (rand() < 0.5) return { ...q, polarity: 'original' };
-
-    const invertedQ = q.qFalse || _autoNegateStatement(q.q);
     return {
       ...q,
-      q:        invertedQ,
-      ans:      !q.ans,
-      exp:      q.expFalse || q.exp,
-      polarity: 'flipped',
+      options: shuffled,
+      /** @deprecated preferir `options` + `answerId`; se mantiene por compat. */
+      opts: shuffled.map(o => o.text),
+      answerId,
+      ans: shuffled.findIndex(o => o.id === answerId),
     };
   }
 
-  /** Baraja el orden de las filas y, por separado, el de las definiciones. */
+  /**
+   * V/F: polaridad del enunciado + orden de los botones, ambos en el estado
+   * de la pregunta para no recolocar "Verdadero" siempre a la izquierda.
+   */
+  function _randomizeTrueFalse(q, rand) {
+    const hasVariant = typeof q.qFalse === 'string' && q.qFalse.trim().length > 0;
+    let next = { ...q, polarity: 'original' };
+
+    if (hasVariant && q.ans === true) {
+      if (rand() >= 0.5) {
+        next = {
+          ...q,
+          q: q.qFalse,
+          ans: false,
+          exp: q.expFalse || q.exp,
+          polarity: 'negated',
+        };
+      }
+    } else if (rand() >= 0.5) {
+      next = {
+        ...q,
+        q: q.qFalse || _autoNegateStatement(q.q),
+        ans: !q.ans,
+        exp: q.expFalse || q.exp,
+        polarity: 'flipped',
+      };
+    }
+
+    next.tfOrder = _shuffle([true, false], rand);
+    return next;
+  }
+
+  /** Pareos: filas y desplegable de definiciones, cada fila con `id` estable. */
   function _randomizeMatch(q, rand) {
     const pairs = Array.isArray(q.pairs) ? q.pairs : [];
-    if (pairs.length < 2) return { ...q, rights: pairs.map(p => p.right) };
+    const tagged = pairs.map((p, i) => ({
+      id: `p${i}`,
+      left: p.left,
+      right: p.right,
+    }));
 
-    const rows = _shuffle(pairs, rand);
+    if (tagged.length < 2) {
+      return { ...q, pairs: tagged, rights: tagged.map(p => p.right) };
+    }
+
+    const rows = _shuffle(tagged, rand);
     return {
       ...q,
-      pairs:  rows,
+      pairs: rows,
       rights: _shuffle(rows.map(p => p.right), rand),
     };
   }
 
   function _randomizeQuestion(q, rand) {
     if (q.type === 'truefalse') return _randomizeTrueFalse(q, rand);
-    if (q.type === 'match')     return _randomizeMatch(q, rand);
-    if (q.type === 'choice')    return _randomizeChoice(q, rand);
+    if (q.type === 'match') return _randomizeMatch(q, rand);
+    if (q.type === 'choice') return _randomizeChoice(q, rand);
     return { ...q };
   }
 
   /**
-   * Aplana el quiz en una lista de preguntas ya aleatorizadas.
-   * Se conserva el orden de secciones y preguntas (es pedagógico); lo que se
-   * baraja son las respuestas dentro de cada pregunta.
+   * Aplana el quiz, aleatoriza cada pregunta y baraja el orden global.
+   * Una sola llamada por intento: el array resultante es el estado local.
    *
    * @param {object} quiz  definición con `sections[].questions[]`
    * @param {number} seed  semilla; la misma semilla da la misma presentación
@@ -133,16 +147,23 @@ const QuizRandomizer = (() => {
   function prepare(quiz, seed) {
     const rand = _rng(seed);
     const flat = [];
+
     (quiz?.sections || []).forEach((sec, si) => {
-      (sec.questions || []).forEach(q => {
+      (sec.questions || []).forEach((q, qi) => {
         flat.push({
           ..._randomizeQuestion(q, rand),
           sectionTitle: sec.title,
           sectionIndex: si,
+          sourceIndex: qi,
+          // Identidad estable para depuración / review; no depende del shuffle.
+          uid: `${si}:${qi}:${q.type}`,
         });
       });
     });
-    return flat;
+
+    // El orden de preguntas (y por tanto la secuencia de metodologías) también
+    // queda fijado en este array: nadie debe volver a llamar a prepare.
+    return _shuffle(flat, rand);
   }
 
   return { prepare, _rng, _shuffle };

@@ -167,13 +167,7 @@ const AuthGuard = (() => {
     }
   }
 
-  /**
-   * Exige sesión para ver la página actual.
-   * @returns {boolean} true si puede continuar
-   */
-  function require() {
-    if (_hasSession()) return true;
-
+  function _redirectToLogin() {
     const target = window.location.href;
     try {
       if (_isSafe(target)) sessionStorage.setItem(NEXT_KEY, target);
@@ -182,6 +176,32 @@ const AuthGuard = (() => {
     const login = new URL('login.html', window.location.href);
     login.searchParams.set('next', new URL(target).pathname + new URL(target).search);
     window.location.replace(login.toString());
+  }
+
+  /**
+   * Exige sesión para ver la página actual.
+   * @returns {boolean} true si puede continuar (síncrono; si hay que esperar
+   *   a Supabase, `requireAsync` se usa en el boot).
+   */
+  function require() {
+    if (_hasSession()) return true;
+    _redirectToLogin();
+    return false;
+  }
+
+  /**
+   * Igual que require(), pero intenta rehidratar desde Supabase Auth
+   * (p. ej. pestaña nueva con JWT vigente).
+   */
+  async function requireAsync() {
+    if (_hasSession()) return true;
+    if (typeof AuthService !== 'undefined' && AuthService.restoreOAuthSession) {
+      try {
+        const oauth = await AuthService.restoreOAuthSession();
+        if (oauth?.ok) return true;
+      } catch { /* sin sesión cloud */ }
+    }
+    _redirectToLogin();
     return false;
   }
 
@@ -211,23 +231,35 @@ const AuthGuard = (() => {
     } catch { /* ignore */ }
   }
 
-  return { require, consumeRedirect, setRedirect, hasSession: _hasSession, NEXT_KEY };
+  return { require, requireAsync, consumeRedirect, setRedirect, hasSession: _hasSession, NEXT_KEY };
 
 })();
 
 /**
  * Las páginas protegidas se marcan con `data-requires-auth` en <html>.
- * La comprobación corre en cuanto se carga este script (antes de DOMContentLoaded)
- * para no llegar a pintar contenido a quien no ha iniciado sesión.
+ * Se espera a que carguen AuthService/SessionStore (scripts posteriores) antes
+ * de decidir el redirect, para poder rehidratar JWT de Supabase.
  */
 if (typeof document !== 'undefined') {
   const html = document.documentElement;
   const params = new URLSearchParams(window.location.search);
-  // La vista previa pública de cursos sigue siendo accesible sin sesión.
   const isPreview = params.get('preview') === '1';
 
   if (html.hasAttribute('data-requires-auth') && !isPreview) {
-    AuthGuard.require();
+    if (!AuthGuard.hasSession()) {
+      html.style.visibility = 'hidden';
+      const gate = () => {
+        void AuthGuard.requireAsync().then(ok => {
+          if (ok) html.style.visibility = '';
+        });
+      };
+      // AuthService suele cargarse después de este archivo: esperar al final del parseo.
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', gate);
+      } else {
+        setTimeout(gate, 0);
+      }
+    }
   }
 
   const boot = () => ShareService.bind();

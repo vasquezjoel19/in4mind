@@ -509,19 +509,19 @@ const AuthController = (() => {
     // aunque haya una sesión abierta.
     const isResetLink = params.get('view') === 'reset';
 
+    // Solo auto-entrar con sesión real de Supabase Auth (OAuth / JWT vigente).
+    // La sesión local recordada ya NO salta el formulario de login.
     if (typeof AuthService !== 'undefined' && !isResetLink) {
       const oauth = await AuthService.restoreOAuthSession();
       if (oauth.ok) {
         _redirectAfterAuth();
         return;
       }
-    }
-
-    // Redirigir si ya hay sesión (SessionStore ya rehidrató "Recordar datos")
-    const existing = sessionStorage.getItem('in4mind_user');
-    if (existing && !isResetLink) {
-      _redirectAfterAuth();
-      return;
+      // Sin sesión Supabase: limpia restos locales para forzar credenciales.
+      try { sessionStorage.removeItem('in4mind_user'); } catch { /* ignore */ }
+      if (typeof SessionStore !== 'undefined') {
+        SessionStore.restore(); // limpia legacy USER_KEY en localStorage
+      }
     }
 
     // Cachear referencias DOM

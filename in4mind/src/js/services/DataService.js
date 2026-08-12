@@ -125,8 +125,8 @@ const DataService = (() => {
   }
 
   /**
-   * Simula login. Busca al usuario registrado en memoria o acepta cualquier
-   * credencial válida (demo). El name siempre viene del registro, nunca del email.
+   * Simula login local (solo si Supabase no está disponible).
+   * Exige un usuario registrado en este dispositivo; ya no acepta credenciales arbitrarias.
    */
   function login(email, password) {
     return new Promise(resolve => {
@@ -135,18 +135,21 @@ const DataService = (() => {
           resolve({ ok: false, error: typeof I18n !== 'undefined' ? I18n.t('auth.invalidCreds') : 'Credenciales inválidas.' });
           return;
         }
-        // Si el usuario se registró en esta sesión, usar su nombre real
         const registered = _users[email.toLowerCase()];
-        if (registered) {
-          if (registered.password !== password) {
-            resolve({ ok: false, error: typeof I18n !== 'undefined' ? I18n.t('auth.wrongPassword') : 'Contraseña incorrecta.' });
-            return;
-          }
-          resolve({ ok: true, user: { name: registered.name, email } });
-        } else {
-          // Demo: cualquier email+contraseña válidos accede
-          resolve({ ok: true, user: { name: email.split('@')[0], email } });
+        if (!registered) {
+          resolve({
+            ok: false,
+            error: typeof I18n !== 'undefined'
+              ? I18n.t('auth.errLogin')
+              : 'Credenciales incorrectas. Regístrate o usa una cuenta válida.',
+          });
+          return;
         }
+        if (registered.password !== password) {
+          resolve({ ok: false, error: typeof I18n !== 'undefined' ? I18n.t('auth.wrongPassword') : 'Contraseña incorrecta.' });
+          return;
+        }
+        resolve({ ok: true, user: { name: registered.name, email } });
       }, 800);
     });
   }

@@ -62,6 +62,7 @@ const AuthService = (() => {
   async function login(email, password, remember = false) {
     const em = email.trim().toLowerCase();
 
+    // Con Supabase configurado, el login real es obligatorio (sin bypass demo).
     if (_sb) {
       try {
         const { data, error } = await _sb.auth.signInWithPassword({ email: em, password });
@@ -71,10 +72,16 @@ const AuthService = (() => {
           await _persistSession(user, remember, password);
           return { ok: true, user };
         }
-        if (error?.message?.includes('Invalid login')) {
-          return { ok: false, error: _t('auth.errLogin', null, 'Credenciales incorrectas.') };
-        }
-      } catch { /* fallback demo */ }
+        return {
+          ok: false,
+          error: _t('auth.errLogin', null, 'Credenciales incorrectas.'),
+        };
+      } catch {
+        return {
+          ok: false,
+          error: _t('auth.errLogin', null, 'No se pudo iniciar sesión. Inténtalo de nuevo.'),
+        };
+      }
     }
 
     const result = await DataService.login(em, password);
@@ -102,7 +109,16 @@ const AuthService = (() => {
         if (error?.message?.includes('already registered')) {
           return { ok: false, error: _t('auth.errEmailTaken', null, 'Este correo ya está registrado.') };
         }
-      } catch { /* fallback */ }
+        return {
+          ok: false,
+          error: error?.message || _t('auth.errRegister', null, 'No se pudo crear la cuenta.'),
+        };
+      } catch {
+        return {
+          ok: false,
+          error: _t('auth.errRegister', null, 'No se pudo crear la cuenta. Inténtalo de nuevo.'),
+        };
+      }
     }
 
     const result = await DataService.register(displayName, em, password);

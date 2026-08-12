@@ -1,16 +1,11 @@
 /**
  * IN4MIND — SessionStore
  *
- * Decide dónde vive la sesión del usuario:
- *  - sin "Recordar datos" → sessionStorage (se pierde al cerrar la pestaña)
- *  - con "Recordar datos" → además localStorage, y al abrir la app se rehidrata
+ * Sesión activa: solo en sessionStorage (se pierde al cerrar la pestaña).
  *
- * Decisión de seguridad: la contraseña solo se guarda si el usuario marca
- * "Recordar mis datos", codificada en localStorage del dispositivo (no en la nube).
- *
- * El resto del código sigue leyendo `sessionStorage.getItem('in4mind_user')`
- * como siempre: `restore()` se ejecuta al arrancar y repuebla esa clave, así no
- * hay que tocar cada punto de lectura.
+ * "Recordar mis datos" guarda únicamente correo/contraseña para precargar el
+ * formulario de login. NO rehidrata la sesión automáticamente: el usuario debe
+ * iniciar sesión de nuevo (o tener sesión válida de Supabase Auth).
  */
 
 'use strict';
@@ -59,33 +54,22 @@ const SessionStore = (() => {
   }
 
   /**
-   * Rehidrata la sesión desde localStorage al abrir la app.
-   * Debe llamarse lo antes posible, antes de que los controladores comprueben
-   * si hay sesión activa.
+   * Limpia restos de versiones anteriores que auto-iniciaban sesión desde
+   * localStorage. Ya no se restaura `in4mind_user` automáticamente.
    */
   function restore() {
     try {
-      if (sessionStorage.getItem(USER_KEY)) return true;
-      if (!isRemembered()) return false;
-      const saved = localStorage.getItem(USER_KEY);
-      if (!saved) return false;
-      JSON.parse(saved); // valida que no esté corrupto
-      sessionStorage.setItem(USER_KEY, saved);
-      return true;
-    } catch {
-      return false;
-    }
+      // Legacy: había un auto-login copiando localStorage → sessionStorage.
+      localStorage.removeItem(USER_KEY);
+    } catch { /* ignore */ }
+    return Boolean(sessionStorage.getItem(USER_KEY));
   }
 
   /**
-   * Guarda la sesión activa.
-   * @param {object} user
-   * @param {boolean|null} remember  null = conservar la preferencia actual
-   */
-  /**
+   * Guarda la sesión activa en la pestaña y, si aplica, credenciales recordadas.
    * @param {object} user
    * @param {boolean|null} remember
-   * @param {string|null} [password] solo se guarda si remember es true
+   * @param {string|null} [password]
    */
   function persist(user, remember = null, password = null) {
     if (!user) return;
@@ -96,28 +80,35 @@ const SessionStore = (() => {
 
     const keep = remember === null ? isRemembered() : Boolean(remember);
     try {
+      // Nunca persistir el objeto de sesión en localStorage (evita saltarse login).
+      localStorage.removeItem(USER_KEY);
+
       if (keep) {
         localStorage.setItem(REMEMBER_KEY, '1');
-        localStorage.setItem(USER_KEY, raw);
         if (user.email) localStorage.setItem(EMAIL_KEY, user.email);
         if (password) localStorage.setItem(PWD_KEY, _encodePwd(password));
       } else {
         localStorage.removeItem(REMEMBER_KEY);
-        localStorage.removeItem(USER_KEY);
         localStorage.removeItem(EMAIL_KEY);
         localStorage.removeItem(PWD_KEY);
       }
     } catch { /* sin espacio: la sesión de pestaña sigue funcionando */ }
   }
 
-  /** Cierre de sesión: borra la sesión persistida pero conserva el correo. */
+  /** Cierre de sesión: borra la sesión; el correo recordado es opcional. */
   function clear({ keepEmail = true, keepPassword = true } = {}) {
     try {
       sessionStorage.removeItem(USER_KEY);
       localStorage.removeItem(USER_KEY);
-      localStorage.removeItem(REMEMBER_KEY);
+      if (!keepEmail || !keepPassword) {
+        localStorage.removeItem(REMEMBER_KEY);
+      }
       if (!keepEmail) localStorage.removeItem(EMAIL_KEY);
       if (!keepPassword) localStorage.removeItem(PWD_KEY);
+      // Si se borra la contraseña pero se quiere conservar el correo, mantener flag.
+      if (keepEmail && !keepPassword && getRememberedEmail()) {
+        localStorage.setItem(REMEMBER_KEY, '1');
+      }
     } catch { /* ignore */ }
   }
 
@@ -128,7 +119,7 @@ const SessionStore = (() => {
 
 })();
 
-// Rehidratar cuanto antes: este script se carga antes que los controladores.
+// Limpia legacy de auto-login al cargar.
 if (typeof window !== 'undefined') SessionStore.restore();
 
 if (typeof module !== 'undefined') module.exports = SessionStore;

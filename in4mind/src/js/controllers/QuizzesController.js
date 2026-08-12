@@ -975,7 +975,7 @@ const QuizzesController = (() => {
     $resultsView.classList.add('results-view--visible');
   }
 
-  function _startQuiz(id) {
+  async function _startQuiz(id) {
     const quiz = _getQuizById(id);
     if (!quiz) return;
 
@@ -983,7 +983,10 @@ const QuizzesController = (() => {
       const totalLessons = typeof TutorialData !== 'undefined'
         ? TutorialData.getLessons(quiz.courseId).length
         : 0;
-      if (!UserProfileService.isExamUnlocked(quiz.courseId, totalLessons)) {
+      const unlocked = typeof CertGateService !== 'undefined'
+        ? await CertGateService.isExamUnlocked(quiz.courseId, totalLessons)
+        : UserProfileService.isExamUnlocked(quiz.courseId, totalLessons);
+      if (!unlocked) {
         const req = UserProfileService.getCertificationRequirements(quiz.courseId, totalLessons);
         const parts = [];
         if (!req.lessonStats.unlocked) {

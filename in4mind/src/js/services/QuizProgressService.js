@@ -42,9 +42,39 @@ const QuizProgressService = (() => {
   function _writeAll(map) {
     try {
       localStorage.setItem(_userKey(), JSON.stringify(map));
+      _scheduleCloudPush();
       return true;
     } catch {
       // Cuota llena o almacenamiento bloqueado: el quiz debe seguir funcionando.
+      return false;
+    }
+  }
+
+  let _pushTimer = null;
+  function _scheduleCloudPush() {
+    if (typeof CloudBlobSync === 'undefined') return;
+    clearTimeout(_pushTimer);
+    _pushTimer = setTimeout(() => {
+      void CloudBlobSync.pushBlob('quizAttempts', _readAll());
+    }, 500);
+  }
+
+  async function hydrateFromCloud() {
+    if (typeof CloudBlobSync === 'undefined') return false;
+    const remote = await CloudBlobSync.pullBlob('quizAttempts');
+    if (!remote?.blob) return false;
+    const local = _readAll();
+    const merged = { ...(remote.blob || {}) };
+    Object.entries(local).forEach(([id, entry]) => {
+      const remoteEntry = merged[id];
+      if (!remoteEntry || (entry.updatedAt || 0) >= (remoteEntry.updatedAt || 0)) {
+        merged[id] = entry;
+      }
+    });
+    try {
+      localStorage.setItem(_userKey(), JSON.stringify(merged));
+      return true;
+    } catch {
       return false;
     }
   }
@@ -186,6 +216,7 @@ const QuizProgressService = (() => {
     isResumable,
     getCompletionPct,
     mergeGuestInto,
+    hydrateFromCloud,
   };
 
 })();

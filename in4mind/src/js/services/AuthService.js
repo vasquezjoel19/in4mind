@@ -70,6 +70,7 @@ const AuthService = (() => {
           const meta = await _upsertProfile(data.user);
           const user = _sessionUser(data.user, meta.name);
           await _persistSession(user, remember, password);
+          if (typeof AuthSessionSync !== 'undefined') AuthSessionSync.broadcastLogin(user);
           return { ok: true, user };
         }
         return {
@@ -104,6 +105,7 @@ const AuthService = (() => {
           await _upsertProfile(data.user, displayName);
           const user = _sessionUser(data.user, displayName);
           await _persistSession(user, remember, password);
+          if (typeof AuthSessionSync !== 'undefined') AuthSessionSync.broadcastLogin(user);
           return { ok: true, user };
         }
         if (error?.message?.includes('already registered')) {
@@ -224,6 +226,7 @@ const AuthService = (() => {
     } else {
       sessionStorage.removeItem('in4mind_user');
     }
+    if (typeof AuthSessionSync !== 'undefined') AuthSessionSync.broadcastLogout();
   }
 
   async function getSession() {

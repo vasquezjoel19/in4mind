@@ -318,6 +318,16 @@ const SettingsController = (() => {
         </div>
         <div class="settings-row">
           <div class="settings-row__text">
+            <p class="settings-row__label" data-i18n="privacy.importData">Restaurar datos</p>
+            <p class="settings-row__hint" data-i18n="privacy.importHint">Importa un JSON exportado previamente.</p>
+          </div>
+          <label class="settings-btn" style="cursor:pointer">
+            <span data-i18n="privacy.importBtn">Importar</span>
+            <input type="file" id="settings-import-data" accept="application/json,.json" hidden>
+          </label>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row__text">
             <p class="settings-row__label" data-i18n="privacy.clearAi">Borrar historial IA</p>
           </div>
           <button type="button" class="settings-btn" id="settings-clear-ai" data-i18n="privacy.clearAiBtn">Borrar</button>
@@ -412,13 +422,28 @@ const SettingsController = (() => {
       localStorage.removeItem('in4mind_onboarding_done');
       alert(typeof I18n !== 'undefined' ? I18n.t('settingsModal.onboardReset') : 'Tour reiniciado.');
     });
-    document.getElementById('settings-export-data')?.addEventListener('click', () => {
+    document.getElementById('settings-export-data')?.addEventListener('click', async () => {
+      if (typeof LazyScriptLoader !== 'undefined') await LazyScriptLoader.loadPrivacyTools();
       if (typeof DataExportService !== 'undefined') DataExportService.downloadJson();
     });
-    document.getElementById('settings-clear-ai')?.addEventListener('click', () => {
+    document.getElementById('settings-import-data')?.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      if (typeof LazyScriptLoader !== 'undefined') await LazyScriptLoader.loadPrivacyTools();
+      if (typeof DataExportService !== 'undefined') {
+        const result = await DataExportService.importFromFile(file);
+        if (!result.ok) {
+          alert(typeof I18n !== 'undefined' ? I18n.t('privacy.importFail') : 'No se pudo importar el archivo.');
+        }
+      }
+      e.target.value = '';
+    });
+    document.getElementById('settings-clear-ai')?.addEventListener('click', async () => {
+      if (typeof LazyScriptLoader !== 'undefined') await LazyScriptLoader.loadPrivacyTools();
       if (typeof DataExportService !== 'undefined') DataExportService.clearAiHistory();
     });
-    document.getElementById('settings-delete-account')?.addEventListener('click', () => {
+    document.getElementById('settings-delete-account')?.addEventListener('click', async () => {
+      if (typeof LazyScriptLoader !== 'undefined') await LazyScriptLoader.loadPrivacyTools();
       if (typeof DataExportService !== 'undefined') DataExportService.deleteAccount();
     });
     document.querySelector('[data-settings-go-profile]')?.addEventListener('click', e => {

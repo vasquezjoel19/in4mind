@@ -40,6 +40,7 @@ const NotesService = (() => {
   function _writeNotes(map) {
     try {
       localStorage.setItem(_scopedKey(KEY), JSON.stringify(map));
+      _scheduleCloudPush();
       return true;
     } catch {
       return false;
@@ -58,10 +59,40 @@ const NotesService = (() => {
   function _writeFolders(map) {
     try {
       localStorage.setItem(_scopedKey(FOLDERS_KEY), JSON.stringify(map));
+      _scheduleCloudPush();
       return true;
     } catch {
       return false;
     }
+  }
+
+  let _pushTimer = null;
+  function _scheduleCloudPush() {
+    if (typeof CloudBlobSync === 'undefined') return;
+    clearTimeout(_pushTimer);
+    _pushTimer = setTimeout(() => {
+      void CloudBlobSync.pushBlob('notes', {
+        notes: _readNotes(),
+        folders: _readFolders(),
+      });
+    }, 450);
+  }
+
+  async function hydrateFromCloud() {
+    if (typeof CloudBlobSync === 'undefined') return false;
+    const remote = await CloudBlobSync.pullBlob('notes');
+    if (!remote?.blob) return false;
+    const localNotes = _readNotes();
+    const localFolders = _readFolders();
+    const remoteNotes = remote.blob.notes || {};
+    const remoteFolders = remote.blob.folders || {};
+    const mergedNotes = CloudBlobSync.mergeMaps(localNotes, remoteNotes);
+    const mergedFolders = CloudBlobSync.mergeMaps(localFolders, remoteFolders);
+    try {
+      localStorage.setItem(_scopedKey(KEY), JSON.stringify(mergedNotes));
+      localStorage.setItem(_scopedKey(FOLDERS_KEY), JSON.stringify(mergedFolders));
+    } catch { return false; }
+    return true;
   }
 
   function _id() {
@@ -260,6 +291,7 @@ const NotesService = (() => {
     search,
     getByFolder,
     getRecent,
+    hydrateFromCloud,
   };
 
 })();

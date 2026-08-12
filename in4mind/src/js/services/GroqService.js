@@ -194,7 +194,7 @@ DIRECTRICES
 
   /**
    * Completions ligeras (p. ej. feedback de quiz). No usa el system prompt largo del chat.
-   * @param {{ system: string, user: string, model?: string, max_tokens?: number, temperature?: number }} opts
+   * @param {{ system: string, user: string, model?: string, max_tokens?: number, temperature?: number, timeoutMs?: number }} opts
    * @returns {Promise<string>}
    */
   async function complete(opts) {
@@ -204,22 +204,41 @@ DIRECTRICES
     const cfg = _config();
     if (!cfg) throw new Error('GROQ_API_KEY_MISSING');
 
-    const response = await fetch(cfg.API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${cfg.API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: opts.model || cfg.MODEL || 'llama-3.1-8b-instant',
-        messages: [
-          { role: 'system', content: String(opts.system || '') },
-          { role: 'user', content: String(opts.user || '') },
-        ],
-        max_tokens: opts.max_tokens ?? 120,
-        temperature: opts.temperature ?? 0.35,
-      }),
-    });
+    const cacheKey = `g:${opts.model || ''}|${String(opts.system || '').slice(0, 80)}|${String(opts.user || '').slice(0, 180)}`;
+    try {
+      const cached = sessionStorage.getItem(`in4mind_groq_cache:${cacheKey}`);
+      if (cached) return cached;
+    } catch { /* ignore */ }
+
+    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timeoutMs = opts.timeoutMs || 8000;
+    const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+
+    let response;
+    try {
+      response = await fetch(cfg.API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${cfg.API_KEY}`,
+        },
+        signal: controller?.signal,
+        body: JSON.stringify({
+          model: opts.model || cfg.MODEL || 'llama-3.1-8b-instant',
+          messages: [
+            { role: 'system', content: String(opts.system || '') },
+            { role: 'user', content: String(opts.user || '') },
+          ],
+          max_tokens: opts.max_tokens ?? 120,
+          temperature: opts.temperature ?? 0.35,
+        }),
+      });
+    } catch (err) {
+      if (err?.name === 'AbortError') throw new Error('GROQ_TIMEOUT');
+      throw err;
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
 
     if (!response.ok) {
       const errBody = await response.text().catch(() => '');
@@ -232,6 +251,9 @@ DIRECTRICES
     const data = await response.json();
     const reply = data.choices?.[0]?.message?.content?.trim();
     if (!reply) throw new Error('GROQ_EMPTY_RESPONSE');
+    try {
+      sessionStorage.setItem(`in4mind_groq_cache:${cacheKey}`, reply);
+    } catch { /* ignore */ }
     return reply;
   }
 

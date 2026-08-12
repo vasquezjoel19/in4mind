@@ -20,9 +20,41 @@ const AppFeatures = (() => {
   }
 
   function _navigateItem(item) {
+    if (!item) return;
+
+    if (item.type === 'note' && item.noteId) {
+      window.location.href = `notes.html?note=${encodeURIComponent(item.noteId)}`;
+      return;
+    }
+    if (item.type === 'project' && item.projectId) {
+      window.location.href = `projects.html?project=${encodeURIComponent(item.projectId)}`;
+      return;
+    }
+    if (item.type === 'guided' && item.route) {
+      window.location.href = item.route;
+      return;
+    }
+    if (item.type === 'quiz') {
+      if (item.quizId) sessionStorage.setItem('in4mind_open_quiz', item.quizId);
+      else if (item.courseId) sessionStorage.setItem('in4mind_open_quiz', item.courseId);
+      const q = item.quizId || item.courseId;
+      window.location.href = q
+        ? `quizzes.html?quiz=${encodeURIComponent(q)}`
+        : 'quizzes.html';
+      return;
+    }
+    if (item.type === 'lesson' && item.courseId) {
+      sessionStorage.setItem('in4mind_open_course', item.courseId);
+      const lesson = item.lessonId ? `&lesson=${encodeURIComponent(item.lessonId)}` : '';
+      window.location.href = `tutorial.html?course=${encodeURIComponent(item.courseId)}${lesson}`;
+      return;
+    }
     if (item.courseId) sessionStorage.setItem('in4mind_open_course', item.courseId);
     if (item.route) {
-      const url = item.hash ? `${item.route}${item.hash}` : item.route;
+      let url = item.hash ? `${item.route}${item.hash}` : item.route;
+      if (item.type === 'course' && item.courseId && !/[?&]course=/.test(url)) {
+        url = `tutorial.html?course=${encodeURIComponent(item.courseId)}`;
+      }
       window.location.href = url;
     }
   }
@@ -212,8 +244,11 @@ const AppFeatures = (() => {
       return;
     }
     const results = GlobalSearchService.search(q);
-    const groups = ['courses', 'lessons', 'quizzes', 'help'];
-    const typeMap = { courses: 'course', lessons: 'lesson', quizzes: 'quiz', help: 'help' };
+    const groups = ['courses', 'lessons', 'quizzes', 'notes', 'projects', 'guided', 'help'];
+    const typeMap = {
+      courses: 'course', lessons: 'lesson', quizzes: 'quiz', help: 'help',
+      notes: 'note', projects: 'project', guided: 'guided',
+    };
     let html = '';
     groups.forEach(g => {
       const items = results[g];
@@ -228,7 +263,8 @@ const AppFeatures = (() => {
       html += '</ul></div>';
     });
     root.innerHTML = html || `<p class="global-search-modal__hint">${_t('common.noResults', null, 'Sin resultados.')}</p>`;
-    const flat = GlobalSearchService.flatten(results);
+    // Flatten in the same group order used above
+    const flat = groups.flatMap(g => results[g] || []);
     root.querySelectorAll('[data-search-item]').forEach((el, i) => {
       const item = flat[i];
       if (!item) return;

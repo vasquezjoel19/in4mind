@@ -75,10 +75,16 @@ const QuizAIFeedbackService = (() => {
         model: FEEDBACK_MODEL,
         max_tokens: MAX_TOKENS,
         temperature: TEMPERATURE,
+        timeoutMs: 7000,
       });
     } catch (err) {
       console.warn('[QuizAIFeedback]', err?.message || err);
-      return null;
+      if (typeof ErrorReporter !== 'undefined') {
+        ErrorReporter.capture('quiz_ai_feedback_fail', { message: err?.message || String(err) });
+      }
+      // Fallback local: explicación base del currículo o tip genérico.
+      if (ctx.explanation) return _clip(ctx.explanation, 220);
+      return 'Revisa la respuesta correcta y vuelve a intentar el concepto en la siguiente pregunta.';
     }
   }
 

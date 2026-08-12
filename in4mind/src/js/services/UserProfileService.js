@@ -574,7 +574,27 @@ const UserProfileService = (() => {
     };
 
     await _sb.from('quiz_progress')
-      .upsert(row, { onConflict: 'user_id,quiz_id' });
+      .upsert(row, { onConflict: 'user_id,quiz_id' })
+      .then(({ error }) => {
+        if (error) throw error;
+      })
+      .catch((err) => {
+        if (typeof SyncOutboxService !== 'undefined') {
+          SyncOutboxService.enqueue({
+            table: 'quiz_progress',
+            action: 'upsert',
+            payload: row,
+            conflict: 'user_id,quiz_id',
+            conflictKey: `quiz_progress:${userId}:${quizId}`,
+          });
+        }
+        if (typeof ErrorReporter !== 'undefined') {
+          ErrorReporter.capture('quiz_progress_upsert_fail', { message: err?.message || String(err) });
+        }
+        if (typeof AppShell !== 'undefined') {
+          AppShell.showToast('Progreso guardado en este dispositivo. Se sincronizará al recuperar la conexión.', 2800);
+        }
+      });
 
     _mergeLocalQuiz(quizId, { bestPct, attempts, completedAt: Date.now() });
     _cache.quizProgress = null;
@@ -713,7 +733,7 @@ const UserProfileService = (() => {
     const bestPct  = Math.max(prev?.pct || 0, score, localBest);
     const attempts = Math.max((prev?.attempts || 0) + 1, localAttempts);
 
-    await _sb.from('lesson_progress').upsert({
+    const lessonRow = {
       user_id:      userId,
       course_id:    courseId,
       lesson_id:    lessonId,
@@ -722,7 +742,27 @@ const UserProfileService = (() => {
       attempts,
       completed_at: new Date().toISOString(),
       updated_at:   new Date().toISOString(),
-    }, { onConflict: 'user_id,course_id,lesson_id' });
+    };
+
+    try {
+      const { error } = await _sb.from('lesson_progress').upsert(lessonRow, {
+        onConflict: 'user_id,course_id,lesson_id',
+      });
+      if (error) throw error;
+    } catch (err) {
+      if (typeof SyncOutboxService !== 'undefined') {
+        SyncOutboxService.enqueue({
+          table: 'lesson_progress',
+          action: 'upsert',
+          payload: lessonRow,
+          conflict: 'user_id,course_id,lesson_id',
+          conflictKey: `lesson_progress:${userId}:${courseId}:${lessonId}`,
+        });
+      }
+      if (typeof ErrorReporter !== 'undefined') {
+        ErrorReporter.capture('lesson_progress_upsert_fail', { message: err?.message || String(err) });
+      }
+    }
 
     _cache.lessonProgress = null;
     _mergeLessonLocal(courseId, {

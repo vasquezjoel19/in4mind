@@ -69,6 +69,7 @@ const GlobalSearchService = (() => {
             title: mod.title || _t('search.quizModule', { course: quiz.title }, `Quiz de ${quiz.title}`),
             subtitle: quiz.title,
             courseId: quiz.id,
+            quizId: quiz.id,
             route: 'quizzes.html',
           });
         }
@@ -80,6 +81,7 @@ const GlobalSearchService = (() => {
           title: quiz.title,
           subtitle: _t('search.groupQuizzes', null, 'Quizzes'),
           courseId: quiz.id,
+          quizId: quiz.id,
           route: 'quizzes.html',
         });
       }

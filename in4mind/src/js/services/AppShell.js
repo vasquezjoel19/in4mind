@@ -211,6 +211,10 @@ const AppShell = (() => {
     _bindAvatarNavigation();
     _bindHelpNavigation();
 
+    if (typeof ErrorReporter !== 'undefined') ErrorReporter.init();
+    if (typeof ConnectivityService !== 'undefined') ConnectivityService.init();
+    if (typeof AuthSessionSync !== 'undefined') AuthSessionSync.init();
+
     if (typeof UserProfileService !== 'undefined') {
       const user = UserProfileService.getCurrentUser();
       if (user?.email) {
@@ -245,6 +249,23 @@ const AppShell = (() => {
       }
       if (typeof GlobalChatController !== 'undefined') {
         void GlobalChatController.init();
+      }
+      // Hidrata blobs desde la nube (notas/proyectos/intentos)
+      void (async () => {
+        try {
+          if (typeof NotesService?.hydrateFromCloud === 'function') await NotesService.hydrateFromCloud();
+          if (typeof ProjectsService?.hydrateFromCloud === 'function') await ProjectsService.hydrateFromCloud();
+          if (typeof GuidedProjectsService?.hydrateFromCloud === 'function') await GuidedProjectsService.hydrateFromCloud();
+          if (typeof QuizProgressService?.hydrateFromCloud === 'function') await QuizProgressService.hydrateFromCloud();
+          if (typeof ConnectivityService !== 'undefined') await ConnectivityService.flushNow(false);
+        } catch (err) {
+          if (typeof ErrorReporter !== 'undefined') {
+            ErrorReporter.capture('hydrate_fail', { message: err?.message || String(err) });
+          }
+        }
+      })();
+      if (typeof LazyScriptLoader !== 'undefined') {
+        void LazyScriptLoader.loadPushOptional().catch(() => {});
       }
     });
 

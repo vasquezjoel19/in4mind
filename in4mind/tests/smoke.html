@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IN4MIND — Smoke tests</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 24px; background: #f4f6fb; color: #1b273c; }
+    h1 { margin: 0 0 8px; }
+    .meta { color: #5c6b7f; margin-bottom: 20px; }
+    .ok { color: #0f766e; }
+    .fail { color: #b91c1c; }
+    li { margin: 6px 0; }
+    code { background: #e8eef7; padding: 1px 6px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Smoke tests</h1>
+  <p class="meta">Pruebas locales de servicios críticos (sin red). Abre este archivo servido desde la app.</p>
+  <ul id="results"></ul>
+
+  <script src="../src/js/services/ErrorReporter.js"></script>
+  <script src="../src/js/services/SyncOutboxService.js"></script>
+  <script src="../src/js/services/ConnectivityService.js"></script>
+  <script src="../src/js/services/CloudBlobSync.js"></script>
+  <script src="../src/js/services/QuizProgressService.js"></script>
+  <script src="../src/js/services/DataExportService.js"></script>
+  <script src="../src/js/services/GlobalSearchService.js"></script>
+  <script>
+    const $list = document.getElementById('results');
+    const results = [];
+
+    function assert(name, cond, detail = '') {
+      results.push({ name, ok: Boolean(cond), detail });
+    }
+
+    // ErrorReporter
+    ErrorReporter.init();
+    ErrorReporter.clear();
+    ErrorReporter.capture('smoke', { hello: true });
+    assert('ErrorReporter.capture', ErrorReporter.getLog().length === 1);
+
+    // Outbox enqueue + size
+    const before = SyncOutboxService.size();
+    SyncOutboxService.enqueue({
+      table: 'quiz_progress',
+      action: 'upsert',
+      payload: { user_id: '00000000-0000-0000-0000-000000000000', quiz_id: 'smoke' },
+      conflict: 'user_id,quiz_id',
+      conflictKey: 'smoke-test',
+    });
+    assert('SyncOutboxService.enqueue', SyncOutboxService.size() >= before + 1 || SyncOutboxService.size() >= 1);
+
+    // Quiz mid-attempt local
+    QuizProgressService.clear('smoke-quiz');
+    const saved = QuizProgressService.save('smoke-quiz', {
+      seed: 42,
+      currentIdx: 1,
+      total: 5,
+      answers: [{ correct: true }],
+      title: 'Smoke',
+    });
+    assert('QuizProgressService.save', saved === true);
+    assert('QuizProgressService.isResumable', QuizProgressService.isResumable('smoke-quiz') === true);
+    QuizProgressService.clear('smoke-quiz');
+
+    // Connectivity API exists
+    assert('ConnectivityService.isOnline', typeof ConnectivityService.isOnline === 'function');
+
+    // Export shape (async)
+    (async () => {
+      const data = await DataExportService.collectUserData();
+      assert('DataExportService.collectUserData platform', data.platform === 'IN4MIND');
+      assert('DataExportService.version', data.version === 2);
+
+      const roundtrip = await DataExportService.importJson(data);
+      assert('DataExportService.importJson', roundtrip.ok === true);
+
+      // Search empty query
+      const empty = GlobalSearchService.search('a');
+      assert('GlobalSearchService short query', Array.isArray(empty.courses));
+
+      results.forEach(r => {
+        const li = document.createElement('li');
+        li.className = r.ok ? 'ok' : 'fail';
+        li.textContent = `${r.ok ? '✓' : '✗'} ${r.name}${r.detail ? ' — ' + r.detail : ''}`;
+        $list.appendChild(li);
+      });
+
+      const failed = results.filter(r => !r.ok).length;
+      const summary = document.createElement('p');
+      summary.innerHTML = failed
+        ? `<strong class="fail">${failed} fallos</strong>`
+        : `<strong class="ok">Todos los checks pasaron (${results.length})</strong>`;
+      document.body.appendChild(summary);
+    })();
+  </script>
+</body>
+</html>

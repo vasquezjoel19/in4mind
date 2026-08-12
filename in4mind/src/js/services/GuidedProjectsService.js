@@ -38,6 +38,29 @@ const GuidedProjectsService = (() => {
   function _writeAll(map) {
     try {
       localStorage.setItem(_scopedKey(), JSON.stringify(map));
+      _scheduleCloudPush();
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  let _pushTimer = null;
+  function _scheduleCloudPush() {
+    if (typeof CloudBlobSync === 'undefined') return;
+    clearTimeout(_pushTimer);
+    _pushTimer = setTimeout(() => {
+      void CloudBlobSync.pushBlob('guided', _readAll());
+    }, 450);
+  }
+
+  async function hydrateFromCloud() {
+    if (typeof CloudBlobSync === 'undefined') return false;
+    const remote = await CloudBlobSync.pullBlob('guided');
+    if (!remote?.blob) return false;
+    const merged = CloudBlobSync.mergeMaps(_readAll(), remote.blob || {});
+    try {
+      localStorage.setItem(_scopedKey(), JSON.stringify(merged));
       return true;
     } catch {
       return false;
@@ -187,6 +210,7 @@ const GuidedProjectsService = (() => {
     getQuizBestPctAsync,
     isUnlockedSync,
     isUnlocked,
+    hydrateFromCloud,
   };
 
 })();

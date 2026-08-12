@@ -8,12 +8,23 @@ Tablas de sync de usuario en Supabase usadas por la app estática:
 
 | Tabla | Propósito | Clave |
 |-------|-----------|-------|
+| `profiles` | Perfil del usuario (signup) | `id` = `auth.uid()` |
 | `user_notes` | Notas del alumno (blob JSON) | `user_id` PK |
 | `user_projects` | Proyectos libres | `user_id` PK |
 | `quiz_attempts` | Intentos / progreso de quiz | `user_id` PK |
 | `guided_progress` | Progreso de proyectos guiados | `user_id` PK |
 
-Migración de referencia: `supabase/migrations/20260812_user_blobs.sql`.
+Migraciones de referencia:
+- `supabase/migrations/20260812_user_blobs.sql`
+- `supabase/migrations/20260812_profiles_rls.sql`
+
+## Profiles (signup)
+
+- RLS habilitado con policy `users_own_profile` para `authenticated`:
+  - `USING (auth.uid() = id)`
+  - `WITH CHECK (auth.uid() = id)`
+- Trigger `trg_on_auth_user_created` → `handle_new_user()` (SECURITY DEFINER) inserta el perfil al crear `auth.users`.
+- El cliente también intenta `profiles.upsert` tras login/signup con sesión; sin JWT no debe bloquear el flujo de “confirma tu email”.
 
 RPC relacionada: `is_exam_unlocked` (`20260812_exam_unlock_rpc.sql`) — solo lectura de progreso del `auth.uid()` actual.
 

@@ -516,10 +516,22 @@ html[data-theme="dark"] .auth-card {
   margin-bottom: 12px;
 }
 
+.auth-alert.auth-alert--success {
+  color: #065f46;
+  background: rgba(5, 150, 105, 0.12);
+  border-color: rgba(5, 150, 105, 0.35);
+}
+
 html[data-theme="dark"] .auth-alert {
   color: #fca5a5;
   background: rgba(239, 68, 68, 0.15);
   border-color: rgba(248, 113, 113, 0.35);
+}
+
+html[data-theme="dark"] .auth-alert.auth-alert--success {
+  color: #6ee7b7;
+  background: rgba(5, 150, 105, 0.18);
+  border-color: rgba(52, 211, 153, 0.4);
 }
 
 /* ── Recuperación de contraseña ── */

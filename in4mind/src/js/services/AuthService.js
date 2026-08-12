@@ -23,17 +23,47 @@ const AuthService = (() => {
     };
   }
 
+  function _mapAuthError(error, fallbackKey, fallbackMsg) {
+    const msg = String(error?.message || '').toLowerCase();
+    if (msg.includes('already registered') || msg.includes('already been registered') || msg.includes('user already exists')) {
+      return _t('auth.errEmailTaken', null, 'Este correo ya está registrado.');
+    }
+    if (msg.includes('invalid login') || msg.includes('invalid credentials')) {
+      return _t('auth.errLogin', null, 'Credenciales incorrectas.');
+    }
+    if (msg.includes('email not confirmed')) {
+      return _t('auth.errEmailNotConfirmed', null, 'Confirma tu correo antes de iniciar sesión.');
+    }
+    if (msg.includes('password')) {
+      return error.message || _t(fallbackKey, null, fallbackMsg);
+    }
+    return error?.message || _t(fallbackKey, null, fallbackMsg);
+  }
+
   async function _upsertProfile(user, name) {
-    if (!_sb || !user?.id) return { name };
+    if (!_sb || !user?.id) return { ok: true, name };
+    const displayName = name || user.user_metadata?.name || user.email?.split('@')[0] || 'Usuario';
     try {
-      await _sb.from('profiles').upsert({
+      const { error } = await _sb.from('profiles').upsert({
         id: user.id,
         email: user.email?.toLowerCase(),
-        name: name || user.user_metadata?.name || user.email?.split('@')[0],
+        name: displayName,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'id' });
-    } catch { /* tabla opcional */ }
-    return { name: name || user.user_metadata?.name };
+      if (error) {
+        if (typeof ErrorReporter !== 'undefined') {
+          ErrorReporter.capture('profile_upsert_fail', { message: error.message });
+        }
+        // El trigger handle_new_user suele crear la fila; no bloqueamos el login.
+        return { ok: false, name: displayName, error: error.message };
+      }
+      return { ok: true, name: displayName };
+    } catch (err) {
+      if (typeof ErrorReporter !== 'undefined') {
+        ErrorReporter.capture('profile_upsert_fail', { message: err?.message || String(err) });
+      }
+      return { ok: false, name: displayName, error: err?.message || String(err) };
+    }
   }
 
   /**
@@ -46,7 +76,6 @@ const AuthService = (() => {
     } else {
       sessionStorage.setItem('in4mind_user', JSON.stringify(user));
     }
-    // El avance de quizzes hecho como invitado pasa a la cuenta.
     if (typeof QuizProgressService !== 'undefined') {
       QuizProgressService.mergeGuestInto(user.email);
     }
@@ -60,22 +89,22 @@ const AuthService = (() => {
   }
 
   async function login(email, password, remember = false) {
-    const em = email.trim().toLowerCase();
+    const em = String(email || '').trim().toLowerCase();
+    const pass = String(password || '');
 
-    // Con Supabase configurado, el login real es obligatorio (sin bypass demo).
     if (_sb) {
       try {
-        const { data, error } = await _sb.auth.signInWithPassword({ email: em, password });
-        if (!error && data?.user) {
+        const { data, error } = await _sb.auth.signInWithPassword({ email: em, password: pass });
+        if (!error && data?.user && data?.session) {
           const meta = await _upsertProfile(data.user);
           const user = _sessionUser(data.user, meta.name);
-          await _persistSession(user, remember, password);
+          await _persistSession(user, remember, pass);
           if (typeof AuthSessionSync !== 'undefined') AuthSessionSync.broadcastLogin(user);
           return { ok: true, user };
         }
         return {
           ok: false,
-          error: _t('auth.errLogin', null, 'Credenciales incorrectas.'),
+          error: _mapAuthError(error, 'auth.errLogin', 'Credenciales incorrectas.'),
         };
       } catch {
         return {
@@ -85,36 +114,62 @@ const AuthService = (() => {
       }
     }
 
-    const result = await DataService.login(em, password);
-    if (result.ok) await _persistSession(result.user, remember, password);
+    const result = await DataService.login(em, pass);
+    if (result.ok) await _persistSession(result.user, remember, pass);
     return result;
   }
 
   async function register(name, email, password, remember = false) {
-    const em = email.trim().toLowerCase();
-    const displayName = name.trim();
+    const em = String(email || '').trim().toLowerCase();
+    const pass = String(password || '');
+    const displayName = String(name || '').trim();
 
     if (_sb) {
       try {
         const { data, error } = await _sb.auth.signUp({
           email: em,
-          password,
+          password: pass,
           options: { data: { name: displayName } },
         });
-        if (!error && data?.user) {
-          await _upsertProfile(data.user, displayName);
-          const user = _sessionUser(data.user, displayName);
-          await _persistSession(user, remember, password);
-          if (typeof AuthSessionSync !== 'undefined') AuthSessionSync.broadcastLogin(user);
-          return { ok: true, user };
+
+        if (error) {
+          return {
+            ok: false,
+            error: _mapAuthError(error, 'auth.errRegister', 'No se pudo crear la cuenta.'),
+          };
         }
-        if (error?.message?.includes('already registered')) {
-          return { ok: false, error: _t('auth.errEmailTaken', null, 'Este correo ya está registrado.') };
+
+        const user = data?.user;
+        if (!user) {
+          return {
+            ok: false,
+            error: _t('auth.errRegister', null, 'No se pudo crear la cuenta.'),
+          };
         }
-        return {
-          ok: false,
-          error: error?.message || _t('auth.errRegister', null, 'No se pudo crear la cuenta.'),
-        };
+
+        // Supabase anti-enumeration: usuario sin identities = correo ya registrado.
+        if (Array.isArray(user.identities) && user.identities.length === 0) {
+          return {
+            ok: false,
+            error: _t('auth.errEmailTaken', null, 'Este correo ya está registrado.'),
+          };
+        }
+
+        // Confirmación de email activa: hay user pero aún no hay sesión JWT.
+        if (!data.session) {
+          return {
+            ok: true,
+            needsEmailConfirmation: true,
+            email: em,
+            user: _sessionUser(user, displayName),
+          };
+        }
+
+        await _upsertProfile(user, displayName);
+        const sessionUser = _sessionUser(user, displayName);
+        await _persistSession(sessionUser, remember, pass);
+        if (typeof AuthSessionSync !== 'undefined') AuthSessionSync.broadcastLogin(sessionUser);
+        return { ok: true, user: sessionUser };
       } catch {
         return {
           ok: false,
@@ -123,22 +178,16 @@ const AuthService = (() => {
       }
     }
 
-    const result = await DataService.register(displayName, em, password);
-    if (result.ok) await _persistSession(result.user, remember, password);
+    const result = await DataService.register(displayName, em, pass);
+    if (result.ok) await _persistSession(result.user, remember, pass);
     return result;
   }
 
   /**
    * Envía el correo de recuperación a la dirección que escribió el usuario.
-   *
-   * Orden de intento:
-   *  1. Supabase Auth — envía el correo y devuelve al usuario a login.html.
-   *  2. `/api/auth/request-reset` — función serverless con proveedor de correo.
-   *  3. Sin ninguno configurado se informa con claridad; antes se simulaba un
-   *     envío que en realidad nunca ocurría.
    */
   async function requestPasswordReset(email) {
-    const em = email.trim().toLowerCase();
+    const em = String(email || '').trim().toLowerCase();
 
     if (_sb) {
       try {
@@ -149,7 +198,6 @@ const AuthService = (() => {
       } catch { /* se intenta el endpoint propio */ }
     }
 
-    // Genera el token local que validará `resetPassword` y lo manda al backend.
     const local = await DataService.requestPasswordReset(em);
     if (!local.ok) return local;
 
@@ -163,8 +211,6 @@ const AuthService = (() => {
 
       const data = await res.json().catch(() => ({}));
       if (data.error === 'RESET_EMAIL_NOT_CONFIGURED' || res.status === 404) {
-        // Sin proveedor de correo: se permite continuar en el mismo dispositivo,
-        // pero se dice explícitamente que no se envió ningún correo.
         return { ok: true, email: em, delivered: false, reason: 'not_configured' };
       }
       return { ok: true, email: em, delivered: false, reason: 'send_failed' };
@@ -174,7 +220,7 @@ const AuthService = (() => {
   }
 
   async function resetPassword(email, password, confirm) {
-    const em = email.trim().toLowerCase();
+    const em = String(email || '').trim().toLowerCase();
 
     if (_sb) {
       try {
@@ -187,7 +233,7 @@ const AuthService = (() => {
   }
 
   async function updateDisplayName(name) {
-    const trimmed = name.trim();
+    const trimmed = String(name || '').trim();
     if (!trimmed) return { ok: false, error: _t('settingsModal.nameRequired', null, 'El nombre es obligatorio.') };
 
     const stored = sessionStorage.getItem('in4mind_user');
@@ -221,7 +267,6 @@ const AuthService = (() => {
       try { await _sb.auth.signOut(); } catch { /* ignore */ }
     }
     if (typeof SessionStore !== 'undefined') {
-      // Se conserva el correo recordado para precargar el formulario.
       SessionStore.clear({ keepEmail: true });
     } else {
       sessionStorage.removeItem('in4mind_user');

@@ -415,23 +415,27 @@ const TutorialController = (() => {
     window.location.href = 'quizzes.html';
   }
 
-  function _goToCertExam() {
+  async function _goToCertExam() {
     if (!_currentCourse) return;
     if (typeof UserProfileService === 'undefined') return;
     if (!UserProfileService.getCurrentUser()) {
-      window.location.href = 'login.html';
+      if (typeof AppShell !== 'undefined') {
+        AppShell.showToast(_t('tutorial.loginToSave', null, 'Inicia sesión para presentar el examen de certificación.'));
+      }
       return;
     }
-    const stats = UserProfileService.getCertificationRequirements(_currentCourse.id, _currentLessons.length);
+    const stats = await UserProfileService.getCertificationRequirements(_currentCourse.id, _currentLessons.length);
     if (!stats.examUnlocked) {
       const parts = [];
-      if (!stats.lessonStats.unlocked) {
+      if (!stats.lessonStats?.unlocked) {
         parts.push(`lecciones con promedio ≥${stats.lessonMinAvg}%`);
       }
       if (!stats.quizPassed) {
         parts.push(`quiz ≥${stats.quizMinPct}% (actual ${stats.quizPct}%)`);
       }
-      AppShell.showToast(_t('tutorial.certUnlock', { parts: parts.join(' y ') }, `Completa: ${parts.join(' y ')} para desbloquear el examen.`));
+      if (typeof AppShell !== 'undefined') {
+        AppShell.showToast(_t('tutorial.certUnlock', { parts: parts.join(' y ') }, `Completa: ${parts.join(' y ')} para desbloquear el examen.`));
+      }
       return;
     }
     sessionStorage.setItem('in4mind_open_exam', _currentCourse.id);
@@ -461,13 +465,13 @@ const TutorialController = (() => {
     if (!_currentCourse || typeof UserProfileService === 'undefined') return;
     const lesson = _currentLessons[_currentLessonIdx];
     if (!lesson) return;
-    if (!UserProfileService.getCurrentUser()) {
-      window.location.href = 'login.html';
-      return;
-    }
+    // Guarda localmente también sin sesión; no redirigir (congelaba "Siguiente").
     UserProfileService.saveLessonProgress(_currentCourse.id, lesson.id, scorePct, {
       title: lesson.title,
-    });
+    }).catch(() => {});
+    if (!UserProfileService.getCurrentUser() && typeof AppShell !== 'undefined') {
+      AppShell.showToast(_t('tutorial.progressLocal', null, 'Progreso guardado en este dispositivo. Inicia sesión para sincronizarlo.'));
+    }
     if (typeof GamificationService !== 'undefined') {
       GamificationService.recordActivity('lesson', { courseId: _currentCourse.id, lessonId: lesson.id });
     }
@@ -690,17 +694,18 @@ const TutorialController = (() => {
     overlay.hidden = false;
   }
 
-  function _renderCertPanel() {
+  async function _renderCertPanel() {
     const panel = document.getElementById('tut-cert-panel');
     if (!panel || !_currentCourse) return;
 
     const total = _currentLessons.length;
     const req = typeof UserProfileService !== 'undefined'
-      ? UserProfileService.getCertificationRequirements(_currentCourse.id, total)
+      ? await UserProfileService.getCertificationRequirements(_currentCourse.id, total)
       : null;
     const stats = req?.lessonStats || { completed: 0, total, avg: 0, unlocked: false };
     const hasCert = typeof UserProfileService !== 'undefined'
-      && UserProfileService.hasExamCertification(_currentCourse.id);
+      ? await UserProfileService.hasExamCertification(_currentCourse.id)
+      : false;
     const progressPct = total ? Math.round((stats.completed / total) * 100) : 0;
     const lessonMin = req?.lessonMinAvg ?? 80;
     const quizMin = req?.quizMinPct ?? 70;
@@ -768,16 +773,18 @@ const TutorialController = (() => {
         </div>
       </div>
       <div class="tut-cert-panel__actions">
-        <button type="button" class="btn--primary tut-btn-learn" id="tut-cert-exam-btn"
-                ${examUnlocked && !hasCert ? '' : 'disabled'}>
+        <button type="button" class="btn--primary tut-btn-learn" id="tut-cert-exam-btn">
           ${hasCert ? _t('tutorial.btnViewCert', null, 'Ver certificado en perfil') : examUnlocked ? _t('tutorial.btnGoExam', null, 'Ir al examen de certificación') : _t('tutorial.btnExamBlocked', null, 'Examen bloqueado')}
         </button>
         <button type="button" class="btn--course" id="tut-cert-quiz-btn">${_t('tutorial.btnPracticeQuiz', { min: quizMin }, `Quiz de práctica (≥${quizMin}%)`)}</button>
       </div>`;
 
     document.getElementById('tut-cert-exam-btn')?.addEventListener('click', () => {
-      if (hasCert) window.location.href = 'profile.html';
-      else _goToCertExam();
+      if (hasCert) {
+        window.location.href = 'profile.html';
+        return;
+      }
+      void _goToCertExam();
     });
     document.getElementById('tut-cert-quiz-btn')?.addEventListener('click', _goToCourseQuiz);
   }
@@ -936,7 +943,7 @@ const TutorialController = (() => {
     _setActionButtonState('fav', false);
     _setActionButtonState('save', false);
     _syncActionButtons();
-    _renderCertPanel();
+    void _renderCertPanel();
 
     UserProfileService.recordVisit(UserProfileService.buildCourseItem(course));
 
@@ -1216,6 +1223,10 @@ const TutorialController = (() => {
 
   function _showLesson(idx, opts = {}) {
     if (!_currentLessons.length || idx < 0 || idx >= _currentLessons.length) return;
+
+    // Cierra el timer del video de la lección anterior antes de cambiar estado.
+    try { _stopVideoWatch(_videoMeta()); } catch { /* ignore */ }
+
     _currentLessonIdx = idx;
     const lesson = _currentLessons[idx];
     const total = _currentLessons.length;
@@ -1231,10 +1242,13 @@ const TutorialController = (() => {
     const prevBtn = document.getElementById('lesson-prev');
     const nextBtn = document.getElementById('lesson-next');
     const quizBtn = document.getElementById('lesson-quiz-btn');
-    prevBtn.disabled = idx === 0;
-    nextBtn.textContent = idx === total - 1
-      ? _t('tutorial.finishCourse', null, 'Finalizar curso')
-      : _t('tutorial.next', null, 'Siguiente →');
+    if (prevBtn) prevBtn.disabled = idx === 0;
+    if (nextBtn) {
+      nextBtn.disabled = false;
+      nextBtn.textContent = idx === total - 1
+        ? _t('tutorial.finishCourse', null, 'Finalizar curso')
+        : _t('tutorial.next', null, 'Siguiente →');
+    }
     if (quizBtn) quizBtn.textContent = _t('tutorial.quizLabel', { course: _currentCourse.title }, `Quiz: ${_currentCourse.title}`);
 
     $listView.style.display = 'none';
@@ -1389,16 +1403,20 @@ const TutorialController = (() => {
 
     document.getElementById('lesson-prev')?.addEventListener('click', () => _showLesson(_currentLessonIdx - 1));
     document.getElementById('lesson-next')?.addEventListener('click', () => {
-      _showLessonCheck(() => {
+      _showLessonCheck(async () => {
         if (_currentLessonIdx < _currentLessons.length - 1) {
           _showLesson(_currentLessonIdx + 1);
         } else if (_currentCourse) {
           _showDetail(_currentCourse.id);
-          const stats = UserProfileService?.getCourseLessonStats(_currentCourse.id, _currentLessons.length);
-          if (stats?.unlocked) {
-            AppShell.showToast(_t('tutorial.finishCourse', null, '¡Curso completado! Ya puedes presentar el examen de certificación.'));
-          } else {
-            AppShell.showToast(_t('tutorial.quickCheckSub', null, 'Lección final registrada. Sigue practicando para alcanzar el 80% de promedio.'));
+          try {
+            const stats = await UserProfileService?.getCourseLessonStats(_currentCourse.id, _currentLessons.length);
+            if (stats?.unlocked) {
+              AppShell.showToast(_t('tutorial.finishCourse', null, '¡Curso completado! Ya puedes presentar el examen de certificación.'));
+            } else {
+              AppShell.showToast(_t('tutorial.quickCheckSub', null, 'Lección final registrada. Sigue practicando para alcanzar el 80% de promedio.'));
+            }
+          } catch {
+            AppShell.showToast(_t('tutorial.quickCheckSub', null, 'Lección final registrada.'));
           }
         }
       });

@@ -137,8 +137,10 @@ const AuthController = (() => {
    * @param {string} msg
    */
   function _showError(el, msg) {
+    if (!el) return;
     el.textContent = msg;
     el.style.display = 'block';
+    el.hidden = false;
     el.classList.add('anim-fade-in');
   }
 
@@ -148,6 +150,8 @@ const AuthController = (() => {
       if (!el) return;
       el.textContent = '';
       el.style.display = 'none';
+      el.hidden = true;
+      el.classList.remove('auth-alert--success');
     });
     if ($forgotSuccess) $forgotSuccess.hidden = true;
     if ($resetSuccess) $resetSuccess.hidden = true;
@@ -469,6 +473,20 @@ const AuthController = (() => {
     const result = await authFn(nameInput.value, emailInput.value, passInput.value);
 
     if (result.ok) {
+      if (result.needsEmailConfirmation) {
+        _showError(
+          $registerError,
+          _t('auth.confirmEmail', { email: result.email || emailInput.value.trim() },
+            `Cuenta creada. Revisa ${result.email || emailInput.value.trim()} y confirma el enlace antes de iniciar sesión.`)
+        );
+        $registerError.classList.add('auth-alert--success');
+        $registerBtn.disabled = false;
+        $registerBtn.textContent = _t('auth.registerBtn');
+        // Prefill login for after confirmation
+        const loginEmail = $loginForm?.querySelector('#login-email');
+        if (loginEmail) loginEmail.value = result.email || emailInput.value.trim();
+        return;
+      }
       if (typeof AuthService === 'undefined') {
         sessionStorage.setItem('in4mind_user', JSON.stringify(result.user));
         if (typeof UserProfileService !== 'undefined') {
@@ -478,6 +496,7 @@ const AuthController = (() => {
       }
       _redirectAfterAuth();
     } else {
+      $registerError?.classList.remove('auth-alert--success');
       _showError($registerError, result.error || _t('auth.errRegister'));
       $registerBtn.disabled = false;
       $registerBtn.textContent = _t('auth.registerBtn');
@@ -497,8 +516,7 @@ const AuthController = (() => {
       return;
     }
     if ($loginError) {
-      $loginError.textContent = result.error || _t('auth.errLogin');
-      $loginError.hidden = false;
+      _showError($loginError, result.error || _t('auth.errLogin'));
     }
   }
 

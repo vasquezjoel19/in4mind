@@ -857,7 +857,7 @@ const LOCALE_EN = {
     navCommunity: 'Community',
     navGuides: 'Guides',
     navContact: 'Contact',
-    start: 'Get Started',
+    start: 'Start',
     heroTag: 'Stay up to date with accessible technology',
     heroTitle: 'Learn technology clearly and modernly',
     heroSub: 'Courses, quizzes, certifications, and AI assistant in one platform.',

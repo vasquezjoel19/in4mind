@@ -135,9 +135,18 @@ const NotesController = (() => {
 
     if (!notes.length) {
       $grid.innerHTML = `
-        <div class="notes-empty">
-          <p>${_t('notes.empty', null, 'Aún no tienes notas. ¡Crea la primera!')}</p>
-          <button type="button" class="btn--course" id="notes-empty-create">${_t('notes.newNote', null, 'Nueva nota')}</button>
+        <div class="empty-state notes-empty">
+          <div class="empty-state__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="8" y1="13" x2="16" y2="13"/>
+              <line x1="8" y1="17" x2="12" y2="17"/>
+            </svg>
+          </div>
+          <h3 class="empty-state__title">${_t('notes.emptyTitle', null, 'Aún no tienes notas')}</h3>
+          <p class="empty-state__desc">${_t('notes.empty', null, 'Aún no tienes notas. ¡Crea la primera!')}</p>
+          <button type="button" class="btn--course empty-state__action" id="notes-empty-create">${_t('notes.newNote', null, 'Nueva nota')}</button>
         </div>`;
       document.getElementById('notes-empty-create')?.addEventListener('click', () => _openEditor());
       return;

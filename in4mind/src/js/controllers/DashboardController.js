@@ -22,6 +22,33 @@ const DashboardController = (() => {
     return fallback;
   }
 
+  function _skelCard() {
+    return `
+      <div class="skel-card" aria-hidden="true">
+        <div class="skel skel-card__icon"></div>
+        <div class="skel skel-card__line"></div>
+        <div class="skel skel-card__line skel-card__line--short"></div>
+        <div class="skel skel-card__bar"></div>
+      </div>`;
+  }
+
+  function _skelCards(count = 4) {
+    return Array.from({ length: count }, () => _skelCard()).join('');
+  }
+
+  function _emptyState({ title, desc, href, action, icon = 'book' }) {
+    const actionHtml = href && action
+      ? `<a class="btn--course empty-state__action" href="${href}">${action}</a>`
+      : '';
+    return `
+      <div class="empty-state">
+        <div class="empty-state__icon">${_uiIcon(icon)}</div>
+        <h3 class="empty-state__title">${title}</h3>
+        <p class="empty-state__desc">${desc}</p>
+        ${actionHtml}
+      </div>`;
+  }
+
   /** Reparte el catálogo entre los dos carruseles horizontales. */
   function _splitCoursesForCarousels(all) {
     const mid = Math.ceil(all.length / 2);
@@ -154,6 +181,7 @@ const DashboardController = (() => {
       user: '<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>',
       spark: '<path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2z"/><path d="M19 14l.9 2.6L22.5 18l-2.6.9L19 21.5l-.9-2.6L15.5 18l2.6-.9L19 14z"/><path d="M5 14l.9 2.6L8.5 18l-2.6.9L5 21.5l-.9-2.6L1.5 18l2.6-.9L5 14z"/>',
       clock: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+      book: '<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>',
       arrow: '<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>',
     };
     return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[iconId] || ICONS.spark}</svg>`;
@@ -376,7 +404,7 @@ const DashboardController = (() => {
               <h3 class="resume-card__title">${item.title}</h3>
             </div>
           </div>
-          <span class="resume-card__percent">${item.progressPct}%</span>
+          <span class="resume-card__percent progress-pct">${item.progressPct}%</span>
         </div>
         <p class="resume-card__desc">${meta.join(' · ') || _t('dashboard.resumeNoProgress', null, 'Empieza tu primer módulo y registra tu avance.')}</p>
         <div class="resume-card__bar" aria-hidden="true">
@@ -967,11 +995,23 @@ const DashboardController = (() => {
 
     $featuredTrack.innerHTML = featured.length
       ? featured.map((c, i) => _renderCourseCard(c, i)).join('')
-      : `<p style="color:var(--clr-text-muted);font-size:.85rem">${typeof I18n !== 'undefined' ? I18n.t('common.noResults') : 'Sin resultados.'}</p>`;
+      : _emptyState({
+          title: _t('common.noResults', null, 'Sin resultados.'),
+          desc: _t('dashboard.emptyCoursesDesc', null, 'Prueba otra búsqueda o explora el catálogo completo.'),
+          href: 'tutorial.html',
+          action: _t('dashboard.browseCourses', null, 'Ver cursos'),
+          icon: 'book',
+        });
 
     $learningTrack.innerHTML = learning.length
       ? learning.map((c, i) => _renderCourseCard(c, i)).join('')
-      : `<p style="color:var(--clr-text-muted);font-size:.85rem">${typeof I18n !== 'undefined' ? I18n.t('dashboard.noCoursesSection') : 'Sin cursos en esta sección.'}</p>`;
+      : _emptyState({
+          title: _t('dashboard.noCoursesSection', null, 'Sin cursos en esta sección.'),
+          desc: _t('dashboard.emptyCoursesDesc', null, 'Prueba otra búsqueda o explora el catálogo completo.'),
+          href: 'tutorial.html',
+          action: _t('dashboard.browseCourses', null, 'Ver cursos'),
+          icon: 'book',
+        });
 
     _bindCourseTrack($featuredTrack);
     _bindCourseTrack($learningTrack);
@@ -999,7 +1039,13 @@ const DashboardController = (() => {
     $recentTrack.classList.toggle('carousel-track--expanded', _expanded.recent);
     $recentTrack.innerHTML = items.length
       ? items.map((it, i) => _renderRecentCard(it, i)).join('')
-      : `<p style="color:var(--clr-text-muted);font-size:.85rem">${typeof I18n !== 'undefined' ? I18n.t('dashboard.emptyRecent') : 'Sin actividad reciente. Explora cursos para ver tu historial.'}</p>`;
+      : _emptyState({
+          title: _t('dashboard.emptyRecentTitle', null, 'Sin actividad reciente'),
+          desc: _t('dashboard.emptyRecent', null, 'Explora cursos para ver tu historial.'),
+          href: 'tutorial.html',
+          action: _t('dashboard.browseCourses', null, 'Ver cursos'),
+          icon: 'clock',
+        });
 
     _bindRecentTrack();
   }
@@ -1014,14 +1060,13 @@ const DashboardController = (() => {
   function _renderResume(resumeItems) {
     if (!$resumeGrid) return;
     if (!resumeItems.length) {
-      $resumeGrid.innerHTML = `
-        <article class="empty-state-panel">
-          <div class="empty-state-panel__icon">${_uiIcon('clock')}</div>
-          <div>
-            <h3 class="empty-state-panel__title">${_t('dashboard.resumeEmptyTitle', null, 'Aún no hay progreso registrado')}</h3>
-            <p class="empty-state-panel__desc">${_t('dashboard.resumeEmptyDesc', null, 'Explora un curso, completa una lección o responde un quiz para ver tu progreso aquí.')}</p>
-          </div>
-        </article>`;
+      $resumeGrid.innerHTML = _emptyState({
+        title: _t('dashboard.resumeEmptyTitle', null, 'Aún no hay progreso registrado'),
+        desc: _t('dashboard.resumeEmptyDesc', null, 'Explora un curso, completa una lección o responde un quiz para ver tu progreso aquí.'),
+        href: 'tutorial.html',
+        action: _t('dashboard.browseCourses', null, 'Ver cursos'),
+        icon: 'clock',
+      });
       return;
     }
     $resumeGrid.innerHTML = resumeItems.map((item, i) => _renderResumeCard(item, i)).join('');
@@ -1036,7 +1081,13 @@ const DashboardController = (() => {
           badge: item.badge,
           meta: item.meta,
         })).join('')
-      : `<p style="color:var(--clr-text-muted);font-size:.85rem">${_t('common.noResults', null, 'Sin resultados.')}</p>`;
+      : _emptyState({
+          title: _t('dashboard.emptyRecoTitle', null, 'Sin recomendaciones aún'),
+          desc: _t('dashboard.emptyRecoDesc', null, 'Completa un curso o quiz para personalizar tus sugerencias.'),
+          href: 'tutorial.html',
+          action: _t('dashboard.browseCourses', null, 'Ver cursos'),
+          icon: 'book',
+        });
 
     _bindCourseTrack($recommendedTrack);
   }
@@ -1333,8 +1384,37 @@ const DashboardController = (() => {
 
     // Renderizar contenido
     AppShell.initPage('home');
-    _renderCourses();
-    void _renderRecent();
+
+    if ($summaryGrid) $summaryGrid.innerHTML = _skelCards(4);
+    if ($quickActionsGrid) $quickActionsGrid.innerHTML = _skelCards(3);
+    if ($resumeGrid) $resumeGrid.innerHTML = _skelCards(2);
+    if ($recommendedTrack) $recommendedTrack.innerHTML = _skelCards(3);
+    if ($recentTrack) {
+      $recentTrack.innerHTML = _skelCards(3);
+      $recentTrack.setAttribute('aria-busy', 'true');
+    }
+    if ($featuredTrack) {
+      $featuredTrack.innerHTML = _skelCards(4);
+      $featuredTrack.setAttribute('aria-busy', 'true');
+    }
+    if ($learningTrack) {
+      $learningTrack.innerHTML = _skelCards(4);
+      $learningTrack.setAttribute('aria-busy', 'true');
+    }
+
+    const paintCourses = () => {
+      _renderCourses();
+      $featuredTrack?.removeAttribute('aria-busy');
+      $learningTrack?.removeAttribute('aria-busy');
+    };
+
+    if (typeof ContentLoader !== 'undefined' && ContentLoader.load) {
+      ContentLoader.load().finally(paintCourses);
+    } else {
+      paintCourses();
+    }
+
+    void _renderRecent().then(() => $recentTrack?.removeAttribute('aria-busy'));
     void _refreshDashboardInsights();
     _updateExpandLabels();
 

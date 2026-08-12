@@ -9,6 +9,9 @@
   <meta property="og:description" content="Cursos, quizzes, certificaciones y asistente IA.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="src/img/brand/icon-512.png">
+  <meta property="og:image:width" content="512">
+  <meta property="og:image:height" content="512">
+  <meta name="theme-color" content="#1b273c">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="src/img/brand/icon-512.png">
 
@@ -26,14 +29,15 @@
   <script src="src/js/services/I18n.js?v=20260801"></script>
   <script>ThemeController.initEarly(); I18n.initEarly();</script>
 
-  <link rel="stylesheet" href="src/css/tokens.css?v=20260811mobile">
-  <link rel="stylesheet" href="src/css/landing.css?v=20260811mobile">
+  <link rel="stylesheet" href="src/css/tokens.css?v=20260812polish">
+  <link rel="stylesheet" href="src/css/landing.css?v=20260812polish">
+  <link rel="stylesheet" href="src/css/ui-polish.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/ambient.css?v=20260714fluid3">
-  <link rel="stylesheet" href="src/css/theme.css?v=20260811mobile">
-  <link rel="stylesheet" href="src/css/i18n.css?v=20260811login2">
+  <link rel="stylesheet" href="src/css/theme.css?v=20260812polish">
+  <link rel="stylesheet" href="src/css/i18n.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/accessibility.css?v=20260707">
-  <link rel="stylesheet" href="src/css/cookie-consent.css?v=20260811mobile">
-  <link rel="stylesheet" href="src/css/settings-modal.css?v=20260811mobile">
+  <link rel="stylesheet" href="src/css/cookie-consent.css?v=20260812polish">
+  <link rel="stylesheet" href="src/css/settings-modal.css?v=20260812polish">
   <link rel="manifest" href="manifest.json">
 
   <link rel="icon" type="image/png" sizes="64x64" href="src/img/brand/favicon-64.png">
@@ -130,9 +134,9 @@
       <h1 class="lp-hero__title lp-hero-enter lp-hero-enter--1" data-i18n="landing.heroTitle">Aprende tecnología de forma clara y moderna</h1>
       <p class="lp-hero__sub lp-hero-enter lp-hero-enter--2" data-i18n="landing.heroSub">Cursos, quizzes, certificaciones y asistente IA en una sola plataforma.</p>
       <div class="lp-hero__actions lp-hero-enter lp-hero-enter--3">
-        <a class="lp-btn lp-btn--primary" href="login.html" data-i18n="landing.explore">Explorar temas</a>
-        <button type="button" class="lp-btn lp-btn--ghost" id="btn-watch-intro">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <a class="lp-btn lp-btn--primary" href="login.html" data-i18n="landing.start">Empezar</a>
+        <button type="button" class="lp-btn lp-btn--quiet" id="btn-watch-intro">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
             <polygon points="10 8 16 12 10 16 10 8"/>
           </svg>
@@ -762,10 +766,10 @@
 <script src="src/js/locales/extended-course-locales.js?v=20260904"></script>
 <script src="src/js/data/extendedCourseLocales.js?v=20260904"></script>
 <script src="src/js/services/QuizProgressService.js?v=20260805"></script>
-<script src="src/js/services/QuizRandomizer.js?v=20260811shuffle"></script>
-<script src="src/js/services/SessionStore.js?v=20260812auth"></script>
-<script src="src/js/services/ShareService.js?v=20260812auth"></script>
-<script src="src/js/services/DataService.js?v=20260812auth"></script>
+<script src="src/js/services/QuizRandomizer.js?v=20260812polish"></script>
+<script src="src/js/services/SessionStore.js?v=20260812polish"></script>
+<script src="src/js/services/ShareService.js?v=20260812polish"></script>
+<script src="src/js/services/DataService.js?v=20260812polish"></script>
 <script src="src/js/components/In4mindBulb.js?v=20260810logo"></script>
 <script src="src/js/controllers/OtherMenuController.js?v=20260714theme"></script>
 <script src="src/js/other-menu-boot.js?v=20260714theme"></script>
@@ -1116,10 +1120,10 @@
   document.addEventListener('in4mind-locale-change', _renderCoursesCarousel);
 
   const TESTIMONIAL_AVATARS = [
-    'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&h=120&fit=crop&crop=face',
-    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop&crop=face',
-    'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&h=120&fit=crop&crop=face',
-    'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&h=120&fit=crop&crop=face',
+    'src/img/avatars/avatar-01.svg',
+    'src/img/avatars/avatar-02.svg',
+    'src/img/avatars/avatar-03.svg',
+    'src/img/avatars/avatar-04.svg',
   ];
 
   function _getTestimonials() {

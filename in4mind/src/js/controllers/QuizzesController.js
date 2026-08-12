@@ -714,7 +714,7 @@ const QuizzesController = (() => {
           <div class="quiz-card__progress-bg">
             <div class="quiz-card__progress-fill" style="width:${pct}%"></div>
           </div>
-          ${pct > 0 && pct < 100 ? `<p class="quiz-card__pct">${pct}%</p>` : ''}
+          ${`<p class="quiz-card__pct progress-pct">${pct}%</p>`}
           ${resumable ? `<p class="quiz-card__resume">${_t('quizzes.resumeHint', { pct }, `En curso · ${pct}% completado`)}</p>` : ''}
           <div class="quiz-card__controls">
             <span class="quiz-card__stat">${_t('quizzes.questionsLabel', { n: _countQuestions(exam) }, `${_countQuestions(exam)} Preguntas`)}</span>
@@ -790,7 +790,7 @@ const QuizzesController = (() => {
           <div class="quiz-card__progress-bg">
             <div class="quiz-card__progress-fill" style="width:${pct}%"></div>
           </div>
-          ${pct > 0 && pct < 100 ? `<p class="quiz-card__pct">${pct}%</p>` : ''}
+          ${`<p class="quiz-card__pct progress-pct">${pct}%</p>`}
           ${resumable ? `<p class="quiz-card__resume">${_t('quizzes.resumeHint', { pct }, `En curso · ${pct}% completado`)}</p>` : ''}
           <div class="quiz-card__controls">
             <span class="quiz-card__stat">${_t('quizzes.questionsLabel', { n: total }, `${total} Preguntas`)}</span>
@@ -825,7 +825,20 @@ const QuizzesController = (() => {
 
     $quizGrid.innerHTML = filtered.length
       ? filtered.map((q, i) => _renderCard(q, i)).join('')
-      : `<p style="color:var(--clr-text-muted);font-size:.85rem;grid-column:1/-1">${_t('quizzes.emptyFilter', null, 'Sin resultados para este filtro.')}</p>`;
+      : `<div class="empty-state" style="grid-column:1/-1">
+          <div class="empty-state__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <h3 class="empty-state__title">${_t('quizzes.emptyFilterTitle', null, 'Sin quizzes aquí')}</h3>
+          <p class="empty-state__desc">${_t('quizzes.emptyFilter', null, 'Sin resultados para este filtro.')}</p>
+          <button type="button" class="btn--course empty-state__action" data-filter-reset>Ver todos</button>
+        </div>`;
+
+    $quizGrid.querySelector('[data-filter-reset]')?.addEventListener('click', () => {
+      _activeFilter = 'all';
+      _renderFilters();
+      _renderGrid();
+    });
 
     $quizGrid.querySelectorAll('[data-quiz-id]').forEach(el => {
       el.addEventListener('click', e => {
@@ -1581,9 +1594,23 @@ const QuizzesController = (() => {
     $reviewList = document.getElementById('results-review');
 
     _renderFilters();
-    _renderGrid();
-    _renderContinue();
-    _renderCertExams();
+    if ($quizGrid) {
+      $quizGrid.innerHTML = Array.from({ length: 6 }, () => `
+        <div class="skel-card" aria-hidden="true">
+          <div class="skel skel-card__icon"></div>
+          <div class="skel skel-card__line"></div>
+          <div class="skel skel-card__line skel-card__line--short"></div>
+          <div class="skel skel-card__bar"></div>
+        </div>`).join('');
+      $quizGrid.setAttribute('aria-busy', 'true');
+    }
+    // Deja ver el skeleton un frame; el progreso local ya está listo.
+    requestAnimationFrame(() => {
+      _renderGrid();
+      _renderContinue();
+      _renderCertExams();
+      $quizGrid?.removeAttribute('aria-busy');
+    });
 
     document.getElementById('quiz-btn-back')?.addEventListener('click', () => {
       _persistAttempt();

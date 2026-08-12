@@ -234,15 +234,19 @@ const AppShell = (() => {
       AppFeatures.init(activeNavId);
     }
 
-    if (typeof CursorSpotlight !== 'undefined') {
-      CursorSpotlight.init({ intensity: 'app' });
-    }
+    const idle = typeof requestIdleCallback === 'function'
+      ? requestIdleCallback
+      : (cb) => setTimeout(cb, 280);
 
-    // El chat se monta solo y se inyecta en el body, así que basta con
-    // llamarlo desde aquí para tenerlo en todas las páginas del shell.
-    if (typeof GlobalChatController !== 'undefined') {
-      void GlobalChatController.init();
-    }
+    // Decorativo / secundario: no bloquea el primer paint.
+    idle(() => {
+      if (typeof CursorSpotlight !== 'undefined') {
+        CursorSpotlight.init({ intensity: 'app' });
+      }
+      if (typeof GlobalChatController !== 'undefined') {
+        void GlobalChatController.init();
+      }
+    });
 
     const main = document.querySelector('.main-area');
     if (main && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {

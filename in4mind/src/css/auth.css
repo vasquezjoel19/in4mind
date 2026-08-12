@@ -90,6 +90,8 @@ html[data-theme="dark"] .auth-bg::after {
   align-items: center;
   justify-content: space-between;
   padding: var(--sp-md) var(--sp-xl);
+  position: relative;
+  z-index: 2;
 }
 
 .auth-topbar__brand {
@@ -103,15 +105,15 @@ html[data-theme="dark"] .auth-bg::after {
   text-decoration: none;
 }
 
-.auth-topbar__links {
-  font-size: 0.8rem;
-  color: var(--clr-text-secondary);
+.auth-topbar__brand svg {
+  width: 28px;
+  height: 28px;
 }
 
 .auth-topbar__actions {
   display: flex;
   align-items: center;
-  gap: var(--sp-lg);
+  gap: var(--sp-md);
 }
 
 .auth-btn-home {

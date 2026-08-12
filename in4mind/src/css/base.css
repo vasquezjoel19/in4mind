@@ -1,9 +1,8 @@
 /**
  * IN4MIND — Estilos Base & Reset
  * Normalización global y tipografía base.
+ * Las fuentes se cargan desde el HTML (preconnect + stylesheet), no vía @import.
  */
-
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -215,11 +214,11 @@ ul, ol {
 }
 
 .main-area.page-enter {
-  animation: pageFadeIn 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: pageFadeIn var(--dur-slow) var(--ease) both;
 }
 
 .main-area.page-exit {
-  animation: pageFadeOut 0.22s ease forwards;
+  animation: pageFadeOut var(--dur-med) var(--ease) forwards;
   pointer-events: none;
 }
 

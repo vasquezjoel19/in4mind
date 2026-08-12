@@ -959,7 +959,7 @@ const LOCALE_ES = {
     navCommunity: 'Comunidad',
     navGuides: 'Guías',
     navContact: 'Contacto',
-    start: 'Comenzar',
+    start: 'Empezar',
     heroTag: 'Mantente al día con tecnología accesible',
     heroTitle: 'Aprende tecnología de forma clara y moderna',
     heroSub: 'Cursos, quizzes, certificaciones y asistente IA en una sola plataforma.',

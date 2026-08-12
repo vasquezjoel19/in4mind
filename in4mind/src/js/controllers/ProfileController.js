@@ -375,8 +375,21 @@ const ProfileController = (() => {
       $list.innerHTML = '';
       _clearListLoading();
       $empty.hidden = false;
-      const $msg = $empty.querySelector('p');
+      const $msg = $empty.querySelector('.empty-state__desc, p');
       if ($msg) $msg.textContent = _emptyMessage();
+      const $action = $empty.querySelector('.empty-state__action');
+      if ($action) {
+        if (_activeTab === 'progress' || _activeTab === 'quizzes') {
+          $action.href = 'tutorial.html';
+          $action.textContent = _t('profile.emptyActionCourses', null, 'Explorar cursos');
+        } else if (_activeTab === 'certifications') {
+          $action.href = 'quizzes.html';
+          $action.textContent = _t('profile.emptyActionQuizzes', null, 'Hacer un quiz');
+        } else {
+          $action.href = 'dashboard.html';
+          $action.textContent = _t('profile.emptyAction', null, 'Ir al dashboard');
+        }
+      }
       _animateEmptyEnter();
       return;
     }

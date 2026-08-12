@@ -124,6 +124,7 @@
               <div class="gp-panel__head" id="gp-workspace-label" data-i18n="guided.workspace">Tu respuesta</div>
               <div class="gp-panel__body" style="padding:0;display:flex;flex-direction:column;">
                 <textarea class="gp-workspace" id="gp-workspace" rows="16" spellcheck="false"></textarea>
+                <div class="gp-review" id="gp-review" hidden></div>
               </div>
             </section>
           </div>
@@ -162,6 +163,9 @@
 <script src="src/js/services/UserProfileService.js?v=20260812func"></script>
 <script src="src/js/services/QuizProgressService.js?v=20260812func"></script>
 <script src="src/js/services/GuidedProjectsService.js?v=20260812func"></script>
+<script src="src/js/services/ProjectReviewService.js?v=20260812hi"></script>
+<script src="src/js/config/groq.config.js?v=20260810"></script>
+<script src="src/js/services/GroqService.js?v=20260812hi"></script>
 <script src="src/js/services/GlobalSearchService.js?v=20260812func"></script>
 <script src="src/js/services/AccessibilityService.js?v=20260707"></script>
 <script src="src/js/controllers/AppFeatures.js?v=20260812func"></script>
@@ -172,7 +176,7 @@
 <script src="src/js/services/AuthService.js?v=20260812func"></script>
 <script src="src/js/controllers/OtherMenuController.js?v=20260714theme"></script>
 <script src="src/js/controllers/SettingsController.js?v=20260812func"></script>
-<script src="src/js/controllers/GuidedProjectsController.js?v=20260812polish"></script>
+<script src="src/js/controllers/GuidedProjectsController.js?v=20260812hi"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     try { AppShell.initPage('guided'); } catch (e) { console.error(e); AppShell.setupAvatar(); }

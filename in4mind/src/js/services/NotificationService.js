@@ -11,6 +11,8 @@ const NotificationService = (() => {
     cert: 92,
     streak_risk: 88,
     resume: 82,
+    study: 80,
+    review: 78,
     lesson: 76,
     quiz: 72,
     path: 66,
@@ -26,6 +28,8 @@ const NotificationService = (() => {
     resume: 2,
     lesson: 2,
     quiz: 2,
+    review: 2,
+    study: 1,
     path: 1,
     weekly: 1,
     streak: 1,
@@ -264,6 +268,37 @@ const NotificationService = (() => {
           priorityBoost: pct >= 50 ? 5 : 0,
         }));
       });
+    }
+
+    if (typeof SpacedRepetitionService !== 'undefined') {
+      SpacedRepetitionService.getDueTopics(3).forEach((topic, i) => {
+        candidates.push(_finalize({
+          id: `srs-${topic.topicKey}`,
+          type: 'review',
+          title: _t('notif.srsTitle', null, 'Repaso espaciado'),
+          body: _t('notif.srsBody', { topic: topic.label, days: topic.overdueDays }, `Repasa «${topic.label}» (${topic.overdueDays}d de retraso)`),
+          at: topic.dueAt || now - i,
+          courseId: topic.quizId,
+          route: 'quizzes.html',
+          priorityBoost: Math.min(12, topic.overdueDays),
+        }));
+      });
+    }
+
+    // Recordatorio de estudio diario (si no hubo actividad hoy)
+    if (typeof GamificationService !== 'undefined' && !GamificationService.wasActiveToday?.()) {
+      const hour = new Date().getHours();
+      if (hour >= 9) {
+        candidates.push(_finalize({
+          id: 'study-today',
+          type: 'study',
+          title: _t('notif.studyTitle', null, 'Momento de estudiar'),
+          body: _t('notif.studyBody', null, 'Dedica 15 minutos hoy: una lección o un quiz corto.'),
+          at: now,
+          route: 'dashboard.html',
+          priorityBoost: hour >= 18 ? 6 : 0,
+        }));
+      }
     }
 
     if (typeof GamificationService !== 'undefined') {

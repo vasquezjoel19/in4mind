@@ -221,6 +221,12 @@ const GuidedProjectsController = (() => {
       ? _t('guided.workspaceCode', null, 'Área de código')
       : _t('guided.workspaceText', null, 'Área de respuesta'));
 
+    const $review = document.getElementById('gp-review');
+    if ($review) {
+      $review.hidden = true;
+      $review.innerHTML = '';
+    }
+
     $btnPrev.disabled = _stepIndex <= 0;
     $btnNext.disabled = _stepIndex >= total - 1;
     $btnComplete.textContent = prog.completedSteps?.[step.id]
@@ -237,7 +243,7 @@ const GuidedProjectsController = (() => {
     GuidedProjectsService.saveStepResponse(_current.id, step.id, $workspace.value);
   }
 
-  function _completeCurrentStep() {
+  async function _completeCurrentStep() {
     if (!_current) return;
     _persistWorkspace();
     const step = _current.steps[_stepIndex];
@@ -247,17 +253,53 @@ const GuidedProjectsController = (() => {
       }
       return;
     }
+
+    const $review = document.getElementById('gp-review');
+    if ($btnComplete) $btnComplete.disabled = true;
+    if ($review) {
+      $review.hidden = false;
+      $review.innerHTML = `<p class="gp-review__loading">${_t('guided.reviewing', null, 'Revisando tu respuesta…')}</p>`;
+    }
+
+    let review = null;
+    if (typeof ProjectReviewService !== 'undefined') {
+      try {
+        review = await ProjectReviewService.reviewStep({
+          project: _current,
+          step,
+          response: $workspace.value,
+        });
+      } catch { /* ignore */ }
+    }
+
     GuidedProjectsService.completeStep(_current.id, step.id, _stepIndex, _current.steps.length);
+
+    if ($review && review) {
+      const rubricHtml = (review.rubric || []).map(r =>
+        `<li><span>${r.label || r.id}</span><strong>${r.score ?? '—'}</strong></li>`
+      ).join('');
+      $review.innerHTML = `
+        <div class="gp-review__score">${_t('guided.reviewScore', { n: review.score }, `Puntuación: ${review.score}/100`)}</div>
+        <p class="gp-review__feedback">${review.feedback || ''}</p>
+        ${rubricHtml ? `<ul class="gp-review__rubric">${rubricHtml}</ul>` : ''}
+        <p class="gp-review__source">${review.source === 'ai'
+          ? _t('guided.reviewAi', null, 'Feedback con IA')
+          : _t('guided.reviewLocal', null, 'Feedback local')}</p>`;
+    } else if ($review) {
+      $review.hidden = true;
+      $review.innerHTML = '';
+    }
+
+    if ($btnComplete) {
+      $btnComplete.disabled = false;
+      $btnComplete.textContent = _t('guided.completedStep', null, 'Paso completado');
+    }
+
     const prog = GuidedProjectsService.getProgress(_current.id);
     const done = Object.keys(prog.completedSteps || {}).length;
     if (done >= _current.steps.length && typeof AppShell !== 'undefined') {
       AppShell.showToast(_t('guided.projectDone', null, '¡Proyecto completado!'));
     }
-    if (_stepIndex < _current.steps.length - 1) {
-      _stepIndex += 1;
-      GuidedProjectsService.setCurrentStep(_current.id, _stepIndex);
-    }
-    _renderStep();
   }
 
   async function _loadScores() {

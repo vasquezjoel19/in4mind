@@ -468,8 +468,13 @@ const DashboardController = (() => {
       el.addEventListener('click', e => {
         e.preventDefault();
         e.stopPropagation();
+        const href = e.currentTarget.dataset.href;
         const route = e.currentTarget.dataset.route;
         const courseId = e.currentTarget.dataset.course;
+        if (href) {
+          window.location.href = href;
+          return;
+        }
         if (courseId) {
           _handleCourseClick(courseId);
           return;
@@ -479,8 +484,13 @@ const DashboardController = (() => {
       el.addEventListener('keydown', ev => {
         if (ev.key === 'Enter' || ev.key === ' ') {
           ev.preventDefault();
+          const href = el.dataset.href;
           const route = el.dataset.route;
           const courseId = el.dataset.course;
+          if (href) {
+            window.location.href = href;
+            return;
+          }
           if (courseId) {
             _handleCourseClick(courseId);
             return;
@@ -1098,7 +1108,11 @@ const DashboardController = (() => {
     _bindActionCards($promoSlot, '.dashboard-promo');
   }
 
-  async function _pathProgress(courseIds, quizProgress) {
+  async function _pathProgress(courseIds, quizProgress, certifications = []) {
+    if (typeof LearningPathService !== 'undefined') {
+      const fakePath = { courseIds };
+      return LearningPathService.getPathProgress(fakePath, quizProgress, certifications).pct;
+    }
     let done = 0;
     for (const id of courseIds) {
       const quiz = quizProgress?.[id];
@@ -1111,23 +1125,43 @@ const DashboardController = (() => {
     return Math.min(100, Math.round((done / Math.max(courseIds.length, 1)) * 100));
   }
 
-  function _renderLearningPaths(quizProgress) {
+  function _renderLearningPaths(quizProgress, certifications = []) {
     if (!$learningPathsGrid || typeof LearningPathsData === 'undefined') return;
-    const courses = DataService.getCourses();
-    $learningPathsGrid.innerHTML = LearningPathsData.getPaths().map((path, i) => `
+    const paths = LearningPathsData.getPaths();
+    const progressMap = typeof LearningPathService !== 'undefined'
+      ? Object.fromEntries(
+        LearningPathService.getAllProgress(quizProgress, certifications)
+          .map(row => [row.path.id, row])
+      )
+      : {};
+
+    $learningPathsGrid.innerHTML = paths.map((path, i) => {
+      const prog = progressMap[path.id];
+      const nextLabel = prog?.next?.label
+        ? ` · ${prog.next.label}`
+        : '';
+      const href = prog?.next?.href || `tutorial.html?course=${encodeURIComponent(path.courseIds[0] || '')}`;
+      return `
       <article class="learning-path-card anim-fade-up delay-${Math.min(i + 1, 6)}"
-        data-path-id="${path.id}" data-course="${path.courseIds[0] || ''}" role="button" tabindex="0">
+        data-path-id="${path.id}" data-course="${prog?.nextCourseId || path.courseIds[0] || ''}"
+        data-href="${href}" role="button" tabindex="0">
         <h3 class="learning-path-card__title">${path.title}</h3>
         <p class="learning-path-card__desc">${path.desc}</p>
         <div class="learning-path-card__bar" data-path-bar="${path.id}"><span style="width:0%"></span></div>
-        <p class="learning-path-card__meta" data-path-meta="${path.id}">${_t('paths.progress', null, 'Progreso de ruta')}</p>
-      </article>`).join('');
-    LearningPathsData.getPaths().forEach(async (path) => {
-      const pct = await _pathProgress(path.courseIds, quizProgress);
+        <p class="learning-path-card__meta" data-path-meta="${path.id}">${_t('paths.progress', null, 'Progreso de ruta')}${nextLabel}</p>
+      </article>`;
+    }).join('');
+
+    paths.forEach(async (path) => {
+      const prog = progressMap[path.id];
+      const pct = prog?.pct ?? await _pathProgress(path.courseIds, quizProgress, certifications);
       const bar = $learningPathsGrid.querySelector(`[data-path-bar="${path.id}"] span`);
       const meta = $learningPathsGrid.querySelector(`[data-path-meta="${path.id}"]`);
       if (bar) bar.style.width = `${pct}%`;
-      if (meta) meta.textContent = _t('paths.progressPct', { pct }, `${pct}% completado`);
+      if (meta) {
+        const next = prog?.next?.label ? ` · ${prog.next.label}` : '';
+        meta.textContent = _t('paths.progressPct', { pct }, `${pct}% completado`) + next;
+      }
     });
     _bindActionCards($learningPathsGrid, '.learning-path-card');
   }
@@ -1137,20 +1171,33 @@ const DashboardController = (() => {
     const g = GamificationService.getSummary();
     const weeks = GamificationService.getActivityByWeek(6);
     const max = Math.max(...weeks.map(w => w.count), 1);
+    const atRisk = GamificationService.isStreakAtRisk?.();
+    const dueTopics = typeof SpacedRepetitionService !== 'undefined'
+      ? SpacedRepetitionService.getDueTopics(4)
+      : [];
+    const lessonPct = Math.min(100, Math.round((g.weekly.lessons / Math.max(1, g.weekly.lessonGoal)) * 100));
+    const quizPct = Math.min(100, Math.round((g.weekly.quizzes / Math.max(1, g.weekly.quizGoal)) * 100));
+
     $analyticsPanel.innerHTML = `
       <div class="analytics-panel">
+        ${atRisk ? `<p class="analytics-streak-risk" role="status">${_t('notif.streakRiskTitle', { n: g.streak }, `No pierdas tu racha de ${g.streak} días`)}</p>` : ''}
+        <div class="analytics-panel__toolbar">
+          <button type="button" class="prof-btn" id="btn-weekly-share">${_t('share.weeklyCta', null, 'Compartir semana')}</button>
+        </div>
         <div class="analytics-panel__stats">
-          <div class="analytics-stat">
+          <div class="analytics-stat analytics-stat--streak">
             <div class="analytics-stat__value" data-count="${g.streak}" data-suffix="">0</div>
             <div class="analytics-stat__label">${_t('analytics.streak', null, 'Racha (días)')}</div>
           </div>
           <div class="analytics-stat">
             <div class="analytics-stat__value" data-count="${g.weekly.lessons}" data-suffix="/${g.weekly.lessonGoal}">0/${g.weekly.lessonGoal}</div>
             <div class="analytics-stat__label">${_t('analytics.weeklyLessons', null, 'Lecciones esta semana')}</div>
+            <div class="analytics-goal-bar" aria-hidden="true"><span style="width:${lessonPct}%"></span></div>
           </div>
           <div class="analytics-stat">
             <div class="analytics-stat__value" data-count="${g.weekly.quizzes}" data-suffix="/${g.weekly.quizGoal}">0/${g.weekly.quizGoal}</div>
             <div class="analytics-stat__label">${_t('analytics.weeklyQuizzes', null, 'Quizzes esta semana')}</div>
+            <div class="analytics-goal-bar" aria-hidden="true"><span style="width:${quizPct}%"></span></div>
           </div>
           <div class="analytics-stat">
             <div class="analytics-stat__value" data-count="${g.level}" data-suffix="">0</div>
@@ -1169,8 +1216,22 @@ const DashboardController = (() => {
               <span class="analytics-chart__label">${w.label}</span>
             </div>`).join('')}
         </div>
+        ${dueTopics.length ? `
+          <div class="srs-due-panel">
+            <h3 class="srs-due-panel__title">${_t('srs.dueTitle', null, 'Repaso espaciado')}</h3>
+            <ul class="srs-due-panel__list">
+              ${dueTopics.map(t => `
+                <li>
+                  <a href="quizzes.html?quiz=${encodeURIComponent(t.quizId || '')}">${t.label}</a>
+                  <span>${_t('srs.overdue', { n: t.overdueDays }, `${t.overdueDays}d`)}</span>
+                </li>`).join('')}
+            </ul>
+          </div>` : ''}
       </div>`;
     _animateAnalyticsCounters($analyticsPanel);
+    document.getElementById('btn-weekly-share')?.addEventListener('click', () => {
+      if (typeof WeeklyShareService !== 'undefined') WeeklyShareService.openModal();
+    });
   }
 
   function _animateAnalyticsCounters(root) {
@@ -1240,7 +1301,7 @@ const DashboardController = (() => {
     _renderQuickActions(stats, resumeItems, insightContext);
     _renderResume(resumeItems);
     _renderRecommendations(recommendations);
-    _renderLearningPaths(quizProgress);
+    _renderLearningPaths(quizProgress, certifications);
     _renderAnalytics();
     _renderPromo(_selectPromo(stats, resumeItems, recommendations));
   }

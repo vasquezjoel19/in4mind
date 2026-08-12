@@ -940,6 +940,11 @@ const TutorialController = (() => {
 
     UserProfileService.recordVisit(UserProfileService.buildCourseItem(course));
 
+    try {
+      sessionStorage.setItem('in4mind_open_course', courseId);
+    } catch { /* ignore */ }
+
+    _bindDetailExtraActions(courseId);
     _bindLessonCards();
 
     $listView.style.display = 'none';
@@ -950,6 +955,35 @@ const TutorialController = (() => {
     _syncDeepLinkUrl();
 
     if (openFirstLesson && _currentLessons.length) _showLesson(0);
+  }
+
+  function _bindDetailExtraActions(courseId) {
+    const offlineBtn = document.getElementById('tut-btn-offline');
+    const tutorBtn = document.getElementById('tut-btn-tutor');
+    if (offlineBtn) {
+      const downloaded = typeof OfflineCourseService !== 'undefined'
+        && OfflineCourseService.isDownloaded(courseId);
+      offlineBtn.textContent = downloaded
+        ? _t('offline.downloaded', null, 'Listo offline')
+        : _t('offline.download', null, 'Descargar offline');
+      offlineBtn.onclick = async () => {
+        if (typeof OfflineCourseService === 'undefined') return;
+        offlineBtn.disabled = true;
+        offlineBtn.textContent = _t('offline.downloading', null, 'Descargando…');
+        await OfflineCourseService.downloadCourse(courseId);
+        offlineBtn.disabled = false;
+        offlineBtn.textContent = OfflineCourseService.isDownloaded(courseId)
+          ? _t('offline.downloaded', null, 'Listo offline')
+          : _t('offline.download', null, 'Descargar offline');
+      };
+    }
+    if (tutorBtn) {
+      tutorBtn.href = `ai.html?course=${encodeURIComponent(courseId)}`;
+      tutorBtn.textContent = _t('tutorial.askTutor', null, 'Tutor IA');
+      tutorBtn.onclick = () => {
+        try { sessionStorage.setItem('in4mind_open_course', courseId); } catch { /* ignore */ }
+      };
+    }
   }
 
   function _levelScaleHtml(activeLevel) {
@@ -1185,6 +1219,11 @@ const TutorialController = (() => {
     _currentLessonIdx = idx;
     const lesson = _currentLessons[idx];
     const total = _currentLessons.length;
+
+    try {
+      if (_currentCourse?.id) sessionStorage.setItem('in4mind_open_course', _currentCourse.id);
+      sessionStorage.setItem('in4mind_open_lesson', lesson?.title || lesson?.id || String(idx + 1));
+    } catch { /* ignore */ }
 
     _renderLessonSidebar(idx);
     _renderLessonArticle(lesson, idx, total);

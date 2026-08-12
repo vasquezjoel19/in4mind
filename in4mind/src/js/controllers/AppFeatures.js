@@ -160,6 +160,9 @@ const AppFeatures = (() => {
     _notifications = await NotificationService.buildNotifications();
     _renderNotifList();
     _updateNotifBadge();
+    if (typeof PushNotificationService !== 'undefined') {
+      PushNotificationService.syncUsefulReminders(_notifications);
+    }
   }
 
   function _toggleNotifPanel() {

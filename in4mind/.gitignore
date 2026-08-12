@@ -7,6 +7,10 @@ src/js/config/groq.config.js
 # Dependencias
 node_modules/
 
+# Bundles / Vite
+src/js/dist/
+dist-vite/
+
 # Sistema
 .DS_Store
 Thumbs.db

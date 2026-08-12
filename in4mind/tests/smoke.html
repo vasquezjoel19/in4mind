@@ -26,6 +26,12 @@
   <script src="../src/js/services/QuizProgressService.js"></script>
   <script src="../src/js/services/DataExportService.js"></script>
   <script src="../src/js/services/GlobalSearchService.js"></script>
+  <script src="../src/js/services/AdaptiveQuizEngine.js"></script>
+  <script src="../src/js/services/SpacedRepetitionService.js"></script>
+  <script src="../src/js/services/LearningPathService.js"></script>
+  <script src="../src/js/services/OfflineCourseService.js"></script>
+  <script src="../src/js/services/ProjectReviewService.js"></script>
+  <script src="../src/js/services/PushNotificationService.js"></script>
   <script>
     const $list = document.getElementById('results');
     const results = [];
@@ -66,6 +72,12 @@
 
     // Connectivity API exists
     assert('ConnectivityService.isOnline', typeof ConnectivityService.isOnline === 'function');
+
+    assert('SpacedRepetitionService.getDueTopics', typeof SpacedRepetitionService.getDueTopics === 'function');
+    assert('LearningPathService.getAllProgress', typeof LearningPathService.getAllProgress === 'function');
+    assert('OfflineCourseService.isDownloaded', typeof OfflineCourseService.isDownloaded === 'function');
+    assert('ProjectReviewService.getRubric', Array.isArray(ProjectReviewService.getRubric({})));
+    assert('PushNotificationService.syncUsefulReminders', typeof PushNotificationService.syncUsefulReminders === 'function');
 
     // Export shape (async)
     (async () => {

@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [develop, main, master]
+  pull_request:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: in4mind
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Feature smoke (Node)
+        run: node tests/smoke-ci.js
+
+      - name: Bundle shell
+        run: npm run build:shell

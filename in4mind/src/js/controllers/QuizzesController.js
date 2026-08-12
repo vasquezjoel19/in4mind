@@ -729,6 +729,24 @@ const QuizzesController = (() => {
       </article>`;
   }
 
+  function _renderSrsBanner() {
+    const el = document.getElementById('srs-due-banner');
+    if (!el || typeof SpacedRepetitionService === 'undefined') return;
+    const due = SpacedRepetitionService.getDueTopics(5);
+    if (!due.length) {
+      el.hidden = true;
+      el.innerHTML = '';
+      return;
+    }
+    el.hidden = false;
+    el.innerHTML = `
+      <strong>${_t('srs.dueTitle', null, 'Repaso espaciado')}</strong>
+      <ul>${due.map(t => `
+        <li><a href="quizzes.html?quiz=${encodeURIComponent(t.quizId || '')}">${_escape(t.label)}</a>
+        <span>${_t('srs.overdue', { n: t.overdueDays }, `${t.overdueDays}d`)}</span></li>`).join('')}
+      </ul>`;
+  }
+
   function _renderCertExams() {
     if (!$certExamGrid || typeof CertificationExamData === 'undefined') return;
     const exams = CertificationExamData.getAllExams();
@@ -1612,6 +1630,7 @@ const QuizzesController = (() => {
       _renderGrid();
       _renderContinue();
       _renderCertExams();
+      _renderSrsBanner();
       $quizGrid?.removeAttribute('aria-busy');
     });
 

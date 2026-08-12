@@ -474,3 +474,43 @@ html[data-theme="dark"] .gp-card__diff--advanced { color: #fca5a5; }
     min-height: 44px;
   }
 }
+
+.gp-review {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: var(--rad-md);
+  border: 1px solid var(--clr-border);
+  background: var(--clr-bg-input);
+}
+
+.gp-review__score {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.gp-review__feedback {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.gp-review__rubric {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.gp-review__rubric li {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+}
+
+.gp-review__source,
+.gp-review__loading {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--clr-text-muted);
+}

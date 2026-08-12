@@ -25,6 +25,11 @@ const GuidedProjectsData = (() => {
           workspaceType: 'code',
           placeholder: '<!DOCTYPE html>\n<html lang="es">\n<head>\n  …\n</head>\n<body>\n</body>\n</html>',
           hint: 'Incluye <meta charset="UTF-8"> y un <title> descriptivo.',
+          rubric: [
+            { id: 'completeness', label: 'Completitud', weight: 0.4 },
+            { id: 'semantics', label: 'Semántica HTML', weight: 0.35 },
+            { id: 'best_practices', label: 'Buenas prácticas', weight: 0.25 },
+          ],
         },
         {
           id: 's2',

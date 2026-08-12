@@ -13,10 +13,15 @@ const AIUserContext = (() => {
     if (user?.name) lines.push(`Usuario: ${user.name}`);
 
     const openCourse = sessionStorage.getItem('in4mind_open_course');
+    const openLesson = sessionStorage.getItem('in4mind_open_lesson');
     if (openCourse && typeof DataService !== 'undefined') {
       const course = DataService.getCourses().find(c => c.id === openCourse);
       if (course) lines.push(`Curso activo en sesión: ${course.title} (${course.id})`);
     }
+    if (openLesson) {
+      lines.push(`Lección activa: ${openLesson}`);
+    }
+    lines.push('Actúa como tutor del curso/lección activos cuando el alumno pregunte; prioriza ejemplos de ese tema.');
 
     if (typeof UserProfileService !== 'undefined') {
       try {

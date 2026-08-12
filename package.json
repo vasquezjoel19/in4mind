@@ -8,6 +8,7 @@
   "scripts": {
     "build": "npm run build --prefix in4mind",
     "start": "npm start --prefix in4mind",
-    "test": "npm test --prefix in4mind"
+    "test": "npm test --prefix in4mind",
+    "build:shell": "npm run build:shell --prefix in4mind"
   }
 }

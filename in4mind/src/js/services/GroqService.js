@@ -63,6 +63,19 @@ DIRECTRICES
 - Respuestas breves y sin redundancia.`;
   }
 
+  async function _systemPromptWithStudentContext() {
+    let prompt = _buildSystemPrompt();
+    if (typeof AIUserContext !== 'undefined') {
+      try {
+        const ctx = await AIUserContext.build();
+        if (ctx) {
+          prompt += `\n\nCONTEXTO DEL ESTUDIANTE (usa esto para tutoría personalizada; no inventes datos)\n${ctx}`;
+        }
+      } catch { /* ignore */ }
+    }
+    return prompt;
+  }
+
   /**
    * @param {{ role: string, content: string }[]} history
    * @returns {Promise<string>}
@@ -73,7 +86,7 @@ DIRECTRICES
     }
 
     const messages = [
-      { role: 'system', content: _buildSystemPrompt() },
+      { role: 'system', content: await _systemPromptWithStudentContext() },
       ...history.map(m => ({
         role: m.role === 'assistant' ? 'assistant' : 'user',
         content: m.content,
@@ -123,7 +136,7 @@ DIRECTRICES
     }
 
     const messages = [
-      { role: 'system', content: _buildSystemPrompt() },
+      { role: 'system', content: await _systemPromptWithStudentContext() },
       ...history.map(m => ({
         role: m.role === 'assistant' ? 'assistant' : 'user',
         content: m.content,

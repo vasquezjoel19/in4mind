@@ -399,6 +399,12 @@ const AIChatController = (() => {
       _renderSuggestions();
       _renderRecentSidebar();
 
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const courseId = params.get('course');
+        if (courseId) sessionStorage.setItem('in4mind_open_course', courseId);
+      } catch { /* ignore */ }
+
       document.getElementById('btn-new-chat')?.addEventListener('click', _newChat);
 
       $sendBtn?.addEventListener('click', () => _sendMessage($input.value));

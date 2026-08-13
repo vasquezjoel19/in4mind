@@ -1091,8 +1091,8 @@ a.lp-feature-card--link {
   background-repeat: no-repeat;
   background-position: calc(100% - 10px) 55%;
   background-size: min(46%, 160px) auto;
-  opacity: 0.55;
-  filter: saturate(1.15) contrast(1.05) drop-shadow(0 8px 18px rgba(0, 0, 0, 0.35));
+  opacity: 0.78;
+  filter: saturate(1.1) contrast(1.05) drop-shadow(0 10px 22px rgba(0, 0, 0, 0.4));
   display: block;
 }
 

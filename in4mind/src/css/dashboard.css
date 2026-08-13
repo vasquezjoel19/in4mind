@@ -888,8 +888,8 @@ a.avatar:visited {
   background-repeat: no-repeat;
   background-position: calc(100% - 12px) 55%;
   background-size: min(46%, 150px) auto;
-  opacity: 0.55;
-  filter: saturate(1.15) contrast(1.05) drop-shadow(0 8px 18px rgba(0, 0, 0, 0.35));
+  opacity: 0.78;
+  filter: saturate(1.1) contrast(1.05) drop-shadow(0 10px 22px rgba(0, 0, 0, 0.4));
 }
 .course-banner-card__overlay {
   background: linear-gradient(105deg, #050b14 0%, rgba(5,11,20,0.96) 34%, rgba(5,11,20,0.78) 58%, rgba(5,11,20,0.35) 82%, rgba(5,11,20,0.18) 100%);

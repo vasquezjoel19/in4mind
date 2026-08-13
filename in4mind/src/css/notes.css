@@ -1,35 +1,13 @@
 /* IN4MIND — Notes hub */
 
-.notes-page-header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--sp-md);
-  margin-bottom: var(--sp-xl);
-}
-
-.notes-page-header__brand {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-md);
-}
-
 .notes-page-header__logo.in4mind-bulb {
-  width: 38px;
+  width: 42px;
   height: auto;
   color: var(--clr-brand-ink);
 }
 
 html[data-theme="dark"] .notes-page-header__logo.in4mind-bulb {
   color: #f2f6fb;
-}
-
-.notes-page-header h1 {
-  font-size: clamp(1.6rem, 3vw, 2.2rem);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  margin: 0;
 }
 
 .notes-page-header__actions {
@@ -64,8 +42,8 @@ html[data-theme="dark"] .notes-page-header__logo.in4mind-bulb {
 }
 
 .notes-section-title {
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: 1.2rem;
+  font-weight: 750;
   margin: 0 0 var(--sp-md);
 }
 
@@ -74,7 +52,11 @@ html[data-theme="dark"] .notes-page-header__logo.in4mind-bulb {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: var(--sp-md);
-  margin-bottom: var(--sp-2xl);
+  margin-bottom: 0;
+}
+
+.notes-empty.empty-state--hero {
+  grid-column: 1 / -1;
 }
 
 .notes-folder-card {

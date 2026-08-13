@@ -2,23 +2,8 @@
 
 .projects-view--hidden { display: none !important; }
 
-.projects-page-header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--sp-md);
-  margin-bottom: var(--sp-xl);
-}
-
-.projects-page-header__brand {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-md);
-}
-
 .projects-page-header__logo.in4mind-bulb {
-  width: 38px;
+  width: 42px;
   height: auto;
   color: var(--clr-brand-ink);
 }
@@ -27,17 +12,14 @@ html[data-theme="dark"] .projects-page-header__logo.in4mind-bulb {
   color: #f2f6fb;
 }
 
-.projects-page-header h1 {
-  font-size: clamp(1.6rem, 3vw, 2.2rem);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  margin: 0;
-}
-
 .projects-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: var(--sp-md);
+}
+
+.projects-empty.empty-state--hero {
+  grid-column: 1 / -1;
 }
 
 .projects-card {

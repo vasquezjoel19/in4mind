@@ -16,8 +16,11 @@ const NotesController = (() => {
   let $editorTitle, $editorContent, $editorTags, $editorColor;
 
   function _t(k, p, fb) {
-    if (typeof I18n !== 'undefined') return I18n.t(k, p);
-    return fb ?? '';
+    if (typeof I18n !== 'undefined') {
+      const out = I18n.t(k, p);
+      if (out && out !== k) return out;
+    }
+    return fb ?? k;
   }
 
   function _escape(str) {
@@ -135,7 +138,7 @@ const NotesController = (() => {
 
     if (!notes.length) {
       $grid.innerHTML = `
-        <div class="empty-state notes-empty">
+        <div class="empty-state empty-state--hero notes-empty">
           <div class="empty-state__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
               <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
@@ -146,7 +149,7 @@ const NotesController = (() => {
           </div>
           <h3 class="empty-state__title">${_t('notes.emptyTitle', null, 'Aún no tienes notas')}</h3>
           <p class="empty-state__desc">${_t('notes.empty', null, 'Aún no tienes notas. ¡Crea la primera!')}</p>
-          <button type="button" class="btn--course empty-state__action" id="notes-empty-create">${_t('notes.newNote', null, 'Nueva nota')}</button>
+          <button type="button" class="btn--course btn--lg empty-state__action" id="notes-empty-create">${_t('notes.newNote', null, 'Nueva nota')}</button>
         </div>`;
       document.getElementById('notes-empty-create')?.addEventListener('click', () => _openEditor());
       return;

@@ -16,9 +16,9 @@
   <link rel="stylesheet" href="src/css/base.css?v=20260714fluid3">
   <link rel="stylesheet" href="src/css/dashboard.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/responsive.css?v=20260812polish">
-  <link rel="stylesheet" href="src/css/notes.css?v=20260812polish">
+  <link rel="stylesheet" href="src/css/notes.css?v=20260813workspace">
   <link rel="stylesheet" href="src/css/theme.css?v=20260812polish">
-  <link rel="stylesheet" href="src/css/ui-polish.css?v=20260812polish">
+  <link rel="stylesheet" href="src/css/ui-polish.css?v=20260813workspace">
   <link rel="stylesheet" href="src/css/accessibility.css?v=20260707">
   <link rel="stylesheet" href="src/css/i18n.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/settings-modal.css?v=20260812polish">
@@ -72,22 +72,22 @@
       </div>
     </header>
 
-    <main class="content-area">
-      <div class="notes-page-header anim-fade-up">
-        <div class="notes-page-header__brand">
+    <main class="content-area content-area--workspace">
+      <div class="notes-page-header workspace-page-header anim-fade-up">
+        <div class="notes-page-header__brand workspace-page-header__brand">
           <span class="in4mind-bulb notes-page-header__logo" aria-hidden="true"></span>
           <div>
             <h1 data-i18n="notes.pageTitle">Mis Notas</h1>
-            <p style="color:var(--clr-text-muted);font-size:.85rem;margin:.25rem 0 0" data-i18n="notes.pageSub">Organiza tus apuntes de cursos y proyectos.</p>
+            <p class="workspace-page-header__sub" data-i18n="notes.pageSub">Organiza tus apuntes de cursos y proyectos.</p>
           </div>
         </div>
-        <div class="notes-page-header__actions">
-          <button type="button" class="btn--course" id="notes-new-btn" data-i18n="notes.newNote">Nueva nota</button>
+        <div class="notes-page-header__actions workspace-page-header__actions">
+          <button type="button" class="btn--course btn--lg" id="notes-new-btn" data-i18n="notes.newNote">Nueva nota</button>
         </div>
       </div>
 
-      <section class="anim-fade-up delay-1">
-        <h2 class="notes-section-title" data-i18n="notes.recentFolders">Carpetas recientes</h2>
+      <section class="workspace-section anim-fade-up delay-1">
+        <h2 class="notes-section-title workspace-section-title" data-i18n="notes.recentFolders">Carpetas recientes</h2>
         <div class="notes-period-tabs" role="tablist">
           <button type="button" class="notes-period" data-notes-period="today" data-i18n="notes.today">Hoy</button>
           <button type="button" class="notes-period notes-period--active" data-notes-period="week" data-i18n="notes.thisWeek">Esta semana</button>
@@ -96,8 +96,8 @@
         <div class="notes-folders-grid" id="notes-folders-grid"></div>
       </section>
 
-      <section class="anim-fade-up delay-2">
-        <h2 class="notes-section-title" data-i18n="notes.myNotes">Mis notas</h2>
+      <section class="workspace-section anim-fade-up delay-2">
+        <h2 class="notes-section-title workspace-section-title" data-i18n="notes.myNotes">Mis notas</h2>
         <nav class="notes-filter-nav" id="notes-filter-nav" aria-label="Filtrar notas"></nav>
         <div class="notes-grid" id="notes-grid" role="list"></div>
       </section>
@@ -126,7 +126,7 @@
 <script defer src="src/js/data/CourseCurriculum.js?v=20260805"></script>
 <script defer src="src/js/services/LessonNotesService.js?v=20260812func"></script>
 <script defer src="src/js/services/NotesService.js?v=20260812func"></script>
-<script defer src="src/js/controllers/NotesController.js?v=20260812polish"></script>
+<script defer src="src/js/controllers/NotesController.js?v=20260813workspace"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     try { AppShell.initPage('notes'); } catch (e) { console.error(e); AppShell.setupAvatar(); }

@@ -16,9 +16,9 @@
   <link rel="stylesheet" href="src/css/base.css?v=20260714fluid3">
   <link rel="stylesheet" href="src/css/dashboard.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/responsive.css?v=20260812polish">
-  <link rel="stylesheet" href="src/css/projects.css?v=20260812polish">
+  <link rel="stylesheet" href="src/css/projects.css?v=20260813workspace">
   <link rel="stylesheet" href="src/css/theme.css?v=20260812polish">
-  <link rel="stylesheet" href="src/css/ui-polish.css?v=20260812polish">
+  <link rel="stylesheet" href="src/css/ui-polish.css?v=20260813workspace">
   <link rel="stylesheet" href="src/css/accessibility.css?v=20260707">
   <link rel="stylesheet" href="src/css/i18n.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/settings-modal.css?v=20260812polish">
@@ -72,17 +72,19 @@
       </div>
     </header>
 
-    <main class="content-area">
+    <main class="content-area content-area--workspace">
       <div id="projects-list-view">
-        <div class="projects-page-header anim-fade-up">
-          <div class="projects-page-header__brand">
+        <div class="projects-page-header workspace-page-header anim-fade-up">
+          <div class="projects-page-header__brand workspace-page-header__brand">
             <span class="in4mind-bulb projects-page-header__logo" aria-hidden="true"></span>
             <div>
               <h1 data-i18n="projects.pageTitle">Mis Proyectos</h1>
-              <p style="color:var(--clr-text-muted);font-size:.85rem;margin:.25rem 0 0" data-i18n="projects.pageSub">Organiza tu aprendizaje con tareas, notas y cursos vinculados.</p>
+              <p class="workspace-page-header__sub" data-i18n="projects.pageSub">Organiza tu aprendizaje con tareas, notas y cursos vinculados.</p>
             </div>
           </div>
-          <button type="button" class="btn--course" id="projects-new-btn" data-i18n="projects.newProject">Nuevo proyecto</button>
+          <div class="workspace-page-header__actions">
+            <button type="button" class="btn--course btn--lg" id="projects-new-btn" data-i18n="projects.newProject">Nuevo proyecto</button>
+          </div>
         </div>
         <div class="projects-grid anim-fade-up delay-1" id="projects-grid" role="list"></div>
       </div>
@@ -101,7 +103,7 @@
 <script defer src="src/js/services/LessonNotesService.js?v=20260812func"></script>
 <script defer src="src/js/services/NotesService.js?v=20260812func"></script>
 <script defer src="src/js/services/ProjectsService.js?v=20260812func"></script>
-<script defer src="src/js/controllers/ProjectsController.js?v=20260812polish"></script>
+<script defer src="src/js/controllers/ProjectsController.js?v=20260813workspace"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     try { AppShell.initPage('projects'); } catch (e) { console.error(e); AppShell.setupAvatar(); }

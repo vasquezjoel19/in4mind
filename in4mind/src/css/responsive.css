@@ -289,8 +289,14 @@ svg {
 
   .notes-page-header__actions .btn,
   .projects-page-header__actions .btn,
+  .workspace-page-header__actions .btn,
   .gp-page-header__actions .btn {
     flex: 1 1 auto;
+  }
+
+  .workspace-page-header__actions .btn--lg {
+    width: 100%;
+    justify-content: center;
   }
 }
 

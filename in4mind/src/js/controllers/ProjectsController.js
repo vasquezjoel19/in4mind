@@ -13,8 +13,11 @@ const ProjectsController = (() => {
   let $grid, $detail, $search, $listView, $detailView;
 
   function _t(k, p, fb) {
-    if (typeof I18n !== 'undefined') return I18n.t(k, p);
-    return fb ?? '';
+    if (typeof I18n !== 'undefined') {
+      const out = I18n.t(k, p);
+      if (out && out !== k) return out;
+    }
+    return fb ?? k;
   }
 
   function _escape(str) {
@@ -62,15 +65,15 @@ const ProjectsController = (() => {
 
     if (!projects.length) {
       $grid.innerHTML = `
-        <div class="projects-empty empty-state">
+        <div class="projects-empty empty-state empty-state--hero">
           <div class="empty-state__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
               <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
             </svg>
           </div>
-          <h3 class="empty-state__title">${_t('projects.emptyTitle', null, 'Sin proyectos')}</h3>
-          <p class="empty-state__desc">${_t('projects.empty', null, 'Organiza tu aprendizaje en proyectos.')}</p>
-          <button type="button" class="btn--course empty-state__action" id="projects-empty-create">${_t('projects.newProject', null, 'Nuevo proyecto')}</button>
+          <h3 class="empty-state__title">${_t('projects.emptyTitle', null, 'Sin proyectos todavía')}</h3>
+          <p class="empty-state__desc">${_t('projects.empty', null, 'Organiza tu aprendizaje en proyectos con tareas y cursos vinculados.')}</p>
+          <button type="button" class="btn--course btn--lg empty-state__action" id="projects-empty-create">${_t('projects.newProject', null, 'Nuevo proyecto')}</button>
         </div>`;
       document.getElementById('projects-empty-create')?.addEventListener('click', _createProject);
       return;

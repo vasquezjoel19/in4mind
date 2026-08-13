@@ -1,4 +1,4 @@
-/*! IN4MIND bundle 20260813theme27 — 2026-08-13T20:16:52.448079+00:00 */
+/*! IN4MIND bundle 20260813live28 — 2026-08-13T20:39:44.485938+00:00 */
 
 ;/* --- src/js/components/In4mindBulb.js --- */
 'use strict';
@@ -6286,7 +6286,7 @@ const AppFeatures = (() => {
     if (!('serviceWorker' in navigator)) return;
     const isAppPage = /dashboard|tutorial|quizzes|ai|profile|help/.test(window.location.pathname);
     if (!isAppPage) return;
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    navigator.serviceWorker.register('sw.js?v=20260813live28').catch(() => {});
   }
 
   function _injectManifest() {

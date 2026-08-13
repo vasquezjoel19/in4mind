@@ -1,4 +1,4 @@
-/*! IN4MIND bundle 20260813theme27 — 2026-08-13T20:16:52.443088+00:00 */
+/*! IN4MIND bundle 20260813live28 — 2026-08-13T20:39:44.477848+00:00 */
 
 ;/* --- src/js/controllers/ThemeController.js --- */
 /**
@@ -1458,6 +1458,8 @@ const LOCALE_ES = {
     themeShowcaseTitle: 'Claro y oscuro, el mismo IN4MIND',
     themeShowcaseSub: 'Cambia de tema cuando quieras: la interfaz y el catálogo se adaptan sin perder claridad.',
     themeShowcaseAlt: 'Comparación del catálogo visual IN4MIND en modo claro y modo oscuro',
+    themeShowcaseCta: 'Probar modo claro / oscuro',
+    navTheme: 'Tema',
     courseSlideDot: 'Aplicaciones {n}',
     navCatalog: 'Catálogo',
     featureProgramming: 'Programación',
@@ -2625,6 +2627,8 @@ const LOCALE_EN = {
     themeShowcaseTitle: 'Light and dark, the same IN4MIND',
     themeShowcaseSub: 'Switch themes anytime — the interface and catalog stay clear in both modes.',
     themeShowcaseAlt: 'Side-by-side comparison of the IN4MIND visual catalog in light and dark mode',
+    themeShowcaseCta: 'Try light / dark mode',
+    navTheme: 'Theme',
     courseSlideDot: 'Applications {n}',
     navCatalog: 'Catalog',
     featureProgramming: 'Programming',
@@ -3810,6 +3814,8 @@ const LOCALE_ZH = {
     themeShowcaseTitle: '浅色与深色，同一套 IN4MIND',
     themeShowcaseSub: '随时切换主题：界面与目录在两种模式下都保持清晰。',
     themeShowcaseAlt: 'IN4MIND 视觉目录在浅色与深色模式下的对比',
+    themeShowcaseCta: '试用浅色 / 深色模式',
+    navTheme: '主题',
     courseSlideDot: '应用 {n}',
     navCatalog: '目录',
     featureProgramming: '编程',

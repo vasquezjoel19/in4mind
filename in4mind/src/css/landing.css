@@ -890,8 +890,10 @@ a.lp-feature-card--link {
 /* ══════════════════════════════════════
    SCROLL REVEAL
 ══════════════════════════════════════ */
-/* Catálogo siempre legible (no depende del IntersectionObserver). */
-#catalog.lp-reveal {
+/* Catálogo y showcase de tema siempre legibles (no dependen del IntersectionObserver). */
+#catalog.lp-reveal,
+#theme-showcase.lp-reveal,
+#theme-showcase .lp-reveal {
   opacity: 1;
   transform: none;
 }
@@ -1128,6 +1130,16 @@ a.lp-feature-card--link {
   border: 1px solid var(--clr-border, #e2e6ec);
   box-shadow: var(--lp-shadow-lg, 0 18px 48px rgba(27, 39, 60, 0.12));
   background: var(--clr-bg-card, #fff);
+}
+
+.lp-theme-showcase__hint {
+  display: flex;
+  justify-content: center;
+  margin: 1.25rem 0 0;
+}
+
+.lp-theme-showcase__hint .lp-btn {
+  min-height: 44px;
 }
 
 html[data-theme="dark"] .lp-theme-showcase {

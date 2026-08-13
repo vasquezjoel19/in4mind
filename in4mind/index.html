@@ -19,13 +19,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <script src="src/js/dist/boot.bundle.js?v=20260813theme27"></script>
+  <script src="src/js/dist/boot.bundle.js?v=20260813live28"></script>
 
   <link rel="stylesheet" href="src/css/tokens.css?v=20260812polish">
-  <link rel="stylesheet" href="src/css/landing.css?v=20260813theme27">
+  <link rel="stylesheet" href="src/css/landing.css?v=20260813live28">
   <link rel="stylesheet" href="src/css/ui-polish.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/ambient.css?v=20260714fluid3">
-  <link rel="stylesheet" href="src/css/theme.css?v=20260813theme27">
+  <link rel="stylesheet" href="src/css/theme.css?v=20260813live28">
   <link rel="stylesheet" href="src/css/i18n.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/accessibility.css?v=20260707">
   <link rel="stylesheet" href="src/css/cookie-consent.css?v=20260812polish">
@@ -66,6 +66,7 @@
     <nav class="lp-nav" id="lp-nav" aria-label="Navegación principal" data-i18n-aria="shell.mainNav">
       <a href="#home" class="is-active" data-i18n="landing.navHome">Inicio</a>
       <a href="#catalog" data-i18n="landing.navCatalog">Catálogo</a>
+      <a href="#theme-showcase" data-i18n="landing.navTheme">Tema</a>
       <a href="#topics" data-i18n="landing.navTopics">Temas</a>
       <a href="#testimonials" data-i18n="landing.navTestimonials">Testimonios</a>
       <a href="#about" data-i18n="landing.navAbout">Nosotros</a>
@@ -302,23 +303,27 @@
 <!-- --------------------------------------
      TEMA — Claro y oscuro
 -------------------------------------- -->
-<section class="lp-theme-showcase lp-reveal" id="theme-showcase" aria-labelledby="lp-theme-showcase-title">
+<section class="lp-theme-showcase is-visible" id="theme-showcase" aria-labelledby="lp-theme-showcase-title">
   <div class="lp-container">
-    <h2 class="lp-section-title lp-reveal lp-reveal--delay-1" id="lp-theme-showcase-title" data-i18n="landing.themeShowcaseTitle">Claro y oscuro, el mismo IN4MIND</h2>
-    <p class="lp-theme-showcase__sub lp-reveal lp-reveal--delay-2" data-i18n="landing.themeShowcaseSub">Cambia de tema cuando quieras: la interfaz y el catálogo se adaptan sin perder claridad.</p>
-    <figure class="lp-theme-showcase__figure lp-reveal lp-reveal--delay-3">
+    <h2 class="lp-section-title" id="lp-theme-showcase-title" data-i18n="landing.themeShowcaseTitle">Claro y oscuro, el mismo IN4MIND</h2>
+    <p class="lp-theme-showcase__sub" data-i18n="landing.themeShowcaseSub">Cambia de tema cuando quieras: la interfaz y el catálogo se adaptan sin perder claridad.</p>
+    <figure class="lp-theme-showcase__figure">
       <img
         class="lp-theme-showcase__img"
-        src="src/img/marketing/theme-light-dark-grid.png?v=20260813theme27"
+        src="src/img/marketing/theme-light-dark-grid.png?v=20260813live28"
         width="1600"
         height="900"
         alt="Comparación del catálogo visual IN4MIND en modo claro y modo oscuro"
         data-i18n="landing.themeShowcaseAlt"
         data-i18n-attr="alt"
-        loading="lazy"
+        loading="eager"
         decoding="async"
+        fetchpriority="high"
       >
     </figure>
+    <p class="lp-theme-showcase__hint">
+      <button type="button" class="lp-btn lp-btn--quiet" data-theme-toggle data-i18n="landing.themeShowcaseCta">Probar modo claro / oscuro</button>
+    </p>
   </div>
 </section>
 
@@ -776,11 +781,11 @@
   </svg>
 </button>
 
-<script defer src="src/js/dist/landing.bundle.js?v=20260813theme27"></script>
+<script defer src="src/js/dist/landing.bundle.js?v=20260813live28"></script>
 <script defer src="src/js/other-menu-boot.js?v=20260714theme"></script>
 <script defer src="src/js/services/CookieConsent.js?v=20260706"></script>
 <script defer src="src/js/services/CursorSpotlight.js?v=20260714fluid4"></script>
-<script defer src="src/js/controllers/LandingController.js?v=20260813theme27"></script>
+<script defer src="src/js/controllers/LandingController.js?v=20260813live28"></script>
 
 <script>
 /* Espera DOMContentLoaded: los bundles van con defer y deben existir

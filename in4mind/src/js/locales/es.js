@@ -1081,6 +1081,8 @@ const LOCALE_ES = {
     themeShowcaseTitle: 'Claro y oscuro, el mismo IN4MIND',
     themeShowcaseSub: 'Cambia de tema cuando quieras: la interfaz y el catálogo se adaptan sin perder claridad.',
     themeShowcaseAlt: 'Comparación del catálogo visual IN4MIND en modo claro y modo oscuro',
+    themeShowcaseCta: 'Probar modo claro / oscuro',
+    navTheme: 'Tema',
     courseSlideDot: 'Aplicaciones {n}',
     navCatalog: 'Catálogo',
     featureProgramming: 'Programación',

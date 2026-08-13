@@ -1046,6 +1046,8 @@ const LOCALE_EN = {
     themeShowcaseTitle: 'Light and dark, the same IN4MIND',
     themeShowcaseSub: 'Switch themes anytime — the interface and catalog stay clear in both modes.',
     themeShowcaseAlt: 'Side-by-side comparison of the IN4MIND visual catalog in light and dark mode',
+    themeShowcaseCta: 'Try light / dark mode',
+    navTheme: 'Theme',
     courseSlideDot: 'Applications {n}',
     navCatalog: 'Catalog',
     featureProgramming: 'Programming',

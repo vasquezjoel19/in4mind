@@ -1064,6 +1064,8 @@ const LOCALE_ZH = {
     themeShowcaseTitle: '浅色与深色，同一套 IN4MIND',
     themeShowcaseSub: '随时切换主题：界面与目录在两种模式下都保持清晰。',
     themeShowcaseAlt: 'IN4MIND 视觉目录在浅色与深色模式下的对比',
+    themeShowcaseCta: '试用浅色 / 深色模式',
+    navTheme: '主题',
     courseSlideDot: '应用 {n}',
     navCatalog: '目录',
     featureProgramming: '编程',

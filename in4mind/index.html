@@ -760,7 +760,9 @@
 <script defer src="src/js/controllers/LandingController.js?v=20260714theme"></script>
 
 <script>
-(function () {
+/* Espera DOMContentLoaded: los bundles van con defer y deben existir
+   (p. ej. DataService) antes de pintar el carrusel del catálogo. */
+document.addEventListener('DOMContentLoaded', function () {
   'use strict';
 
   /* Menú móvil */
@@ -1269,7 +1271,7 @@
   });
 
   if (typeof LandingController !== 'undefined') LandingController.init();
-})();
+});
 </script>
 
 </body>

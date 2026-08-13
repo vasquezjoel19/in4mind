@@ -991,6 +991,12 @@ const LOCALE_ES = {
     darkTitle: 'Modo oscuro',
     lightTitle: 'Modo claro',
   },
+  courseCard: {
+    lessons: '{n} lecciones',
+    modulesQuestions: '{m} módulos • {q} preguntas',
+    view: 'Ver',
+    rating: 'Valoración',
+  },
   courses: {
     canvas: { title: 'Canvas', desc: 'Diseño visual profesional y creación de contenido gráfico.' },
     figma: { title: 'Figma', desc: 'Diseño de interfaces y prototipos colaborativos.' },

@@ -9,7 +9,7 @@ const path = require('path');
 
 const root = path.join(__dirname, '..');
 const outDir = path.join(root, 'src/js/dist');
-const VERSION = '20260813live28';
+const VERSION = '20260813cards29';
 
 const BOOT_FILES = [
   'src/js/controllers/ThemeController.js',
@@ -38,6 +38,7 @@ const SHELL_FILES = [
   'src/js/services/LazyScriptLoader.js',
   'src/js/services/ShareService.js',
   'src/js/services/DataService.js',
+  'src/js/components/CourseCard.js',
   'src/js/services/UserProfileService.js',
   'src/js/services/QuizProgressService.js',
   'src/js/services/GamificationService.js',
@@ -68,6 +69,7 @@ const LANDING_FILES = [
   'src/js/services/SessionStore.js',
   'src/js/services/ShareService.js',
   'src/js/services/DataService.js',
+  'src/js/components/CourseCard.js',
   'src/js/controllers/OtherMenuController.js',
   'src/js/i18n-boot.js',
 ];

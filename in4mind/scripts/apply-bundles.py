@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "src" / "js" / "dist"
-VERSION = "20260813live28"
+VERSION = "20260813cards29"
 
 BOOT_FILES = [
     "src/js/controllers/ThemeController.js",
@@ -37,6 +37,7 @@ SHELL_FILES = [
     "src/js/services/LazyScriptLoader.js",
     "src/js/services/ShareService.js",
     "src/js/services/DataService.js",
+    "src/js/components/CourseCard.js",
     "src/js/services/UserProfileService.js",
     "src/js/services/QuizProgressService.js",
     "src/js/services/GamificationService.js",
@@ -66,6 +67,7 @@ LANDING_FILES = [
     "src/js/services/SessionStore.js",
     "src/js/services/ShareService.js",
     "src/js/services/DataService.js",
+    "src/js/components/CourseCard.js",
     "src/js/controllers/OtherMenuController.js",
     "src/js/i18n-boot.js",
 ]

@@ -957,6 +957,12 @@ const LOCALE_EN = {
     darkTitle: 'Dark mode',
     lightTitle: 'Light mode',
   },
+  courseCard: {
+    lessons: '{n} lessons',
+    modulesQuestions: '{m} modules • {q} questions',
+    view: 'View',
+    rating: 'Rating',
+  },
   courses: {
     canvas: { title: 'Canvas', desc: 'Professional visual design and graphic content creation.' },
     figma: { title: 'Figma', desc: 'Interface design and collaborative prototypes.' },

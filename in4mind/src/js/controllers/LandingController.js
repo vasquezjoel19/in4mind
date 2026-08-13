@@ -139,7 +139,7 @@ const LandingController = (() => {
       }
     });
 
-    document.querySelectorAll('.lp-course-card[href="login.html"]').forEach(el => {
+    document.querySelectorAll('.course-banner-card[href="login.html"], .lp-course-card[href="login.html"]').forEach(el => {
       const courseId = el.dataset.openCourse;
       if (courseId) el.setAttribute('href', `tutorial.html?preview=1&course=${courseId}`);
     });
@@ -147,7 +147,7 @@ const LandingController = (() => {
 
   function _registerServiceWorker() {
     if (!('serviceWorker' in navigator)) return;
-    navigator.serviceWorker.register('sw.js?v=20260813live28').catch(() => {});
+    navigator.serviceWorker.register('sw.js?v=20260813cards29').catch(() => {});
   }
 
   function init() {

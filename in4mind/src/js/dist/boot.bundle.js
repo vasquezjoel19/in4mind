@@ -1,4 +1,4 @@
-/*! IN4MIND bundle 20260813bundle — 2026-08-13T18:31:35.106458+00:00 */
+/*! IN4MIND bundle 20260813bundle — 2026-08-13T18:41:30.334983+00:00 */
 
 ;/* --- src/js/controllers/ThemeController.js --- */
 /**
@@ -209,6 +209,7 @@ const LOCALE_ES = {
     profileTitle: 'IN4MIND — Mi Perfil',
     helpTitle: 'IN4MIND — Centro de ayuda',
     landingTitle: 'IN4MIND — Aprende tecnología',
+    onboardingTitle: 'IN4MIND — Bienvenida',
   },
   nav: {
     home: 'Inicio',
@@ -555,6 +556,38 @@ const LOCALE_ES = {
     recommendBody: 'Sugerencias personalizadas según tus visitas, favoritos y quizzes.',
     aiTitle: 'Asistente IA',
     aiBody: 'Pregunta sobre cursos, quizzes o la plataforma. La IA conoce tu contexto de aprendizaje.',
+  },
+  signupOnboard: {
+    title: '¿Cuál es tu objetivo?',
+    sub: 'Elige por dónde quieres empezar. Te asignaremos el primer curso y la Lección 1.',
+    step: 'Paso {n} de {total}',
+    skip: 'Saltar por ahora',
+    assignTitle: 'Tu primer curso: {course}',
+    assignBody: 'Te llevamos a la Lección 1 para empezar ahora.',
+    starting: 'Abriendo lección…',
+    startLesson: 'Ir a la Lección 1',
+    goals: {
+      'python-basics': {
+        title: 'Python básico',
+        desc: 'Sintaxis, tipos y tu primera base de programación.',
+      },
+      logic: {
+        title: 'Lógica',
+        desc: 'Pensamiento estructurado con diagramas de flujo.',
+      },
+      web: {
+        title: 'Desarrollo web',
+        desc: 'Empieza con HTML y la estructura de la web.',
+      },
+      design: {
+        title: 'Diseño',
+        desc: 'Fundamentos creativos con Canva.',
+      },
+      office: {
+        title: 'Ofimática',
+        desc: 'Productividad con Excel desde cero.',
+      },
+    },
   },
   cert: {
     title: 'Certificado de finalización',
@@ -1354,6 +1387,7 @@ const LOCALE_EN = {
     profileTitle: 'IN4MIND — My Profile',
     helpTitle: 'IN4MIND — Help Center',
     landingTitle: 'IN4MIND — Learn Technology',
+    onboardingTitle: 'IN4MIND — Welcome',
   },
   nav: {
     home: 'Home',
@@ -1696,6 +1730,38 @@ const LOCALE_EN = {
     recommendBody: 'Personalized suggestions from visits, favorites, and quizzes.',
     aiTitle: 'AI assistant',
     aiBody: 'Ask about courses, quizzes, or the platform. AI knows your learning context.',
+  },
+  signupOnboard: {
+    title: 'What is your main goal?',
+    sub: 'Pick where you want to start. We will assign your first course and Lesson 1.',
+    step: 'Step {n} of {total}',
+    skip: 'Skip for now',
+    assignTitle: 'Your first course: {course}',
+    assignBody: 'Taking you to Lesson 1 so you can start now.',
+    starting: 'Opening lesson…',
+    startLesson: 'Go to Lesson 1',
+    goals: {
+      'python-basics': {
+        title: 'Basic Python',
+        desc: 'Syntax, types, and your first programming foundation.',
+      },
+      logic: {
+        title: 'Logic',
+        desc: 'Structured thinking with flowcharts.',
+      },
+      web: {
+        title: 'Web development',
+        desc: 'Start with HTML and how the web is built.',
+      },
+      design: {
+        title: 'Design',
+        desc: 'Creative fundamentals with Canva.',
+      },
+      office: {
+        title: 'Office skills',
+        desc: 'Productivity with Excel from scratch.',
+      },
+    },
   },
   cert: {
     title: 'Certificate of completion',
@@ -2409,6 +2475,7 @@ const LOCALE_ZH = {
     profileTitle: 'IN4MIND — 我的资料',
     helpTitle: 'IN4MIND — 帮助中心',
     landingTitle: 'IN4MIND — 学习技术',
+    onboardingTitle: 'IN4MIND — 欢迎',
   },
   nav: {
     home: '首页',
@@ -2753,6 +2820,38 @@ const LOCALE_ZH = {
     recommendBody: '根据访问、收藏和测验生成的个性化建议。',
     aiTitle: 'AI 助手',
     aiBody: '可询问课程、测验或平台问题，AI 了解你的学习上下文。',
+  },
+  signupOnboard: {
+    title: '你的主要目标是什么？',
+    sub: '选择从哪里开始。我们将为你分配第一门课和第 1 课。',
+    step: '第 {n} 步，共 {total} 步',
+    skip: '暂时跳过',
+    assignTitle: '你的第一门课：{course}',
+    assignBody: '正在带你进入第 1 课，马上开始学习。',
+    starting: '正在打开课程…',
+    startLesson: '前往第 1 课',
+    goals: {
+      'python-basics': {
+        title: 'Python 入门',
+        desc: '语法、类型与编程基础。',
+      },
+      logic: {
+        title: '逻辑思维',
+        desc: '用流程图建立结构化思维。',
+      },
+      web: {
+        title: '网页开发',
+        desc: '从 HTML 与网页结构开始。',
+      },
+      design: {
+        title: '设计',
+        desc: '用 Canva 打下创意基础。',
+      },
+      office: {
+        title: '办公技能',
+        desc: '从零开始学习 Excel 提升效率。',
+      },
+    },
   },
   cert: {
     title: '结业证书',

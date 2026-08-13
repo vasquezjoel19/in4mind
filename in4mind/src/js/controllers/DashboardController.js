@@ -1413,6 +1413,11 @@ const DashboardController = (() => {
     const userRaw = sessionStorage.getItem('in4mind_user');
     const user    = userRaw ? JSON.parse(userRaw) : null;
 
+    if (typeof OnboardingService !== 'undefined' && OnboardingService.needsOnboarding()) {
+      window.location.replace('onboarding.html');
+      return;
+    }
+
     // En producción, descomentar para proteger la ruta:
     // if (!user) { window.location.href = 'login.html'; return; }
 

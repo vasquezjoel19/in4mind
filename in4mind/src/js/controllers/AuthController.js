@@ -264,11 +264,20 @@ const AuthController = (() => {
     _openResetView();
   }
 
+  function _needsOnboarding() {
+    return typeof OnboardingService !== 'undefined' && OnboardingService.needsOnboarding();
+  }
+
   function _redirectAfterAuth() {
     // Prioridad: el contenido compartido al que el usuario intentaba entrar.
     if (typeof AuthGuard !== 'undefined') {
       const next = AuthGuard.consumeRedirect();
       if (next) {
+        const isDash = /dashboard\.html/i.test(next);
+        if (isDash && _needsOnboarding()) {
+          window.location.replace('onboarding.html');
+          return;
+        }
         window.location.replace(next);
         return;
       }
@@ -286,6 +295,10 @@ const AuthController = (() => {
     }
     if (sessionStorage.getItem('in4mind_open_quiz')) {
       window.location.href = 'quizzes.html';
+      return;
+    }
+    if (_needsOnboarding()) {
+      window.location.href = 'onboarding.html';
       return;
     }
     window.location.href = 'dashboard.html';
@@ -512,7 +525,7 @@ const AuthController = (() => {
     const result = await AuthService.signInWithGoogle();
     if (result.ok && result.redirecting) return;
     if (result.ok) {
-      window.location.href = 'dashboard.html';
+      _redirectAfterAuth();
       return;
     }
     if ($loginError) {

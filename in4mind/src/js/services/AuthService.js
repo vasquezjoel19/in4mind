@@ -99,6 +99,9 @@ const AuthService = (() => {
           const meta = await _upsertProfile(data.user);
           const user = _sessionUser(data.user, meta.name);
           await _persistSession(user, remember, pass);
+          if (typeof OnboardingService !== 'undefined') {
+            await OnboardingService.hydrateFromCloud(user.email);
+          }
           if (typeof AuthSessionSync !== 'undefined') AuthSessionSync.broadcastLogin(user);
           return { ok: true, user };
         }
@@ -157,6 +160,7 @@ const AuthService = (() => {
 
         // Confirmación de email activa: hay user pero aún no hay sesión JWT.
         if (!data.session) {
+          if (typeof OnboardingService !== 'undefined') OnboardingService.markIncomplete(em);
           return {
             ok: true,
             needsEmailConfirmation: true,
@@ -168,6 +172,15 @@ const AuthService = (() => {
         await _upsertProfile(user, displayName);
         const sessionUser = _sessionUser(user, displayName);
         await _persistSession(sessionUser, remember, pass);
+        if (typeof OnboardingService !== 'undefined') {
+          OnboardingService.markIncomplete(em);
+          try {
+            await _sb.from('profiles').update({
+              onboarding_completed: false,
+              updated_at: new Date().toISOString(),
+            }).eq('id', user.id);
+          } catch { /* optional column */ }
+        }
         if (typeof AuthSessionSync !== 'undefined') AuthSessionSync.broadcastLogin(sessionUser);
         return { ok: true, user: sessionUser };
       } catch {
@@ -179,7 +192,10 @@ const AuthService = (() => {
     }
 
     const result = await DataService.register(displayName, em, pass);
-    if (result.ok) await _persistSession(result.user, remember, pass);
+    if (result.ok) {
+      await _persistSession(result.user, remember, pass);
+      if (typeof OnboardingService !== 'undefined') OnboardingService.markIncomplete(em);
+    }
     return result;
   }
 
@@ -300,6 +316,9 @@ const AuthService = (() => {
       const meta = await _upsertProfile(data.session.user);
       const user = _sessionUser(data.session.user, meta.name);
       await _persistSession(user);
+      if (typeof OnboardingService !== 'undefined') {
+        await OnboardingService.hydrateFromCloud(user.email);
+      }
       return { ok: true, user };
     } catch {
       return { ok: false };

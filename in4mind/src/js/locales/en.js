@@ -14,6 +14,7 @@ const LOCALE_EN = {
     profileTitle: 'IN4MIND — My Profile',
     helpTitle: 'IN4MIND — Help Center',
     landingTitle: 'IN4MIND — Learn Technology',
+    onboardingTitle: 'IN4MIND — Welcome',
   },
   nav: {
     home: 'Home',
@@ -356,6 +357,38 @@ const LOCALE_EN = {
     recommendBody: 'Personalized suggestions from visits, favorites, and quizzes.',
     aiTitle: 'AI assistant',
     aiBody: 'Ask about courses, quizzes, or the platform. AI knows your learning context.',
+  },
+  signupOnboard: {
+    title: 'What is your main goal?',
+    sub: 'Pick where you want to start. We will assign your first course and Lesson 1.',
+    step: 'Step {n} of {total}',
+    skip: 'Skip for now',
+    assignTitle: 'Your first course: {course}',
+    assignBody: 'Taking you to Lesson 1 so you can start now.',
+    starting: 'Opening lesson…',
+    startLesson: 'Go to Lesson 1',
+    goals: {
+      'python-basics': {
+        title: 'Basic Python',
+        desc: 'Syntax, types, and your first programming foundation.',
+      },
+      logic: {
+        title: 'Logic',
+        desc: 'Structured thinking with flowcharts.',
+      },
+      web: {
+        title: 'Web development',
+        desc: 'Start with HTML and how the web is built.',
+      },
+      design: {
+        title: 'Design',
+        desc: 'Creative fundamentals with Canva.',
+      },
+      office: {
+        title: 'Office skills',
+        desc: 'Productivity with Excel from scratch.',
+      },
+    },
   },
   cert: {
     title: 'Certificate of completion',

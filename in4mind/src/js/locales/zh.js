@@ -14,6 +14,7 @@ const LOCALE_ZH = {
     profileTitle: 'IN4MIND — 我的资料',
     helpTitle: 'IN4MIND — 帮助中心',
     landingTitle: 'IN4MIND — 学习技术',
+    onboardingTitle: 'IN4MIND — 欢迎',
   },
   nav: {
     home: '首页',
@@ -358,6 +359,38 @@ const LOCALE_ZH = {
     recommendBody: '根据访问、收藏和测验生成的个性化建议。',
     aiTitle: 'AI 助手',
     aiBody: '可询问课程、测验或平台问题，AI 了解你的学习上下文。',
+  },
+  signupOnboard: {
+    title: '你的主要目标是什么？',
+    sub: '选择从哪里开始。我们将为你分配第一门课和第 1 课。',
+    step: '第 {n} 步，共 {total} 步',
+    skip: '暂时跳过',
+    assignTitle: '你的第一门课：{course}',
+    assignBody: '正在带你进入第 1 课，马上开始学习。',
+    starting: '正在打开课程…',
+    startLesson: '前往第 1 课',
+    goals: {
+      'python-basics': {
+        title: 'Python 入门',
+        desc: '语法、类型与编程基础。',
+      },
+      logic: {
+        title: '逻辑思维',
+        desc: '用流程图建立结构化思维。',
+      },
+      web: {
+        title: '网页开发',
+        desc: '从 HTML 与网页结构开始。',
+      },
+      design: {
+        title: '设计',
+        desc: '用 Canva 打下创意基础。',
+      },
+      office: {
+        title: '办公技能',
+        desc: '从零开始学习 Excel 提升效率。',
+      },
+    },
   },
   cert: {
     title: '结业证书',

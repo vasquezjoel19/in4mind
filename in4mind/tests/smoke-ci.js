@@ -16,11 +16,14 @@ const required = [
   'src/js/services/GroqService.js',
   'src/js/services/AIUserContext.js',
   'dashboard.html',
+  'onboarding.html',
   'tutorial.html',
   'guided-projects.html',
   'ai.html',
   'sw.js',
   'tests/smoke.html',
+  'src/js/services/OnboardingService.js',
+  'src/js/controllers/OnboardingController.js',
 ];
 
 let failed = 0;
@@ -75,6 +78,15 @@ assert('bundle-shell script', fs.existsSync(shellBundle));
 for (const name of ['boot.bundle.js', 'app-shell.bundle.js', 'landing.bundle.js']) {
   assert(`dist:${name}`, fs.existsSync(path.join(root, 'src/js/dist', name)));
 }
+
+const loginHtml = fs.readFileSync(path.join(root, 'login.html'), 'utf8');
+assert('login loads OnboardingService', /OnboardingService\.js/.test(loginHtml));
+assert('auth redirects mention onboarding', /onboarding\.html/.test(
+  fs.readFileSync(path.join(root, 'src/js/controllers/AuthController.js'), 'utf8')
+));
+const obSvc = fs.readFileSync(path.join(root, 'src/js/services/OnboardingService.js'), 'utf8');
+assert('onboarding completes with goal', /completeWithGoal/.test(obSvc));
+assert('onboarding sets completed flag', /onboarding_completed/.test(obSvc));
 
 if (failed) {
   console.error(`\n${failed} smoke check(s) failed`);

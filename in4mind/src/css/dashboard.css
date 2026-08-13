@@ -880,17 +880,13 @@ a.avatar:visited {
   background-image: var(--course-banner), url('../img/banners/circuit-bg.svg');
   background-size: cover;
   background-position: center right;
-  opacity: 0.95;
+  opacity: 1;
 }
 .course-banner-card__art {
-  background-image: var(--course-art);
-  background-repeat: no-repeat;
-  background-position: calc(100% - 16px) center;
-  background-size: min(42%, 140px) auto;
-  opacity: 0.28;
+  display: none;
 }
 .course-banner-card__overlay {
-  background: linear-gradient(105deg, #050b14 0%, rgba(5,11,20,0.94) 38%, rgba(5,11,20,0.72) 62%, rgba(5,11,20,0.28) 100%);
+  background: linear-gradient(105deg, #050b14 0%, rgba(5,11,20,0.96) 34%, rgba(5,11,20,0.78) 58%, rgba(5,11,20,0.35) 82%, rgba(5,11,20,0.18) 100%);
 }
 .course-banner-card__body {
   position: relative; z-index: 1; display: flex; flex-direction: column; gap: 12px;

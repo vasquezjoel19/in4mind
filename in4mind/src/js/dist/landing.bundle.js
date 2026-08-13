@@ -1,4 +1,4 @@
-/*! IN4MIND bundle 20260813cards29 — 2026-08-13T21:05:45.661330+00:00 */
+/*! IN4MIND bundle 20260813banners30 — 2026-08-13T21:24:22.283921+00:00 */
 
 ;/* --- src/js/components/In4mindBulb.js --- */
 'use strict';
@@ -2344,10 +2344,9 @@ const DataService = (() => {
       const base = loc && typeof loc === 'object'
         ? { ...c, title: loc.title || c.title, desc: loc.desc || c.desc }
         : { ...c };
-      // Banner dinámico: override opcional por curso; por defecto circuit tech + icono.
-      base.banner = base.banner || 'src/img/banners/circuit-bg.svg';
-      base.bannerArt = base.bannerArt || base.icon;
-      // Si no hay PNG/SVG propio, CourseCard cae al circuit compartido + icono.
+      // Banner temático por curso: src/img/banners/{id}-bg.svg
+      base.banner = base.banner || `src/img/banners/${base.id}-bg.svg`;
+      base.bannerArt = base.bannerArt || '';
       if (typeof CourseCard !== 'undefined' && CourseCard.decorate) {
         return CourseCard.decorate(base);
       }
@@ -2602,12 +2601,13 @@ const CourseCard = (() => {
 
   function bannerUrl(course) {
     if (course?.banner) return course.banner;
-    // Fondo tech compartido; el arte específico del curso va en --course-art (icono).
+    if (course?.id) return `src/img/banners/${course.id}-bg.svg`;
     return 'src/img/banners/circuit-bg.svg';
   }
 
   function artUrl(course) {
-    return course?.bannerArt || course?.icon || '';
+    // El arte temático ya va integrado en el banner SVG; no duplicar el icono encima.
+    return course?.bannerArt || '';
   }
 
   function categoryLabel(course) {
@@ -2673,7 +2673,7 @@ const CourseCard = (() => {
     const href = options.href || 'login.html';
     const accent = c.color || 'var(--clr-brand-500)';
     const banner = _escape(c.banner);
-    const art = _escape(c.bannerArt || c.icon || '');
+    const art = _escape(c.bannerArt || '');
     const lessonsLabel = _t('courseCard.lessons', '{n} lecciones').replace('{n}', String(c.lessonsCount));
     const modulesLabel = _t('courseCard.modulesQuestions', '{m} módulos • {q} preguntas')
       .replace('{m}', String(c.modulesCount))

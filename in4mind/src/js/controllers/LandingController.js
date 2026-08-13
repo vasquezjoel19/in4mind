@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 const LandingController = (() => {
 
@@ -30,7 +30,7 @@ const LandingController = (() => {
       overlay.innerHTML = `
         <div class="lp-search-modal" role="dialog" aria-modal="true" aria-label="${_t('landing.search', null, 'Buscar')}">
           <input type="search" id="lp-search-input" class="lp-search-input"
-                 placeholder="${_t('search.placeholder', null, 'Buscar cursos…')}" autocomplete="off">
+                 placeholder="${_t('search.placeholder', null, 'Buscar cursosâ€¦')}" autocomplete="off">
           <ul id="lp-search-results" class="lp-search-results" role="listbox"></ul>
           <button type="button" class="lp-search-close" id="lp-search-close">${_t('common.close', null, 'Cerrar')}</button>
         </div>`;
@@ -147,7 +147,7 @@ const LandingController = (() => {
 
   function _registerServiceWorker() {
     if (!('serviceWorker' in navigator)) return;
-    navigator.serviceWorker.register('sw.js?v=20260813cards29').catch(() => {});
+    navigator.serviceWorker.register('sw.js?v=20260813banners30').catch(() => {});
   }
 
   function init() {

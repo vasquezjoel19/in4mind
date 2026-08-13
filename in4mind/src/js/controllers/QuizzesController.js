@@ -696,8 +696,9 @@ const QuizzesController = (() => {
     }
 
     return `
-      <article class="quiz-card quiz-card--cert ${req.examUnlocked ? '' : 'quiz-card--locked'} ${hasCert ? 'quiz-card--earned' : ''} anim-fade-up delay-${Math.min(delay + 1, 6)}"
+      <article class="quiz-card quiz-card--themed quiz-card--cert ${req.examUnlocked ? '' : 'quiz-card--locked'} ${hasCert ? 'quiz-card--earned' : ''} anim-fade-up delay-${Math.min(delay + 1, 6)}"
                data-quiz-id="${exam.id}" data-cert-exam="1" role="button" tabindex="0"
+               style="--quiz-banner:url('${_bannerFor(exam.courseId || exam.id)}')"
                aria-label="${_t('quizzes.examCardAria', { title: exam.title }, `Examen de certificación de ${exam.title}`)}">
         <div class="quiz-card__header">
           <div class="quiz-card__icon-wrap">
@@ -775,6 +776,15 @@ const QuizzesController = (() => {
     });
   }
 
+  function _bannerFor(id) {
+    const safe = String(id || '').replace(/[^a-z0-9-]/gi, '');
+    if (!safe || safe === 'general' || safe === GENERAL_QUIZ_ID) {
+      return 'src/img/banners/circuit-bg.svg';
+    }
+    const courseId = safe.replace(/-exam$/, '').replace(/-cert$/, '');
+    return `src/img/banners/${courseId}-bg.svg`;
+  }
+
   function _renderCard(quiz, delay = 0) {
     const pct = _getPct(quiz.id);
     const scorePct = _getScorePct(quiz.id);
@@ -789,9 +799,11 @@ const QuizzesController = (() => {
     const passHint = passed
       ? _t('quizzes.quizPassedUnlock', { min: quizMin }, `✓ Quiz aprobado (≥${quizMin}%) — desbloquea certificación junto con las lecciones`)
       : _t('quizzes.certGoal', { min: quizMin }, `Meta certificación: ≥${quizMin}% en este quiz`);
+    const banner = _bannerFor(quiz.id);
     return `
-      <article class="quiz-card anim-fade-up delay-${Math.min(delay + 1, 6)}"
+      <article class="quiz-card quiz-card--themed anim-fade-up delay-${Math.min(delay + 1, 6)}"
                data-quiz-id="${quiz.id}" role="button" tabindex="0"
+               style="--quiz-banner:url('${banner}')"
                aria-label="${_t('quizzes.startQuizAria', { title: quiz.title }, `Iniciar quiz de ${quiz.title}`)}">
         <div class="quiz-card__header">
           <div class="quiz-card__icon-wrap">

@@ -1,7 +1,7 @@
-'use strict';
+﻿'use strict';
 
 /**
- * IN4MIND — Funciones globales de la app: notificaciones, búsqueda, bottom nav, onboarding, PWA.
+ * IN4MIND â€” Funciones globales de la app: notificaciones, bÃºsqueda, bottom nav, onboarding, PWA.
  */
 const AppFeatures = (() => {
 
@@ -59,7 +59,7 @@ const AppFeatures = (() => {
     }
   }
 
-  // ── Notificaciones ───────────────────────────────────────────
+  // â”€â”€ Notificaciones â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   function _ensureNotifPanel() {
     let panel = document.getElementById('app-notif-panel');
@@ -71,7 +71,7 @@ const AppFeatures = (() => {
     panel.innerHTML = `
       <div class="app-notif-panel__head">
         <h2 class="app-notif-panel__title">${_t('notif.panelTitle', null, 'Notificaciones')}</h2>
-        <button type="button" class="app-notif-panel__mark" id="app-notif-mark-all">${_t('notif.markAll', null, 'Marcar leídas')}</button>
+        <button type="button" class="app-notif-panel__mark" id="app-notif-mark-all">${_t('notif.markAll', null, 'Marcar leÃ­das')}</button>
       </div>
       <ul class="app-notif-panel__list" id="app-notif-list" role="list"></ul>
       <p class="app-notif-panel__empty" id="app-notif-empty" hidden>${_t('notif.empty', null, 'No hay notificaciones nuevas.')}</p>`;
@@ -105,7 +105,7 @@ const AppFeatures = (() => {
           <p class="app-notif-item__body">${n.body}</p>
         </div>
         <button type="button" class="app-notif-item__snooze" data-snooze="${n.id}"
-                aria-label="${_t('notif.snooze', null, 'Recordar mañana')}">⏱</button>
+                aria-label="${_t('notif.snooze', null, 'Recordar maÃ±ana')}">â±</button>
       </li>`;
     }).join('');
     list.querySelectorAll('.app-notif-item').forEach((el, i) => {
@@ -204,7 +204,7 @@ const AppFeatures = (() => {
     }
   }
 
-  // ── Búsqueda global ──────────────────────────────────────────
+  // â”€â”€ BÃºsqueda global â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   function _ensureSearchModal() {
     let modal = document.getElementById('global-search-modal');
@@ -215,10 +215,10 @@ const AppFeatures = (() => {
     modal.hidden = true;
     modal.innerHTML = `
       <div class="global-search-modal__backdrop" data-close-search></div>
-      <div class="global-search-modal__dialog" role="dialog" aria-modal="true" aria-label="${_t('search.title', null, 'Búsqueda global')}">
+      <div class="global-search-modal__dialog" role="dialog" aria-modal="true" aria-label="${_t('search.title', null, 'BÃºsqueda global')}">
         <div class="global-search-modal__input-wrap">
           <input type="search" id="global-search-input" class="global-search-modal__input"
-                 placeholder="${_t('search.placeholder', null, 'Buscar cursos, lecciones, quizzes…')}"
+                 placeholder="${_t('search.placeholder', null, 'Buscar cursos, lecciones, quizzesâ€¦')}"
                  autocomplete="off" />
           <kbd class="global-search-modal__kbd">Esc</kbd>
         </div>
@@ -320,7 +320,7 @@ const AppFeatures = (() => {
     });
   }
 
-  // ── Bottom navigation (móvil) ────────────────────────────────
+  // â”€â”€ Bottom navigation (mÃ³vil) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   function _renderBottomNav(activeId) {
     if (!document.querySelector('.dashboard, .main-area')) return;
@@ -329,7 +329,7 @@ const AppFeatures = (() => {
       nav = document.createElement('nav');
       nav.id = 'app-bottom-nav';
       nav.className = 'app-bottom-nav';
-      nav.setAttribute('aria-label', _t('shell.mainNav', null, 'Navegación principal'));
+      nav.setAttribute('aria-label', _t('shell.mainNav', null, 'NavegaciÃ³n principal'));
       document.body.appendChild(nav);
     }
     const items = [
@@ -347,7 +347,7 @@ const AppFeatures = (() => {
       </a>`).join('');
   }
 
-  // ── Onboarding ───────────────────────────────────────────────
+  // â”€â”€ Onboarding â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const ONBOARD_STEPS = [
     { sel: '#resume-grid, .resume-section', key: 'onboard.resume' },
@@ -402,13 +402,13 @@ const AppFeatures = (() => {
     _showOnboardStep(0);
   }
 
-  // ── PWA ──────────────────────────────────────────────────────
+  // â”€â”€ PWA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   function _registerPWA() {
     if (!('serviceWorker' in navigator)) return;
     const isAppPage = /dashboard|tutorial|quizzes|ai|profile|help/.test(window.location.pathname);
     if (!isAppPage) return;
-    navigator.serviceWorker.register('sw.js?v=20260813cards29').catch(() => {});
+    navigator.serviceWorker.register('sw.js?v=20260813banners30').catch(() => {});
   }
 
   function _injectManifest() {
@@ -419,7 +419,7 @@ const AppFeatures = (() => {
     document.head.appendChild(link);
   }
 
-  // ── Init ───────────────────────────────────────────────────
+  // â”€â”€ Init â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   function init(activeNavId = null) {
     _activeNav = activeNavId;

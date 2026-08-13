@@ -51,12 +51,13 @@ const CourseCard = (() => {
 
   function bannerUrl(course) {
     if (course?.banner) return course.banner;
-    // Fondo tech compartido; el arte específico del curso va en --course-art (icono).
+    if (course?.id) return `src/img/banners/${course.id}-bg.svg`;
     return 'src/img/banners/circuit-bg.svg';
   }
 
   function artUrl(course) {
-    return course?.bannerArt || course?.icon || '';
+    // El arte temático ya va integrado en el banner SVG; no duplicar el icono encima.
+    return course?.bannerArt || '';
   }
 
   function categoryLabel(course) {
@@ -122,7 +123,7 @@ const CourseCard = (() => {
     const href = options.href || 'login.html';
     const accent = c.color || 'var(--clr-brand-500)';
     const banner = _escape(c.banner);
-    const art = _escape(c.bannerArt || c.icon || '');
+    const art = _escape(c.bannerArt || '');
     const lessonsLabel = _t('courseCard.lessons', '{n} lecciones').replace('{n}', String(c.lessonsCount));
     const modulesLabel = _t('courseCard.modulesQuestions', '{m} módulos • {q} preguntas')
       .replace('{m}', String(c.modulesCount))

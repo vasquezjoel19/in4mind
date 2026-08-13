@@ -71,10 +71,9 @@ const DataService = (() => {
       const base = loc && typeof loc === 'object'
         ? { ...c, title: loc.title || c.title, desc: loc.desc || c.desc }
         : { ...c };
-      // Banner dinámico: override opcional por curso; por defecto circuit tech + icono.
-      base.banner = base.banner || 'src/img/banners/circuit-bg.svg';
-      base.bannerArt = base.bannerArt || base.icon;
-      // Si no hay PNG/SVG propio, CourseCard cae al circuit compartido + icono.
+      // Banner temático por curso: src/img/banners/{id}-bg.svg
+      base.banner = base.banner || `src/img/banners/${base.id}-bg.svg`;
+      base.bannerArt = base.bannerArt || '';
       if (typeof CourseCard !== 'undefined' && CourseCard.decorate) {
         return CourseCard.decorate(base);
       }

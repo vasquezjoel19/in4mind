@@ -1083,25 +1083,27 @@ a.lp-feature-card--link {
   background-size: cover;
   background-position: center right;
   background-repeat: no-repeat;
-  opacity: 0.95;
+  opacity: 1;
 }
 
 .course-banner-card__art {
   background-image: var(--course-art);
   background-repeat: no-repeat;
-  background-position: calc(100% - 18px) center;
-  background-size: min(42%, 150px) auto;
-  opacity: 0.28;
-  filter: saturate(1.15) contrast(1.05);
+  background-position: calc(100% - 10px) 55%;
+  background-size: min(48%, 170px) auto;
+  opacity: 0.22;
+  filter: saturate(1.2) contrast(1.05);
+  display: none; /* arte integrado en el banner temático */
 }
 
 .course-banner-card__overlay {
   background: linear-gradient(
     105deg,
     #050b14 0%,
-    rgba(5, 11, 20, 0.94) 38%,
-    rgba(5, 11, 20, 0.72) 62%,
-    rgba(5, 11, 20, 0.28) 100%
+    rgba(5, 11, 20, 0.96) 34%,
+    rgba(5, 11, 20, 0.78) 58%,
+    rgba(5, 11, 20, 0.35) 82%,
+    rgba(5, 11, 20, 0.18) 100%
   );
 }
 

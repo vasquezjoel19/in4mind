@@ -73,7 +73,7 @@ const DataService = (() => {
         : { ...c };
       // Banner temático por curso: src/img/banners/{id}-bg.svg
       base.banner = base.banner || `src/img/banners/${base.id}-bg.svg`;
-      base.bannerArt = base.bannerArt || '';
+      base.bannerArt = base.bannerArt || base.icon;
       if (typeof CourseCard !== 'undefined' && CourseCard.decorate) {
         return CourseCard.decorate(base);
       }

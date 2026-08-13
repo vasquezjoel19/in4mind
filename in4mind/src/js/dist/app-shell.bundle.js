@@ -1,4 +1,4 @@
-/*! IN4MIND bundle 20260813banners30 — 2026-08-13T21:24:22.279787+00:00 */
+/*! IN4MIND bundle 20260813home31 — 2026-08-13T21:41:49.406760+00:00 */
 
 ;/* --- src/js/components/In4mindBulb.js --- */
 'use strict';
@@ -2605,7 +2605,7 @@ const DataService = (() => {
         : { ...c };
       // Banner temático por curso: src/img/banners/{id}-bg.svg
       base.banner = base.banner || `src/img/banners/${base.id}-bg.svg`;
-      base.bannerArt = base.bannerArt || '';
+      base.bannerArt = base.bannerArt || base.icon;
       if (typeof CourseCard !== 'undefined' && CourseCard.decorate) {
         return CourseCard.decorate(base);
       }
@@ -2865,8 +2865,8 @@ const CourseCard = (() => {
   }
 
   function artUrl(course) {
-    // El arte temático ya va integrado en el banner SVG; no duplicar el icono encima.
-    return course?.bannerArt || '';
+    // Logo/arte del curso a la derecha del banner temático (dashboard/cursos).
+    return course?.bannerArt || course?.icon || '';
   }
 
   function categoryLabel(course) {
@@ -2932,7 +2932,7 @@ const CourseCard = (() => {
     const href = options.href || 'login.html';
     const accent = c.color || 'var(--clr-brand-500)';
     const banner = _escape(c.banner);
-    const art = _escape(c.bannerArt || '');
+    const art = _escape(c.bannerArt || c.icon || '');
     const lessonsLabel = _t('courseCard.lessons', '{n} lecciones').replace('{n}', String(c.lessonsCount));
     const modulesLabel = _t('courseCard.modulesQuestions', '{m} módulos • {q} preguntas')
       .replace('{m}', String(c.modulesCount))
@@ -6472,7 +6472,7 @@ const AppFeatures = (() => {
     if (!('serviceWorker' in navigator)) return;
     const isAppPage = /dashboard|tutorial|quizzes|ai|profile|help/.test(window.location.pathname);
     if (!isAppPage) return;
-    navigator.serviceWorker.register('sw.js?v=20260813banners30').catch(() => {});
+    navigator.serviceWorker.register('sw.js?v=20260813home31').catch(() => {});
   }
 
   function _injectManifest() {

@@ -89,6 +89,7 @@ const GuidedProjectsController = (() => {
     return `
       <article class="gp-card ${unlocked ? '' : 'gp-card--locked'}" role="listitem"
                data-project-id="${_escape(project.id)}" tabindex="0"
+               style="--gp-banner:url('src/img/banners/${_escape(project.courseId || project.quizId)}-bg.svg')"
                aria-label="${_escape(project.title)}">
         <div class="gp-card__top">
           <img class="gp-card__icon" src="${_escape(project.icon)}" alt="" width="28" height="28" loading="lazy">

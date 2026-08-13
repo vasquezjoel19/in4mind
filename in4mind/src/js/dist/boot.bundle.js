@@ -1,4 +1,4 @@
-/*! IN4MIND bundle 20260813banners30 — 2026-08-13T21:24:22.264571+00:00 */
+/*! IN4MIND bundle 20260813home31 — 2026-08-13T21:41:49.390647+00:00 */
 
 ;/* --- src/js/controllers/ThemeController.js --- */
 /**

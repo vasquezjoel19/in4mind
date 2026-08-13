@@ -408,7 +408,7 @@ const AppFeatures = (() => {
     if (!('serviceWorker' in navigator)) return;
     const isAppPage = /dashboard|tutorial|quizzes|ai|profile|help/.test(window.location.pathname);
     if (!isAppPage) return;
-    navigator.serviceWorker.register('sw.js?v=20260813banners30').catch(() => {});
+    navigator.serviceWorker.register('sw.js?v=20260813home31').catch(() => {});
   }
 
   function _injectManifest() {

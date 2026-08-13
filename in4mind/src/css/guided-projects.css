@@ -64,9 +64,18 @@ html[data-theme="dark"] .gp-page-header__logo.in4mind-bulb {
 }
 
 .gp-card {
+  --gp-banner: none;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  background: var(--clr-bg-elevated, #fff);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.86) 55%, rgba(255, 255, 255, 0.7) 100%),
+    var(--gp-banner),
+    var(--clr-bg-elevated, #fff);
+  background-size: cover;
+  background-position: center right;
   border: 1px solid var(--clr-border-lt, var(--clr-border));
   border-radius: var(--rad-xl);
   padding: var(--sp-lg);
@@ -75,6 +84,23 @@ html[data-theme="dark"] .gp-page-header__logo.in4mind-bulb {
   transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
+
+html[data-theme="dark"] .gp-card {
+  border-color: rgba(148, 163, 184, 0.22);
+  background:
+    linear-gradient(145deg, rgba(15, 23, 42, 0.94) 0%, rgba(15, 23, 42, 0.8) 52%, rgba(15, 23, 42, 0.52) 100%),
+    var(--gp-banner),
+    #0b1220;
+  background-size: cover;
+  background-position: center right;
+  color: #e2e8f0;
+}
+
+html[data-theme="dark"] .gp-card__title { color: #fff; }
+html[data-theme="dark"] .gp-card__summary,
+html[data-theme="dark"] .gp-card__meta,
+html[data-theme="dark"] .gp-card__pct,
+html[data-theme="dark"] .gp-card__lock { color: #cbd5e1; }
 
 .gp-card:hover {
   transform: translateY(-3px);

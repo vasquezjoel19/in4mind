@@ -1090,10 +1090,10 @@ a.lp-feature-card--link {
   background-image: var(--course-art);
   background-repeat: no-repeat;
   background-position: calc(100% - 10px) 55%;
-  background-size: min(48%, 170px) auto;
-  opacity: 0.22;
-  filter: saturate(1.2) contrast(1.05);
-  display: none; /* arte integrado en el banner temático */
+  background-size: min(46%, 160px) auto;
+  opacity: 0.55;
+  filter: saturate(1.15) contrast(1.05) drop-shadow(0 8px 18px rgba(0, 0, 0, 0.35));
+  display: block;
 }
 
 .course-banner-card__overlay {
@@ -1257,6 +1257,9 @@ html:not([data-theme="dark"]) .lp-courses-wrap {
 }
 
 .lp-course-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -1264,15 +1267,33 @@ html:not([data-theme="dark"]) .lp-courses-wrap {
   padding: 16px 14px;
   border-radius: var(--lp-radius-md, 12px);
   border: 1px solid var(--clr-border, #e2e6ec);
-  background: var(--clr-bg-card, #fff);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.88) 55%, rgba(255, 255, 255, 0.72) 100%),
+    var(--course-banner, none),
+    var(--clr-bg-card, #fff);
+  background-size: cover;
+  background-position: center right;
   text-decoration: none;
   color: inherit;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, opacity 0.35s ease;
   min-height: 148px;
-  /* Always readable; animation is progressive enhancement. */
   opacity: 1;
   transform: none;
 }
+
+html[data-theme="dark"] .lp-course-card {
+  border-color: rgba(148, 163, 184, 0.22);
+  background:
+    linear-gradient(145deg, rgba(15, 23, 42, 0.94) 0%, rgba(15, 23, 42, 0.82) 52%, rgba(15, 23, 42, 0.55) 100%),
+    var(--course-banner, none),
+    #0b1220;
+  background-size: cover;
+  background-position: center right;
+  color: #e2e8f0;
+}
+
+html[data-theme="dark"] .lp-course-card__title { color: #fff; }
+html[data-theme="dark"] .lp-course-card__desc { color: #cbd5e1; }
 
 .lp-carousel__slide[aria-hidden="true"] .lp-course-card {
   opacity: 0;

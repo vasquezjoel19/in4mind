@@ -19,13 +19,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <script src="src/js/dist/boot.bundle.js?v=20260813banners30"></script>
+  <script src="src/js/dist/boot.bundle.js?v=20260813home31"></script>
 
   <link rel="stylesheet" href="src/css/tokens.css?v=20260812polish">
-  <link rel="stylesheet" href="src/css/landing.css?v=20260813banners30">
+  <link rel="stylesheet" href="src/css/landing.css?v=20260813home31">
   <link rel="stylesheet" href="src/css/ui-polish.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/ambient.css?v=20260714fluid3">
-  <link rel="stylesheet" href="src/css/theme.css?v=20260813banners30">
+  <link rel="stylesheet" href="src/css/theme.css?v=20260813home31">
   <link rel="stylesheet" href="src/css/i18n.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/accessibility.css?v=20260707">
   <link rel="stylesheet" href="src/css/cookie-consent.css?v=20260812polish">
@@ -282,13 +282,20 @@
 </section>
 
 <!-- --------------------------------------
-     CARRUSEL ? CatÃ¡logo de herramientas y aplicaciones
+     CARRUSEL — Catálogo de herramientas y aplicaciones
 -------------------------------------- -->
-<section class="lp-courses-wrap is-visible" id="catalog">
+<section class="lp-courses-wrap lp-reveal" id="catalog">
   <div class="lp-container">
-    <h2 class="lp-section-title" data-i18n="landing.coursesCarouselTitle">Herramientas y aplicaciones IN4MIND</h2>
-    <p class="lp-courses-wrap__sub" data-i18n="landing.coursesCarouselSub">Explora cursos, quizzes y certificaciones de todo el catÃ¡logo.</p>
-    <div class="lp-courses-grid" id="courses-grid" role="list" aria-label="CatÃ¡logo de cursos" data-i18n-aria="landing.coursesCarouselTitle"></div>
+    <h2 class="lp-section-title lp-reveal lp-reveal--delay-1" data-i18n="landing.coursesCarouselTitle">Herramientas y aplicaciones IN4MIND</h2>
+    <p class="lp-courses-wrap__sub lp-reveal lp-reveal--delay-2" data-i18n="landing.coursesCarouselSub">Explora cursos, quizzes y certificaciones de todo el catálogo.</p>
+
+    <div class="lp-carousel lp-carousel--courses lp-reveal lp-reveal--delay-3" id="courses-carousel" aria-roledescription="carrusel" data-i18n-attr="aria-roledescription" data-i18n="landing.carousel">
+      <div class="lp-carousel__viewport">
+        <div class="lp-carousel__track" id="courses-track" role="list"></div>
+      </div>
+      <div class="lp-carousel__progress" id="courses-progress" aria-hidden="true"><span></span></div>
+      <div class="lp-carousel__dots" id="courses-dots" role="tablist" aria-label="Aplicaciones" data-i18n-aria="landing.coursesCarouselTitle"></div>
+    </div>
   </div>
 </section>
 
@@ -746,11 +753,11 @@
   </svg>
 </button>
 
-<script defer src="src/js/dist/landing.bundle.js?v=20260813banners30"></script>
+<script defer src="src/js/dist/landing.bundle.js?v=20260813home31"></script>
 <script defer src="src/js/other-menu-boot.js?v=20260714theme"></script>
 <script defer src="src/js/services/CookieConsent.js?v=20260706"></script>
 <script defer src="src/js/services/CursorSpotlight.js?v=20260714fluid4"></script>
-<script defer src="src/js/controllers/LandingController.js?v=20260813banners30"></script>
+<script defer src="src/js/controllers/LandingController.js?v=20260813home31"></script>
 
 <script>
 /* Espera DOMContentLoaded: los bundles van con defer y deben existir
@@ -1037,13 +1044,15 @@ document.addEventListener('DOMContentLoaded', function () {
     return { goTo, resetAuto };
   }
 
-  function _renderCoursesGrid(attempt) {
-    const $grid = document.getElementById('courses-grid');
-    if (!$grid) return;
+  function _renderCoursesCarousel(attempt) {
+    const $track = document.getElementById('courses-track');
+    const $dots = document.getElementById('courses-dots');
+    const $carousel = document.getElementById('courses-carousel');
+    if (!$track) return;
 
     if (typeof DataService === 'undefined') {
       if ((attempt || 0) < 40) {
-        window.setTimeout(() => _renderCoursesGrid((attempt || 0) + 1), 50);
+        window.setTimeout(() => _renderCoursesCarousel((attempt || 0) + 1), 50);
       }
       return;
     }
@@ -1051,7 +1060,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const courses = DataService.getCourses() || [];
     if (!courses.length) {
       if ((attempt || 0) < 20) {
-        window.setTimeout(() => _renderCoursesGrid((attempt || 0) + 1), 50);
+        window.setTimeout(() => _renderCoursesCarousel((attempt || 0) + 1), 50);
       }
       return;
     }
@@ -1065,34 +1074,55 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     }
 
-    if (typeof CourseCard !== 'undefined' && CourseCard.render) {
-      $grid.innerHTML = courses.map((c) => CourseCard.render(c, { href: 'login.html' })).join('');
-    } else {
-      $grid.innerHTML = courses.map((c) => `
-        <a href="login.html" class="course-banner-card" data-open-course="${_escapeHtml(c.id)}"
-           style="--course-accent:${c.color || 'var(--clr-brand-500)'};--course-banner:url('${_escapeHtml(c.banner || `src/img/banners/${c.id}-bg.svg`)}')">
-          <span class="course-banner-card__bg" aria-hidden="true"></span>
-          <span class="course-banner-card__overlay" aria-hidden="true"></span>
-          <span class="course-banner-card__art" aria-hidden="true"></span>
-          <span class="course-banner-card__body">
-            <span class="course-banner-card__header">
-              <span class="course-banner-card__icon"><img src="${_escapeHtml(c.icon)}" alt="" width="28" height="28" loading="lazy"></span>
-              <span class="course-banner-card__titles">
-                <span class="course-banner-card__title">${_escapeHtml(c.title)}</span>
-                <span class="course-banner-card__category">${_escapeHtml(c.category || '')}</span>
+    const perSlide = _coursesPerSlide();
+    const slides = _chunk(courses, perSlide);
+
+    $track.innerHTML = slides.map((group, slideIdx) => `
+      <article class="lp-carousel__slide" role="listitem" data-index="${slideIdx}" aria-hidden="${slideIdx !== 0}">
+        <div class="lp-courses-slide">
+          ${group.map(c => {
+            const banner = _escapeHtml(c.banner || `src/img/banners/${c.id}-bg.svg`);
+            return `
+            <a href="login.html" class="lp-course-card" data-open-course="${_escapeHtml(c.id)}"
+               style="--course-accent: ${c.color || 'var(--clr-brand-500)'};--course-banner:url('${banner}')">
+              <span class="lp-course-card__icon" aria-hidden="true">
+                <img src="${_escapeHtml(c.icon)}" alt="" width="28" height="28" loading="lazy">
               </span>
-            </span>
-            <span class="course-banner-card__desc">${_escapeHtml(c.desc)}</span>
-          </span>
-        </a>`).join('');
-    }
+              <h3 class="lp-course-card__title">${_escapeHtml(c.title)}</h3>
+              <p class="lp-course-card__desc">${_escapeHtml(c.desc)}</p>
+            </a>`;
+          }).join('')}
+        </div>
+      </article>
+    `).join('');
 
     document.getElementById('catalog')?.classList.add('is-visible');
-    _bindAuthLinks($grid);
+    $carousel?.classList.add('is-visible');
+    $carousel?.closest('.lp-reveal')?.classList.add('is-visible');
+
+    _bindAuthLinks($track);
+
+    const api = _initCarousel({
+      trackEl: $track,
+      dotsEl: $dots,
+      carouselEl: $carousel,
+      slideCount: slides.length,
+      progressEl: document.getElementById('courses-progress'),
+      dotLabel: (i) => (typeof I18n !== 'undefined'
+        ? I18n.t('landing.courseSlideDot', { n: i + 1 })
+        : 'Aplicaciones ' + (i + 1)),
+    });
+    if (api && typeof api.goTo === 'function') api.goTo(0, false);
   }
 
-  _renderCoursesGrid(0);
-  document.addEventListener('in4mind-locale-change', () => _renderCoursesGrid(0));
+  _renderCoursesCarousel(0);
+  let coursesResizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(coursesResizeTimer);
+    coursesResizeTimer = setTimeout(() => _renderCoursesCarousel(0), 180);
+  });
+
+  document.addEventListener('in4mind-locale-change', () => _renderCoursesCarousel(0));
 
   const TESTIMONIAL_AVATARS = [
     'src/img/avatars/avatar-01.svg',

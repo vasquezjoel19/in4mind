@@ -4,16 +4,69 @@
 
 @import url('bulb-icon.css?v=20260810logo');
 
-/* ── Transición suave al cambiar tema ── */
+/* ── Transición suave al cambiar tema (superficies clave) ── */
 html.theme-transition,
-html.theme-transition *,
-html.theme-transition *::before,
-html.theme-transition *::after {
+html.theme-transition body,
+html.theme-transition .main-area,
+html.theme-transition .sidebar,
+html.theme-transition .topbar,
+html.theme-transition .ai-topbar,
+html.theme-transition .auth-page,
+html.theme-transition .auth-card,
+html.theme-transition .auth-topbar,
+html.theme-transition .landing-body,
+html.theme-transition .lp-header,
+html.theme-transition .lp-hero,
+html.theme-transition .settings-modal,
+html.theme-transition .settings-overlay,
+html.theme-transition .other-menu,
+html.theme-transition .other-overlay,
+html.theme-transition .course-card,
+html.theme-transition .quiz-card,
+html.theme-transition .continue-card,
+html.theme-transition .app-toast,
+html.theme-transition .icon-btn,
+html.theme-transition .theme-toggle,
+html.theme-transition .lp-course-card,
+html.theme-transition .sidebar__brand,
+html.theme-transition .nav-item {
   transition:
-    background-color 0.28s var(--ease, ease),
-    color 0.2s var(--ease, ease),
-    border-color 0.28s var(--ease, ease),
-    box-shadow 0.28s var(--ease, ease) !important;
+    background-color 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    color 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    fill 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    stroke 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.theme-transition,
+  html.theme-transition body,
+  html.theme-transition .main-area,
+  html.theme-transition .sidebar,
+  html.theme-transition .topbar,
+  html.theme-transition .ai-topbar,
+  html.theme-transition .auth-page,
+  html.theme-transition .auth-card,
+  html.theme-transition .auth-topbar,
+  html.theme-transition .landing-body,
+  html.theme-transition .lp-header,
+  html.theme-transition .lp-hero,
+  html.theme-transition .settings-modal,
+  html.theme-transition .settings-overlay,
+  html.theme-transition .other-menu,
+  html.theme-transition .other-overlay,
+  html.theme-transition .course-card,
+  html.theme-transition .quiz-card,
+  html.theme-transition .continue-card,
+  html.theme-transition .app-toast,
+  html.theme-transition .icon-btn,
+  html.theme-transition .theme-toggle,
+  html.theme-transition .lp-course-card,
+  html.theme-transition .sidebar__brand,
+  html.theme-transition .nav-item {
+    transition: none !important;
+  }
 }
 
 /* ══════════════════════════════════════
@@ -33,11 +86,24 @@ html.theme-transition *::after {
   flex-shrink: 0;
   color: var(--clr-text-secondary, #64748b);
   transition: background var(--dur-fast, 150ms), color var(--dur-fast, 150ms);
+  vertical-align: middle;
+}
+
+.topbar__actions .theme-toggle,
+.ai-topbar__actions .theme-toggle {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--rad-md, 12px);
 }
 
 .theme-toggle:hover {
   background: var(--clr-bg-input, #edf2f7);
   color: var(--clr-brand-500, #3b506d);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--clr-brand-500, #4a76b2);
+  outline-offset: 2px;
 }
 
 .theme-toggle__icons {
@@ -51,7 +117,9 @@ html.theme-transition *::after {
 .theme-toggle__moon {
   position: absolute;
   inset: 0;
-  transition: opacity 0.22s ease, transform 0.22s ease;
+  width: 18px;
+  height: 18px;
+  transition: opacity 0.28s ease, transform 0.28s ease;
 }
 
 .theme-toggle__sun  { opacity: 1; transform: rotate(0deg) scale(1); color: #d97706; }

@@ -60,6 +60,15 @@ const SettingsController = (() => {
     return saved === 'dark' ? 'dark' : 'light';
   }
 
+  function _syncThemeCards(pref) {
+    const preference = pref || _themePreference();
+    document.querySelectorAll('#settings-overlay [data-theme-pref]').forEach((b) => {
+      const active = b.dataset.themePref === preference;
+      b.classList.toggle('is-active', active);
+      b.setAttribute('aria-checked', String(active));
+    });
+  }
+
   function _isProfilePage() {
     const path = window.location.pathname.replace(/\\/g, '/');
     return /(?:^|\/)profile\.html$/i.test(path) || /\/profile\/?$/i.test(path);
@@ -458,11 +467,7 @@ const SettingsController = (() => {
         if (typeof ThemeController !== 'undefined' && ThemeController.setPreference) {
           ThemeController.setPreference(pref);
         }
-        document.querySelectorAll('[data-theme-pref]').forEach(b => {
-          const active = b.dataset.themePref === pref;
-          b.classList.toggle('is-active', active);
-          b.setAttribute('aria-checked', String(active));
-        });
+        _syncThemeCards(pref);
       });
     });
   }
@@ -633,12 +638,19 @@ const SettingsController = (() => {
         _renderPanels();
       }
     });
+
+    window.addEventListener('in4mind-theme-change', (e) => {
+      const pref = e.detail?.preference || _themePreference();
+      _syncThemeCards(pref);
+    });
   }
 
   function init() {
     if (!document.getElementById('sidebar')) return;
     _resetModalState();
-    if (typeof ThemeController !== 'undefined') ThemeController.unmountToggles();
+    if (typeof ThemeController !== 'undefined' && ThemeController.mount) {
+      ThemeController.mount();
+    }
     _ensureOverlay();
     _bindGlobal();
     if (window.location.hash === '#settings') {

@@ -7,7 +7,9 @@
   if (typeof I18n === 'undefined') return;
   document.addEventListener('DOMContentLoaded', () => {
     I18n.init();
-    if (typeof ThemeController !== 'undefined') ThemeController.unmountToggles();
+    if (typeof ThemeController !== 'undefined' && ThemeController.mount) {
+      ThemeController.mount();
+    }
   });
 
   window.addEventListener('in4mind-locale-change', () => {

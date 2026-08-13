@@ -26,6 +26,15 @@ const OtherMenuController = (() => {
     return 'system';
   }
 
+  function _syncThemeCards(pref) {
+    const preference = pref || _themePreference();
+    document.querySelectorAll('#other-overlay [data-theme-pref]').forEach((b) => {
+      const active = b.dataset.themePref === preference;
+      b.classList.toggle('is-active', active);
+      b.setAttribute('aria-checked', String(active));
+    });
+  }
+
   function _appearanceBlock() {
     const pref = _themePreference();
     const label = _t('otherMenu.appearance', null, 'Apariencia');
@@ -311,7 +320,7 @@ const OtherMenuController = (() => {
         if (typeof ThemeController !== 'undefined' && ThemeController.setPreference) {
           ThemeController.setPreference(pref);
         }
-        _refreshList();
+        _syncThemeCards(pref);
         return;
       }
 
@@ -344,6 +353,11 @@ const OtherMenuController = (() => {
       if (document.getElementById('other-overlay')?.classList.contains('is-open')) {
         _refreshList();
       }
+    });
+
+    window.addEventListener('in4mind-theme-change', (e) => {
+      const pref = e.detail?.preference || _themePreference();
+      _syncThemeCards(pref);
     });
   }
 

@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "src" / "js" / "dist"
-VERSION = "20260813prod25"
+VERSION = "20260813theme26"
 
 BOOT_FILES = [
     "src/js/controllers/ThemeController.js",

@@ -1,4 +1,4 @@
-/*! IN4MIND bundle 20260813prod25 — 2026-08-13T19:38:11.254958+00:00 */
+/*! IN4MIND bundle 20260813theme26 — 2026-08-13T19:48:20.525990+00:00 */
 
 ;/* --- src/js/components/In4mindBulb.js --- */
 'use strict';
@@ -2570,6 +2570,15 @@ const OtherMenuController = (() => {
     return 'system';
   }
 
+  function _syncThemeCards(pref) {
+    const preference = pref || _themePreference();
+    document.querySelectorAll('#other-overlay [data-theme-pref]').forEach((b) => {
+      const active = b.dataset.themePref === preference;
+      b.classList.toggle('is-active', active);
+      b.setAttribute('aria-checked', String(active));
+    });
+  }
+
   function _appearanceBlock() {
     const pref = _themePreference();
     const label = _t('otherMenu.appearance', null, 'Apariencia');
@@ -2855,7 +2864,7 @@ const OtherMenuController = (() => {
         if (typeof ThemeController !== 'undefined' && ThemeController.setPreference) {
           ThemeController.setPreference(pref);
         }
-        _refreshList();
+        _syncThemeCards(pref);
         return;
       }
 
@@ -2889,6 +2898,11 @@ const OtherMenuController = (() => {
         _refreshList();
       }
     });
+
+    window.addEventListener('in4mind-theme-change', (e) => {
+      const pref = e.detail?.preference || _themePreference();
+      _syncThemeCards(pref);
+    });
   }
 
   function init() {
@@ -2913,7 +2927,9 @@ if (typeof module !== 'undefined') module.exports = OtherMenuController;
   if (typeof I18n === 'undefined') return;
   document.addEventListener('DOMContentLoaded', () => {
     I18n.init();
-    if (typeof ThemeController !== 'undefined') ThemeController.unmountToggles();
+    if (typeof ThemeController !== 'undefined' && ThemeController.mount) {
+      ThemeController.mount();
+    }
   });
 
   window.addEventListener('in4mind-locale-change', () => {

@@ -7,8 +7,12 @@
 
 const ProfileController = (() => {
 
-  function _t(k, p) {
-    return typeof I18n !== 'undefined' ? I18n.t(k, p) : '';
+  function _t(k, p, fb) {
+    if (typeof I18n !== 'undefined') {
+      const out = I18n.t(k, p);
+      if (out && out !== k) return out;
+    }
+    return fb ?? k ?? '';
   }
 
   let _activeTab = 'saved';
@@ -16,6 +20,41 @@ const ProfileController = (() => {
   let _categoryFilter = 'all';
   let _loading = false;
   let _loadToken = 0;
+
+  function _notesCount() {
+    try {
+      return typeof NotesService !== 'undefined' ? NotesService.getAllNotes().length : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  function _projectsCount() {
+    try {
+      return typeof ProjectsService !== 'undefined' ? ProjectsService.getAll().length : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  function _courseTitle(courseId) {
+    if (!courseId) return _t('profile.generalNotes', null, 'Notas generales');
+    const courses = typeof DataService !== 'undefined' ? DataService.getCourses() : [];
+    const course = courses.find(c => c.id === courseId);
+    if (course?.title) return course.title;
+    const key = `courses.${courseId}.title`;
+    const localized = _t(key, null, '');
+    return localized && localized !== key ? localized : courseId;
+  }
+
+  function _getFeaturedProjects() {
+    if (typeof ProjectsService === 'undefined') return [];
+    const all = ProjectsService.getAll();
+    const pinned = all.filter(p => p.pinned);
+    const rest = all.filter(p => !p.pinned);
+    // Destacados = fijados; si faltan, completar con los más recientes (máx. 2).
+    return [...pinned, ...rest].slice(0, 2);
+  }
 
   function _openItem(item) {
     if (item.type === 'course') {
@@ -31,6 +70,18 @@ const ProfileController = (() => {
     if (item.type === 'quiz') {
       sessionStorage.setItem('in4mind_open_quiz', item.refId);
       window.location.href = 'quizzes.html';
+      return;
+    }
+    if (item.type === 'project') {
+      window.location.href = `projects.html?project=${encodeURIComponent(item.refId)}`;
+      return;
+    }
+    if (item.type === 'note') {
+      if (item.courseId && item.lessonId) {
+        window.location.href = `tutorial.html?course=${encodeURIComponent(item.courseId)}&lesson=${encodeURIComponent(item.lessonId)}`;
+        return;
+      }
+      window.location.href = 'notes.html';
     }
   }
 
@@ -39,7 +90,12 @@ const ProfileController = (() => {
     const $fav = document.getElementById('stat-fav-count');
     const $quiz = document.getElementById('stat-quiz-count');
     const $cert = document.getElementById('stat-cert-count');
+    const $projects = document.getElementById('stat-projects-count');
+    const $notes = document.getElementById('stat-notes-count');
     if (!$saved || !$fav || !$quiz) return;
+
+    const projects = stats.projects ?? _projectsCount();
+    const notes = stats.notes ?? _notesCount();
 
     $saved.textContent = stats.saved === 1
       ? _t('profile.item', { n: stats.saved })
@@ -54,6 +110,16 @@ const ProfileController = (() => {
       $cert.textContent = stats.certifications === 1
         ? _t('profile.obtainedOne', { n: stats.certifications })
         : _t('profile.obtained', { n: stats.certifications });
+    }
+    if ($projects) {
+      $projects.textContent = projects === 1
+        ? _t('profile.projectOne', { n: projects }, '{n} Proyecto')
+        : _t('profile.projectMany', { n: projects }, '{n} Proyectos');
+    }
+    if ($notes) {
+      $notes.textContent = notes === 1
+        ? _t('profile.noteOne', { n: notes }, '{n} Nota')
+        : _t('profile.noteMany', { n: notes }, '{n} Notas');
     }
   }
 
@@ -121,7 +187,71 @@ const ProfileController = (() => {
 
   async function _renderStats() {
     const stats = await UserProfileService.getStats();
-    _applyStats(stats);
+    _applyStats({
+      ...stats,
+      projects: _projectsCount(),
+      notes: _notesCount(),
+    });
+    _renderFeaturedProjects();
+  }
+
+  function _renderFeaturedProjects() {
+    const $grid = document.getElementById('prof-featured-grid');
+    const $section = document.getElementById('prof-featured-projects');
+    if (!$grid || !$section) return;
+
+    const featured = _getFeaturedProjects();
+    if (!featured.length) {
+      $grid.innerHTML = `
+        <div class="prof-featured__empty">
+          <p>${_t('profile.emptyFeatured', null, 'Aún no tienes proyectos destacados. Crea o fija uno en Mis Proyectos.')}</p>
+          <a class="btn--course" href="projects.html">${_t('profile.goProjects', null, 'Ir a Mis Proyectos')}</a>
+        </div>`;
+      return;
+    }
+
+    $grid.innerHTML = featured.map(p => {
+      const pct = typeof ProjectsService.getProgress === 'function' ? ProjectsService.getProgress(p) : 0;
+      const course = p.courseId ? _courseTitle(p.courseId) : '';
+      const badge = p.pinned
+        ? `<span class="prof-featured__badge">${_t('profile.highlighted', null, 'Destacado')}</span>`
+        : '';
+      return `
+        <article class="prof-featured__card" style="--proj-color:${p.color || '#6366F1'}"
+                 data-project-id="${p.id}" role="button" tabindex="0">
+          <div class="prof-featured__card-top">
+            <span class="prof-featured__icon" aria-hidden="true">${p.icon || '📁'}</span>
+            ${badge}
+          </div>
+          <h3 class="prof-featured__card-title">${_escape(p.title)}</h3>
+          <p class="prof-featured__card-desc">${_escape(p.description || _t('projects.noDesc', null, 'Sin descripción'))}</p>
+          ${course ? `<span class="prof-featured__course">${_escape(course)}</span>` : ''}
+          <div class="prof-featured__progress" aria-hidden="true">
+            <div class="prof-featured__progress-fill" style="width:${pct}%"></div>
+          </div>
+          <footer class="prof-featured__foot">
+            <span>${pct}% ${_t('projects.complete', null, 'completado')}</span>
+            <span>${_t('profile.open', null, 'Abrir')} →</span>
+          </footer>
+        </article>`;
+    }).join('');
+
+    $grid.querySelectorAll('[data-project-id]').forEach(el => {
+      const open = () => _openItem({ type: 'project', refId: el.dataset.projectId });
+      el.addEventListener('click', open);
+      el.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          open();
+        }
+      });
+    });
+  }
+
+  function _escape(str) {
+    return String(str ?? '').replace(/[&<>"']/g, c => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
   }
 
   function _filterItems(items) {
@@ -134,7 +264,8 @@ const ProfileController = (() => {
       );
     }
     if (_categoryFilter !== 'all') {
-      out = out.filter(i => i.category === _categoryFilter);
+      // Items without category (e.g. free-form projects) stay visible.
+      out = out.filter(i => !i.category || i.category === _categoryFilter);
     }
     return out;
   }
@@ -214,6 +345,60 @@ const ProfileController = (() => {
     return items.sort((a, b) => (b.visitedAt || 0) - (a.visitedAt || 0));
   }
 
+  function _buildProjectItems() {
+    if (typeof ProjectsService === 'undefined') return [];
+    const courses = typeof DataService !== 'undefined' ? DataService.getCourses() : [];
+    return ProjectsService.getAll().map(p => {
+      const pct = ProjectsService.getProgress?.(p) ?? 0;
+      const course = p.courseId ? courses.find(c => c.id === p.courseId) : null;
+      return {
+        id: p.id,
+        refId: p.id,
+        type: 'project',
+        title: p.title,
+        desc: p.description || (course ? course.title : _t('projects.noDesc', null, 'Sin descripción')),
+        icon: null,
+        emoji: p.icon || '📁',
+        category: course?.category || null,
+        visitedAt: p.updatedAt,
+        pct,
+        pinned: Boolean(p.pinned),
+      };
+    });
+  }
+
+  function _buildNotesSummaryGroups() {
+    if (typeof NotesService === 'undefined') return [];
+    const notes = NotesService.getAllNotes();
+    const q = _searchQuery.trim().toLowerCase();
+    const filtered = q
+      ? notes.filter(n =>
+          (n.title || '').toLowerCase().includes(q)
+          || (n.preview || n.content || '').toLowerCase().includes(q)
+          || _courseTitle(n.courseId).toLowerCase().includes(q))
+      : notes;
+
+    const byCourse = new Map();
+    filtered.forEach(n => {
+      const key = n.courseId || '_general';
+      if (!byCourse.has(key)) byCourse.set(key, []);
+      byCourse.get(key).push(n);
+    });
+
+    return [...byCourse.entries()]
+      .map(([courseId, list]) => ({
+        courseId: courseId === '_general' ? null : courseId,
+        title: _courseTitle(courseId === '_general' ? null : courseId),
+        notes: list.slice(0, 6),
+        total: list.length,
+      }))
+      .sort((a, b) => {
+        const aTime = Math.max(...a.notes.map(n => n.updatedAt || 0), 0);
+        const bTime = Math.max(...b.notes.map(n => n.updatedAt || 0), 0);
+        return bTime - aTime;
+      });
+  }
+
   async function _getTabItems() {
     if (_activeTab === 'progress') {
       const items = _filterItems(await _buildProgressItems());
@@ -226,6 +411,14 @@ const ProfileController = (() => {
     if (_activeTab === 'favorites') {
       const items = _filterItems((await UserProfileService.getFavorites()).map(_enrichItemCategory));
       return { items, listType: 'favorites' };
+    }
+    if (_activeTab === 'notes') {
+      const groups = _buildNotesSummaryGroups();
+      return { items: groups, listType: 'notes' };
+    }
+    if (_activeTab === 'projects') {
+      const items = _filterItems(_buildProjectItems());
+      return { items, listType: 'projects' };
     }
     if (_activeTab === 'certifications') {
       return {
@@ -260,21 +453,51 @@ const ProfileController = (() => {
     if (_activeTab === 'progress') return _t('profile.emptyProgress', null, 'Sin cursos en progreso. Empieza un curso.');
     if (_activeTab === 'saved') return _t('profile.emptySaved');
     if (_activeTab === 'favorites') return _t('profile.emptyFav');
+    if (_activeTab === 'notes') return _t('profile.emptyNotes', null, 'Aún no tienes notas de estudio. Crea una en Mis Notas.');
+    if (_activeTab === 'projects') return _t('profile.emptyProjects', null, 'Aún no tienes proyectos. Crea uno en Mis Proyectos.');
     if (_activeTab === 'certifications') return _t('profile.emptyCert');
     return _t('profile.emptyQuiz');
   }
 
+  function _renderNotesSummary(groups) {
+    return groups.map(group => `
+      <section class="prof-notes-group">
+        <header class="prof-notes-group__head">
+          <h3 class="prof-notes-group__title">${_escape(group.title)}</h3>
+          <span class="prof-notes-group__count">${_t('notes.notesCount', { n: group.total }, '{n} notas')}</span>
+        </header>
+        <div class="prof-notes-group__list">
+          ${group.notes.map(n => `
+            <article class="prof-note-chip" data-note-id="${_escape(n.id)}"
+                     data-course="${_escape(n.courseId || '')}" data-lesson="${_escape(n.lessonId || '')}"
+                     role="button" tabindex="0">
+              <div class="prof-note-chip__swatch" style="--note-color:${n.color || '#90CAF9'}" aria-hidden="true"></div>
+              <div class="prof-note-chip__body">
+                <h4 class="prof-note-chip__title">${_escape(n.title || _t('notes.untitled', null, 'Sin título'))}</h4>
+                <p class="prof-note-chip__preview">${_escape(n.preview || n.content || '')}</p>
+                <p class="prof-note-chip__meta">${UserProfileService.formatVisitDate(n.updatedAt)}</p>
+              </div>
+            </article>`).join('')}
+        </div>
+      </section>`).join('') + `
+      <div class="prof-notes-footer">
+        <a class="btn--course btn--lg" href="notes.html">${_t('profile.goNotes', null, 'Abrir Mis Notas')}</a>
+      </div>`;
+  }
+
   function _renderItemCard(item, listType) {
     const dateLabel = UserProfileService.formatVisitDate(item.visitedAt || item.savedAt);
-    const iconHtml = item.icon
-      ? `<img src="${item.icon}" alt="" width="40" height="40" loading="lazy">`
-      : `<span class="prof-item__icon-fallback">${item.title.charAt(0)}</span>`;
+    const iconHtml = item.emoji
+      ? `<span class="prof-item__icon-fallback" aria-hidden="true">${item.emoji}</span>`
+      : item.icon
+        ? `<img src="${item.icon}" alt="" width="40" height="40" loading="lazy">`
+        : `<span class="prof-item__icon-fallback">${(item.title || '?').charAt(0)}</span>`;
 
     const extraMeta = listType === 'quizzes' && item.pct != null
       ? `<span class="prof-item__score">${_t('profile.accuracy', { pct: item.pct })}</span>`
       : '';
 
-    const menuHtml = listType === 'quizzes' ? '' : `
+    const menuHtml = (listType === 'quizzes' || listType === 'projects' || listType === 'notes') ? '' : `
           <div class="prof-item__menu-wrap">
             <button type="button" class="prof-item__menu-btn" aria-label="${_t('profile.delete')}" data-menu="${listType}" data-id="${item.id || item.refId}">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
@@ -287,13 +510,17 @@ const ProfileController = (() => {
             ${_t('profile.open')}
           </button>`;
 
+    const pinBadge = item.pinned
+      ? ` · <span class="prof-item__score">${_t('profile.highlighted', null, 'Destacado')}</span>`
+      : '';
+
     return `
       <article class="prof-item" data-item-id="${item.id || item.refId}">
         <div class="prof-item__icon">${iconHtml}</div>
         <div class="prof-item__body">
-          <h3 class="prof-item__title">${item.title}</h3>
-          <p class="prof-item__meta">${dateLabel}${extraMeta ? ` · ${extraMeta}` : ''}${item.pct != null ? ` · ${item.pct}%` : ''}</p>
-          <p class="prof-item__desc">${item.desc || ''}</p>
+          <h3 class="prof-item__title">${_escape(item.title)}</h3>
+          <p class="prof-item__meta">${dateLabel}${extraMeta ? ` · ${extraMeta}` : ''}${item.pct != null ? ` · ${item.pct}%` : ''}${pinBadge}</p>
+          <p class="prof-item__desc">${_escape(item.desc || '')}</p>
         </div>
         <div class="prof-item__actions">
           <button type="button" class="prof-btn prof-btn--ghost prof-item__open" data-ref="${item.refId}" data-type="${item.type}">
@@ -385,6 +612,12 @@ const ProfileController = (() => {
         } else if (_activeTab === 'certifications') {
           $action.href = 'quizzes.html';
           $action.textContent = _t('profile.emptyActionQuizzes', null, 'Hacer un quiz');
+        } else if (_activeTab === 'notes') {
+          $action.href = 'notes.html';
+          $action.textContent = _t('profile.goNotes', null, 'Abrir Mis Notas');
+        } else if (_activeTab === 'projects') {
+          $action.href = 'projects.html';
+          $action.textContent = _t('profile.goProjects', null, 'Ir a Mis Proyectos');
         } else {
           $action.href = 'dashboard.html';
           $action.textContent = _t('profile.emptyAction', null, 'Ir al dashboard');
@@ -405,11 +638,28 @@ const ProfileController = (() => {
           if (cert && typeof CertificateShare !== 'undefined') CertificateShare.openModal(cert);
         });
       });
+    } else if (_activeTab === 'notes') {
+      $list.innerHTML = _renderNotesSummary(items);
+      $list.querySelectorAll('.prof-note-chip').forEach(el => {
+        const open = () => _openItem({
+          type: 'note',
+          refId: el.dataset.noteId,
+          courseId: el.dataset.course || null,
+          lessonId: el.dataset.lesson || null,
+        });
+        el.addEventListener('click', open);
+        el.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            open();
+          }
+        });
+      });
     } else {
       $list.innerHTML = items.map(item => _renderItemCard(item, listType)).join('');
     }
     _clearListLoading();
-    _bindListEvents($list, listType);
+    if (_activeTab !== 'notes') _bindListEvents($list, listType);
     _animateListEnter();
   }
 
@@ -451,7 +701,12 @@ const ProfileController = (() => {
     try {
       if (!listOnly) {
         UserProfileService.hydrateCacheFromLocal();
-        _applyStats(UserProfileService.getStatsSync());
+        _applyStats({
+          ...UserProfileService.getStatsSync(),
+          projects: _projectsCount(),
+          notes: _notesCount(),
+        });
+        _renderFeaturedProjects();
       }
 
       await UserProfileService.prefetchProfileData();
@@ -516,12 +771,21 @@ const ProfileController = (() => {
     _ensureCategoryFilters();
     _renderHeader();
     UserProfileService.hydrateCacheFromLocal();
-    _applyStats(UserProfileService.getStatsSync());
+    _applyStats({
+      ...UserProfileService.getStatsSync(),
+      projects: _projectsCount(),
+      notes: _notesCount(),
+    });
+    _renderFeaturedProjects();
     _showListLoading();
 
     void _loadProfile({ background: true });
     void UserProfileService.syncCertificationsFromQuizzes().then(() => {
-      _applyStats(UserProfileService.getStatsSync());
+      _applyStats({
+        ...UserProfileService.getStatsSync(),
+        projects: _projectsCount(),
+        notes: _notesCount(),
+      });
       if (_activeTab === 'certifications') void _renderList();
     });
 

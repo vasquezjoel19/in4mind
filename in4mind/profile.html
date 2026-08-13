@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="src/css/tokens.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/base.css?v=20260714fluid3">
   <link rel="stylesheet" href="src/css/dashboard.css?v=20260812polish">
-  <link rel="stylesheet" href="src/css/profile.css?v=20260812polish">
+  <link rel="stylesheet" href="src/css/profile.css?v=20260813profilehub">
   <link rel="stylesheet" href="src/css/i18n.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/responsive.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/theme.css?v=20260812polish">
@@ -151,12 +151,36 @@
           <p class="prof-stat-card__label" data-i18n="profile.certifications">Certificaciones</p>
           <p class="prof-stat-card__value" id="stat-cert-count">0 Obtenidas</p>
         </article>
+        <article class="prof-stat-card prof-stat-card--projects" data-tab-target="projects" tabindex="0" role="button" data-i18n-aria="profile.viewProjects" aria-label="Ver proyectos">
+          <div class="prof-stat-card__icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+          </div>
+          <p class="prof-stat-card__label" data-i18n="profile.projects">Proyectos</p>
+          <p class="prof-stat-card__value" id="stat-projects-count">0 Proyectos</p>
+        </article>
+        <article class="prof-stat-card prof-stat-card--notes" data-tab-target="notes" tabindex="0" role="button" data-i18n-aria="profile.viewNotes" aria-label="Ver notas">
+          <div class="prof-stat-card__icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
+          </div>
+          <p class="prof-stat-card__label" data-i18n="profile.notes">Notas</p>
+          <p class="prof-stat-card__value" id="stat-notes-count">0 Notas</p>
+        </article>
+      </section>
+
+      <section class="prof-featured" id="prof-featured-projects" aria-labelledby="prof-featured-title">
+        <div class="prof-featured__head">
+          <h2 class="prof-featured__title" id="prof-featured-title" data-i18n="profile.featuredProjects">Proyectos destacados</h2>
+          <a class="prof-featured__link" href="projects.html" data-i18n="profile.viewAllProjects">Ver todos</a>
+        </div>
+        <div class="prof-featured__grid" id="prof-featured-grid"></div>
       </section>
 
       <div class="prof-tabs" role="tablist" data-i18n-aria="profile.contentAria" aria-label="Contenido del perfil">
         <button type="button" class="prof-tab" data-tab="progress" role="tab" aria-selected="false" data-i18n="profile.tabProgress">En progreso</button>
         <button type="button" class="prof-tab prof-tab--active" data-tab="saved" role="tab" aria-selected="true" data-i18n="profile.tabSaved">Elementos guardados</button>
         <button type="button" class="prof-tab" data-tab="favorites" role="tab" aria-selected="false" data-i18n="profile.tabFavorites">Favoritos</button>
+        <button type="button" class="prof-tab" data-tab="notes" role="tab" aria-selected="false" data-i18n="profile.tabNotes">Resumen de notas</button>
+        <button type="button" class="prof-tab" data-tab="projects" role="tab" aria-selected="false" data-i18n="profile.tabProjects">Mis proyectos</button>
         <button type="button" class="prof-tab" data-tab="quizzes" role="tab" aria-selected="false" data-i18n="profile.tabQuizzes">Quizzes realizados</button>
         <button type="button" class="prof-tab" data-tab="certifications" role="tab" aria-selected="false" data-i18n="profile.tabCerts">Certificaciones</button>
       </div>
@@ -189,8 +213,12 @@
 <script defer src="src/js/services/VideoProgressService.js?v=20260706c"></script>
 <script defer src="src/js/services/CertificateShare.js?v=20260706c"></script>
 <script defer src="src/js/services/AIUserContext.js?v=20260706c"></script>
+<script defer src="src/js/data/CourseCurriculum.js?v=20260805"></script>
+<script defer src="src/js/services/LessonNotesService.js?v=20260812func"></script>
+<script defer src="src/js/services/NotesService.js?v=20260812func"></script>
+<script defer src="src/js/services/ProjectsService.js?v=20260812func"></script>
 <script defer src="src/js/services/CursorSpotlight.js?v=20260714fluid4"></script>
-<script defer src="src/js/controllers/ProfileController.js?v=20260812polish"></script>
+<script defer src="src/js/controllers/ProfileController.js?v=20260813profilehub"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => ProfileController.init());
 </script>

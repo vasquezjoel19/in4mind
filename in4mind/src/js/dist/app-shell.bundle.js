@@ -1,4 +1,4 @@
-/*! IN4MIND bundle 20260813logos32 — 2026-08-13T21:51:05.874388+00:00 */
+/*! IN4MIND bundle 20260813logos33 — 2026-08-13T21:54:16.803658+00:00 */
 
 ;/* --- src/js/components/In4mindBulb.js --- */
 'use strict';
@@ -631,14 +631,14 @@ const ExtendedCourses = (() => {
   const ICON = {
     flowchart: 'https://cdn-icons-png.flaticon.com/512/2920/2920277.png',
     os: 'https://cdn-icons-png.flaticon.com/512/888/888882.png',
-    powerapps: 'https://cdn-icons-png.flaticon.com/512/5968/5968557.png',
+    powerapps: 'src/img/courses/logos/powerapps.png',
     sharepoint: 'src/img/courses/logos/sharepoint.png',
-    outlook: 'https://cdn-icons-png.flaticon.com/512/732/732223.png',
-    onedrive: 'https://cdn-icons-png.flaticon.com/512/2991/2991143.png',
+    outlook: 'src/img/courses/logos/outlook.png',
+    onedrive: 'src/img/courses/logos/onedrive.png',
     scrum: 'https://cdn-icons-png.flaticon.com/512/2920/2920277.png',
-    scratch: 'https://cdn-icons-png.flaticon.com/512/5968/5968242.png',
+    scratch: 'src/img/courses/logos/scratch.png',
     video: 'https://cdn-icons-png.flaticon.com/512/2991/2991108.png',
-    django: 'https://cdn-icons-png.flaticon.com/512/5968/5968350.png',
+    django: 'src/img/courses/logos/django.png',
     powerbi: 'src/img/courses/logos/powerbi.png',
     prompt: 'https://cdn-icons-png.flaticon.com/512/2103/2103633.png',
     engineering: 'https://cdn-icons-png.flaticon.com/512/2920/2920277.png',
@@ -6064,7 +6064,7 @@ if (typeof module !== 'undefined') module.exports = DataExportService;
 
 
 ;/* --- src/js/controllers/AppFeatures.js --- */
-﻿'use strict';
+'use strict';
 
 /**
  * IN4MIND â€” Funciones globales de la app: notificaciones, bÃºsqueda, bottom nav, onboarding, PWA.
@@ -6474,7 +6474,7 @@ const AppFeatures = (() => {
     if (!('serviceWorker' in navigator)) return;
     const isAppPage = /dashboard|tutorial|quizzes|ai|profile|help/.test(window.location.pathname);
     if (!isAppPage) return;
-    navigator.serviceWorker.register('sw.js?v=20260813logos32').catch(() => {});
+    navigator.serviceWorker.register('sw.js?v=20260813logos33').catch(() => {});
   }
 
   function _injectManifest() {

@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 /**
  * IN4MIND â€” Funciones globales de la app: notificaciones, bÃºsqueda, bottom nav, onboarding, PWA.
@@ -408,7 +408,7 @@ const AppFeatures = (() => {
     if (!('serviceWorker' in navigator)) return;
     const isAppPage = /dashboard|tutorial|quizzes|ai|profile|help/.test(window.location.pathname);
     if (!isAppPage) return;
-    navigator.serviceWorker.register('sw.js?v=20260813logos32').catch(() => {});
+    navigator.serviceWorker.register('sw.js?v=20260813logos33').catch(() => {});
   }
 
   function _injectManifest() {

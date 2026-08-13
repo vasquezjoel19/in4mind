@@ -1,7 +1,7 @@
 // Subir la versión invalida el precaché tras cada despliegue: si no, los
 // usuarios que ya tienen el service worker instalado seguirían con el HTML
 // anterior y no recibirían los scripts nuevos.
-const CACHE_NAME = 'in4mind-v32';
+const CACHE_NAME = 'in4mind-v33';
 const CONTENT_CACHE = 'in4mind-content-v1';
 
 const COURSE_BANNERS = [
@@ -14,6 +14,7 @@ const COURSE_BANNERS = [
 const COURSE_LOGOS = [
   'canvas', 'figma', 'python', 'javascript', 'html', 'css', 'github', 'excel',
   'powerpoint', 'sql', 'cybersecurity', 'sharepoint', 'powerbi',
+  'scratch', 'django', 'outlook', 'onedrive', 'powerapps',
 ].map((id) => `./src/img/courses/logos/${id}.png`);
 
 const PRECACHE = [

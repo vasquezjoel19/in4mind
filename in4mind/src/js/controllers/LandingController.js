@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 const LandingController = (() => {
 
@@ -147,7 +147,7 @@ const LandingController = (() => {
 
   function _registerServiceWorker() {
     if (!('serviceWorker' in navigator)) return;
-    navigator.serviceWorker.register('sw.js?v=20260813logos32').catch(() => {});
+    navigator.serviceWorker.register('sw.js?v=20260813logos33').catch(() => {});
   }
 
   function init() {

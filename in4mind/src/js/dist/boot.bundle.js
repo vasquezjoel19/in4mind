@@ -1,4 +1,4 @@
-/*! IN4MIND bundle 20260813theme26 — 2026-08-13T19:48:20.513278+00:00 */
+/*! IN4MIND bundle 20260813theme27 — 2026-08-13T20:16:52.443088+00:00 */
 
 ;/* --- src/js/controllers/ThemeController.js --- */
 /**
@@ -1455,6 +1455,9 @@ const LOCALE_ES = {
     featuresTitle: 'Todo lo que necesitas para potenciar tus habilidades tecnológicas',
     coursesCarouselTitle: 'Herramientas y aplicaciones IN4MIND',
     coursesCarouselSub: 'Explora cursos, quizzes y certificaciones de todo el catálogo.',
+    themeShowcaseTitle: 'Claro y oscuro, el mismo IN4MIND',
+    themeShowcaseSub: 'Cambia de tema cuando quieras: la interfaz y el catálogo se adaptan sin perder claridad.',
+    themeShowcaseAlt: 'Comparación del catálogo visual IN4MIND en modo claro y modo oscuro',
     courseSlideDot: 'Aplicaciones {n}',
     navCatalog: 'Catálogo',
     featureProgramming: 'Programación',
@@ -2619,6 +2622,9 @@ const LOCALE_EN = {
     featuresTitle: 'Everything you need to boost your tech skills',
     coursesCarouselTitle: 'IN4MIND tools and applications',
     coursesCarouselSub: 'Explore courses, quizzes, and certifications across the full catalog.',
+    themeShowcaseTitle: 'Light and dark, the same IN4MIND',
+    themeShowcaseSub: 'Switch themes anytime — the interface and catalog stay clear in both modes.',
+    themeShowcaseAlt: 'Side-by-side comparison of the IN4MIND visual catalog in light and dark mode',
     courseSlideDot: 'Applications {n}',
     navCatalog: 'Catalog',
     featureProgramming: 'Programming',
@@ -3801,6 +3807,9 @@ const LOCALE_ZH = {
     featuresTitle: '提升技术技能所需的一切',
     coursesCarouselTitle: 'IN4MIND 工具与应用',
     coursesCarouselSub: '探索完整目录中的课程、测验与认证。',
+    themeShowcaseTitle: '浅色与深色，同一套 IN4MIND',
+    themeShowcaseSub: '随时切换主题：界面与目录在两种模式下都保持清晰。',
+    themeShowcaseAlt: 'IN4MIND 视觉目录在浅色与深色模式下的对比',
     courseSlideDot: '应用 {n}',
     navCatalog: '目录',
     featureProgramming: '编程',

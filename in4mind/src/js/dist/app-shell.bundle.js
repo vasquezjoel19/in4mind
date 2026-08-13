@@ -1,4 +1,4 @@
-/*! IN4MIND bundle 20260813theme26 — 2026-08-13T19:48:20.523807+00:00 */
+/*! IN4MIND bundle 20260813theme27 — 2026-08-13T20:16:52.448079+00:00 */
 
 ;/* --- src/js/components/In4mindBulb.js --- */
 'use strict';

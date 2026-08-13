@@ -408,6 +408,7 @@ const LOCALE_EN = {
     hideVideo: 'Hide video',
     startLearning: 'Start Learning',
     askTutor: 'AI tutor',
+    lessonLocked: 'Complete the previous lesson to unlock this one.',
     progressLocal: 'Progress saved on this device. Sign in to sync it.',
     loginToSave: 'Sign in to take the certification exam.',
     sectionN: 'Section {n}',

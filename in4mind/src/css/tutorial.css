@@ -1320,6 +1320,42 @@ svg.tut-star,
   background: #059669;
 }
 
+.lesson-w3__nav-item--locked {
+  opacity: 0.62;
+  cursor: not-allowed;
+}
+
+.lesson-w3__nav-item--locked:hover {
+  background: transparent;
+  color: var(--clr-text-secondary);
+}
+
+.lesson-w3__nav-lock {
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+#lesson-next.is-locked {
+  opacity: 0.75;
+}
+
+.tut-lesson-card.is-locked,
+.tut-topic-item.is-locked,
+.tut-video-card.is-locked {
+  position: relative;
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.tut-lesson-lock {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
 .lesson-w3__nav-num {
   flex-shrink: 0;
   width: 22px;

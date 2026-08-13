@@ -357,15 +357,24 @@ const TutorialController = (() => {
 
   function _bindLessonCards() {
     document.querySelectorAll('.tut-lesson-card, .tut-topic-item[data-lesson-idx], .tut-video-card[data-lesson-idx]').forEach(el => {
+      const idx = parseInt(el.dataset.lessonIdx, 10);
+      const locked = !Number.isNaN(idx) && !canAccess(idx);
+      el.classList.toggle('is-locked', locked);
+      el.setAttribute('aria-disabled', locked ? 'true' : 'false');
+      if (locked && !el.querySelector('.tut-lesson-lock')) {
+        const lock = document.createElement('span');
+        lock.className = 'tut-lesson-lock';
+        lock.setAttribute('aria-hidden', 'true');
+        lock.textContent = '🔒';
+        el.appendChild(lock);
+      }
       el.addEventListener('click', () => {
-        const idx = parseInt(el.dataset.lessonIdx, 10);
-        if (!isNaN(idx)) _showLesson(idx);
+        if (!isNaN(idx)) _requestShowLesson(idx);
       });
       el.addEventListener('keydown', e => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          const idx = parseInt(el.dataset.lessonIdx, 10);
-          if (!isNaN(idx)) _showLesson(idx);
+          if (!isNaN(idx)) _requestShowLesson(idx);
         }
       });
     });
@@ -373,7 +382,7 @@ const TutorialController = (() => {
       btn.addEventListener('click', e => {
         e.stopPropagation();
         const idx = parseInt(btn.dataset.lessonVideo, 10);
-        if (!isNaN(idx)) _showLesson(idx, { autoplayVideo: true });
+        if (!isNaN(idx)) _requestShowLesson(idx, { autoplayVideo: true });
       });
     });
   }
@@ -445,6 +454,48 @@ const TutorialController = (() => {
   function _isLessonComplete(lessonId) {
     if (!_currentCourse || typeof UserProfileService === 'undefined') return false;
     return Boolean(UserProfileService.getLessonProgressSync(_currentCourse.id)[lessonId]);
+  }
+
+  /**
+   * Acceso unificado: lección 0 siempre libre; el resto exige la anterior completada.
+   * @param {number} index
+   * @returns {boolean}
+   */
+  function canAccess(index) {
+    if (!_currentLessons?.length) return false;
+    const idx = Number(index);
+    if (!Number.isInteger(idx) || idx < 0 || idx >= _currentLessons.length) return false;
+    if (idx === 0) return true;
+    const prev = _currentLessons[idx - 1];
+    return Boolean(prev && _isLessonComplete(prev.id));
+  }
+
+  function _toastLessonLocked() {
+    if (typeof AppShell !== 'undefined') {
+      AppShell.showToast(_t('tutorial.lessonLocked', null, 'Completa la lección anterior para desbloquear esta.'));
+    }
+  }
+
+  /** Navega a una lección si canAccess; si no, toast y no cambia de vista. */
+  function _requestShowLesson(idx, opts = {}) {
+    const index = parseInt(idx, 10);
+    if (Number.isNaN(index)) return false;
+    if (!canAccess(index)) {
+      _toastLessonLocked();
+      return false;
+    }
+    _showLesson(index, opts);
+    return true;
+  }
+
+  /** Índice accesible más cercano ≤ solicitado (deep links / preview). */
+  function _clampAccessibleLesson(idx) {
+    const target = Math.max(0, Math.min(idx, _currentLessons.length - 1));
+    if (canAccess(target)) return target;
+    for (let i = target - 1; i >= 0; i -= 1) {
+      if (canAccess(i)) return i;
+    }
+    return 0;
   }
 
   function _hideLessonCheck() {
@@ -1016,17 +1067,22 @@ const TutorialController = (() => {
 
     $list.innerHTML = _currentLessons.map((l, i) => {
       const done = progress[l.id];
+      const locked = !canAccess(i);
       return `
-        <button type="button" class="lesson-w3__nav-item ${i === activeIdx ? 'lesson-w3__nav-item--active' : ''} ${done ? 'lesson-w3__nav-item--done' : ''}"
-                data-lesson-idx="${i}">
+        <button type="button" class="lesson-w3__nav-item ${i === activeIdx ? 'lesson-w3__nav-item--active' : ''} ${done ? 'lesson-w3__nav-item--done' : ''} ${locked ? 'lesson-w3__nav-item--locked' : ''}"
+                data-lesson-idx="${i}" aria-disabled="${locked ? 'true' : 'false'}">
           <span class="lesson-w3__nav-num">${i + 1}</span>
           <span class="lesson-w3__nav-text">${l.title}</span>
-          ${done ? '<span class="lesson-w3__nav-check" aria-hidden="true">✓</span>' : ''}
+          ${locked ? '<span class="lesson-w3__nav-lock" aria-hidden="true">🔒</span>' : ''}
+          ${!locked && done ? '<span class="lesson-w3__nav-check" aria-hidden="true">✓</span>' : ''}
         </button>`;
     }).join('');
 
     $list.querySelectorAll('[data-lesson-idx]').forEach(btn => {
-      btn.addEventListener('click', () => _showLesson(parseInt(btn.dataset.lessonIdx, 10)));
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.lessonIdx, 10);
+        _requestShowLesson(idx);
+      });
     });
 
     const $quizLink = document.getElementById('lesson-sidebar-quiz');
@@ -1244,10 +1300,16 @@ const TutorialController = (() => {
     const quizBtn = document.getElementById('lesson-quiz-btn');
     if (prevBtn) prevBtn.disabled = idx === 0;
     if (nextBtn) {
+      const isLast = idx === total - 1;
+      const nextIdx = idx + 1;
+      const nextLocked = !isLast && !canAccess(nextIdx);
       nextBtn.disabled = false;
-      nextBtn.textContent = idx === total - 1
+      nextBtn.setAttribute('aria-disabled', nextLocked ? 'true' : 'false');
+      nextBtn.classList.toggle('is-locked', nextLocked);
+      const baseLabel = isLast
         ? _t('tutorial.finishCourse', null, 'Finalizar curso')
         : _t('tutorial.next', null, 'Siguiente →');
+      nextBtn.textContent = nextLocked ? `🔒 ${baseLabel}` : baseLabel;
     }
     if (quizBtn) quizBtn.textContent = _t('tutorial.quizLabel', { course: _currentCourse.title }, `Quiz: ${_currentCourse.title}`);
 
@@ -1401,11 +1463,21 @@ const TutorialController = (() => {
       if (first) _showDetail(first.id, true);
     });
 
-    document.getElementById('lesson-prev')?.addEventListener('click', () => _showLesson(_currentLessonIdx - 1));
+    document.getElementById('lesson-prev')?.addEventListener('click', () => _requestShowLesson(_currentLessonIdx - 1));
     document.getElementById('lesson-next')?.addEventListener('click', () => {
+      const isLast = _currentLessonIdx >= _currentLessons.length - 1;
+      const nextIdx = _currentLessonIdx + 1;
+      // Si la siguiente está bloqueada, avisar; el check de esta lección sigue para poder desbloquearla.
+      if (!isLast && !canAccess(nextIdx)) {
+        _toastLessonLocked();
+      }
       _showLessonCheck(async () => {
         if (_currentLessonIdx < _currentLessons.length - 1) {
-          _showLesson(_currentLessonIdx + 1);
+          if (canAccess(nextIdx)) {
+            _showLesson(nextIdx);
+          } else {
+            _toastLessonLocked();
+          }
         } else if (_currentCourse) {
           _showDetail(_currentCourse.id);
           try {
@@ -1460,14 +1532,17 @@ const TutorialController = (() => {
       // Enlace compartido a una lección concreta: ?course=python&lesson=3
       const lessonParam = parseInt(params.get('lesson'), 10);
       if (Number.isInteger(lessonParam) && lessonParam >= 1) {
-        _showLesson(Math.min(lessonParam, _currentLessons.length) - 1);
+        const wanted = Math.min(lessonParam, _currentLessons.length) - 1;
+        const accessible = _clampAccessibleLesson(wanted);
+        if (accessible !== wanted) _toastLessonLocked();
+        _showLesson(accessible);
       }
     }
 
     window.addEventListener('in4mind-relocalize', _relocalize);
   }
 
-  return { init };
+  return { init, canAccess };
 
 })();
 

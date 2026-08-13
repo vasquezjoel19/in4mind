@@ -75,35 +75,26 @@ const I18n = (() => {
 
 
   function t(key, params) {
-
     if (!key) return '';
-
     let val = _lookup(_dict(), key);
-
-    if (val == null && _locale !== 'es') val = _lookup(LOCALE_ES, key);
-
-    if (val == null && _locale === 'zh' && typeof LOCALE_EN !== 'undefined') {
-
+    // Fallbacks: never surface raw keys if ES/EN have a string.
+    if (val == null && _locale !== 'es' && typeof LOCALE_ES !== 'undefined') {
+      val = _lookup(LOCALE_ES, key);
+    }
+    if (val == null && _locale !== 'en' && typeof LOCALE_EN !== 'undefined') {
       val = _lookup(LOCALE_EN, key);
-
     }
-
+    if (val == null && typeof LOCALE_ZH !== 'undefined') {
+      val = _lookup(LOCALE_ZH, key);
+    }
     if (val == null) return key;
-
     if (typeof val !== 'string') return val;
-
     if (params) {
-
       Object.keys(params).forEach(k => {
-
         val = val.replace(new RegExp(`\\{${k}\\}`, 'g'), params[k]);
-
       });
-
     }
-
     return val;
-
   }
 
 

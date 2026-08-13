@@ -5,13 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="description" content="Verifica certificaciones IN4MIND">
   <title>IN4MIND — Verificar certificado</title>
-  <script src="src/js/controllers/ThemeController.js"></script>
-  <script src="src/js/a11y-boot.js?v=20260707"></script>
-  <script src="src/js/locales/es.js?v=20260805"></script>
-  <script src="src/js/locales/en.js?v=20260805"></script>
-  <script src="src/js/locales/zh.js?v=20260805"></script>
-  <script src="src/js/services/I18n.js"></script>
-  <script>ThemeController.initEarly(); I18n.initEarly();</script>
+  <script src="src/js/dist/boot.bundle.js?v=20260813bundle"></script>
+
   <link rel="stylesheet" href="src/css/tokens.css">
   <link rel="stylesheet" href="src/css/base.css?v=20260714fluid3">
   <link rel="stylesheet" href="src/css/theme.css?v=20260811mobile">
@@ -65,13 +60,13 @@
       <a href="index.html" class="verify-back" data-i18n="common.backHome">Volver a Home</a>
     </div>
   </main>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="src/js/config/supabase.config.js"></script>
-  <script src="src/js/components/In4mindBulb.js?v=20260810logo"></script>
-  <script src="src/js/services/CertVerificationService.js"></script>
-  <script src="src/js/i18n-boot.js"></script>
-  <script src="src/js/controllers/OtherMenuController.js?v=20260714theme"></script>
-  <script src="src/js/other-menu-boot.js?v=20260707"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="src/js/config/supabase.config.js"></script>
+  <script defer src="src/js/components/In4mindBulb.js?v=20260810logo"></script>
+  <script defer src="src/js/services/CertVerificationService.js"></script>
+  <script defer src="src/js/i18n-boot.js"></script>
+  <script defer src="src/js/controllers/OtherMenuController.js?v=20260714theme"></script>
+  <script defer src="src/js/other-menu-boot.js?v=20260707"></script>
   <script>
   (function () {
     const params = new URLSearchParams(location.search);
@@ -104,7 +99,7 @@
     if (params.get('code')) run();
   })();
   </script>
-<script src="src/js/services/CursorSpotlight.js?v=20260714fluid4"></script>
+<script defer src="src/js/services/CursorSpotlight.js?v=20260714fluid4"></script>
 <script>document.addEventListener('DOMContentLoaded',()=>{ if(typeof CursorSpotlight!=='undefined') CursorSpotlight.init({ intensity:'app' }); });</script>
 </body>
 </html>

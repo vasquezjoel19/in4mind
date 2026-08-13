@@ -18,11 +18,11 @@ jobs:
         with:
           node-version: '24'
 
+      - name: Build shell bundles
+        run: npm run build:shell
+
       - name: Unit tests
         run: npm test
 
       - name: Feature smoke (Node)
         run: node tests/smoke-ci.js
-
-      - name: Bundle shell
-        run: npm run build:shell

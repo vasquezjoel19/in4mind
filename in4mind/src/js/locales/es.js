@@ -420,6 +420,7 @@ const LOCALE_ES = {
     hideVideo: 'Ocultar video',
     startLearning: 'Empieza a Aprender',
     askTutor: 'Tutor IA',
+    lessonLocked: 'Completa la lección anterior para desbloquear esta.',
     progressLocal: 'Progreso guardado en este dispositivo. Inicia sesión para sincronizarlo.',
     loginToSave: 'Inicia sesión para presentar el examen de certificación.',
     sectionN: 'Apartado {n}',

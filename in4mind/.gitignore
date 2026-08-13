@@ -7,8 +7,9 @@ src/js/config/groq.config.js
 # Dependencias
 node_modules/
 
-# Bundles / Vite
-src/js/dist/
+# Bundles / Vite — commit production *.bundle.js for static hosting
+src/js/dist/*
+!src/js/dist/*.bundle.js
 dist-vite/
 
 # Sistema

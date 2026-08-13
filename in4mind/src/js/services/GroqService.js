@@ -1,21 +1,76 @@
 /**
  * IN4MIND — GroqService
- * Cliente para la API de Groq (compatible OpenAI Chat Completions).
+ * Cliente del asistente. Prioriza el proxy serverless (/api/groq/chat), donde la
+ * API Key vive en el servidor. Solo cae al modo directo si existe una clave local
+ * en groq.config.js (uso de desarrollo; nunca en producción).
  */
 
 'use strict';
 
 const GroqService = (() => {
 
+  const HEALTH_URL = '/api/health';
+  const PROXY_URL = '/api/groq/chat';
+
+  /** 'unknown' | 'proxy' | 'direct' | 'none' */
+  let _mode = 'unknown';
+  let _initPromise = null;
+
   function _config() {
     return typeof GroqConfig !== 'undefined' ? GroqConfig : null;
   }
 
-  function isConfigured() {
+  /** Clave embebida en el cliente: solo escape hatch de desarrollo local. */
+  function _hasLocalKey() {
     const cfg = _config();
-    if (!cfg) return false;
-    const key = cfg.API_KEY || '';
+    const key = (cfg && cfg.API_KEY) || '';
     return key.length > 20 && !key.includes('PEGAR') && !key.includes('TU_API_KEY');
+  }
+
+  function _proxyDisabled() {
+    const cfg = _config();
+    return Boolean(cfg && cfg.USE_PROXY === false);
+  }
+
+  /**
+   * Detecta una sola vez si el backend tiene la clave configurada.
+   * Idempotente: las llamadas posteriores reutilizan la misma promesa.
+   */
+  function init() {
+    if (_initPromise) return _initPromise;
+
+    _initPromise = (async () => {
+      if (!_proxyDisabled()) {
+        try {
+          const res = await fetch(HEALTH_URL, { headers: { Accept: 'application/json' } });
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.groq === true) {
+              _mode = 'proxy';
+              return _mode;
+            }
+          }
+        } catch (_) {
+          /* Sin backend (p. ej. `npx serve`): se evalúa el modo directo. */
+        }
+      }
+
+      _mode = _hasLocalKey() ? 'direct' : 'none';
+      return _mode;
+    })();
+
+    return _initPromise;
+  }
+
+  /** Síncrono por compatibilidad: refleja el último estado conocido. */
+  function isConfigured() {
+    if (_mode === 'proxy' || _mode === 'direct') return true;
+    if (_mode === 'none') return false;
+    return _hasLocalKey();
+  }
+
+  function usesProxy() {
+    return _mode === 'proxy';
   }
 
   function _buildSystemPrompt() {
@@ -63,40 +118,39 @@ DIRECTRICES
 - Respuestas breves y sin redundancia.`;
   }
 
-  async function _systemPromptWithStudentContext() {
-    let prompt = _buildSystemPrompt();
-    if (typeof AIUserContext !== 'undefined') {
-      try {
-        const ctx = await AIUserContext.build();
-        if (ctx) {
-          prompt += `\n\nCONTEXTO DEL ESTUDIANTE (usa esto para tutoría personalizada; no inventes datos)\n${ctx}`;
-        }
-      } catch { /* ignore */ }
-    }
-    return prompt;
+  function _mapHistory(history) {
+    return history.map(m => ({
+      role: m.role === 'assistant' ? 'assistant' : 'user',
+      content: m.content,
+    }));
   }
 
-  /**
-   * @param {{ role: string, content: string }[]} history
-   * @returns {Promise<string>}
-   */
-  async function chat(history) {
-    if (!isConfigured()) {
-      throw new Error('GROQ_API_KEY_MISSING');
-    }
+  /** Petición al proxy: el servidor añade la credencial. */
+  function _proxyRequest(history, stream) {
+    const cfg = _config();
+    return fetch(PROXY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        systemPrompt: _buildSystemPrompt(),
+        history: _mapHistory(history),
+        model: cfg?.MODEL,
+        max_tokens: cfg?.MAX_TOKENS,
+        temperature: cfg?.TEMPERATURE,
+        stream,
+      }),
+    });
+  }
 
+  /** Petición directa a Groq con la clave del cliente (solo desarrollo local). */
+  function _directRequest(history, stream) {
+    const cfg = _config();
     const messages = [
-      { role: 'system', content: await _systemPromptWithStudentContext() },
-      ...history.map(m => ({
-        role: m.role === 'assistant' ? 'assistant' : 'user',
-        content: m.content,
-      })),
+      { role: 'system', content: _buildSystemPrompt() },
+      ..._mapHistory(history),
     ];
 
-    const cfg = _config();
-    if (!cfg) throw new Error('GROQ_API_KEY_MISSING');
-
-    const response = await fetch(cfg.API_URL, {
+    return fetch(cfg.API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -107,19 +161,48 @@ DIRECTRICES
         messages,
         max_tokens: cfg.MAX_TOKENS,
         temperature: cfg.TEMPERATURE,
+        stream,
       }),
     });
+  }
 
-    if (!response.ok) {
-      const errBody = await response.text().catch(() => '');
-      if (response.status === 401 || response.status === 403) {
-        throw new Error('GROQ_API_KEY_INVALID');
-      }
-      throw new Error(`GROQ_HTTP_${response.status}: ${errBody.slice(0, 200)}`);
+  async function _request(history, stream) {
+    const mode = await init();
+    if (mode === 'none') throw new Error('GROQ_API_KEY_MISSING');
+    return mode === 'proxy'
+      ? _proxyRequest(history, stream)
+      : _directRequest(history, stream);
+  }
+
+  async function _assertOk(response) {
+    if (response.ok) return;
+
+    const raw = await response.text().catch(() => '');
+    let code = '';
+    try {
+      code = JSON.parse(raw)?.error || '';
+    } catch (_) { /* respuesta no JSON */ }
+
+    if (code === 'GROQ_API_KEY_MISSING' || response.status === 503) {
+      throw new Error('GROQ_API_KEY_MISSING');
     }
+    if (code === 'GROQ_API_KEY_INVALID' || response.status === 401 || response.status === 403) {
+      throw new Error('GROQ_API_KEY_INVALID');
+    }
+    throw new Error(`GROQ_HTTP_${response.status}: ${raw.slice(0, 200)}`);
+  }
+
+  /**
+   * @param {{ role: string, content: string }[]} history
+   * @returns {Promise<string>}
+   */
+  async function chat(history) {
+    const response = await _request(history, false);
+    await _assertOk(response);
 
     const data = await response.json();
-    const reply = data.choices?.[0]?.message?.content?.trim();
+    /* El proxy devuelve { reply }; Groq directo devuelve choices[]. */
+    const reply = (data.reply || data.choices?.[0]?.message?.content || '').trim();
     if (!reply) throw new Error('GROQ_EMPTY_RESPONSE');
     return reply;
   }
@@ -131,43 +214,8 @@ DIRECTRICES
    * @returns {Promise<string>}
    */
   async function chatStream(history, onChunk) {
-    if (!isConfigured()) {
-      throw new Error('GROQ_API_KEY_MISSING');
-    }
-
-    const messages = [
-      { role: 'system', content: await _systemPromptWithStudentContext() },
-      ...history.map(m => ({
-        role: m.role === 'assistant' ? 'assistant' : 'user',
-        content: m.content,
-      })),
-    ];
-
-    const cfg = _config();
-    if (!cfg) throw new Error('GROQ_API_KEY_MISSING');
-
-    const response = await fetch(cfg.API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${cfg.API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: cfg.MODEL,
-        messages,
-        max_tokens: cfg.MAX_TOKENS,
-        temperature: cfg.TEMPERATURE,
-        stream: true,
-      }),
-    });
-
-    if (!response.ok) {
-      const errBody = await response.text().catch(() => '');
-      if (response.status === 401 || response.status === 403) {
-        throw new Error('GROQ_API_KEY_INVALID');
-      }
-      throw new Error(`GROQ_HTTP_${response.status}: ${errBody.slice(0, 200)}`);
-    }
+    const response = await _request(history, true);
+    await _assertOk(response);
 
     if (!response.body || !response.body.getReader) {
       return chat(history);
@@ -205,72 +253,7 @@ DIRECTRICES
     return full.trim();
   }
 
-  /**
-   * Completions ligeras (p. ej. feedback de quiz). No usa el system prompt largo del chat.
-   * @param {{ system: string, user: string, model?: string, max_tokens?: number, temperature?: number, timeoutMs?: number }} opts
-   * @returns {Promise<string>}
-   */
-  async function complete(opts) {
-    if (!isConfigured()) {
-      throw new Error('GROQ_API_KEY_MISSING');
-    }
-    const cfg = _config();
-    if (!cfg) throw new Error('GROQ_API_KEY_MISSING');
-
-    const cacheKey = `g:${opts.model || ''}|${String(opts.system || '').slice(0, 80)}|${String(opts.user || '').slice(0, 180)}`;
-    try {
-      const cached = sessionStorage.getItem(`in4mind_groq_cache:${cacheKey}`);
-      if (cached) return cached;
-    } catch { /* ignore */ }
-
-    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    const timeoutMs = opts.timeoutMs || 8000;
-    const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
-
-    let response;
-    try {
-      response = await fetch(cfg.API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${cfg.API_KEY}`,
-        },
-        signal: controller?.signal,
-        body: JSON.stringify({
-          model: opts.model || cfg.MODEL || 'llama-3.1-8b-instant',
-          messages: [
-            { role: 'system', content: String(opts.system || '') },
-            { role: 'user', content: String(opts.user || '') },
-          ],
-          max_tokens: opts.max_tokens ?? 120,
-          temperature: opts.temperature ?? 0.35,
-        }),
-      });
-    } catch (err) {
-      if (err?.name === 'AbortError') throw new Error('GROQ_TIMEOUT');
-      throw err;
-    } finally {
-      if (timer) clearTimeout(timer);
-    }
-
-    if (!response.ok) {
-      const errBody = await response.text().catch(() => '');
-      if (response.status === 401 || response.status === 403) {
-        throw new Error('GROQ_API_KEY_INVALID');
-      }
-      throw new Error(`GROQ_HTTP_${response.status}: ${errBody.slice(0, 200)}`);
-    }
-
-    const data = await response.json();
-    const reply = data.choices?.[0]?.message?.content?.trim();
-    if (!reply) throw new Error('GROQ_EMPTY_RESPONSE');
-    try {
-      sessionStorage.setItem(`in4mind_groq_cache:${cacheKey}`, reply);
-    } catch { /* ignore */ }
-    return reply;
-  }
-
-  return { chat, chatStream, complete, isConfigured, buildSystemPrompt: _buildSystemPrompt };
+  return { init, chat, chatStream, isConfigured, usesProxy, buildSystemPrompt: _buildSystemPrompt };
 
 })();
 

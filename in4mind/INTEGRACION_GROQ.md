@@ -13,29 +13,37 @@ Guía paso a paso para activar el asistente con **Groq** en la sección **IA**.
 
 ---
 
-## Paso 2 — Colocar la API Key en el proyecto
+## Paso 2 — Colocar la API Key (producción: Vercel)
 
-Abra el archivo:
+La clave **no se coloca en el código**. El navegador llama a `/api/groq/chat` y es esa
+función serverless la que añade la credencial, de modo que nunca llega al cliente.
 
-```
-in4mind/src/js/config/groq.config.js
-```
+En Vercel → **Settings → Environment Variables**, cree para *Production* y *Preview*:
 
-Reemplace la línea:
+| Variable | Ejemplo | Obligatoria |
+|---|---|---|
+| `GROQ_API_KEY` | `gsk_xxxxxxxx…` | Sí |
+| `GROQ_MODEL` | `llama-3.3-70b-versatile` | No |
+| `GROQ_MAX_TOKENS` | `1200` | No |
+| `GROQ_TEMPERATURE` | `0.45` | No |
 
-```javascript
-API_KEY: 'TU_API_KEY_DE_GROQ',
-```
+Las variables solo se aplican en un despliegue nuevo: tras guardarlas, use
+**Deployments → ⋯ → Redeploy**.
 
-Por su clave real, la que copió en el paso 1:
+Verifique en `https://SU-DOMINIO.vercel.app/api/health` que la respuesta incluya
+`"groq": true`.
 
-```javascript
-API_KEY: 'gsk_...su_clave...',
-```
+> **Importante:** nunca escriba la clave en un archivo versionado. `.env` y
+> `src/js/config/groq.config.js` están en `.gitignore`; si una clave llega a un repo
+> público, GitHub la detecta y Groq la revoca automáticamente.
 
-Guarde el archivo.
+### Desarrollo local
 
-> **Importante:** `groq.config.js` está en `.gitignore` justamente para que la clave no llegue al repositorio. No la escriba nunca en `groq.config.example.js` ni en esta guía, y no la comparta. Para producción, use un backend que oculte la key.
+- **Con backend (recomendado):** `vercel dev` levanta las funciones de `api/` y lee el
+  archivo `.env` de la raíz, igual que en producción.
+- **Sin backend** (`npm start`, que sirve archivos estáticos): copie
+  `groq.config.example.js` como `groq.config.js` y pegue su clave en `API_KEY`. Solo
+  para su máquina — en ese modo la clave sí queda visible en el navegador.
 
 ---
 
@@ -74,9 +82,11 @@ Si la key es inválida, el asistente mostrará un mensaje de error profesional i
 
 | Archivo | Función |
 |---------|---------|
-| `src/js/config/groq.config.js` | **API Key y modelo Groq** |
+| `api/groq/chat.js` | **Proxy serverless: única pieza que usa `GROQ_API_KEY`** |
+| `api/health.js` | Informa al frontend si la clave está configurada |
+| `src/js/config/groq.config.js` | Modelo y parámetros (generado en build, sin secretos) |
 | `src/js/config/groq.config.example.js` | Plantilla de referencia |
-| `src/js/services/GroqService.js` | Cliente HTTP hacia Groq |
+| `src/js/services/GroqService.js` | Cliente: usa el proxy y cae a modo local si no hay backend |
 | `src/js/controllers/AIChatController.js` | Interfaz del chat |
 | `src/css/ai.css` | Vista profesional tipo Gemini |
 | `ai.html` | Página del asistente |
@@ -85,13 +95,15 @@ Si la key es inválida, el asistente mostrará un mensaje de error profesional i
 
 ## Modelos disponibles (opcional)
 
-En `groq.config.js` puede cambiar `MODEL`:
+Cambie la variable `GROQ_MODEL` en Vercel:
 
 | Modelo | Uso |
 |--------|-----|
 | `llama-3.3-70b-versatile` | Recomendado — respuestas completas |
 | `llama-3.1-8b-instant` | Más rápido, respuestas más breves |
-| `mixtral-8x7b-32768` | Contexto amplio |
+
+El proxy solo acepta modelos de esa lista (`ALLOWED_MODELS` en `api/groq/chat.js`);
+cualquier otro valor enviado desde el navegador se ignora y usa el predeterminado.
 
 ---
 
@@ -114,14 +126,16 @@ Si no configura la key, el chat usa respuestas locales (`AIKnowledge.js`) con co
 
 ## Punto de integración en código
 
-La llamada a Groq ocurre en:
+El navegador nunca ve la credencial:
 
-```javascript
-// src/js/services/GroqService.js → función chat()
-fetch(GroqConfig.API_URL, {
-  headers: { Authorization: `Bearer ${GroqConfig.API_KEY}` },
-  ...
-});
+```
+ai.html / help.html
+  → GroqService.chatStream()        (src/js/services/GroqService.js)
+    → POST /api/groq/chat           (sin Authorization)
+      → api/groq/chat.js            añade Bearer ${process.env.GROQ_API_KEY}
+        → api.groq.com              respuesta SSE reenviada tal cual
 ```
 
-La key **solo** se define en `groq.config.js`.
+`GroqService.init()` consulta `/api/health` una sola vez para decidir el modo:
+**proxy** si el backend tiene la clave, **directo** si solo hay una clave local de
+desarrollo, y **local** (`AIKnowledge.js`) si no hay ninguna.

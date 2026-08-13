@@ -10,7 +10,8 @@ const AIEngine = (() => {
   }
 
   async function init() {
-    /* GroqService.isConfigured() es síncrono; no requiere init de red */
+    /* Detecta si el backend tiene la clave (proxy) antes de consultar isConfigured(). */
+    if (typeof GroqService !== 'undefined') await GroqService.init();
   }
 
   function isOffTopic(message) {

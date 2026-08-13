@@ -890,6 +890,12 @@ a.lp-feature-card--link {
 /* ══════════════════════════════════════
    SCROLL REVEAL
 ══════════════════════════════════════ */
+/* Catálogo siempre legible (no depende del IntersectionObserver). */
+#catalog.lp-reveal {
+  opacity: 1;
+  transform: none;
+}
+
 .lp-reveal {
   opacity: 0;
   transform: translateY(16px);

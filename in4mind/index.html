@@ -19,10 +19,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <script src="src/js/dist/boot.bundle.js?v=20260813bundle"></script>
+  <script src="src/js/dist/boot.bundle.js?v=20260813theme24"></script>
 
   <link rel="stylesheet" href="src/css/tokens.css?v=20260812polish">
-  <link rel="stylesheet" href="src/css/landing.css?v=20260812polish">
+  <link rel="stylesheet" href="src/css/landing.css?v=20260813theme24">
   <link rel="stylesheet" href="src/css/ui-polish.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/ambient.css?v=20260714fluid3">
   <link rel="stylesheet" href="src/css/theme.css?v=20260812polish">
@@ -753,7 +753,7 @@
   </svg>
 </button>
 
-<script defer src="src/js/dist/landing.bundle.js?v=20260813bundle"></script>
+<script defer src="src/js/dist/landing.bundle.js?v=20260813theme24"></script>
 <script defer src="src/js/other-menu-boot.js?v=20260714theme"></script>
 <script defer src="src/js/services/CookieConsent.js?v=20260706"></script>
 <script defer src="src/js/services/CursorSpotlight.js?v=20260714fluid4"></script>
@@ -1044,13 +1044,28 @@ document.addEventListener('DOMContentLoaded', function () {
     return { goTo, resetAuto };
   }
 
-  function _renderCoursesCarousel() {
+  function _renderCoursesCarousel(attempt) {
     const $track = document.getElementById('courses-track');
     const $dots = document.getElementById('courses-dots');
     const $carousel = document.getElementById('courses-carousel');
-    if (!$track || typeof DataService === 'undefined') return;
+    if (!$track) return;
 
-    const courses = DataService.getCourses();
+    // Retry: defer bundles can lag a tick behind DOMContentLoaded in some browsers/SW.
+    if (typeof DataService === 'undefined') {
+      if ((attempt || 0) < 40) {
+        window.setTimeout(() => _renderCoursesCarousel((attempt || 0) + 1), 50);
+      }
+      return;
+    }
+
+    const courses = DataService.getCourses() || [];
+    if (!courses.length) {
+      if ((attempt || 0) < 20) {
+        window.setTimeout(() => _renderCoursesCarousel((attempt || 0) + 1), 50);
+      }
+      return;
+    }
+
     const statEl = document.getElementById('lp-stat-courses');
     if (statEl && courses.length) {
       statEl.dataset.count = String(courses.length);
@@ -1080,9 +1095,14 @@ document.addEventListener('DOMContentLoaded', function () {
       </article>
     `).join('');
 
+    // Evita que el scroll-reveal deje el carrusel invisible si ya hay contenido.
+    document.getElementById('catalog')?.classList.add('is-visible');
+    $carousel?.classList.add('is-visible');
+    $carousel?.closest('.lp-reveal')?.classList.add('is-visible');
+
     _bindAuthLinks($track);
 
-    _initCarousel({
+    const api = _initCarousel({
       trackEl: $track,
       dotsEl: $dots,
       carouselEl: $carousel,
@@ -1092,16 +1112,18 @@ document.addEventListener('DOMContentLoaded', function () {
         ? I18n.t('landing.courseSlideDot', { n: i + 1 })
         : 'Aplicaciones ' + (i + 1)),
     });
+    // Fuerza aria-hidden/animación de la primera diapositiva.
+    if (api && typeof api.goTo === 'function') api.goTo(0, false);
   }
 
-  _renderCoursesCarousel();
+  _renderCoursesCarousel(0);
   let coursesResizeTimer;
   window.addEventListener('resize', () => {
     clearTimeout(coursesResizeTimer);
-    coursesResizeTimer = setTimeout(_renderCoursesCarousel, 180);
+    coursesResizeTimer = setTimeout(() => _renderCoursesCarousel(0), 180);
   });
 
-  document.addEventListener('in4mind-locale-change', _renderCoursesCarousel);
+  document.addEventListener('in4mind-locale-change', () => _renderCoursesCarousel(0));
 
   const TESTIMONIAL_AVATARS = [
     'src/img/avatars/avatar-01.svg',

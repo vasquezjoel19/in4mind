@@ -1,4 +1,4 @@
-/*! IN4MIND bundle 20260813bundle — 2026-08-13T18:54:00.586305+00:00 */
+/*! IN4MIND bundle 20260813theme24 — 2026-08-13T19:22:46.761363+00:00 */
 
 ;/* --- src/js/controllers/ThemeController.js --- */
 /**
@@ -84,12 +84,12 @@ const ThemeController = (() => {
   /** Llamar en <head> antes del paint para evitar flash. */
   function initEarly() {
     const theme = _resolveTheme();
-    if (theme === 'dark') {
-      document.documentElement.setAttribute('data-theme', 'dark');
-    }
+    document.documentElement.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
   }
 
   function init() {
+    // Reaplica en cada página la preferencia guardada (Notas → Quizzes, etc.).
+    applyTheme(_resolveTheme(), { persist: false });
     mount();
     _watchSystemPreference();
   }

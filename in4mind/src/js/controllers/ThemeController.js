@@ -81,12 +81,12 @@ const ThemeController = (() => {
   /** Llamar en <head> antes del paint para evitar flash. */
   function initEarly() {
     const theme = _resolveTheme();
-    if (theme === 'dark') {
-      document.documentElement.setAttribute('data-theme', 'dark');
-    }
+    document.documentElement.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
   }
 
   function init() {
+    // Reaplica en cada página la preferencia guardada (Notas → Quizzes, etc.).
+    applyTheme(_resolveTheme(), { persist: false });
     mount();
     _watchSystemPreference();
   }

@@ -86,8 +86,16 @@ const LandingController = (() => {
 
     _sync();
     btn.addEventListener('click', () => {
-      if (typeof ThemeController !== 'undefined') ThemeController.toggle();
+      if (typeof ThemeController !== 'undefined') {
+        // Persistir explícitamente dark/light para que sobreviva al navegar a la app.
+        const next = ThemeController.getTheme() === 'dark' ? 'light' : 'dark';
+        if (ThemeController.setPreference) ThemeController.setPreference(next);
+        else ThemeController.toggle();
+      }
       _sync();
+    });
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'in4mind_theme') _sync();
     });
     const startBtn = actions.querySelector('.lp-btn--primary');
     actions.insertBefore(btn, startBtn || actions.firstChild);

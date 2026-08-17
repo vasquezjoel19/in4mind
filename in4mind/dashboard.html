@@ -3,21 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="description" content="IN4MIND Dashboard â€” Explora cursos y cursos de tecnologÃ­a.">
-  <title>IN4MIND â€” Dashboard</title>
+  <meta name="description" content="IN4MIND Dashboard — Explora cursos y cursos de tecnología.">
+  <title>IN4MIND — Dashboard</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <script src="src/js/dist/boot.bundle.js?v=20260813logos33"></script>
+  <script src="src/js/dist/boot.bundle.js?v=20260817nobanners34"></script>
 
   <!-- Estilos -->
   <link rel="stylesheet" href="src/css/tokens.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/base.css?v=20260714fluid3">
-  <link rel="stylesheet" href="src/css/dashboard.css?v=20260813logos33">
+  <link rel="stylesheet" href="src/css/dashboard.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/responsive.css?v=20260812polish">
-  <link rel="stylesheet" href="src/css/theme.css?v=20260813logos33">
+  <link rel="stylesheet" href="src/css/theme.css?v=20260817nobanners34">
   <link rel="stylesheet" href="src/css/ui-polish.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/i18n.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/accessibility.css?v=20260707">
@@ -33,7 +33,7 @@
 </head>
 <body>
 
-<!-- Overlay para sidebar mÃ³vil -->
+<!-- Overlay para sidebar móvil -->
 <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
 
 <div class="dashboard">
@@ -41,7 +41,7 @@
   <!-- --------------------------------------
        SIDEBAR
   -------------------------------------- -->
-  <aside class="sidebar" id="sidebar" role="navigation" aria-label="MenÃº principal" data-i18n-aria="shell.mainMenu">
+  <aside class="sidebar" id="sidebar" role="navigation" aria-label="Menú principal" data-i18n-aria="shell.mainMenu">
 
     <!-- Marca -->
     <div class="sidebar__brand">
@@ -56,7 +56,7 @@
         <span class="sidebar__brand-name">IN4MIND</span>
       </div>
       <button type="button" class="sidebar__collapse-btn" id="sidebar-collapse"
-              aria-label="Colapsar menÃº" data-i18n-aria="shell.collapseMenu" aria-expanded="true">
+              aria-label="Colapsar menú" data-i18n-aria="shell.collapseMenu" aria-expanded="true">
         <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none"
              stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="15 18 9 12 15 6"/>
@@ -65,28 +65,28 @@
     </div>
 
     <!-- Nav principal (renderizado por DashboardController) -->
-    <ul class="sidebar__nav" id="sidebar-nav" role="menubar" aria-label="NavegaciÃ³n principal" data-i18n-aria="shell.mainNav">
-      <!-- Ãtems generados dinÃ¡micamente -->
+    <ul class="sidebar__nav" id="sidebar-nav" role="menubar" aria-label="Navegación principal" data-i18n-aria="shell.mainNav">
+      <!-- Ítems generados dinámicamente -->
     </ul>
 
     <!-- Nav footer -->
     <div class="sidebar__footer">
       <ul id="sidebar-footer" role="menubar" aria-label="Opciones de cuenta" data-i18n-aria="shell.accountOptions">
-        <!-- Ãtems generados dinÃ¡micamente -->
+        <!-- Ítems generados dinámicamente -->
       </ul>
     </div>
   </aside>
 
   <!-- --------------------------------------
-       ÃREA PRINCIPAL
+       ÁREA PRINCIPAL
   -------------------------------------- -->
   <div class="main-area">
 
     <!-- Top Bar -->
     <header class="topbar" role="banner">
-      <!-- Hamburger (mÃ³vil) -->
+      <!-- Hamburger (móvil) -->
       <button class="menu-toggle icon-btn" id="menu-toggle"
-              aria-label="Abrir menÃº" data-i18n-aria="shell.openMenu" aria-expanded="false">
+              aria-label="Abrir menú" data-i18n-aria="shell.openMenu" aria-expanded="false">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
              stroke="currentColor" stroke-width="2"
              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -96,7 +96,7 @@
         </svg>
       </button>
 
-      <!-- Barra de bÃºsqueda -->
+      <!-- Barra de búsqueda -->
       <div class="search-bar" role="search">
         <svg class="search-bar__icon" width="16" height="16" viewBox="0 0 24 24"
              fill="none" stroke="currentColor" stroke-width="2"
@@ -105,7 +105,7 @@
           <line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
         <input class="search-bar__input" type="search" id="search-input"
-               placeholder="BÃºsqueda de cursos, temas u otros..."
+               placeholder="Búsqueda de cursos, temas u otros..."
                data-i18n-placeholder="shell.searchDashboard"
                aria-label="Buscar cursos" data-i18n-aria="shell.searchDashboardAria">
       </div>
@@ -188,7 +188,7 @@
         <div class="section-header section-header--stacked">
           <div>
             <h2 class="section-header__title" id="dashboard-summary-title" data-i18n="dashboard.summaryTitle">Tu resumen</h2>
-            <p class="section-header__sub" data-i18n="dashboard.summarySub">Consulta tu actividad, progreso y accesos mÃ¡s Ãºtiles en un solo lugar.</p>
+            <p class="section-header__sub" data-i18n="dashboard.summarySub">Consulta tu actividad, progreso y accesos más útiles en un solo lugar.</p>
           </div>
         </div>
         <div class="dashboard-summary__grid" id="dashboard-summary-grid" role="list" aria-label="Resumen del usuario" data-i18n-aria="dashboard.summaryTitle">
@@ -202,11 +202,11 @@
       <section class="quick-actions-section anim-fade-up delay-2" aria-labelledby="quick-actions-title">
         <div class="section-header section-header--stacked">
           <div>
-            <h2 class="section-header__title" id="quick-actions-title" data-i18n="dashboard.quickActionsTitle">Acciones rÃ¡pidas</h2>
-            <p class="section-header__sub" data-i18n="dashboard.quickActionsSub">Ve directo a lo que mÃ¡s usas, sin pasos extra.</p>
+            <h2 class="section-header__title" id="quick-actions-title" data-i18n="dashboard.quickActionsTitle">Acciones rápidas</h2>
+            <p class="section-header__sub" data-i18n="dashboard.quickActionsSub">Ve directo a lo que más usas, sin pasos extra.</p>
           </div>
         </div>
-        <div class="quick-actions-grid" id="quick-actions-grid" role="list" aria-label="Acciones rÃ¡pidas" data-i18n-aria="dashboard.quickActionsTitle"></div>
+        <div class="quick-actions-grid" id="quick-actions-grid" role="list" aria-label="Acciones rápidas" data-i18n-aria="dashboard.quickActionsTitle"></div>
       </section>
 
       <section class="analytics-section anim-fade-up delay-2b" aria-labelledby="analytics-title">
@@ -232,11 +232,11 @@
       <section class="resume-section anim-fade-up delay-3" aria-labelledby="resume-section-title">
         <div class="section-header section-header--stacked">
           <div>
-            <h2 class="section-header__title" id="resume-section-title" data-i18n="dashboard.resumeTitle">ContinÃºa donde lo dejaste</h2>
+            <h2 class="section-header__title" id="resume-section-title" data-i18n="dashboard.resumeTitle">Continúa donde lo dejaste</h2>
             <p class="section-header__sub" data-i18n="dashboard.resumeSub">Retoma cursos con progreso, lecciones recientes y quizzes en curso.</p>
           </div>
         </div>
-        <div class="resume-grid" id="resume-grid" role="list" aria-label="ContinÃºa donde lo dejaste" data-i18n-aria="dashboard.resumeTitle"></div>
+        <div class="resume-grid" id="resume-grid" role="list" aria-label="Continúa donde lo dejaste" data-i18n-aria="dashboard.resumeTitle"></div>
       </section>
 
       <section class="courses-section anim-fade-up delay-4" aria-labelledby="recommended-section-title">
@@ -249,7 +249,7 @@
         <div class="carousel-track" id="recommended-track" role="list" aria-label="Recomendado para ti" data-i18n-aria="dashboard.recommendedTitle"></div>
       </section>
 
-      <!-- -- SecciÃ³n: Cursos Destacados -- -->
+      <!-- -- Sección: Cursos Destacados -- -->
       <section class="courses-section anim-fade-up delay-5" aria-label="Cursos Destacados" data-i18n-aria="dashboard.featured">
         <div class="section-header">
           <h2 class="section-header__title" data-i18n="dashboard.featured">Cursos Destacados</h2>
@@ -259,11 +259,11 @@
         <!-- Carrusel: tarjetas generadas por DashboardController -->
         <div class="carousel-track" id="featured-track" role="list" aria-label="Cursos Destacados" data-i18n-aria="dashboard.featured">
           <!-- Skeleton placeholder mientras carga -->
-          <div style="color:var(--clr-text-muted);font-size:.85rem;padding:1rem" data-i18n="common.loadingCourses">Cargando cursosâ€¦</div>
+          <div style="color:var(--clr-text-muted);font-size:.85rem;padding:1rem" data-i18n="common.loadingCourses">Cargando cursos…</div>
         </div>
       </section>
 
-      <!-- -- SecciÃ³n: Continuar Aprendiendo -- -->
+      <!-- -- Sección: Continuar Aprendiendo -- -->
       <section class="courses-section anim-fade-up delay-6" aria-label="Continuar Aprendiendo" data-i18n-aria="dashboard.continue">
         <div class="section-header">
           <h2 class="section-header__title" data-i18n="dashboard.continue">Continuar Aprendiendo</h2>
@@ -274,14 +274,14 @@
         </div>
       </section>
 
-      <!-- -- SecciÃ³n: ReciÃ©n Vistos -- -->
-      <section class="courses-section anim-fade-up delay-7" aria-label="ReciÃ©n Vistos" data-i18n-aria="dashboard.recent">
+      <!-- -- Sección: Recién Vistos -- -->
+      <section class="courses-section anim-fade-up delay-7" aria-label="Recién Vistos" data-i18n-aria="dashboard.recent">
         <div class="section-header">
-          <h2 class="section-header__title" data-i18n="dashboard.recent">ReciÃ©n Vistos</h2>
+          <h2 class="section-header__title" data-i18n="dashboard.recent">Recién Vistos</h2>
           <button type="button" class="section-header__link" data-expand="recent"
-                  aria-expanded="false" aria-controls="recent-track" data-i18n="common.seeMore">Ver mÃ¡s &rsaquo;</button>
+                  aria-expanded="false" aria-controls="recent-track" data-i18n="common.seeMore">Ver más &rsaquo;</button>
         </div>
-        <div class="carousel-track" id="recent-track" role="list" aria-label="ReciÃ©n Vistos" data-i18n-aria="dashboard.recent">
+        <div class="carousel-track" id="recent-track" role="list" aria-label="Recién Vistos" data-i18n-aria="dashboard.recent">
         </div>
       </section>
 
@@ -297,7 +297,7 @@
 <!-- Scripts (orden importante: servicios ? controladores) -->
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="src/js/config/supabase.config.js"></script>
-<script defer src="src/js/dist/app-shell.bundle.js?v=20260813logos33"></script>
+<script defer src="src/js/dist/app-shell.bundle.js?v=20260817nobanners34"></script>
 <script defer src="src/js/services/QuizRandomizer.js?v=20260812polish"></script>
 <script defer src="src/js/data/HelpData.js?v=20260706c"></script>
 <script defer src="src/js/data/CourseCurriculum.js?v=20260805"></script>

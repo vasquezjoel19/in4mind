@@ -1,4 +1,4 @@
-/*! IN4MIND bundle 20260813logos33 — 2026-08-13T21:54:16.779891+00:00 */
+/*! IN4MIND bundle 20260817nobanners34 — 2026-08-17T18:36:22.262095+00:00 */
 
 ;/* --- src/js/controllers/ThemeController.js --- */
 /**
@@ -1368,12 +1368,6 @@ const LOCALE_ES = {
     darkTitle: 'Modo oscuro',
     lightTitle: 'Modo claro',
   },
-  courseCard: {
-    lessons: '{n} lecciones',
-    modulesQuestions: '{m} módulos • {q} preguntas',
-    view: 'Ver',
-    rating: 'Valoración',
-  },
   courses: {
     canvas: { title: 'Canvas', desc: 'Diseño visual profesional y creación de contenido gráfico.' },
     figma: { title: 'Figma', desc: 'Diseño de interfaces y prototipos colaborativos.' },
@@ -2543,12 +2537,6 @@ const LOCALE_EN = {
     light: 'Enable light mode',
     darkTitle: 'Dark mode',
     lightTitle: 'Light mode',
-  },
-  courseCard: {
-    lessons: '{n} lessons',
-    modulesQuestions: '{m} modules • {q} questions',
-    view: 'View',
-    rating: 'Rating',
   },
   courses: {
     canvas: { title: 'Canvas', desc: 'Professional visual design and graphic content creation.' },
@@ -3736,12 +3724,6 @@ const LOCALE_ZH = {
     light: '启用浅色模式',
     darkTitle: '深色模式',
     lightTitle: '浅色模式',
-  },
-  courseCard: {
-    lessons: '{n} 课时',
-    modulesQuestions: '{m} 模块 • {q} 题',
-    view: '查看',
-    rating: '评分',
   },
   courses: {
     canvas: { title: 'Canva', desc: '专业视觉设计与图形内容创作。' },

@@ -38,7 +38,7 @@ const QuizzesController = (() => {
     {
       id: 'canvas', title: 'Canvas', category: 'design',
       desc: 'Fundamentos de Diseño Digital.',
-      icon: 'src/img/courses/logos/canvas.png',
+      icon: 'src/img/courses/canva.svg?v=20260713',
       sections: [
         {
           title: 'Conceptos básicos',
@@ -73,7 +73,7 @@ const QuizzesController = (() => {
     {
       id: 'figma', title: 'Figma', category: 'design',
       desc: 'UI/UX y diseño colaborativo.',
-      icon: 'src/img/courses/logos/figma.png',
+      icon: 'https://cdn-icons-png.flaticon.com/512/5968/5968705.png',
       sections: [
         {
           title: 'Frames y layout',
@@ -111,7 +111,7 @@ const QuizzesController = (() => {
     {
       id: 'python', title: 'Python', category: 'programming',
       desc: 'Lógica y Automatización.',
-      icon: 'src/img/courses/logos/python.png',
+      icon: 'src/img/courses/python.svg',
       sections: [
         {
           title: 'Sintaxis esencial',
@@ -146,7 +146,7 @@ const QuizzesController = (() => {
     {
       id: 'excel', title: 'Excel', category: 'office',
       desc: 'Fórmulas y Funciones Clave.',
-      icon: 'src/img/courses/logos/excel.png',
+      icon: 'https://cdn-icons-png.flaticon.com/512/732/732220.png',
       sections: [
         {
           title: 'Fórmulas básicas',
@@ -179,7 +179,7 @@ const QuizzesController = (() => {
     {
       id: 'html', title: 'HTML', category: 'web',
       desc: 'Arquitectura de Páginas HTML.',
-      icon: 'src/img/courses/logos/html.png',
+      icon: 'https://cdn-icons-png.flaticon.com/512/732/732212.png',
       sections: [
         {
           title: 'Estructura del documento',
@@ -214,7 +214,7 @@ const QuizzesController = (() => {
     {
       id: 'css', title: 'CSS', category: 'web',
       desc: 'Estética y Experiencia Visual.',
-      icon: 'src/img/courses/logos/css.png',
+      icon: 'https://cdn-icons-png.flaticon.com/512/732/732190.png',
       sections: [
         {
           title: 'Selectores y propiedades',
@@ -249,7 +249,7 @@ const QuizzesController = (() => {
     {
       id: 'github', title: 'GitHub', category: 'tools',
       desc: 'Integración y Publicación de Proyectos.',
-      icon: 'src/img/courses/logos/github.png',
+      icon: 'https://cdn-icons-png.flaticon.com/512/25/25231.png',
       sections: [
         {
           title: 'Comandos Git',
@@ -282,7 +282,7 @@ const QuizzesController = (() => {
     {
       id: 'javascript', title: 'JavaScript', category: 'web',
       desc: 'Lógica y Dinamismo Web.',
-      icon: 'src/img/courses/logos/javascript.png',
+      icon: 'https://cdn-icons-png.flaticon.com/512/5968/5968292.png',
       sections: [
         {
           title: 'Fundamentos',
@@ -317,7 +317,7 @@ const QuizzesController = (() => {
     {
       id: 'powerpoint', title: 'PowerPoint', category: 'office',
       desc: 'Diseño Visual Corporativo.',
-      icon: 'src/img/courses/logos/powerpoint.png',
+      icon: 'https://cdn-icons-png.flaticon.com/512/732/732224.png',
       sections: [
         {
           title: 'Vistas y presentación',
@@ -350,7 +350,7 @@ const QuizzesController = (() => {
     {
       id: 'sql', title: 'SQL', category: 'data',
       desc: 'Consultas y bases de datos relacionales.',
-      icon: 'src/img/courses/logos/sql.png',
+      icon: 'src/img/courses/sql.svg',
       sections: [
         {
           title: 'Consultas básicas',
@@ -388,7 +388,7 @@ const QuizzesController = (() => {
     {
       id: 'cybersecurity', title: 'Ciberseguridad', category: 'security',
       desc: 'Protección de datos y sistemas.',
-      icon: 'src/img/courses/logos/cybersecurity.png',
+      icon: 'https://cdn-icons-png.flaticon.com/512/2913/2913133.png',
       sections: [
         {
           title: 'Fundamentos',
@@ -696,9 +696,8 @@ const QuizzesController = (() => {
     }
 
     return `
-      <article class="quiz-card quiz-card--themed quiz-card--cert ${req.examUnlocked ? '' : 'quiz-card--locked'} ${hasCert ? 'quiz-card--earned' : ''} anim-fade-up delay-${Math.min(delay + 1, 6)}"
+      <article class="quiz-card quiz-card--cert ${req.examUnlocked ? '' : 'quiz-card--locked'} ${hasCert ? 'quiz-card--earned' : ''} anim-fade-up delay-${Math.min(delay + 1, 6)}"
                data-quiz-id="${exam.id}" data-cert-exam="1" role="button" tabindex="0"
-               style="--quiz-banner:url('${_bannerFor(exam.courseId || exam.id)}')"
                aria-label="${_t('quizzes.examCardAria', { title: exam.title }, `Examen de certificación de ${exam.title}`)}">
         <div class="quiz-card__header">
           <div class="quiz-card__icon-wrap">
@@ -776,15 +775,6 @@ const QuizzesController = (() => {
     });
   }
 
-  function _bannerFor(id) {
-    const safe = String(id || '').replace(/[^a-z0-9-]/gi, '');
-    if (!safe || safe === 'general' || safe === GENERAL_QUIZ_ID) {
-      return 'src/img/banners/circuit-bg.svg';
-    }
-    const courseId = safe.replace(/-exam$/, '').replace(/-cert$/, '');
-    return `src/img/banners/${courseId}-bg.svg`;
-  }
-
   function _renderCard(quiz, delay = 0) {
     const pct = _getPct(quiz.id);
     const scorePct = _getScorePct(quiz.id);
@@ -799,11 +789,9 @@ const QuizzesController = (() => {
     const passHint = passed
       ? _t('quizzes.quizPassedUnlock', { min: quizMin }, `✓ Quiz aprobado (≥${quizMin}%) — desbloquea certificación junto con las lecciones`)
       : _t('quizzes.certGoal', { min: quizMin }, `Meta certificación: ≥${quizMin}% en este quiz`);
-    const banner = _bannerFor(quiz.id);
     return `
-      <article class="quiz-card quiz-card--themed anim-fade-up delay-${Math.min(delay + 1, 6)}"
+      <article class="quiz-card anim-fade-up delay-${Math.min(delay + 1, 6)}"
                data-quiz-id="${quiz.id}" role="button" tabindex="0"
-               style="--quiz-banner:url('${banner}')"
                aria-label="${_t('quizzes.startQuizAria', { title: quiz.title }, `Iniciar quiz de ${quiz.title}`)}">
         <div class="quiz-card__header">
           <div class="quiz-card__icon-wrap">

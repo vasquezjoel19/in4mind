@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="description" content="Verifica certificaciones IN4MIND">
-  <title>IN4MIND â€” Verificar certificado</title>
-  <script src="src/js/dist/boot.bundle.js?v=20260813logos33"></script>
+  <title>IN4MIND — Verificar certificado</title>
+  <script src="src/js/dist/boot.bundle.js?v=20260817nobanners34"></script>
 
   <link rel="stylesheet" href="src/css/tokens.css">
   <link rel="stylesheet" href="src/css/base.css?v=20260714fluid3">
-  <link rel="stylesheet" href="src/css/theme.css?v=20260813logos33">
+  <link rel="stylesheet" href="src/css/theme.css?v=20260817nobanners34">
   <link rel="stylesheet" href="src/css/bulb-icon.css?v=20260810logo">
   <link rel="stylesheet" href="src/css/accessibility.css?v=20260707">
   <link rel="stylesheet" href="src/css/settings-modal.css?v=20260811mobile">
@@ -53,7 +53,7 @@
   <main class="verify-page" id="main">
     <div class="verify-card">
       <h1 data-i18n="cert.verifyTitle">Verificar certificado</h1>
-      <p data-i18n="cert.verifySub">Introduce el cÃ³digo del certificado IN4MIND.</p>
+      <p data-i18n="cert.verifySub">Introduce el código del certificado IN4MIND.</p>
       <input type="text" id="verify-code" placeholder="IN4-XXXXXXXX" autocomplete="off">
       <button type="button" id="verify-btn" data-i18n="cert.verifyBtn">Verificar</button>
       <div id="verify-result" class="verify-result" hidden></div>
@@ -87,11 +87,11 @@
       }
       const date = new Date(data.earnedAt).toLocaleDateString();
       result.innerHTML = `
-        <span class="cert-verify-badge">${t('cert.verifyValid', 'Certificado vÃ¡lido')}</span>
+        <span class="cert-verify-badge">${t('cert.verifyValid', 'Certificado válido')}</span>
         <p><strong>${t('cert.holder', 'Titular')}:</strong> ${data.userName}</p>
         <p><strong>${t('cert.course', 'Curso')}:</strong> ${data.course}</p>
         <p><strong>${t('cert.issued', { date }, 'Emitido')}</strong></p>
-        <p><strong>${t('cert.code', { code: data.code }, 'CÃ³digo')}:</strong></p>`;
+        <p><strong>${t('cert.code', { code: data.code }, 'Código')}:</strong></p>`;
     }
 
     document.getElementById('verify-btn').addEventListener('click', run);

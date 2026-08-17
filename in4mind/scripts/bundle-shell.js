@@ -1,5 +1,5 @@
-/**
- * IN4MIND — Genera bundles de producción (boot + app-shell + landing).
+﻿/**
+ * IN4MIND â€” Genera bundles de producciÃ³n (boot + app-shell + landing).
  * Uso: node scripts/bundle-shell.js
  */
 'use strict';
@@ -9,7 +9,7 @@ const path = require('path');
 
 const root = path.join(__dirname, '..');
 const outDir = path.join(root, 'src/js/dist');
-const VERSION = '20260813logos33';
+const VERSION = '20260817nobanners34';
 
 const BOOT_FILES = [
   'src/js/controllers/ThemeController.js',
@@ -38,7 +38,6 @@ const SHELL_FILES = [
   'src/js/services/LazyScriptLoader.js',
   'src/js/services/ShareService.js',
   'src/js/services/DataService.js',
-  'src/js/components/CourseCard.js',
   'src/js/services/UserProfileService.js',
   'src/js/services/QuizProgressService.js',
   'src/js/services/GamificationService.js',
@@ -69,7 +68,6 @@ const LANDING_FILES = [
   'src/js/services/SessionStore.js',
   'src/js/services/ShareService.js',
   'src/js/services/DataService.js',
-  'src/js/components/CourseCard.js',
   'src/js/controllers/OtherMenuController.js',
   'src/js/i18n-boot.js',
 ];
@@ -80,7 +78,7 @@ function concat(files, bannerExtra = '') {
     if (!fs.existsSync(full)) throw new Error(`Missing: ${rel}`);
     return `\n;/* --- ${rel} --- */\n${fs.readFileSync(full, 'utf8')}\n`;
   });
-  const banner = `/*! IN4MIND bundle ${VERSION} — ${new Date().toISOString()} */\n${bannerExtra}`;
+  const banner = `/*! IN4MIND bundle ${VERSION} â€” ${new Date().toISOString()} */\n${bannerExtra}`;
   return banner + parts.join('');
 }
 

@@ -120,13 +120,6 @@ const DashboardController = (() => {
    * @returns {string}
    */
   function _renderCourseCard(course, delay = 0, options = {}) {
-    if (typeof CourseCard !== 'undefined' && CourseCard.render) {
-      return CourseCard.render(course, {
-        tag: 'article',
-        extraClass: `anim-fade-up delay-${Math.min(delay + 1, 6)}${options.variant ? ` course-banner-card--${options.variant}` : ''}`,
-        ariaLabel: _t('dashboard.courseAria', { course: course.title }, `Ver curso de ${course.title}`),
-      });
-    }
     const extraClass = options.variant ? ` course-card--${options.variant}` : '';
     const badgeHtml = options.badge
       ? `<span class="course-card__badge">${options.badge}</span>`

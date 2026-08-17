@@ -30,7 +30,7 @@ const LandingController = (() => {
       overlay.innerHTML = `
         <div class="lp-search-modal" role="dialog" aria-modal="true" aria-label="${_t('landing.search', null, 'Buscar')}">
           <input type="search" id="lp-search-input" class="lp-search-input"
-                 placeholder="${_t('search.placeholder', null, 'Buscar cursosâ€¦')}" autocomplete="off">
+                 placeholder="${_t('search.placeholder', null, 'Buscar cursos…')}" autocomplete="off">
           <ul id="lp-search-results" class="lp-search-results" role="listbox"></ul>
           <button type="button" class="lp-search-close" id="lp-search-close">${_t('common.close', null, 'Cerrar')}</button>
         </div>`;
@@ -139,7 +139,7 @@ const LandingController = (() => {
       }
     });
 
-    document.querySelectorAll('.course-banner-card[href="login.html"], .lp-course-card[href="login.html"]').forEach(el => {
+    document.querySelectorAll('.lp-course-card[href="login.html"]').forEach(el => {
       const courseId = el.dataset.openCourse;
       if (courseId) el.setAttribute('href', `tutorial.html?preview=1&course=${courseId}`);
     });
@@ -147,7 +147,7 @@ const LandingController = (() => {
 
   function _registerServiceWorker() {
     if (!('serviceWorker' in navigator)) return;
-    navigator.serviceWorker.register('sw.js?v=20260813logos33').catch(() => {});
+    navigator.serviceWorker.register('sw.js?v=20260817nobanners34').catch(() => {});
   }
 
   function init() {

@@ -1,4 +1,4 @@
-/*! IN4MIND bundle 20260813logos33 — 2026-08-13T21:54:16.817320+00:00 */
+/*! IN4MIND bundle 20260817nobanners34 — 2026-08-17T18:36:22.269480+00:00 */
 
 ;/* --- src/js/components/In4mindBulb.js --- */
 'use strict';
@@ -605,15 +605,15 @@ const ExtendedCourses = (() => {
   const ICON = {
     flowchart: 'https://cdn-icons-png.flaticon.com/512/2920/2920277.png',
     os: 'https://cdn-icons-png.flaticon.com/512/888/888882.png',
-    powerapps: 'src/img/courses/logos/powerapps.png',
-    sharepoint: 'src/img/courses/logos/sharepoint.png',
-    outlook: 'src/img/courses/logos/outlook.png',
-    onedrive: 'src/img/courses/logos/onedrive.png',
+    powerapps: 'https://cdn-icons-png.flaticon.com/512/5968/5968557.png',
+    sharepoint: 'https://cdn-icons-png.flaticon.com/512/2991/2991110.png',
+    outlook: 'https://cdn-icons-png.flaticon.com/512/732/732223.png',
+    onedrive: 'https://cdn-icons-png.flaticon.com/512/2991/2991143.png',
     scrum: 'https://cdn-icons-png.flaticon.com/512/2920/2920277.png',
-    scratch: 'src/img/courses/logos/scratch.png',
+    scratch: 'https://cdn-icons-png.flaticon.com/512/5968/5968242.png',
     video: 'https://cdn-icons-png.flaticon.com/512/2991/2991108.png',
-    django: 'src/img/courses/logos/django.png',
-    powerbi: 'src/img/courses/logos/powerbi.png',
+    django: 'https://cdn-icons-png.flaticon.com/512/5968/5968350.png',
+    powerbi: 'src/img/courses/powerbi.svg?v=20260713',
     prompt: 'https://cdn-icons-png.flaticon.com/512/2103/2103633.png',
     engineering: 'https://cdn-icons-png.flaticon.com/512/2920/2920277.png',
     game: 'https://cdn-icons-png.flaticon.com/512/686/686589.png',
@@ -2281,20 +2281,18 @@ if (typeof module !== 'undefined') module.exports = { ShareService, AuthGuard };
 
 const DataService = (() => {
 
-  const LOGO = (id) => `src/img/courses/logos/${id}.png`;
-
   const COURSES = [
-    { id: 'canvas',      title: 'Canvas',      desc: 'Diseño visual profesional y creación de contenido gráfico.',       icon: LOGO('canvas'), color: 'var(--clr-canvas)',  category: 'design',      tags: ['diseño', 'gráfico', 'canva', 'canvas', 'visual'] },
-    { id: 'figma',       title: 'Figma',        desc: 'Diseño de interfaces y prototipos colaborativos.',                 icon: LOGO('figma'), color: 'var(--clr-figma)',   category: 'design',      tags: ['ui', 'ux', 'figma', 'prototipo'] },
-    { id: 'python',      title: 'Python',       desc: 'Programación versátil para automatización y datos.',              icon: LOGO('python'), color: 'var(--clr-python)',  category: 'programming', tags: ['python', 'programación', 'scripts', 'automatización'] },
-    { id: 'javascript',  title: 'JavaScript',   desc: 'Interactividad y dinamismo para la web moderna.',                 icon: LOGO('javascript'), color: 'var(--clr-js)',      category: 'web',         tags: ['js', 'javascript', 'web', 'frontend'] },
-    { id: 'html',        title: 'HTML',         desc: 'Estructura y semántica de páginas web.',                          icon: LOGO('html'), color: 'var(--clr-html)',    category: 'web',         tags: ['html', 'web', 'estructura', 'marcado'] },
-    { id: 'css',         title: 'CSS',          desc: 'Estilos, animaciones y diseño responsivo.',                       icon: LOGO('css'), color: 'var(--clr-css)',     category: 'web',         tags: ['css', 'estilos', 'web', 'diseño'] },
-    { id: 'github',      title: 'GitHub',       desc: 'Control de versiones y colaboración en proyectos.',               icon: LOGO('github'), color: 'var(--clr-github)',  category: 'tools',       tags: ['github', 'git', 'versiones', 'repositorio'] },
-    { id: 'excel',       title: 'Excel',        desc: 'Gestión y análisis de datos con hojas de cálculo.',               icon: LOGO('excel'), color: 'var(--clr-excel)',   category: 'office',      tags: ['excel', 'datos', 'fórmulas', 'tablas'] },
-    { id: 'powerpoint',  title: 'PowerPoint',   desc: 'Presentaciones visuales de impacto corporativo.',                 icon: LOGO('powerpoint'), color: 'var(--clr-pptx)',    category: 'office',      tags: ['powerpoint', 'presentaciones', 'slides'] },
-    { id: 'sql',         title: 'SQL',          desc: 'Consultas y gestión de bases de datos relacionales.',             icon: LOGO('sql'), color: 'var(--clr-sql)',     category: 'data',        tags: ['sql', 'bases de datos', 'consultas', 'datos'] },
-    { id: 'cybersecurity', title: 'Ciberseguridad', desc: 'Protege sistemas, datos y usuarios frente a amenazas digitales.', icon: LOGO('cybersecurity'), color: 'var(--clr-security)', category: 'security', tags: ['ciberseguridad', 'seguridad', 'phishing', 'malware', 'contraseñas', 'hacking'] },
+    { id: 'canvas',      title: 'Canvas',      desc: 'Diseño visual profesional y creación de contenido gráfico.',       icon: 'src/img/courses/canva.svg?v=20260713', color: 'var(--clr-canvas)',  category: 'design',      tags: ['diseño', 'gráfico', 'canva', 'canvas', 'visual'] },
+    { id: 'figma',       title: 'Figma',        desc: 'Diseño de interfaces y prototipos colaborativos.',                 icon: 'https://cdn-icons-png.flaticon.com/512/5968/5968705.png', color: 'var(--clr-figma)',   category: 'design',      tags: ['ui', 'ux', 'figma', 'prototipo'] },
+    { id: 'python',      title: 'Python',       desc: 'Programación versátil para automatización y datos.',              icon: 'src/img/courses/python.svg', color: 'var(--clr-python)',  category: 'programming', tags: ['python', 'programación', 'scripts', 'automatización'] },
+    { id: 'javascript',  title: 'JavaScript',   desc: 'Interactividad y dinamismo para la web moderna.',                 icon: 'src/img/courses/javascript.svg', color: 'var(--clr-js)',      category: 'web',         tags: ['js', 'javascript', 'web', 'frontend'] },
+    { id: 'html',        title: 'HTML',         desc: 'Estructura y semántica de páginas web.',                          icon: 'src/img/courses/html.svg', color: 'var(--clr-html)',    category: 'web',         tags: ['html', 'web', 'estructura', 'marcado'] },
+    { id: 'css',         title: 'CSS',          desc: 'Estilos, animaciones y diseño responsivo.',                       icon: 'https://cdn-icons-png.flaticon.com/512/732/732190.png',   color: 'var(--clr-css)',     category: 'web',         tags: ['css', 'estilos', 'web', 'diseño'] },
+    { id: 'github',      title: 'GitHub',       desc: 'Control de versiones y colaboración en proyectos.',               icon: 'https://cdn-icons-png.flaticon.com/512/25/25231.png',     color: 'var(--clr-github)',  category: 'tools',       tags: ['github', 'git', 'versiones', 'repositorio'] },
+    { id: 'excel',       title: 'Excel',        desc: 'Gestión y análisis de datos con hojas de cálculo.',               icon: 'https://cdn-icons-png.flaticon.com/512/732/732220.png',   color: 'var(--clr-excel)',   category: 'office',      tags: ['excel', 'datos', 'fórmulas', 'tablas'] },
+    { id: 'powerpoint',  title: 'PowerPoint',   desc: 'Presentaciones visuales de impacto corporativo.',                 icon: 'https://cdn-icons-png.flaticon.com/512/732/732224.png',   color: 'var(--clr-pptx)',    category: 'office',      tags: ['powerpoint', 'presentaciones', 'slides'] },
+    { id: 'sql',         title: 'SQL',          desc: 'Consultas y gestión de bases de datos relacionales.',             icon: 'src/img/courses/sql.svg', color: 'var(--clr-sql)',     category: 'data',        tags: ['sql', 'bases de datos', 'consultas', 'datos'] },
+    { id: 'cybersecurity', title: 'Ciberseguridad', desc: 'Protege sistemas, datos y usuarios frente a amenazas digitales.', icon: 'src/img/courses/security.svg', color: 'var(--clr-security)', category: 'security', tags: ['ciberseguridad', 'seguridad', 'phishing', 'malware', 'contraseñas', 'hacking'] },
     ...(typeof ExtendedCourses !== 'undefined' ? ExtendedCourses.getCatalogEntries() : []),
   ];
 
@@ -2343,16 +2341,10 @@ const DataService = (() => {
   function _localizedCourses() {
     return COURSES.map(c => {
       const loc = typeof I18n !== 'undefined' ? I18n.t(`courses.${c.id}`) : null;
-      const base = loc && typeof loc === 'object'
-        ? { ...c, title: loc.title || c.title, desc: loc.desc || c.desc }
-        : { ...c };
-      // Banner temático por curso: src/img/banners/{id}-bg.svg
-      base.banner = base.banner || `src/img/banners/${base.id}-bg.svg`;
-      base.bannerArt = base.bannerArt || base.icon;
-      if (typeof CourseCard !== 'undefined' && CourseCard.decorate) {
-        return CourseCard.decorate(base);
+      if (loc && typeof loc === 'object') {
+        return { ...c, title: loc.title || c.title, desc: loc.desc || c.desc };
       }
-      return base;
+      return { ...c };
     });
   }
 
@@ -2547,186 +2539,6 @@ const DataService = (() => {
 })();
 
 if (typeof module !== 'undefined') module.exports = DataService;
-
-
-;/* --- src/js/components/CourseCard.js --- */
-/**
- * IN4MIND — CourseCard
- * Tarjeta de curso con banner dinámico (landing + dashboard).
- */
-'use strict';
-
-const CourseCard = (() => {
-
-  const CATEGORY_FALLBACK = {
-    programming: 'Programación',
-    design: 'Diseño',
-    web: 'Desarrollo',
-    office: 'Ofimática',
-    data: 'Datos',
-    tools: 'Herramientas',
-    security: 'Seguridad',
-  };
-
-  const CATEGORY_I18N = {
-    programming: 'tutorial.catProgramming',
-    design: 'tutorial.catDesign',
-    web: 'tutorial.catWeb',
-    office: 'tutorial.catOffice',
-    data: 'tutorial.catData',
-    tools: 'tutorial.catTools',
-    security: 'tutorial.catSecurity',
-  };
-
-  function _t(key, fallback) {
-    if (typeof I18n !== 'undefined') {
-      const out = I18n.t(key);
-      if (out && out !== key) return out;
-    }
-    return fallback;
-  }
-
-  function _escape(str) {
-    return String(str ?? '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
-  }
-
-  function _hash(id) {
-    let h = 0;
-    const s = String(id || '');
-    for (let i = 0; i < s.length; i += 1) h = ((h << 5) - h) + s.charCodeAt(i);
-    return Math.abs(h);
-  }
-
-  function bannerUrl(course) {
-    if (course?.banner) return course.banner;
-    if (course?.id) return `src/img/banners/${course.id}-bg.svg`;
-    return 'src/img/banners/circuit-bg.svg';
-  }
-
-  function artUrl(course) {
-    // Logo/arte del curso a la derecha del banner temático (dashboard/cursos).
-    return course?.bannerArt || course?.icon || '';
-  }
-
-  function categoryLabel(course) {
-    const cat = course?.category || 'tools';
-    if (typeof TutorialData !== 'undefined' && TutorialData.getCategoryLabel) {
-      const label = TutorialData.getCategoryLabel(cat);
-      if (label) return label;
-    }
-    const key = CATEGORY_I18N[cat];
-    if (key) return _t(key, CATEGORY_FALLBACK[cat] || cat);
-    return CATEGORY_FALLBACK[cat] || cat;
-  }
-
-  function statsFor(course) {
-    const id = course?.id;
-    let lessons = course?.lessonsCount;
-    let modules = course?.modulesCount;
-    let questions = course?.questionsCount;
-    let rating = course?.rating;
-
-    if (typeof TutorialData !== 'undefined' && TutorialData.getCourseData) {
-      const d = TutorialData.getCourseData(id);
-      if (d) {
-        if (lessons == null) lessons = d.tutorials || d.topics?.length;
-        if (modules == null) modules = typeof d.quizzes === 'number' ? d.quizzes : d.quizzes?.length;
-        if (questions == null) questions = d.quizQuestions || (modules ? modules * 4 : null);
-        if (rating == null) rating = d.rating;
-      }
-    }
-
-    const h = _hash(id);
-    if (lessons == null) lessons = 3 + (h % 6);
-    if (modules == null) modules = 2 + (h % 4);
-    if (questions == null) questions = modules * (3 + (h % 3));
-    if (rating == null) rating = (4.4 + ((h % 6) * 0.1)).toFixed(1);
-
-    return {
-      lessons: Number(lessons) || 0,
-      modules: Number(modules) || 0,
-      questions: Number(questions) || 0,
-      rating: String(rating),
-    };
-  }
-
-  function decorate(course) {
-    if (!course) return course;
-    const stats = statsFor(course);
-    return {
-      ...course,
-      banner: bannerUrl(course),
-      bannerArt: artUrl(course),
-      categoryLabel: categoryLabel(course),
-      lessonsCount: stats.lessons,
-      modulesCount: stats.modules,
-      questionsCount: stats.questions,
-      rating: stats.rating,
-    };
-  }
-
-  function render(course, options = {}) {
-    const c = decorate(course);
-    const tag = options.tag === 'article' ? 'article' : 'a';
-    const href = options.href || 'login.html';
-    const accent = c.color || 'var(--clr-brand-500)';
-    const banner = _escape(c.banner);
-    const art = _escape(c.bannerArt || c.icon || '');
-    const lessonsLabel = _t('courseCard.lessons', '{n} lecciones').replace('{n}', String(c.lessonsCount));
-    const modulesLabel = _t('courseCard.modulesQuestions', '{m} módulos • {q} preguntas')
-      .replace('{m}', String(c.modulesCount))
-      .replace('{q}', String(c.questionsCount));
-    const verLabel = _t('courseCard.view', 'Ver');
-    const extra = options.extraClass ? ` ${options.extraClass}` : '';
-    const aria = options.ariaLabel
-      ? ` aria-label="${_escape(options.ariaLabel)}"`
-      : '';
-    const openAttrs = tag === 'a'
-      ? ` href="${_escape(href)}" data-open-course="${_escape(c.id)}"`
-      : ` role="button" tabindex="0"`;
-
-    return `
-      <${tag} class="course-banner-card${extra}"
-         data-course="${_escape(c.id)}"
-         ${openAttrs}${aria}
-         style="--course-accent:${accent};--course-banner:url('${banner}');--course-art:url('${art}')">
-        <span class="course-banner-card__bg" aria-hidden="true"></span>
-        <span class="course-banner-card__overlay" aria-hidden="true"></span>
-        <span class="course-banner-card__art" aria-hidden="true"></span>
-        <span class="course-banner-card__body">
-          <span class="course-banner-card__header">
-            <span class="course-banner-card__icon">
-              <img src="${_escape(c.icon)}" alt="" width="28" height="28" loading="lazy">
-            </span>
-            <span class="course-banner-card__titles">
-              <span class="course-banner-card__title">${_escape(c.title)}</span>
-              <span class="course-banner-card__category">${_escape(c.categoryLabel)}</span>
-            </span>
-          </span>
-          <span class="course-banner-card__desc">${_escape(c.desc)}</span>
-          <span class="course-banner-card__badges">
-            <span class="course-banner-card__badge">${_escape(lessonsLabel)}</span>
-            <span class="course-banner-card__badge">${_escape(modulesLabel)}</span>
-          </span>
-          <span class="course-banner-card__footer">
-            <span class="course-banner-card__rating">
-              <span class="course-banner-card__star" aria-hidden="true">★</span>
-              ${_escape(c.rating)}
-            </span>
-            <span class="course-banner-card__cta">${_escape(verLabel)}</span>
-          </span>
-        </span>
-      </${tag}>`;
-  }
-
-  return { bannerUrl, artUrl, decorate, statsFor, categoryLabel, render };
-})();
-
-if (typeof module !== 'undefined') module.exports = CourseCard;
 
 
 ;/* --- src/js/controllers/OtherMenuController.js --- */

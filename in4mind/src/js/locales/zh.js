@@ -975,12 +975,6 @@ const LOCALE_ZH = {
     darkTitle: '深色模式',
     lightTitle: '浅色模式',
   },
-  courseCard: {
-    lessons: '{n} 课时',
-    modulesQuestions: '{m} 模块 • {q} 题',
-    view: '查看',
-    rating: '评分',
-  },
   courses: {
     canvas: { title: 'Canva', desc: '专业视觉设计与图形内容创作。' },
     figma: { title: 'Figma', desc: '界面设计与协作原型。' },

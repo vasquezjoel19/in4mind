@@ -1,4 +1,4 @@
-/*! IN4MIND bundle 20260817nobanners34 — 2026-08-17T18:36:22.267156+00:00 */
+/*! IN4MIND bundle 20260817clean35 — 2026-08-17T21:05:18.745822+00:00 */
 
 ;/* --- src/js/components/In4mindBulb.js --- */
 'use strict';
@@ -6286,7 +6286,7 @@ const AppFeatures = (() => {
     if (!('serviceWorker' in navigator)) return;
     const isAppPage = /dashboard|tutorial|quizzes|ai|profile|help/.test(window.location.pathname);
     if (!isAppPage) return;
-    navigator.serviceWorker.register('sw.js?v=20260817nobanners34').catch(() => {});
+    navigator.serviceWorker.register('sw.js?v=20260817clean35').catch(() => {});
   }
 
   function _injectManifest() {

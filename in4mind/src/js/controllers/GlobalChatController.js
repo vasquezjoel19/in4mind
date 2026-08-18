@@ -693,7 +693,24 @@ const GlobalChatController = (() => {
     });
   }
 
-  return { init, setSuppressed, isOpen: () => _open };
+  /** Vacía el chat UI y cierra el panel (logout / cambio de sesión). */
+  function teardown() {
+    try { localStorage.removeItem(OPEN_KEY); } catch { /* ignore */ }
+    _open = false;
+    _unread = 0;
+    _lastMsg = null;
+    _canPost = false;
+    _suppressed = false;
+    if ($messages) $messages.innerHTML = '';
+    if ($root) {
+      try { $root.remove(); } catch { /* ignore */ }
+    }
+    $root = $launcher = $panel = $messages = $input = $sendBtn = null;
+    $statusText = $dot = $notice = $badge = $picker = $pickerList = $pickerSearch = $count = null;
+    _mounted = false;
+  }
+
+  return { init, setSuppressed, isOpen: () => _open, teardown };
 
 })();
 

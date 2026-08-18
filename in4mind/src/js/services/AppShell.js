@@ -29,14 +29,18 @@ const AppShell = (() => {
   }
 
   function logout() {
+    // Primero vaciar chat UI + desconectar, antes de signOut (evita mensajes residuales).
+    if (typeof GlobalChatController !== 'undefined' && GlobalChatController.teardown) {
+      try { GlobalChatController.teardown(); } catch { /* ignore */ }
+    }
     if (typeof GlobalChatService !== 'undefined') {
       try {
         GlobalChatService.disconnect();
         GlobalChatService.resetAuth();
       } catch { /* ignore */ }
     }
+    try { localStorage.removeItem('in4mind_chat_open'); } catch { /* ignore */ }
     if (typeof AuthService !== 'undefined') {
-      // Cierra también la sesión de Supabase; no se espera para no bloquear.
       Promise.resolve(AuthService.logout()).catch(() => {});
     }
     clearSession();
@@ -80,9 +84,10 @@ const AppShell = (() => {
       return;
     }
     main.classList.add('page-exit');
+    // Crossfade corto: no demorar la navegación real.
     window.setTimeout(() => {
       window.location.assign(href);
-    }, 220);
+    }, 140);
   }
 
   /** Delegación global: avatar → perfil (fase capture, antes que otros handlers). */

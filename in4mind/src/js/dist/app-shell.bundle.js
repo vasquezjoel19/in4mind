@@ -1,4 +1,4 @@
-/*! IN4MIND bundle 20260818emp39 — 2026-08-18T20:06:40.735085+00:00 */
+/*! IN4MIND bundle 20260818emp41 — 2026-08-18T20:45:17.036914+00:00 */
 
 ;/* --- src/js/components/In4mindBulb.js --- */
 'use strict';
@@ -2123,6 +2123,15 @@ const AuthSessionSync = (() => {
   function _handle(msg) {
     if (!msg || !msg.type) return;
     if (msg.type === 'logout') {
+      if (typeof GlobalChatController !== 'undefined' && GlobalChatController.teardown) {
+        try { GlobalChatController.teardown(); } catch { /* ignore */ }
+      }
+      if (typeof GlobalChatService !== 'undefined') {
+        try {
+          GlobalChatService.disconnect();
+          GlobalChatService.resetAuth();
+        } catch { /* ignore */ }
+      }
       if (typeof SessionStore !== 'undefined') SessionStore.clear({ keepEmail: true });
       else sessionStorage.removeItem('in4mind_user');
       if (typeof AppShell !== 'undefined') AppShell.showToast(_t('auth.sessionEnded', 'Sesión cerrada en otra pestaña.'), 2800);
@@ -2130,7 +2139,7 @@ const AuthSessionSync = (() => {
         if (!/login\.html$/i.test(location.pathname)) {
           window.location.replace('login.html');
         }
-      }, 400);
+      }, 200);
     }
     if (msg.type === 'login') {
       // Otra pestaña inició sesión: refrescar avatar / perfil si aplica
@@ -6717,7 +6726,15 @@ const GlobalChatService = (() => {
     _channel = null;
     _connectPromise = null;
     _onlineCount = 0;
+    _seenIds.clear();
     _setState(STATE.IDLE);
+  }
+
+  /** Invalida el usuario cacheado tras un login o logout. */
+  function resetAuth() {
+    _authUser = null;
+    _seenIds.clear();
+    _lastSentAt = 0;
   }
 
   /** Colapsa espacios y quita controles invisibles usados para camuflar spam. */
@@ -6829,11 +6846,6 @@ const GlobalChatService = (() => {
     } catch {
       return null;
     }
-  }
-
-  /** Invalida el usuario cacheado tras un login o logout. */
-  function resetAuth() {
-    _authUser = null;
   }
 
   return {
@@ -7556,7 +7568,24 @@ const GlobalChatController = (() => {
     });
   }
 
-  return { init, setSuppressed, isOpen: () => _open };
+  /** Vacía el chat UI y cierra el panel (logout / cambio de sesión). */
+  function teardown() {
+    try { localStorage.removeItem(OPEN_KEY); } catch { /* ignore */ }
+    _open = false;
+    _unread = 0;
+    _lastMsg = null;
+    _canPost = false;
+    _suppressed = false;
+    if ($messages) $messages.innerHTML = '';
+    if ($root) {
+      try { $root.remove(); } catch { /* ignore */ }
+    }
+    $root = $launcher = $panel = $messages = $input = $sendBtn = null;
+    $statusText = $dot = $notice = $badge = $picker = $pickerList = $pickerSearch = $count = null;
+    _mounted = false;
+  }
+
+  return { init, setSuppressed, isOpen: () => _open, teardown };
 
 })();
 
@@ -7595,14 +7624,18 @@ const AppShell = (() => {
   }
 
   function logout() {
+    // Primero vaciar chat UI + desconectar, antes de signOut (evita mensajes residuales).
+    if (typeof GlobalChatController !== 'undefined' && GlobalChatController.teardown) {
+      try { GlobalChatController.teardown(); } catch { /* ignore */ }
+    }
     if (typeof GlobalChatService !== 'undefined') {
       try {
         GlobalChatService.disconnect();
         GlobalChatService.resetAuth();
       } catch { /* ignore */ }
     }
+    try { localStorage.removeItem('in4mind_chat_open'); } catch { /* ignore */ }
     if (typeof AuthService !== 'undefined') {
-      // Cierra también la sesión de Supabase; no se espera para no bloquear.
       Promise.resolve(AuthService.logout()).catch(() => {});
     }
     clearSession();
@@ -7646,9 +7679,10 @@ const AppShell = (() => {
       return;
     }
     main.classList.add('page-exit');
+    // Crossfade corto: no demorar la navegación real.
     window.setTimeout(() => {
       window.location.assign(href);
-    }, 220);
+    }, 140);
   }
 
   /** Delegación global: avatar → perfil (fase capture, antes que otros handlers). */
@@ -8430,9 +8464,11 @@ const OtherMenuController = (() => {
       const msg = _t('profile.logoutConfirm', null, '¿Cerrar sesión?');
       if (!confirm(msg)) return;
       close();
-      if (typeof AuthService !== 'undefined') await AuthService.logout();
       if (typeof AppShell !== 'undefined') AppShell.logout();
-      else location.href = 'index.html';
+      else if (typeof AuthService !== 'undefined') {
+        await AuthService.logout();
+        window.location.replace('login.html');
+      } else location.href = 'index.html';
     }
   }
 
@@ -8929,8 +8965,11 @@ const SettingsController = (() => {
       const msg = typeof I18n !== 'undefined' ? I18n.t('profile.logoutConfirm') : '¿Cerrar sesión?';
       if (!confirm(msg)) return;
       close();
-      if (typeof AuthService !== 'undefined') await AuthService.logout();
       if (typeof AppShell !== 'undefined') AppShell.logout();
+      else if (typeof AuthService !== 'undefined') {
+        await AuthService.logout();
+        window.location.replace('login.html');
+      }
     });
     document.getElementById('settings-save-name')?.addEventListener('click', async () => {
       const input = document.getElementById('settings-edit-name');

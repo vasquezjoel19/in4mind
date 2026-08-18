@@ -225,7 +225,15 @@ const GlobalChatService = (() => {
     _channel = null;
     _connectPromise = null;
     _onlineCount = 0;
+    _seenIds.clear();
     _setState(STATE.IDLE);
+  }
+
+  /** Invalida el usuario cacheado tras un login o logout. */
+  function resetAuth() {
+    _authUser = null;
+    _seenIds.clear();
+    _lastSentAt = 0;
   }
 
   /** Colapsa espacios y quita controles invisibles usados para camuflar spam. */
@@ -337,11 +345,6 @@ const GlobalChatService = (() => {
     } catch {
       return null;
     }
-  }
-
-  /** Invalida el usuario cacheado tras un login o logout. */
-  function resetAuth() {
-    _authUser = null;
   }
 
   return {

@@ -78,6 +78,18 @@ window.In4mindA11y = (() => {
 
   init();
 
+  // Ocultar páginas protegidas antes del paint si no hay sesión local
+  // (AuthGuard en el shell confirma/redirige después).
+  try {
+    const html = document.documentElement;
+    if (html.hasAttribute('data-requires-auth')) {
+      const preview = /[?&]preview=1(?:&|$)/.test(location.search || '');
+      if (!preview && !sessionStorage.getItem('in4mind_user')) {
+        html.style.visibility = 'hidden';
+      }
+    }
+  } catch { /* ignore */ }
+
   return { KEY, getPrefs, apply };
 
 })();

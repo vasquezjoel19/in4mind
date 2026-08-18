@@ -287,9 +287,11 @@ const OtherMenuController = (() => {
       const msg = _t('profile.logoutConfirm', null, '¿Cerrar sesión?');
       if (!confirm(msg)) return;
       close();
-      if (typeof AuthService !== 'undefined') await AuthService.logout();
       if (typeof AppShell !== 'undefined') AppShell.logout();
-      else location.href = 'index.html';
+      else if (typeof AuthService !== 'undefined') {
+        await AuthService.logout();
+        window.location.replace('login.html');
+      } else location.href = 'index.html';
     }
   }
 

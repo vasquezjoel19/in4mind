@@ -42,6 +42,15 @@ const AuthSessionSync = (() => {
   function _handle(msg) {
     if (!msg || !msg.type) return;
     if (msg.type === 'logout') {
+      if (typeof GlobalChatController !== 'undefined' && GlobalChatController.teardown) {
+        try { GlobalChatController.teardown(); } catch { /* ignore */ }
+      }
+      if (typeof GlobalChatService !== 'undefined') {
+        try {
+          GlobalChatService.disconnect();
+          GlobalChatService.resetAuth();
+        } catch { /* ignore */ }
+      }
       if (typeof SessionStore !== 'undefined') SessionStore.clear({ keepEmail: true });
       else sessionStorage.removeItem('in4mind_user');
       if (typeof AppShell !== 'undefined') AppShell.showToast(_t('auth.sessionEnded', 'Sesión cerrada en otra pestaña.'), 2800);
@@ -49,7 +58,7 @@ const AuthSessionSync = (() => {
         if (!/login\.html$/i.test(location.pathname)) {
           window.location.replace('login.html');
         }
-      }, 400);
+      }, 200);
     }
     if (msg.type === 'login') {
       // Otra pestaña inició sesión: refrescar avatar / perfil si aplica

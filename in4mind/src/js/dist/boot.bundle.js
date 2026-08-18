@@ -1,4 +1,4 @@
-/*! IN4MIND bundle 20260818emp39 — 2026-08-18T20:06:40.728024+00:00 */
+/*! IN4MIND bundle 20260818emp41 — 2026-08-18T20:45:16.949491+00:00 */
 
 ;/* --- src/js/controllers/ThemeController.js --- */
 /**
@@ -56,6 +56,16 @@ const ThemeController = (() => {
     return isDark
       ? _t('theme.light', 'Activar modo claro')
       : _t('theme.dark', 'Activar modo oscuro');
+  }
+
+  function _ensureBootStyle() {
+    if (document.getElementById('in4mind-theme-boot')) return;
+    const style = document.createElement('style');
+    style.id = 'in4mind-theme-boot';
+    // Fondos críticos antes de que cargue tokens.css (evita flash claro→oscuro).
+    style.textContent = 'html,body{background-color:#f0f5fb}'
+      + 'html[data-theme="dark"],html[data-theme="dark"] body{background-color:#121a28;color:#e2e8f0}';
+    (document.head || document.documentElement).appendChild(style);
   }
 
   function _applyDom(resolved) {
@@ -122,16 +132,21 @@ const ThemeController = (() => {
 
   function setPreference(pref) {
     const valid = pref === 'dark' || pref === 'light' || pref === 'system' ? pref : 'light';
-    localStorage.setItem(STORAGE_KEY, valid);
     const resolved = _resolveFromPreference(valid);
-    _withTransition(() => {
+    const prevResolved = getTheme();
+    localStorage.setItem(STORAGE_KEY, valid);
+    const run = () => {
       _applyDom(resolved);
       _updateToggleUi(resolved === 'dark');
       _emit(valid, resolved);
-    });
+    };
+    // Sin animación si el tema visual no cambia (p. ej. system → light cuando ya es light).
+    if (prevResolved === resolved) run();
+    else _withTransition(run);
   }
 
   function toggle() {
+    // Alterna el modo resuelto actual (claro ↔ oscuro) de forma explícita.
     setPreference(getTheme() === 'dark' ? 'light' : 'dark');
   }
 
@@ -243,6 +258,11 @@ const ThemeController = (() => {
     window.addEventListener('storage', (e) => {
       if (e.key !== STORAGE_KEY) return;
       const resolved = _resolveTheme();
+      if (getTheme() === resolved) {
+        _updateToggleUi(resolved === 'dark');
+        _emit(getPreference(), resolved);
+        return;
+      }
       _withTransition(() => {
         _applyDom(resolved);
         _updateToggleUi(resolved === 'dark');
@@ -253,6 +273,7 @@ const ThemeController = (() => {
 
   /** Llamar en <head> antes del paint para evitar flash. */
   function initEarly() {
+    _ensureBootStyle();
     const theme = _resolveTheme();
     _applyDom(theme);
   }
@@ -368,6 +389,18 @@ window.In4mindA11y = (() => {
   }
 
   init();
+
+  // Ocultar páginas protegidas antes del paint si no hay sesión local
+  // (AuthGuard en el shell confirma/redirige después).
+  try {
+    const html = document.documentElement;
+    if (html.hasAttribute('data-requires-auth')) {
+      const preview = /[?&]preview=1(?:&|$)/.test(location.search || '');
+      if (!preview && !sessionStorage.getItem('in4mind_user')) {
+        html.style.visibility = 'hidden';
+      }
+    }
+  } catch { /* ignore */ }
 
   return { KEY, getPrefs, apply };
 

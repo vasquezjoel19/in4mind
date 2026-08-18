@@ -218,7 +218,7 @@ ul, ol {
 }
 
 .main-area.page-exit {
-  animation: pageFadeOut var(--dur-med) var(--ease) forwards;
+  animation: pageFadeOut var(--dur-fast) var(--ease) forwards;
   pointer-events: none;
 }
 

@@ -302,12 +302,35 @@ const GuidedProjectsController = (() => {
     }
   }
 
-  async function _loadScores() {
+  function _loadScoresSync() {
     _quizScores = {};
     const ids = [...new Set(_projects.map(p => p.quizId))];
-    await Promise.all(ids.map(async id => {
-      _quizScores[id] = await GuidedProjectsService.getQuizBestPctAsync(id);
-    }));
+    ids.forEach((id) => {
+      _quizScores[id] = GuidedProjectsService.getQuizBestPct(id);
+    });
+  }
+
+  /** Una sola lectura cloud de quiz_progress; no bloquea el primer paint. */
+  async function _refreshScoresFromCloud() {
+    const ids = [...new Set(_projects.map(p => p.quizId))];
+    if (!ids.length) return;
+    let map = null;
+    if (typeof UserProfileService !== 'undefined' && UserProfileService.getQuizProgress) {
+      try {
+        map = await UserProfileService.getQuizProgress();
+      } catch { /* local basta */ }
+    }
+    let changed = false;
+    ids.forEach((id) => {
+      let best = GuidedProjectsService.getQuizBestPct(id);
+      const row = map?.[id];
+      if (row) best = Math.max(best, row.bestPct || row.pct || 0);
+      if (_quizScores[id] !== best) {
+        _quizScores[id] = best;
+        changed = true;
+      }
+    });
+    if (changed) _renderGrid($search?.value || '');
   }
 
   function _bind() {
@@ -376,9 +399,11 @@ const GuidedProjectsController = (() => {
 
     _projects = GuidedProjectsData.getAll();
     _bind();
-    await _loadScores();
+    // Paint inmediato con scores locales; cloud en segundo plano.
+    _loadScoresSync();
     _renderGrid();
     _showList();
+    void _refreshScoresFromCloud();
 
     // Deep link ?project=id
     try {

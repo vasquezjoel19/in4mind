@@ -203,10 +203,8 @@ const EmployabilityService = (() => {
     return prog?.pct || 0;
   }
 
-  function getChecklist(pathId, opts = {}) {
-    const progress = getPortfolioProgress(pathId, opts);
-    const rec = progress.record;
-    const lessonsDone = progress.learningPct >= 70;
+  function _buildChecklist(rec, learningPct) {
+    const lessonsDone = learningPct >= 70;
     const projectBuilt = lessonsDone; // proxy: learning done implies project work stage
     return [
       {
@@ -235,6 +233,10 @@ const EmployabilityService = (() => {
         done: Boolean(rec.pitch),
       },
     ];
+  }
+
+  function getChecklist(pathId, opts = {}) {
+    return getPortfolioProgress(pathId, opts).checklist;
   }
 
   /**
@@ -306,7 +308,7 @@ const EmployabilityService = (() => {
       isComplete,
       isLearningOnlyComplete,
       record: rec,
-      checklist: getChecklist(id, opts),
+      checklist: _buildChecklist(rec, learningPct),
       nextAction,
       next: !hasProject
         ? 'project'

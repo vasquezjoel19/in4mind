@@ -60,7 +60,7 @@
 }
 
 .main-area.page-exit {
-  animation: pageFadeOut var(--motion-med) var(--motion-ease) forwards;
+  animation: pageFadeOut var(--motion-fast, 140ms) var(--motion-ease) forwards;
   pointer-events: none;
 }
 

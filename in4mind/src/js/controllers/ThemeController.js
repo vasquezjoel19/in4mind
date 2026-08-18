@@ -55,6 +55,16 @@ const ThemeController = (() => {
       : _t('theme.dark', 'Activar modo oscuro');
   }
 
+  function _ensureBootStyle() {
+    if (document.getElementById('in4mind-theme-boot')) return;
+    const style = document.createElement('style');
+    style.id = 'in4mind-theme-boot';
+    // Fondos críticos antes de que cargue tokens.css (evita flash claro→oscuro).
+    style.textContent = 'html,body{background-color:#f0f5fb}'
+      + 'html[data-theme="dark"],html[data-theme="dark"] body{background-color:#121a28;color:#e2e8f0}';
+    (document.head || document.documentElement).appendChild(style);
+  }
+
   function _applyDom(resolved) {
     const isDark = resolved === 'dark';
     const root = document.documentElement;
@@ -119,16 +129,21 @@ const ThemeController = (() => {
 
   function setPreference(pref) {
     const valid = pref === 'dark' || pref === 'light' || pref === 'system' ? pref : 'light';
-    localStorage.setItem(STORAGE_KEY, valid);
     const resolved = _resolveFromPreference(valid);
-    _withTransition(() => {
+    const prevResolved = getTheme();
+    localStorage.setItem(STORAGE_KEY, valid);
+    const run = () => {
       _applyDom(resolved);
       _updateToggleUi(resolved === 'dark');
       _emit(valid, resolved);
-    });
+    };
+    // Sin animación si el tema visual no cambia (p. ej. system → light cuando ya es light).
+    if (prevResolved === resolved) run();
+    else _withTransition(run);
   }
 
   function toggle() {
+    // Alterna el modo resuelto actual (claro ↔ oscuro) de forma explícita.
     setPreference(getTheme() === 'dark' ? 'light' : 'dark');
   }
 
@@ -240,6 +255,11 @@ const ThemeController = (() => {
     window.addEventListener('storage', (e) => {
       if (e.key !== STORAGE_KEY) return;
       const resolved = _resolveTheme();
+      if (getTheme() === resolved) {
+        _updateToggleUi(resolved === 'dark');
+        _emit(getPreference(), resolved);
+        return;
+      }
       _withTransition(() => {
         _applyDom(resolved);
         _updateToggleUi(resolved === 'dark');
@@ -250,6 +270,7 @@ const ThemeController = (() => {
 
   /** Llamar en <head> antes del paint para evitar flash. */
   function initEarly() {
+    _ensureBootStyle();
     const theme = _resolveTheme();
     _applyDom(theme);
   }

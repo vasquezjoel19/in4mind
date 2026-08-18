@@ -410,8 +410,11 @@ const SettingsController = (() => {
       const msg = typeof I18n !== 'undefined' ? I18n.t('profile.logoutConfirm') : '¿Cerrar sesión?';
       if (!confirm(msg)) return;
       close();
-      if (typeof AuthService !== 'undefined') await AuthService.logout();
       if (typeof AppShell !== 'undefined') AppShell.logout();
+      else if (typeof AuthService !== 'undefined') {
+        await AuthService.logout();
+        window.location.replace('login.html');
+      }
     });
     document.getElementById('settings-save-name')?.addEventListener('click', async () => {
       const input = document.getElementById('settings-edit-name');

@@ -26,6 +26,23 @@ const OnboardingService = (() => {
       courseId: 'html',
       lesson: 1,
       icon: 'globe',
+      careerPathId: 'web-junior',
+    },
+    {
+      id: 'data-career',
+      pathId: 'programming',
+      courseId: 'excel',
+      lesson: 1,
+      icon: 'chart',
+      careerPathId: 'data-analyst-jr',
+    },
+    {
+      id: 'office-automation',
+      pathId: 'office',
+      courseId: 'powerapps',
+      lesson: 1,
+      icon: 'briefcase',
+      careerPathId: 'office365-automation',
     },
     {
       id: 'design',
@@ -227,6 +244,9 @@ const OnboardingService = (() => {
     const saved = saveGoal(goalId, email);
     if (!saved) return { ok: false, href: 'dashboard.html' };
     markCompleted(email);
+    if (saved.careerPathId && typeof EmployabilityService !== 'undefined') {
+      EmployabilityService.setActivePath(saved.careerPathId);
+    }
     void _syncCloud({
       onboarding_completed: true,
       learning_goal: JSON.stringify(saved),

@@ -1,0 +1,312 @@
+/* IN4MIND — Ruta Empleable / Portfolio progress */
+
+.employable-section {
+  margin: var(--sp-xl, 1.5rem) 0;
+}
+
+.employable-hero__eyebrow {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--clr-brand-600, #0d9488);
+}
+
+.employable-hero__title {
+  margin: 0.35rem 0 0.4rem;
+  font-size: 1.35rem;
+}
+
+.employable-hero__sub {
+  margin: 0 0 1rem;
+  color: var(--clr-text-muted, #64748b);
+  max-width: 42rem;
+  line-height: 1.5;
+}
+
+.portfolio-progress__bar {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+}
+
+html[data-theme="dark"] .portfolio-progress__bar {
+  background: rgba(148, 163, 184, 0.2);
+}
+
+.portfolio-progress__bar > span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #0d9488, #4ade80);
+  border-radius: inherit;
+  transition: width 0.35s ease;
+}
+
+.portfolio-progress__pct {
+  margin: 0.5rem 0 0.75rem;
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
+.portfolio-progress__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.portfolio-progress__list--row {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+@media (max-width: 720px) {
+  .portfolio-progress__list--row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.portfolio-progress__item {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--clr-border, #e2e8f0);
+  border-radius: 12px;
+  background: var(--clr-bg-elevated, #fff);
+}
+
+.portfolio-progress__item.is-done {
+  border-color: rgba(74, 222, 128, 0.55);
+  background: rgba(74, 222, 128, 0.08);
+}
+
+.portfolio-progress__item p {
+  margin: 0.15rem 0 0;
+  font-size: 0.85rem;
+  color: var(--clr-text-muted, #64748b);
+  word-break: break-word;
+}
+
+.portfolio-progress__check {
+  font-weight: 800;
+  color: #16a34a;
+}
+
+.employable-paths {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1.1rem;
+}
+
+@media (max-width: 960px) {
+  .employable-paths {
+    grid-template-columns: 1fr;
+  }
+}
+
+.employable-path-card {
+  border: 1px solid var(--clr-border, #e2e8f0);
+  border-radius: 16px;
+  padding: 1rem;
+  background: var(--clr-bg-elevated, #fff);
+  border-top: 3px solid var(--emp-accent, #0d9488);
+}
+
+.employable-path-card.is-active {
+  box-shadow: 0 10px 28px rgba(13, 148, 136, 0.12);
+}
+
+.employable-path-card h4 {
+  margin: 0 0 0.35rem;
+}
+
+.employable-path-card p {
+  margin: 0;
+  color: var(--clr-text-muted, #64748b);
+  font-size: 0.9rem;
+  min-height: 2.6em;
+}
+
+.employable-path-card__bar {
+  margin: 0.85rem 0 0.35rem;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+}
+
+.employable-path-card__bar > span {
+  display: block;
+  height: 100%;
+  background: var(--emp-accent, #0d9488);
+}
+
+.employable-path-card__meta {
+  margin: 0 0 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.employable-course-banner {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin: 0 0 1rem;
+  padding: 1rem 1.1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(13, 148, 136, 0.35);
+  background:
+    linear-gradient(105deg, rgba(13, 148, 136, 0.12), rgba(56, 189, 248, 0.08));
+}
+
+.employable-course-banner__eyebrow {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #0f766e;
+}
+
+.employable-course-banner__text {
+  margin: 0.25rem 0 0;
+  font-weight: 650;
+  max-width: 40rem;
+}
+
+.employable-course-banner__path {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  color: var(--clr-text-muted, #64748b);
+}
+
+.employable-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.employable-modal[hidden] {
+  display: none !important;
+}
+
+.employable-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.55);
+}
+
+.employable-modal__panel {
+  position: relative;
+  width: min(680px, 100%);
+  max-height: min(88vh, 900px);
+  overflow: auto;
+  background: var(--clr-bg-elevated, #fff);
+  border-radius: 18px;
+  padding: 1.1rem 1.2rem 1.35rem;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+}
+
+.employable-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.employable-modal__header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.employable-modal__close {
+  border: none;
+  background: transparent;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  color: inherit;
+}
+
+.employable-modal__lead {
+  color: var(--clr-text-muted, #64748b);
+  line-height: 1.45;
+}
+
+.employable-form {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 1rem;
+}
+
+.employable-form input {
+  width: 100%;
+  padding: 0.75rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid var(--clr-border, #e2e8f0);
+  background: var(--clr-bg-app, #fff);
+  color: inherit;
+}
+
+.employable-form__hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--clr-text-muted, #64748b);
+}
+
+.employable-cert {
+  margin-top: 1rem;
+  padding: 0.85rem;
+  border-radius: 12px;
+  background: rgba(13, 148, 136, 0.1);
+}
+
+.employable-cert__code {
+  font-family: ui-monospace, monospace;
+  font-weight: 700;
+}
+
+.employable-pitch {
+  margin-top: 1rem;
+}
+
+.employable-pitch__out {
+  margin-top: 0.85rem;
+  padding: 0.85rem;
+  border-radius: 12px;
+  border: 1px solid var(--clr-border, #e2e8f0);
+}
+
+.employable-pitch__out h3 {
+  margin: 0.85rem 0 0.35rem;
+  font-size: 0.95rem;
+}
+
+.employable-pitch__out h3:first-child {
+  margin-top: 0;
+}
+
+.employable-gate {
+  margin-top: 1rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 10px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  font-size: 0.9rem;
+}
+
+.btn--ghost {
+  background: transparent;
+  border: 1px solid var(--clr-border, #cbd5e1);
+  color: inherit;
+}

@@ -10,19 +10,20 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <script src="src/js/dist/boot.bundle.js?v=20260817clean35"></script>
+  <script src="src/js/dist/boot.bundle.js?v=20260817emp36"></script>
 
   <link rel="stylesheet" href="src/css/tokens.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/base.css?v=20260714fluid3">
   <link rel="stylesheet" href="src/css/dashboard.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/responsive.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/tutorial.css?v=20260813lock">
-  <link rel="stylesheet" href="src/css/theme.css?v=20260817clean35">
+  <link rel="stylesheet" href="src/css/theme.css?v=20260817emp36">
   <link rel="stylesheet" href="src/css/ui-polish.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/accessibility.css?v=20260707">
   <link rel="stylesheet" href="src/css/i18n.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/settings-modal.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/app-features.css?v=20260812polish">
+  <link rel="stylesheet" href="src/css/employable.css?v=20260817emp36">
   <link rel="stylesheet" href="src/css/global-chat.css?v=20260812polish">
   <link rel="manifest" href="manifest.json">
 
@@ -454,6 +455,8 @@
           </div>
         </section>
 
+        <div id="employable-course-banner" class="anim-fade-up" hidden></div>
+
         <!-- Acciones sociales -->
         <div class="tut-actions anim-fade-up delay-1">
           <button type="button" class="tut-action-btn tut-action-btn--fav-toggle" id="btn-fav"
@@ -612,7 +615,7 @@
 
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="src/js/config/supabase.config.js"></script>
-<script defer src="src/js/dist/app-shell.bundle.js?v=20260817clean35"></script>
+<script defer src="src/js/dist/app-shell.bundle.js?v=20260817emp36"></script>
 <script defer src="src/js/data/CourseCurriculum.js?v=20260805"></script>
 <script defer src="src/js/services/QuizRandomizer.js?v=20260812polish"></script>
 <script defer src="src/js/data/LearningPathsData.js?v=20260706c"></script>
@@ -621,13 +624,19 @@
 <script defer src="src/js/services/VideoProgressService.js?v=20260706c"></script>
 <script defer src="src/js/services/CertificateShare.js?v=20260706c"></script>
 <script defer src="src/js/services/AIUserContext.js?v=20260812hi"></script>
+<script defer src="src/js/services/CertVerificationService.js?v=20260817emp36"></script>
+<script defer src="src/js/data/CareerPathsData.js?v=20260817emp36"></script>
+<script defer src="src/js/services/EmployabilityService.js?v=20260817emp36"></script>
+<script defer src="src/js/controllers/EmployabilityController.js?v=20260817emp36"></script>
+<script defer src="src/js/config/groq.config.js"></script>
+<script defer src="src/js/services/GroqService.js?v=20260812polish"></script>
 <script defer src="src/js/services/OfflineCourseService.js?v=20260812hi"></script>
 <script defer src="src/js/services/CursorSpotlight.js?v=20260714fluid4"></script>
 <script defer src="src/js/data/TutorialData.js?v=20260902"></script>
 <script defer src="src/js/data/LessonCheckData.js?v=20260708"></script>
 <script defer src="src/js/data/LessonExamples.js?v=20260709"></script>
 <script defer src="src/js/services/LessonNotesService.js?v=20260812func"></script>
-<script defer src="src/js/controllers/TutorialController.js?v=20260813lock"></script>
+<script defer src="src/js/controllers/TutorialController.js?v=20260817emp36"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   try {

@@ -1,4 +1,4 @@
-/*! IN4MIND bundle 20260817clean35 — 2026-08-17T21:05:18.745822+00:00 */
+/*! IN4MIND bundle 20260817emp36 — 2026-08-18T19:16:01.034323+00:00 */
 
 ;/* --- src/js/components/In4mindBulb.js --- */
 'use strict';
@@ -1960,8 +1960,8 @@ const CloudBlobSync = (() => {
     notes: 'user_notes',
     projects: 'user_projects',
     quizAttempts: 'quiz_attempts',
-    guided: 'guided_progress',
-  };
+  employability: 'employability_progress',
+};
 
   function _sb() {
     return typeof _sbClient !== 'undefined' ? _sbClient : null;
@@ -6286,7 +6286,7 @@ const AppFeatures = (() => {
     if (!('serviceWorker' in navigator)) return;
     const isAppPage = /dashboard|tutorial|quizzes|ai|profile|help/.test(window.location.pathname);
     if (!isAppPage) return;
-    navigator.serviceWorker.register('sw.js?v=20260817clean35').catch(() => {});
+    navigator.serviceWorker.register('sw.js?v=20260817emp36').catch(() => {});
   }
 
   function _injectManifest() {

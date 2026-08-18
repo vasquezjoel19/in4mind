@@ -60,7 +60,8 @@ const DashboardController = (() => {
 
   // ── Refs DOM ──
   let $sidebarNav, $sidebarFooter, $welcomeTitle;
-  let $summaryGrid, $quickActionsGrid, $resumeGrid, $recommendedTrack;
+    let $summaryGrid, $quickActionsGrid, $resumeGrid, $recommendedTrack;
+    let $employableRoot;
   let $learningPathsGrid, $analyticsPanel;
   let $featuredTrack, $learningTrack, $recentTrack, $promoSlot;
   let $searchInput;
@@ -1060,6 +1061,15 @@ const DashboardController = (() => {
     _bindRecentTrack();
   }
 
+  function _renderEmployable(quizProgress = {}, certifications = []) {
+    if (!$employableRoot) return;
+    if (typeof EmployabilityController === 'undefined') {
+      $employableRoot.innerHTML = '';
+      return;
+    }
+    EmployabilityController.renderDashboardSection($employableRoot, { quizProgress, certifications });
+  }
+
   function _renderQuickActions(stats, resumeItems, context = {}) {
     if (!$quickActionsGrid) return;
     const actions = _buildQuickActions(stats, resumeItems, context);
@@ -1154,13 +1164,26 @@ const DashboardController = (() => {
 
     paths.forEach(async (path) => {
       const prog = progressMap[path.id];
-      const pct = prog?.pct ?? await _pathProgress(path.courseIds, quizProgress, certifications);
+      let pct = prog?.pct ?? await _pathProgress(path.courseIds, quizProgress, certifications);
+      // Ruta Empleable: never show 100% learning path completion without final project URL.
+      if (typeof CareerPathsData !== 'undefined' && typeof EmployabilityService !== 'undefined' && pct >= 100) {
+        const career = CareerPathsData.getPaths().find((c) =>
+          (c.courseIds || []).some((id) => (path.courseIds || []).includes(id))
+        );
+        if (career) {
+          const rec = EmployabilityService.getPathRecord(career.id);
+          if (!rec?.projectUrl) pct = 99;
+        }
+      }
       const bar = $learningPathsGrid.querySelector(`[data-path-bar="${path.id}"] span`);
       const meta = $learningPathsGrid.querySelector(`[data-path-meta="${path.id}"]`);
       if (bar) bar.style.width = `${pct}%`;
       if (meta) {
         const next = prog?.next?.label ? ` · ${prog.next.label}` : '';
-        meta.textContent = _t('paths.progressPct', { pct }, `${pct}% completado`) + next;
+        const gateNote = pct === 99 && prog?.pct >= 100
+          ? ` · ${_t('employable.gateShort', null, 'Falta proyecto final')}`
+          : '';
+        meta.textContent = _t('paths.progressPct', { pct }, `${pct}% completado`) + next + gateNote;
       }
     });
     _bindActionCards($learningPathsGrid, '.learning-path-card');
@@ -1298,6 +1321,7 @@ const DashboardController = (() => {
     const recommendations = _buildRecommendedCourses(courses, visits, favorites, saved, insightContext);
 
     _renderSummary(stats);
+    _renderEmployable(quizProgress, certifications);
     _renderQuickActions(stats, resumeItems, insightContext);
     _renderResume(resumeItems);
     _renderRecommendations(recommendations);
@@ -1428,6 +1452,7 @@ const DashboardController = (() => {
     $summaryGrid   = document.getElementById('dashboard-summary-grid');
     $quickActionsGrid = document.getElementById('quick-actions-grid');
     $resumeGrid    = document.getElementById('resume-grid');
+    $employableRoot = document.getElementById('employable-root');
     $recommendedTrack = document.getElementById('recommended-track');
     $learningPathsGrid = document.getElementById('learning-paths-grid');
     $analyticsPanel = document.getElementById('analytics-panel');
@@ -1483,6 +1508,13 @@ const DashboardController = (() => {
     void _renderRecent().then(() => $recentTrack?.removeAttribute('aria-busy'));
     void _refreshDashboardInsights();
     _updateExpandLabels();
+
+    if (typeof EmployabilityService !== 'undefined' && EmployabilityService.hydrateFromCloud) {
+      EmployabilityService.hydrateFromCloud().catch(() => {});
+    }
+    document.addEventListener('in4mind-employable-updated', () => {
+      void _refreshDashboardInsights();
+    });
 
     document.querySelectorAll('[data-expand]').forEach(btn => {
       btn.addEventListener('click', () => _toggleSection(btn.dataset.expand));

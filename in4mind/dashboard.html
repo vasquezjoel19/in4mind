@@ -10,18 +10,19 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <script src="src/js/dist/boot.bundle.js?v=20260817clean35"></script>
+  <script src="src/js/dist/boot.bundle.js?v=20260817emp36"></script>
 
   <!-- Estilos -->
   <link rel="stylesheet" href="src/css/tokens.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/base.css?v=20260714fluid3">
   <link rel="stylesheet" href="src/css/dashboard.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/responsive.css?v=20260812polish">
-  <link rel="stylesheet" href="src/css/theme.css?v=20260817clean35">
+  <link rel="stylesheet" href="src/css/theme.css?v=20260817emp36">
   <link rel="stylesheet" href="src/css/ui-polish.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/i18n.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/accessibility.css?v=20260707">
   <link rel="stylesheet" href="src/css/app-features.css?v=20260812polish">
+  <link rel="stylesheet" href="src/css/employable.css?v=20260817emp36">
   <link rel="stylesheet" href="src/css/global-chat.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/settings-modal.css?v=20260812polish">
   <link rel="manifest" href="manifest.json">
@@ -199,6 +200,16 @@
         </div>
       </section>
 
+      <section class="employable-section anim-fade-up delay-1b" aria-labelledby="employable-title">
+        <div class="section-header section-header--stacked">
+          <div>
+            <h2 class="section-header__title" id="employable-title" data-i18n="employable.sectionTitle">Ruta Empleable</h2>
+            <p class="section-header__sub" data-i18n="employable.sectionSub">Progreso hacia tus 3 entregables de portfolio: proyecto, certificado y pitch.</p>
+          </div>
+        </div>
+        <div id="employable-root"></div>
+      </section>
+
       <section class="quick-actions-section anim-fade-up delay-2" aria-labelledby="quick-actions-title">
         <div class="section-header section-header--stacked">
           <div>
@@ -297,7 +308,7 @@
 <!-- Scripts (orden importante: servicios ? controladores) -->
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="src/js/config/supabase.config.js"></script>
-<script defer src="src/js/dist/app-shell.bundle.js?v=20260817clean35"></script>
+<script defer src="src/js/dist/app-shell.bundle.js?v=20260817emp36"></script>
 <script defer src="src/js/services/QuizRandomizer.js?v=20260812polish"></script>
 <script defer src="src/js/data/HelpData.js?v=20260706c"></script>
 <script defer src="src/js/data/CourseCurriculum.js?v=20260805"></script>
@@ -314,10 +325,15 @@
 <script defer src="src/js/services/CertVerificationService.js?v=20260706"></script>
 <script defer src="src/js/services/CertificateShare.js?v=20260706c"></script>
 <script defer src="src/js/services/AIUserContext.js?v=20260706c"></script>
+<script defer src="src/js/data/CareerPathsData.js?v=20260817emp36"></script>
+<script defer src="src/js/services/EmployabilityService.js?v=20260817emp36"></script>
+<script defer src="src/js/controllers/EmployabilityController.js?v=20260817emp36"></script>
+<script defer src="src/js/config/groq.config.js"></script>
+<script defer src="src/js/services/GroqService.js?v=20260812polish"></script>
 
 <script defer src="src/js/services/OnboardingService.js?v=20260813ob"></script>
 <script defer src="src/js/services/CursorSpotlight.js?v=20260714fluid4"></script>
-<script defer src="src/js/controllers/DashboardController.js?v=20260813ob"></script>
+<script defer src="src/js/controllers/DashboardController.js?v=20260817emp36"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => DashboardController.init());
 </script>

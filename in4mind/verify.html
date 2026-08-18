@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="description" content="Verifica certificaciones IN4MIND">
   <title>IN4MIND — Verificar certificado</title>
-  <script src="src/js/dist/boot.bundle.js?v=20260817clean35"></script>
+  <script src="src/js/dist/boot.bundle.js?v=20260817emp36"></script>
 
   <link rel="stylesheet" href="src/css/tokens.css">
   <link rel="stylesheet" href="src/css/base.css?v=20260714fluid3">
-  <link rel="stylesheet" href="src/css/theme.css?v=20260817clean35">
+  <link rel="stylesheet" href="src/css/theme.css?v=20260817emp36">
   <link rel="stylesheet" href="src/css/bulb-icon.css?v=20260810logo">
   <link rel="stylesheet" href="src/css/accessibility.css?v=20260707">
   <link rel="stylesheet" href="src/css/settings-modal.css?v=20260811mobile">
@@ -72,7 +72,8 @@
     const params = new URLSearchParams(location.search);
     const input = document.getElementById('verify-code');
     const result = document.getElementById('verify-result');
-    if (params.get('code')) input.value = params.get('code');
+    const initial = params.get('id') || params.get('code');
+    if (initial) input.value = initial;
 
     function t(k, fb) { return typeof I18n !== 'undefined' ? I18n.t(k) : fb; }
 
@@ -86,17 +87,25 @@
         return;
       }
       const date = new Date(data.earnedAt).toLocaleDateString();
+      const projectLine = data.projectUrl
+        ? `<p><strong>${t('cert.project', 'Proyecto')}:</strong> <a href="${data.projectUrl}" target="_blank" rel="noopener noreferrer">${data.projectUrl}</a></p>`
+        : '';
+      const pathLine = data.pathId
+        ? `<p><strong>${t('cert.path', 'Ruta')}:</strong> ${data.course}</p>`
+        : '';
       result.innerHTML = `
         <span class="cert-verify-badge">${t('cert.verifyValid', 'Certificado válido')}</span>
         <p><strong>${t('cert.holder', 'Titular')}:</strong> ${data.userName}</p>
         <p><strong>${t('cert.course', 'Curso')}:</strong> ${data.course}</p>
+        ${pathLine}
+        ${projectLine}
         <p><strong>${t('cert.issued', { date }, 'Emitido')}</strong></p>
-        <p><strong>${t('cert.code', { code: data.code }, 'Código')}:</strong></p>`;
+        <p><strong>${t('cert.code', { code: data.code }, 'Código')}:</strong> ${data.code}</p>`;
     }
 
     document.getElementById('verify-btn').addEventListener('click', run);
     input.addEventListener('keydown', e => { if (e.key === 'Enter') run(); });
-    if (params.get('code')) run();
+    if (initial) run();
   })();
   </script>
 <script defer src="src/js/services/CursorSpotlight.js?v=20260714fluid4"></script>

@@ -764,6 +764,24 @@ const TutorialController = (() => {
     const quizPct = req?.quizPct ?? 0;
     const examUnlocked = req?.examUnlocked ?? false;
 
+    const careerPath = typeof CareerPathsData !== 'undefined'
+      ? CareerPathsData.getPathForCourse(_currentCourse.id)
+      : null;
+    let displayPct = progressPct;
+    let gateHtml = '';
+    if (careerPath && typeof EmployabilityService !== 'undefined') {
+      const quizMap = typeof QuizProgressService !== 'undefined' ? (QuizProgressService.getAll?.() || {}) : {};
+      const emp = EmployabilityService.getPortfolioProgress(careerPath.id, {
+        quizProgress: quizMap,
+        certifications: [],
+      });
+      displayPct = Math.min(progressPct, emp.record.projectUrl ? 100 : 99);
+      if (progressPct >= 100 && !emp.record.projectUrl) {
+        displayPct = 99;
+        gateHtml = `<p class="employable-gate">${_t('employable.gateMsg', null, 'Aprendizaje casi listo: la ruta no se marca al 100% hasta enviar el proyecto final.')}</p>`;
+      }
+    }
+
     let badgeClass = 'tut-cert-panel__badge';
     let badgeText = _t('tutorial.badgeProgress', null, 'En progreso');
     if (hasCert) {
@@ -817,17 +835,19 @@ const TutorialController = (() => {
       <div class="tut-cert-panel__bar-wrap">
         <div class="tut-cert-panel__bar-label">
           <span>${_t('tutorial.certProgress', null, 'Progreso del curso')}</span>
-          <span>${progressPct}%</span>
+          <span>${displayPct}%</span>
         </div>
-        <div class="tut-cert-panel__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progressPct}">
-          <div class="tut-cert-panel__bar-fill" style="width:${progressPct}%"></div>
+        <div class="tut-cert-panel__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${displayPct}">
+          <div class="tut-cert-panel__bar-fill" style="width:${displayPct}%"></div>
         </div>
       </div>
+      ${gateHtml}
       <div class="tut-cert-panel__actions">
         <button type="button" class="btn--primary tut-btn-learn" id="tut-cert-exam-btn">
           ${hasCert ? _t('tutorial.btnViewCert', null, 'Ver certificado en perfil') : examUnlocked ? _t('tutorial.btnGoExam', null, 'Ir al examen de certificación') : _t('tutorial.btnExamBlocked', null, 'Examen bloqueado')}
         </button>
         <button type="button" class="btn--course" id="tut-cert-quiz-btn">${_t('tutorial.btnPracticeQuiz', { min: quizMin }, `Quiz de práctica (≥${quizMin}%)`)}</button>
+        ${careerPath ? `<button type="button" class="btn--course" id="tut-employable-btn">${_t('employable.openPanel', null, 'Ver entregables')}</button>` : ''}
       </div>`;
 
     document.getElementById('tut-cert-exam-btn')?.addEventListener('click', () => {
@@ -838,6 +858,12 @@ const TutorialController = (() => {
       void _goToCertExam();
     });
     document.getElementById('tut-cert-quiz-btn')?.addEventListener('click', _goToCourseQuiz);
+    document.getElementById('tut-employable-btn')?.addEventListener('click', () => {
+      if (typeof EmployabilityController !== 'undefined' && careerPath) {
+        EmployabilityService?.setActivePath?.(careerPath.id);
+        EmployabilityController.openModal(careerPath.id);
+      }
+    });
   }
 
   function _showList() {
@@ -934,6 +960,13 @@ const TutorialController = (() => {
     document.getElementById('btn-more').textContent = _t('tutorial.readMore', null, 'Leer Más');
     const startBtn = document.getElementById('tut-detail-start');
     if (startBtn) startBtn.textContent = _t('tutorial.startLearning', null, 'Empieza a Aprender');
+
+    if (typeof EmployabilityController !== 'undefined') {
+      EmployabilityController.renderCourseBanner(
+        document.getElementById('employable-course-banner'),
+        course.id
+      );
+    }
 
     const groups = _groupLessons(_currentLessons);
     const timeline = meta?.levelsCovered || data.timeline || _levels();

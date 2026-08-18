@@ -32,6 +32,8 @@ const CertVerificationService = (() => {
       userName: userName || 'Usuario',
       earnedAt: cert.earnedAt || Date.now(),
       pct: cert.pct,
+      projectUrl: cert.projectUrl || '',
+      pathId: cert.pathId || '',
     };
     _writeRegistry(reg);
 
@@ -43,6 +45,8 @@ const CertVerificationService = (() => {
         user_name: userName,
         earned_at: new Date(cert.earnedAt || Date.now()).toISOString(),
         pct: cert.pct,
+        project_url: cert.projectUrl || null,
+        path_id: cert.pathId || null,
       }, { onConflict: 'code' }).catch(() => {});
     }
 
@@ -71,6 +75,8 @@ const CertVerificationService = (() => {
             userName: data.user_name,
             earnedAt: new Date(data.earned_at).getTime(),
             pct: data.pct,
+            projectUrl: data.project_url || '',
+            pathId: data.path_id || '',
             source: 'cloud',
           };
         }
@@ -82,7 +88,8 @@ const CertVerificationService = (() => {
 
   function verifyUrl(code) {
     const base = window.location.pathname.replace(/[^/]+$/, '');
-    return `${window.location.origin}${base}verify.html?code=${encodeURIComponent(code)}`;
+    // Prefer ?id= for public Ruta Empleable links; ?code= remains supported.
+    return `${window.location.origin}${base}verify.html?id=${encodeURIComponent(code)}`;
   }
 
   return { register, verify, verifyUrl, generateCode };

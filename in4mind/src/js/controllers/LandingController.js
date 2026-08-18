@@ -147,7 +147,7 @@ const LandingController = (() => {
 
   function _registerServiceWorker() {
     if (!('serviceWorker' in navigator)) return;
-    navigator.serviceWorker.register('sw.js?v=20260817clean35').catch(() => {});
+    navigator.serviceWorker.register('sw.js?v=20260817emp36').catch(() => {});
   }
 
   function init() {

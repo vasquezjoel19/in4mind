@@ -19,10 +19,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <script src="src/js/dist/boot.bundle.js?v=20260818emp41"></script>
+  <script src="src/js/dist/boot.bundle.js?v=20260818emp42"></script>
 
   <link rel="stylesheet" href="src/css/tokens.css?v=20260812polish">
-  <link rel="stylesheet" href="src/css/landing.css?v=20260817emp36">
+  <link rel="stylesheet" href="src/css/landing.css?v=20260818emp42">
   <link rel="stylesheet" href="src/css/ui-polish.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/ambient.css?v=20260714fluid3">
   <link rel="stylesheet" href="src/css/theme.css?v=20260817emp36">
@@ -753,7 +753,7 @@
   </svg>
 </button>
 
-<script defer src="src/js/dist/landing.bundle.js?v=20260818emp41"></script>
+<script defer src="src/js/dist/landing.bundle.js?v=20260818emp42"></script>
 <script defer src="src/js/other-menu-boot.js?v=20260714theme"></script>
 <script defer src="src/js/services/CookieConsent.js?v=20260706"></script>
 <script defer src="src/js/services/CursorSpotlight.js?v=20260714fluid4"></script>
@@ -855,9 +855,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
   /* Scroll suave con offset del header sticky */
   const HEADER_OFFSET = 84;
+  function _revealSection(el) {
+    if (!el) return;
+    el.classList.add('is-visible');
+    el.querySelectorAll('.lp-reveal').forEach((child) => child.classList.add('is-visible'));
+  }
   function _scrollToId(id, push) {
     const el = document.querySelector(id);
     if (!el) return;
+    _revealSection(el);
     const top = el.getBoundingClientRect().top + window.scrollY - HEADER_OFFSET;
     window.scrollTo({ top, behavior: reduceMotion ? 'auto' : 'smooth' });
     if (push) history.pushState(null, '', id);

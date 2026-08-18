@@ -116,6 +116,26 @@ const UserProfileService = (() => {
     }
   }
 
+  /**
+   * Snapshot síncrono para pintar el dashboard sin esperar a Supabase.
+   * No escribe en el caché de quizzes/visitas para no bloquear el merge con la nube.
+   */
+  function getInsightSnapshotSync() {
+    hydrateCacheFromLocal();
+    const quizProgress = _cache.quizProgress || _localQuizProgress();
+    const visits = (_cache.visits || _localVisits()).slice(0, 24);
+    const certifications = _cache.certifications != null
+      ? _cache.certifications
+      : _mergeEmployableIntoList([]);
+    return {
+      visits,
+      quizProgress,
+      favorites: _cache.favorites || [],
+      saved: _cache.saved || [],
+      certifications,
+    };
+  }
+
   /** Estadísticas síncronas si el caché ya está poblado. */
   function getStatsSync() {
     hydrateCacheFromLocal();
@@ -1321,6 +1341,7 @@ const UserProfileService = (() => {
     // Estadísticas
     getStats,
     getStatsSync,
+    getInsightSnapshotSync,
     hydrateCacheFromLocal,
     prefetchProfileData,
 

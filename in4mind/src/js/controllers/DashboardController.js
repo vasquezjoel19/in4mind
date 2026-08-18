@@ -1324,21 +1324,8 @@ const DashboardController = (() => {
     });
   }
 
-  async function _refreshDashboardInsights() {
-    if (!$summaryGrid) return;
-
-    UserProfileService.hydrateCacheFromLocal();
-    _renderSummary(UserProfileService.getStatsSync());
-
+  function _paintInsights(visits, quizProgress, favorites, saved, certifications) {
     const courses = DataService.getCourses();
-    const [visits, quizProgress, favorites, saved, certifications] = await Promise.all([
-      UserProfileService.getRecentVisits(24),
-      UserProfileService.getQuizProgress(),
-      UserProfileService.getFavorites(),
-      UserProfileService.getSaved(),
-      UserProfileService.getCertifications(),
-    ]);
-
     const stats = {
       saved: saved.length,
       favorites: favorites.length,
@@ -1348,19 +1335,58 @@ const DashboardController = (() => {
     const affinity = _buildUserAffinity(visits, favorites, saved, quizProgress);
     const topCourse = _getTopUsedCourse(affinity, courses);
     const insightContext = { visits, quizProgress, affinity, topCourse };
-    const resumeItems = await _buildResumeItems(courses, visits, quizProgress);
+    const resumeItemsPromise = _buildResumeItems(courses, visits, quizProgress);
     const recommendations = _buildRecommendedCourses(courses, visits, favorites, saved, insightContext);
 
     _renderSummary(stats);
     _renderEmployable(quizProgress, certifications);
-    _renderQuickActions(stats, resumeItems, insightContext);
-    _renderResume(resumeItems);
-    _renderRecommendations(recommendations);
     _renderLearningPaths(quizProgress, certifications);
     _renderAnalytics();
-    _renderPromo(_selectPromo(stats, resumeItems, recommendations, quizProgress, certifications));
-    if (typeof EmployabilityService !== 'undefined') {
-      EmployabilityService.maybeNudgeProjectSubmission({ quizProgress, certifications });
+    _renderRecommendations(recommendations);
+
+    return resumeItemsPromise.then((resumeItems) => {
+      _renderQuickActions(stats, resumeItems, insightContext);
+      _renderResume(resumeItems);
+      _renderPromo(_selectPromo(stats, resumeItems, recommendations, quizProgress, certifications));
+      if (typeof EmployabilityService !== 'undefined') {
+        EmployabilityService.maybeNudgeProjectSubmission({ quizProgress, certifications });
+      }
+    });
+  }
+
+  async function _refreshDashboardInsights() {
+    if (!$summaryGrid) return;
+
+    // Paint inmediato con datos locales (evita skeletons eternos).
+    const local = typeof UserProfileService.getInsightSnapshotSync === 'function'
+      ? UserProfileService.getInsightSnapshotSync()
+      : {
+          visits: [],
+          quizProgress: {},
+          favorites: [],
+          saved: [],
+          certifications: [],
+        };
+    _renderSummary(UserProfileService.getStatsSync());
+    void _paintInsights(
+      local.visits,
+      local.quizProgress,
+      local.favorites,
+      local.saved,
+      local.certifications
+    );
+
+    try {
+      const [visits, quizProgress, favorites, saved, certifications] = await Promise.all([
+        UserProfileService.getRecentVisits(24),
+        UserProfileService.getQuizProgress(),
+        UserProfileService.getFavorites(),
+        UserProfileService.getSaved(),
+        UserProfileService.getCertifications(),
+      ]);
+      await _paintInsights(visits, quizProgress, favorites, saved, certifications);
+    } catch (err) {
+      console.error('Dashboard insights:', err);
     }
   }
 

@@ -7,6 +7,7 @@
 .dashboard {
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
   background: transparent;
 }
 
@@ -15,12 +16,18 @@
 ══════════════════════════════════════════ */
 .sidebar {
   width: var(--sidebar-w);
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
+  min-height: 0;
   background: color-mix(in srgb, var(--clr-bg-sidebar) 92%, var(--clr-brand-navy) 8%);
   border-right: 1px solid rgba(var(--clr-brand-navy-rgb), 0.12);
   display: flex;
   flex-direction: column;
-  padding: var(--sp-xl) var(--sp-md);
+  padding:
+    max(var(--sp-xl), env(safe-area-inset-top, 0px))
+    var(--sp-md)
+    max(var(--sp-xl), env(safe-area-inset-bottom, 0px));
   position: fixed;
   top: 0;
   left: 0;
@@ -31,7 +38,7 @@
     padding var(--dur-med) var(--ease),
     transform var(--dur-med) var(--ease);
   animation: slideInLeft var(--dur-slow) var(--ease) both;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 .sidebar__brand {
@@ -91,9 +98,15 @@ html.sidebar-collapsed .sidebar__collapse-btn {
 /* ── Nav items ── */
 .sidebar__nav {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 2px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
 }
 
 .nav-item {
@@ -174,6 +187,7 @@ a.nav-item {
 }
 
 .sidebar__footer {
+  flex-shrink: 0;
   padding-top: var(--sp-md);
   border-top: 1px solid var(--clr-border);
   display: flex;
@@ -190,6 +204,7 @@ a.nav-item {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  min-height: 100dvh;
   transition: margin-left var(--dur-med) var(--ease);
   min-width: 0;
 }

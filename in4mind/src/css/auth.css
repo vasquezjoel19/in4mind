@@ -347,10 +347,21 @@ html[data-theme="dark"] .auth-card {
   padding: 4px;
   display: flex;
   align-items: center;
+  z-index: 2;
   transition: color var(--dur-fast);
 }
 
 .form-group__pwd-toggle:hover { color: var(--clr-link); }
+
+/* Oculta el ojo nativo de Edge/Chrome (evita el “segundo ojo”). */
+.form-input[type="password"]::-ms-reveal,
+.form-input[type="password"]::-ms-clear {
+  display: none;
+}
+
+.form-group .form-input[type="password"] {
+  padding-right: 44px;
+}
 
 /* Fila: recordar datos + contraseña olvidada */
 .auth-row {

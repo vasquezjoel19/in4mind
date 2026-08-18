@@ -92,6 +92,34 @@ const EmployabilityController = (() => {
       </ol>`;
   }
 
+  function _reqChecklistHtml(path) {
+    const items = path?.submissionChecklist || [];
+    if (!items.length) return '';
+    const readme = path.readmeTemplate
+      ? `<details class="employable-readme"><summary>${_esc(_t('employable.readmeToggle', null, 'Ver plantilla README'))}</summary><pre class="employable-readme__pre">${_esc(path.readmeTemplate)}</pre><button type="button" class="prof-btn" id="employable-copy-readme">${_esc(_t('employable.copyReadme', null, 'Copiar README'))}</button></details>`
+      : '';
+    return `
+      <div class="employable-req" aria-label="${_esc(_t('employable.reqTitle', null, 'Checklist del proyecto'))}">
+        <h3 class="employable-req__title">${_esc(_t('employable.reqTitle', null, 'Checklist del proyecto'))}</h3>
+        <ul class="employable-req__list">
+          ${items.map((item) => `<li>○ ${_esc(item.label)}</li>`).join('')}
+        </ul>
+        ${readme}
+      </div>`;
+  }
+
+  async function _portfolioShareUrl() {
+    const base = `${window.location.origin}${window.location.pathname.replace(/[^/]+$/, '')}`;
+    let userId = null;
+    try {
+      if (typeof UserProfileService !== 'undefined' && UserProfileService.getCurrentUserId) {
+        userId = await UserProfileService.getCurrentUserId();
+      }
+    } catch { /* ignore */ }
+    if (userId) return `${base}profile.html?u=${encodeURIComponent(userId)}`;
+    return `${base}portfolio-public.html`;
+  }
+
   function openModal(pathId, opts = {}) {
     if (typeof EmployabilityService === 'undefined') return;
     const modal = ensureModal();
@@ -102,6 +130,7 @@ const EmployabilityController = (() => {
 
     const d = progress.deliverables;
     const review = progress.record.projectReview;
+    const hasProject = Boolean(progress.record.projectUrl);
     body.innerHTML = `
       <p class="employable-modal__lead">${_esc(path?.tagline || _t('employable.banner', null, 'No solo aprendes: sales con proyecto real, certificado verificable y perfil listo para aplicar.'))}</p>
       ${_checklistHtml(progress.checklist)}
@@ -122,6 +151,8 @@ const EmployabilityController = (() => {
         </ul>
       </div>
 
+      ${_reqChecklistHtml(path)}
+
       <form class="employable-form" id="employable-project-form">
         <label for="employable-project-url">${_esc(_t('employable.projectLabel', null, 'URL del proyecto final'))}</label>
         <input type="url" id="employable-project-url" required
@@ -138,6 +169,12 @@ const EmployabilityController = (() => {
         <a class="employable-cert__link" id="employable-cert-link" href="${progress.record.certCode && typeof CertVerificationService !== 'undefined' ? _esc(CertVerificationService.verifyUrl(progress.record.certCode)) : '#'}" target="_blank" rel="noopener">
           ${_esc(_t('employable.openVerify', null, 'Abrir verificación pública'))}
         </a>
+      </div>
+
+      <div class="employable-share" ${hasProject ? '' : 'hidden'}>
+        <button type="button" class="btn--course" id="employable-copy-portfolio">
+          ${_esc(_t('employable.copyPortfolio', null, 'Copiar enlace de mi Portafolio'))}
+        </button>
       </div>
 
       <div class="employable-review" id="employable-review-box">
@@ -165,6 +202,21 @@ const EmployabilityController = (() => {
     `;
 
     modal.hidden = false;
+
+    document.getElementById('employable-copy-readme')?.addEventListener('click', async () => {
+      const ok = await _copyText(path?.readmeTemplate || '');
+      if (typeof AppShell !== 'undefined') {
+        AppShell.showToast(ok ? _t('employable.copied', null, 'Copiado') : _t('employable.copyFail', null, 'No se pudo copiar'), 2000);
+      }
+    });
+
+    document.getElementById('employable-copy-portfolio')?.addEventListener('click', async () => {
+      const url = await _portfolioShareUrl();
+      const ok = await _copyText(url);
+      if (typeof AppShell !== 'undefined') {
+        AppShell.showToast(ok ? _t('employable.portfolioCopied', null, 'Enlace de portafolio copiado') : _t('employable.copyFail', null, 'No se pudo copiar'), 2400);
+      }
+    });
 
     const urlInput = document.getElementById('employable-project-url');
     const warnEl = document.getElementById('employable-url-warn');
@@ -198,7 +250,6 @@ const EmployabilityController = (() => {
       } else if (typeof AppShell !== 'undefined') {
         AppShell.showToast(_t('employable.projectSaved', null, 'Proyecto guardado y certificado emitido'), 2800);
       }
-      // Soft AI review after submit (non-blocking)
       void EmployabilityService.reviewSubmittedProject(progress.pathId).then(() => {
         openModal(progress.pathId, opts);
       });

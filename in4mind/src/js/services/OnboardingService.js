@@ -5,7 +5,35 @@
 'use strict';
 
 const OnboardingService = (() => {
+  // Career tracks first (Ruta Empleable), then optional other goals.
   const GOALS = [
+    {
+      id: 'web',
+      pathId: 'web-dev',
+      courseId: 'html',
+      lesson: 1,
+      icon: 'globe',
+      careerPathId: 'web-junior',
+      featured: true,
+    },
+    {
+      id: 'data-career',
+      pathId: 'programming',
+      courseId: 'excel',
+      lesson: 1,
+      icon: 'chart',
+      careerPathId: 'data-analyst-jr',
+      featured: true,
+    },
+    {
+      id: 'office-automation',
+      pathId: 'office',
+      courseId: 'powerapps',
+      lesson: 1,
+      icon: 'briefcase',
+      careerPathId: 'office365-automation',
+      featured: true,
+    },
     {
       id: 'python-basics',
       pathId: 'programming',
@@ -19,30 +47,6 @@ const OnboardingService = (() => {
       courseId: 'flowchart',
       lesson: 1,
       icon: 'git',
-    },
-    {
-      id: 'web',
-      pathId: 'web-dev',
-      courseId: 'html',
-      lesson: 1,
-      icon: 'globe',
-      careerPathId: 'web-junior',
-    },
-    {
-      id: 'data-career',
-      pathId: 'programming',
-      courseId: 'excel',
-      lesson: 1,
-      icon: 'chart',
-      careerPathId: 'data-analyst-jr',
-    },
-    {
-      id: 'office-automation',
-      pathId: 'office',
-      courseId: 'powerapps',
-      lesson: 1,
-      icon: 'briefcase',
-      careerPathId: 'office365-automation',
     },
     {
       id: 'design',

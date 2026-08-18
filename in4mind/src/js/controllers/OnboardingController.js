@@ -45,15 +45,26 @@ const OnboardingController = (() => {
   function _renderGoals() {
     if (!$goals || typeof OnboardingService === 'undefined') return;
     const goals = OnboardingService.getGoals();
-    $goals.innerHTML = goals.map((g) => `
-      <button type="button" class="ob-goal" data-goal="${g.id}" aria-pressed="false">
+    const featured = goals.filter((g) => g.featured || g.careerPathId);
+    const other = goals.filter((g) => !(g.featured || g.careerPathId));
+
+    const card = (g, featuredClass = '') => `
+      <button type="button" class="ob-goal ${featuredClass}" data-goal="${g.id}" aria-pressed="false">
         <span class="ob-goal__icon">${_icon(g.icon)}</span>
         <span class="ob-goal__text">
           <span class="ob-goal__title">${g.title}</span>
           <span class="ob-goal__desc">${g.desc}</span>
         </span>
-      </button>
-    `).join('');
+      </button>`;
+
+    $goals.innerHTML = `
+      <p class="ob-goals__label">${_t('signupOnboard.tracksLabel', null, 'Elige tu Ruta Empleable')}</p>
+      <div class="ob-goals__grid ob-goals__grid--featured" role="list">
+        ${featured.map((g) => card(g, 'ob-goal--featured')).join('')}
+      </div>
+      ${other.length ? `
+        <p class="ob-goals__label ob-goals__label--muted">${_t('signupOnboard.otherLabel', null, 'Otras opciones')}</p>
+        <div class="ob-goals__grid" role="list">${other.map((g) => card(g)).join('')}</div>` : ''}`;
 
     $goals.querySelectorAll('.ob-goal').forEach((btn) => {
       btn.addEventListener('click', () => {

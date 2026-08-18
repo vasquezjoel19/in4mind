@@ -647,19 +647,29 @@ Tono profesional, concreto, junior-friendly.`;
     const sb = _sb();
     if (!sb || !userId) return null;
     try {
-      const [{ data: profile }, { data: rows }, { data: certs }] = await Promise.all([
-        sb.from('profiles').select('id, name, email, public_bio, public_slug, avatar_url').eq('id', userId).maybeSingle(),
-        sb.from('employability_progress').select('*').eq('user_id', userId),
-        sb.from('certifications').select('*').eq('user_id', userId).eq('type', 'employable'),
+      // Prefer recruiter-safe view (no email). Fall back to local-only if denied.
+      const [{ data: profile }, { data: rows }] = await Promise.all([
+        sb.from('public_portfolio_profiles').select('id, name, public_bio, public_slug, avatar_url').eq('id', userId).maybeSingle(),
+        sb.from('employability_progress')
+          .select('path_id, project_url, cv_pitch, linkedin_summary, completed_steps, updated_at')
+          .eq('user_id', userId)
+          .not('project_url', 'is', null),
       ]);
       return {
         profile: profile || null,
-        paths: rows || [],
-        certifications: certs || [],
+        paths: (rows || []).filter((r) => r.project_url),
+        certifications: [],
       };
     } catch {
       return null;
     }
+  }
+
+  async function getPortfolioShareUrl() {
+    const base = `${window.location.origin}${window.location.pathname.replace(/[^/]+$/, '')}`;
+    const userId = await _userId();
+    if (userId) return `${base}profile.html?u=${encodeURIComponent(userId)}`;
+    return `${base}portfolio-public.html`;
   }
 
   return {
@@ -678,6 +688,7 @@ Tono profesional, concreto, junior-friendly.`;
     maybeNudgeProjectSubmission,
     hydrateFromCloud,
     getPublicPortfolio,
+    getPortfolioShareUrl,
     isValidUrl: _isValidUrl,
     getUrlTrustHint,
   };

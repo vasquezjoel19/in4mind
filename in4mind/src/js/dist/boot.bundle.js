@@ -1,4 +1,4 @@
-/*! IN4MIND bundle 20260818emp38 — 2026-08-18T19:54:51.272490+00:00 */
+/*! IN4MIND bundle 20260818emp39 — 2026-08-18T20:06:40.728024+00:00 */
 
 ;/* --- src/js/controllers/ThemeController.js --- */
 /**
@@ -706,6 +706,31 @@ const LOCALE_ES = {
       pitch: 'Genera tu CV / pitch de {path}',
       done: 'Ver portfolio de {path}',
     },
+    copyPortfolio: 'Copiar enlace de mi Portafolio',
+    portfolioCopied: 'Enlace de portafolio copiado',
+    reqTitle: 'Checklist del proyecto',
+    readmeToggle: 'Ver plantilla README',
+    copyReadme: 'Copiar README',
+    req: {
+      web: {
+        live: 'URL en vivo pública (Pages / Vercel / Netlify)',
+        repo: 'Repo GitHub con código y README',
+        responsive: 'Diseño responsive en móvil',
+        semantic: 'HTML semántico y estilos organizados',
+      },
+      data: {
+        charts: 'Al menos 3 gráficos interactivos',
+        filter: '1 filtro global funcional',
+        public: 'Enlace de vista pública (sin login)',
+        story: 'Narrativa clara: pregunta → insight → acción',
+      },
+      office: {
+        functional: 'App / flujo funcional de punta a punta',
+        access: 'Instrucciones de acceso (permiso de lectura)',
+        usecase: 'Caso de uso de negocio documentado',
+        share: 'Link compartible Power Apps / SharePoint / Flow',
+      },
+    },
     cvTitle: 'Bullets de CV',
     liHeadline: 'LinkedIn — titular',
     liSummary: 'LinkedIn — resumen',
@@ -822,14 +847,17 @@ const LOCALE_ES = {
     aiBody: 'Pregunta sobre cursos, quizzes o la plataforma. La IA conoce tu contexto de aprendizaje.',
   },
   signupOnboard: {
-    title: '¿Cuál es tu objetivo?',
-    sub: 'Elige por dónde quieres empezar. Te asignaremos el primer curso y la Lección 1.',
+    title: 'Empieza tu Ruta Empleable',
+    sub: 'Elige Web Junior, Analista de datos Jr u Office 365 & Automatización. Te llevamos al primer curso.',
     step: 'Paso {n} de {total}',
     skip: 'Saltar por ahora',
     assignTitle: 'Tu primer curso: {course}',
     assignBody: 'Te llevamos a la Lección 1 para empezar ahora.',
     starting: 'Abriendo lección…',
     startLesson: 'Ir a la Lección 1',
+    tracksLabel: 'Elige tu Ruta Empleable',
+    otherLabel: 'Otras opciones',
+    cta: 'Empieza tu Ruta Empleable',
     goals: {
       'python-basics': {
         title: 'Python básico',
@@ -1539,7 +1567,7 @@ const LOCALE_ES = {
     navCommunity: 'Comunidad',
     navGuides: 'Guías',
     navContact: 'Contacto',
-    start: 'Empezar',
+    start: 'Empieza tu Ruta Empleable',
     heroTag: 'Mantente al día con tecnología accesible',
     heroTitle: 'Crea un proyecto real, obtén tu certificado verificable y sal con tu perfil listo para trabajar.',
     heroSub: 'Ruta Empleable IN4MIND: no solo aprendes — sales con evidencia para aplicar.',
@@ -1992,6 +2020,31 @@ const LOCALE_EN = {
     reviewFallback: 'Good progress: make sure the link is public, documented, and shows the path stack.',
     nudgeMsg: 'Almost done! You only need to upload your project to get your certificate.',
     publicProfile: 'View / share public portfolio profile',
+    copyPortfolio: 'Copy my Portfolio link',
+    portfolioCopied: 'Portfolio link copied',
+    reqTitle: 'Project requirements checklist',
+    readmeToggle: 'View README template',
+    copyReadme: 'Copy README',
+    req: {
+      web: {
+        live: 'Public live URL (Pages / Vercel / Netlify)',
+        repo: 'GitHub repo with code and README',
+        responsive: 'Mobile-responsive layout',
+        semantic: 'Semantic HTML and organized styles',
+      },
+      data: {
+        charts: 'At least 3 interactive charts',
+        filter: '1 working global filter',
+        public: 'Public view link (no login)',
+        story: 'Clear narrative: question → insight → action',
+      },
+      office: {
+        functional: 'End-to-end functional app / flow',
+        access: 'Access instructions (read permission)',
+        usecase: 'Documented business use case',
+        share: 'Shareable Power Apps / SharePoint / Flow link',
+      },
+    },
     next: {
       lessons: 'Continue {path} lessons',
       project: 'Submit your {path} project',
@@ -2114,14 +2167,17 @@ const LOCALE_EN = {
     aiBody: 'Ask about courses, quizzes, or the platform. AI knows your learning context.',
   },
   signupOnboard: {
-    title: 'What is your main goal?',
-    sub: 'Pick where you want to start. We will assign your first course and Lesson 1.',
+    title: 'Start your Job-Ready Path',
+    sub: 'Choose Web Junior, Jr Data Analyst, or Office 365 & Automation. We take you to Lesson 1.',
     step: 'Step {n} of {total}',
     skip: 'Skip for now',
     assignTitle: 'Your first course: {course}',
     assignBody: 'Taking you to Lesson 1 so you can start now.',
     starting: 'Opening lesson…',
     startLesson: 'Go to Lesson 1',
+    tracksLabel: 'Choose your Job-Ready Path',
+    otherLabel: 'Other options',
+    cta: 'Start your Job-Ready Path',
     goals: {
       'python-basics': {
         title: 'Basic Python',
@@ -2801,7 +2857,7 @@ const LOCALE_EN = {
     navCommunity: 'Community',
     navGuides: 'Guides',
     navContact: 'Contact',
-    start: 'Start',
+    start: 'Start your Job-Ready Path',
     heroTag: 'Stay up to date with accessible technology',
     heroTitle: 'Build a real project, get a verifiable certificate, and leave job-ready.',
     heroSub: 'IN4MIND Job-Ready Path: you don’t just learn — you leave with proof to apply.',
@@ -3254,6 +3310,31 @@ const LOCALE_ZH = {
     reviewFallback: '进展不错：请确保链接公开、有文档，并展示该路径的技术栈。',
     nudgeMsg: '快完成了！只需上传项目即可获得证书。',
     publicProfile: '查看/分享公开作品集主页',
+    copyPortfolio: '复制我的作品集链接',
+    portfolioCopied: '作品集链接已复制',
+    reqTitle: '项目交付清单',
+    readmeToggle: '查看 README 模板',
+    copyReadme: '复制 README',
+    req: {
+      web: {
+        live: '公开线上 URL（Pages / Vercel / Netlify）',
+        repo: '带代码与 README 的 GitHub 仓库',
+        responsive: '移动端自适应',
+        semantic: '语义化 HTML 与清晰样式',
+      },
+      data: {
+        charts: '至少 3 个交互图表',
+        filter: '1 个可用的全局筛选器',
+        public: '公开查看链接（无需登录）',
+        story: '清晰叙事：问题 → 洞察 → 行动',
+      },
+      office: {
+        functional: '端到端可用的应用/流程',
+        access: '访问说明（只读权限）',
+        usecase: '已记录的业务用例',
+        share: '可分享的 Power Apps / SharePoint / Flow 链接',
+      },
+    },
     next: {
       lessons: '继续 {path} 课时',
       project: '提交你的 {path} 项目',
@@ -3377,14 +3458,17 @@ const LOCALE_ZH = {
     aiBody: '可询问课程、测验或平台问题，AI 了解你的学习上下文。',
   },
   signupOnboard: {
-    title: '你的主要目标是什么？',
-    sub: '选择从哪里开始。我们将为你分配第一门课和第 1 课。',
+    title: '开始你的就业就绪路径',
+    sub: '选择 Web 初级、初级数据分析师或 Office 365 与自动化。我们将带你进入第 1 课。',
     step: '第 {n} 步，共 {total} 步',
     skip: '暂时跳过',
     assignTitle: '你的第一门课：{course}',
     assignBody: '正在带你进入第 1 课，马上开始学习。',
     starting: '正在打开课程…',
     startLesson: '前往第 1 课',
+    tracksLabel: '选择你的就业就绪路径',
+    otherLabel: '其他选项',
+    cta: '开始你的就业就绪路径',
     goals: {
       'python-basics': {
         title: 'Python 入门',
@@ -4080,7 +4164,7 @@ const LOCALE_ZH = {
     navCommunity: '社区',
     navGuides: '指南',
     navContact: '联系',
-    start: '开始使用',
+    start: '开始你的就业就绪路径',
     heroTag: '随时掌握易懂的技术',
     heroTitle: '做出真实项目，获得可验证证书，带着可投递的个人简介毕业。',
     heroSub: 'IN4MIND 就业就绪路径：你不只是学习——还会带走求职证据。',

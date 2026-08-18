@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="src/js/dist/boot.bundle.js?v=20260818emp42"></script>
+  <script src="src/js/dist/boot.bundle.js?v=20260818emp45"></script>
   <link rel="stylesheet" href="src/css/tokens.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/base.css?v=20260714fluid3">
   <link rel="stylesheet" href="src/css/theme.css?v=20260818emp38">
@@ -30,17 +30,17 @@
     <p id="pub-bio" class="employable-hero__sub"></p>
     <div id="pub-paths"></div>
     <div class="pub-actions">
-      <button type="button" class="btn--course" id="pub-copy-link">Copiar enlace</button>
-      <a class="btn--course btn--ghost" href="dashboard.html">Volver al dashboard</a>
+      <button type="button" class="btn--course" id="pub-copy-link" data-i18n="employable.copyLink">Copiar enlace</button>
+      <a class="btn--course btn--ghost" href="dashboard.html" data-i18n="employable.backDashboard">Volver al dashboard</a>
     </div>
   </main>
 
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="src/js/config/supabase.config.js"></script>
-  <script defer src="src/js/dist/app-shell.bundle.js?v=20260818emp42"></script>
-  <script defer src="src/js/services/CertVerificationService.js?v=20260818emp42"></script>
-  <script defer src="src/js/data/CareerPathsData.js?v=20260818emp42"></script>
-  <script defer src="src/js/services/EmployabilityService.js?v=20260818emp42"></script>
+  <script defer src="src/js/dist/app-shell.bundle.js?v=20260818emp45"></script>
+  <script defer src="src/js/services/CertVerificationService.js?v=20260818emp45"></script>
+  <script defer src="src/js/data/CareerPathsData.js?v=20260818emp45"></script>
+  <script defer src="src/js/services/EmployabilityService.js?v=20260818emp45"></script>
   <script>
   document.addEventListener('DOMContentLoaded', async () => {
     const params = new URLSearchParams(location.search);
@@ -48,21 +48,46 @@
     const $name = document.getElementById('pub-name');
     const $bio = document.getElementById('pub-bio');
     const $paths = document.getElementById('pub-paths');
+    let _mode = u ? 'remote' : 'local';
+    let _remoteId = u;
+
+    function t(key, fb) {
+      if (typeof I18n !== 'undefined') {
+        const out = I18n.t(key);
+        if (out && out !== key) return out;
+      }
+      return fb;
+    }
 
     function esc(s) {
       return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
+    function emptyHtml() {
+      return `<div class="pub-card"><p>${esc(t('employable.publicEmpty', 'Aún no hay entregables públicos. Completa una Ruta Empleable en el dashboard.'))}</p></div>`;
+    }
+
+    function cardHtml({ title, projectUrl, verify, pitch }) {
+      const projectLabel = t('employable.publicProject', 'Proyecto');
+      const certLabel = t('employable.certReady', 'Certificado verificable');
+      return `<article class="pub-card">
+        <h2>${esc(title)}</h2>
+        ${projectUrl ? `<p><strong>${esc(projectLabel)}:</strong> <a href="${esc(projectUrl)}" target="_blank" rel="noopener">${esc(projectUrl)}</a></p>` : ''}
+        ${verify ? `<p><a href="${esc(verify)}" target="_blank" rel="noopener">${esc(certLabel)}</a></p>` : ''}
+        ${pitch ? `<p class="pub-meta">${esc(pitch)}</p>` : ''}
+      </article>`;
+    }
+
     function renderLocal() {
+      _mode = 'local';
       const user = typeof UserProfileService !== 'undefined' ? UserProfileService.getCurrentUser() : null;
       const display = user?.name || user?.email?.split('@')[0] || 'Usuario IN4MIND';
       $name.textContent = display;
-      $bio.textContent = (typeof I18n !== 'undefined' ? I18n.t('employable.coreHook') : '')
-        || 'Proyecto real, certificado verificable y perfil listo para trabajar.';
+      $bio.textContent = t('employable.coreHook', 'Proyecto real, certificado verificable y perfil listo para trabajar.');
       const state = EmployabilityService.getState();
       const cards = Object.values(state.paths || {}).filter(r => r.projectUrl || r.certCode || r.pitch);
       if (!cards.length) {
-        $paths.innerHTML = '<div class="pub-card"><p>Aún no hay entregables públicos. Completa una Ruta Empleable en el dashboard.</p></div>';
+        $paths.innerHTML = emptyHtml();
         return;
       }
       $paths.innerHTML = cards.map(rec => {
@@ -70,16 +95,18 @@
         const verify = rec.certCode && typeof CertVerificationService !== 'undefined'
           ? CertVerificationService.verifyUrl(rec.certCode) : '';
         const pitch = rec.pitch?.linkedinSummary || rec.pitch?.linkedinHeadline || '';
-        return `<article class="pub-card">
-          <h2>${esc(path?.title || rec.pathId)}</h2>
-          ${rec.projectUrl ? `<p><strong>Proyecto:</strong> <a href="${esc(rec.projectUrl)}" target="_blank" rel="noopener">${esc(rec.projectUrl)}</a></p>` : ''}
-          ${verify ? `<p><a href="${esc(verify)}" target="_blank" rel="noopener">Certificado verificable</a></p>` : ''}
-          ${pitch ? `<p class="pub-meta">${esc(pitch)}</p>` : ''}
-        </article>`;
+        return cardHtml({
+          title: path?.title || rec.pathId,
+          projectUrl: rec.projectUrl,
+          verify,
+          pitch,
+        });
       }).join('');
     }
 
     async function renderRemote(userId) {
+      _mode = 'remote';
+      _remoteId = userId;
       const data = await EmployabilityService.getPublicPortfolio(userId);
       if (!data || (!data.profile && !(data.paths || []).length)) {
         renderLocal();
@@ -88,11 +115,10 @@
       const profile = data.profile || {};
       $name.textContent = profile.name || profile.email?.split('@')[0] || 'Portfolio IN4MIND';
       $bio.textContent = profile.public_bio
-        || ((typeof I18n !== 'undefined' ? I18n.t('employable.coreHook') : null)
-          || 'Proyecto real, certificado verificable y perfil listo para trabajar.');
+        || t('employable.coreHook', 'Proyecto real, certificado verificable y perfil listo para trabajar.');
       const rows = data.paths || [];
       if (!rows.length) {
-        $paths.innerHTML = '<div class="pub-card"><p>Sin entregables públicos todavía.</p></div>';
+        $paths.innerHTML = emptyHtml();
         return;
       }
       $paths.innerHTML = rows.map(row => {
@@ -101,19 +127,27 @@
         const verify = steps.certCode && typeof CertVerificationService !== 'undefined'
           ? CertVerificationService.verifyUrl(steps.certCode) : '';
         const pitch = row.linkedin_summary || steps.pitch?.linkedinSummary || '';
-        return `<article class="pub-card">
-          <h2>${esc(path?.title || row.path_id)}</h2>
-          ${row.project_url ? `<p><strong>Proyecto:</strong> <a href="${esc(row.project_url)}" target="_blank" rel="noopener">${esc(row.project_url)}</a></p>` : ''}
-          ${verify ? `<p><a href="${esc(verify)}" target="_blank" rel="noopener">Certificado verificable</a></p>` : ''}
-          ${pitch ? `<p class="pub-meta">${esc(pitch)}</p>` : ''}
-        </article>`;
+        return cardHtml({
+          title: path?.title || row.path_id,
+          projectUrl: row.project_url,
+          verify,
+          pitch,
+        });
       }).join('');
+    }
+
+    async function paint() {
+      if (typeof I18n !== 'undefined' && I18n.apply) I18n.apply(document);
+      if (_mode === 'remote' && _remoteId) await renderRemote(_remoteId);
+      else renderLocal();
     }
 
     if (u) await renderRemote(u);
     else renderLocal();
+    if (typeof I18n !== 'undefined' && I18n.apply) I18n.apply(document);
 
-    // Prefer own public URL with user id when available
+    window.addEventListener('in4mind-relocalize', () => { void paint(); });
+
     document.getElementById('pub-copy-link')?.addEventListener('click', async () => {
       let link = location.href;
       try {
@@ -127,9 +161,13 @@
           }
         }
         await navigator.clipboard.writeText(link);
-        if (typeof AppShell !== 'undefined') AppShell.showToast('Enlace copiado', 2000);
+        if (typeof AppShell !== 'undefined') {
+          AppShell.showToast(t('employable.copied', 'Enlace copiado'), 2000);
+        }
       } catch {
-        if (typeof AppShell !== 'undefined') AppShell.showToast('No se pudo copiar', 2000);
+        if (typeof AppShell !== 'undefined') {
+          AppShell.showToast(t('employable.copyFail', 'No se pudo copiar'), 2000);
+        }
       }
     });
   });

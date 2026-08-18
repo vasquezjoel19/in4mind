@@ -1,4 +1,4 @@
-/*! IN4MIND bundle 20260818emp42 — 2026-08-18T21:04:40.038738+00:00 */
+/*! IN4MIND bundle 20260818emp45 — 2026-08-18T21:30:10.309726+00:00 */
 
 ;/* --- src/js/controllers/ThemeController.js --- */
 /**
@@ -732,6 +732,10 @@ const LOCALE_ES = {
     reviewFallback: 'Buen avance: asegúrate de que el enlace sea público, documentado y demuestre el stack de la ruta.',
     nudgeMsg: '¡Casi terminas! Solo te falta subir tu proyecto para obtener tu certificado.',
     publicProfile: 'Ver / compartir perfil público de portfolio',
+    publicEmpty: 'Aún no hay entregables públicos. Completa una Ruta Empleable en el dashboard.',
+    publicProject: 'Proyecto',
+    backDashboard: 'Volver al dashboard',
+    copyLink: 'Copiar enlace',
     next: {
       lessons: 'Continúa las lecciones de {path}',
       project: 'Envía tu proyecto {path}',
@@ -1601,6 +1605,7 @@ const LOCALE_ES = {
     navGuides: 'Guías',
     navContact: 'Contacto',
     start: 'Empieza tu Ruta Empleable',
+    startNav: 'Empezar',
     heroTag: 'Mantente al día con tecnología accesible',
     heroTitle: 'Crea un proyecto real, obtén tu certificado verificable y sal con tu perfil listo para trabajar.',
     heroSub: 'Ruta Empleable IN4MIND: no solo aprendes — sales con evidencia para aplicar.',
@@ -2053,6 +2058,10 @@ const LOCALE_EN = {
     reviewFallback: 'Good progress: make sure the link is public, documented, and shows the path stack.',
     nudgeMsg: 'Almost done! You only need to upload your project to get your certificate.',
     publicProfile: 'View / share public portfolio profile',
+    publicEmpty: 'No public deliverables yet. Complete a Job-Ready Path on the dashboard.',
+    publicProject: 'Project',
+    backDashboard: 'Back to dashboard',
+    copyLink: 'Copy link',
     copyPortfolio: 'Copy my Portfolio link',
     portfolioCopied: 'Portfolio link copied',
     reqTitle: 'Project requirements checklist',
@@ -2891,6 +2900,7 @@ const LOCALE_EN = {
     navGuides: 'Guides',
     navContact: 'Contact',
     start: 'Start your Job-Ready Path',
+    startNav: 'Get started',
     heroTag: 'Stay up to date with accessible technology',
     heroTitle: 'Build a real project, get a verifiable certificate, and leave job-ready.',
     heroSub: 'IN4MIND Job-Ready Path: you don’t just learn — you leave with proof to apply.',
@@ -3343,6 +3353,10 @@ const LOCALE_ZH = {
     reviewFallback: '进展不错：请确保链接公开、有文档，并展示该路径的技术栈。',
     nudgeMsg: '快完成了！只需上传项目即可获得证书。',
     publicProfile: '查看/分享公开作品集主页',
+    publicEmpty: '尚无公开交付物。请先在仪表盘完成一条就业就绪路径。',
+    publicProject: '项目',
+    backDashboard: '返回仪表盘',
+    copyLink: '复制链接',
     copyPortfolio: '复制我的作品集链接',
     portfolioCopied: '作品集链接已复制',
     reqTitle: '项目交付清单',
@@ -4198,6 +4212,7 @@ const LOCALE_ZH = {
     navGuides: '指南',
     navContact: '联系',
     start: '开始你的就业就绪路径',
+    startNav: '开始',
     heroTag: '随时掌握易懂的技术',
     heroTitle: '做出真实项目，获得可验证证书，带着可投递的个人简介毕业。',
     heroSub: 'IN4MIND 就业就绪路径：你不只是学习——还会带走求职证据。',

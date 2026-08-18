@@ -322,6 +322,10 @@ const LOCALE_ES = {
     reviewFallback: 'Buen avance: asegúrate de que el enlace sea público, documentado y demuestre el stack de la ruta.',
     nudgeMsg: '¡Casi terminas! Solo te falta subir tu proyecto para obtener tu certificado.',
     publicProfile: 'Ver / compartir perfil público de portfolio',
+    publicEmpty: 'Aún no hay entregables públicos. Completa una Ruta Empleable en el dashboard.',
+    publicProject: 'Proyecto',
+    backDashboard: 'Volver al dashboard',
+    copyLink: 'Copiar enlace',
     next: {
       lessons: 'Continúa las lecciones de {path}',
       project: 'Envía tu proyecto {path}',
@@ -1191,6 +1195,7 @@ const LOCALE_ES = {
     navGuides: 'Guías',
     navContact: 'Contacto',
     start: 'Empieza tu Ruta Empleable',
+    startNav: 'Empezar',
     heroTag: 'Mantente al día con tecnología accesible',
     heroTitle: 'Crea un proyecto real, obtén tu certificado verificable y sal con tu perfil listo para trabajar.',
     heroSub: 'Ruta Empleable IN4MIND: no solo aprendes — sales con evidencia para aplicar.',

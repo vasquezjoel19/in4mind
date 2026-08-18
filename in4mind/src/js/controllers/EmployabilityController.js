@@ -4,6 +4,10 @@
 'use strict';
 
 const EmployabilityController = (() => {
+  let _lastDash = null;
+  let _lastBanner = null;
+  let _lastModal = null;
+  let _localeBound = false;
 
   function _t(key, params, fallback) {
     if (typeof I18n !== 'undefined') {
@@ -50,9 +54,21 @@ const EmployabilityController = (() => {
     URL.revokeObjectURL(url);
   }
 
+  function _updateModalChrome(el) {
+    const modal = el || document.getElementById('employable-modal');
+    if (!modal) return;
+    const title = modal.querySelector('#employable-modal-title');
+    if (title) title.textContent = _t('employable.modalTitle', null, 'Ruta Empleable');
+    const closeBtn = modal.querySelector('.employable-modal__close');
+    if (closeBtn) closeBtn.setAttribute('aria-label', _t('common.close', null, 'Cerrar'));
+  }
+
   function ensureModal() {
     let el = document.getElementById('employable-modal');
-    if (el) return el;
+    if (el) {
+      _updateModalChrome(el);
+      return el;
+    }
     el = document.createElement('div');
     el.id = 'employable-modal';
     el.className = 'employable-modal';
@@ -79,6 +95,31 @@ const EmployabilityController = (() => {
   function closeModal() {
     const el = document.getElementById('employable-modal');
     if (el) el.hidden = true;
+  }
+
+  /** Re-render dynamic Ruta Empleable UI after ES/EN/中 switch. */
+  function relocalize() {
+    _updateModalChrome();
+    const dashRoot = (_lastDash?.container?.isConnected && _lastDash.container)
+      || document.getElementById('employable-root');
+    if (dashRoot) {
+      renderDashboardSection(dashRoot, _lastDash?.opts || {});
+    }
+    const bannerEl = (_lastBanner?.container?.isConnected && _lastBanner.container)
+      || document.getElementById('employable-course-banner');
+    if (bannerEl && _lastBanner?.courseId) {
+      renderCourseBanner(bannerEl, _lastBanner.courseId);
+    }
+    const modal = document.getElementById('employable-modal');
+    if (modal && !modal.hidden && _lastModal?.pathId) {
+      openModal(_lastModal.pathId, _lastModal.opts || {});
+    }
+  }
+
+  function _bindLocale() {
+    if (_localeBound) return;
+    _localeBound = true;
+    window.addEventListener('in4mind-relocalize', relocalize);
   }
 
   function _checklistHtml(checklist) {
@@ -122,10 +163,13 @@ const EmployabilityController = (() => {
 
   function openModal(pathId, opts = {}) {
     if (typeof EmployabilityService === 'undefined') return;
+    _bindLocale();
     const modal = ensureModal();
+    _updateModalChrome(modal);
     const body = document.getElementById('employable-modal-body');
     const progress = EmployabilityService.getPortfolioProgress(pathId, opts);
     const path = progress.path;
+    _lastModal = { pathId: progress.pathId, opts };
     EmployabilityService.setActivePath(progress.pathId);
 
     const d = progress.deliverables;
@@ -338,6 +382,8 @@ const EmployabilityController = (() => {
 
   function renderDashboardSection(container, opts = {}) {
     if (!container || typeof CareerPathsData === 'undefined' || typeof EmployabilityService === 'undefined') return;
+    _bindLocale();
+    _lastDash = { container, opts };
     const paths = CareerPathsData.getPaths();
     const activeId = EmployabilityService.getActivePathId() || paths[0]?.id;
     const progress = EmployabilityService.getPortfolioProgress(activeId, opts);
@@ -397,6 +443,8 @@ const EmployabilityController = (() => {
 
   function renderCourseBanner(container, courseId) {
     if (!container) return;
+    _bindLocale();
+    _lastBanner = { container, courseId };
     const path = typeof CareerPathsData !== 'undefined'
       ? CareerPathsData.getPathForCourse(courseId)
       : null;
@@ -422,7 +470,9 @@ const EmployabilityController = (() => {
     });
   }
 
-  return { renderDashboardSection, renderCourseBanner, openModal, closeModal, ensureModal };
+  _bindLocale();
+
+  return { renderDashboardSection, renderCourseBanner, openModal, closeModal, ensureModal, relocalize };
 })();
 
 if (typeof module !== 'undefined') module.exports = EmployabilityController;

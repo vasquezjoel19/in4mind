@@ -168,6 +168,48 @@ const OnboardingController = (() => {
     _showStep(1);
 
     if (typeof I18n !== 'undefined' && I18n.apply) I18n.apply(document);
+
+    window.addEventListener('in4mind-relocalize', () => {
+      if (typeof I18n !== 'undefined' && I18n.apply) I18n.apply(document);
+      const kept = _selected;
+      if ($step1 && !$step1.hidden) {
+        _renderGoals();
+        if (kept) {
+          _selected = kept;
+          $goals?.querySelectorAll('.ob-goal').forEach((b) => {
+            const on = b.getAttribute('data-goal') === kept;
+            b.classList.toggle('ob-goal--selected', on);
+            b.setAttribute('aria-pressed', on ? 'true' : 'false');
+          });
+        }
+        _showStep(1);
+      } else if ($step2 && !$step2.hidden && kept && !_finishing) {
+        const goal = typeof OnboardingService !== 'undefined'
+          ? OnboardingService.getGoalById(kept)
+          : null;
+        const courseKey = goal ? `courses.${goal.courseId}.title` : '';
+        let courseName = goal?.title || '';
+        if (goal && typeof I18n !== 'undefined') {
+          const localized = I18n.t(courseKey);
+          if (localized && localized !== courseKey) courseName = localized;
+        }
+        if ($assignTitle) {
+          $assignTitle.textContent = _t(
+            'signupOnboard.assignTitle',
+            { course: courseName },
+            `Tu primer curso: ${courseName}`
+          );
+        }
+        if ($assignBody) {
+          $assignBody.textContent = _t(
+            'signupOnboard.assignBody',
+            null,
+            'Te llevamos a la Lección 1 para empezar ahora.'
+          );
+        }
+        _showStep(2);
+      }
+    });
   }
 
   return { init };

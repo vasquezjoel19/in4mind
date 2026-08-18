@@ -96,12 +96,17 @@ button {
   box-shadow: 0 10px 28px rgba(27, 39, 60, 0.1);
 }
 
+.lp-header .lp-container {
+  width: min(100% - 32px, 1280px);
+}
+
 .lp-header__inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: clamp(12px, 1.5vw, 20px);
   height: 72px;
+  min-width: 0;
 }
 
 .lp-logo {
@@ -120,7 +125,10 @@ button {
 .lp-nav {
   display: flex;
   align-items: center;
-  gap: clamp(14px, 2vw, 26px);
+  justify-content: center;
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: clamp(10px, 1.4vw, 22px);
 }
 
 .lp-nav a {
@@ -164,8 +172,18 @@ button {
 .lp-header__actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: flex-end;
+  gap: 8px;
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.lp-header__actions .lp-btn--nav-cta {
+  white-space: nowrap;
   flex-shrink: 0;
+  min-height: 42px;
+  padding: 10px 18px;
+  font-size: 0.9rem;
 }
 
 .lp-icon-btn {
@@ -1983,7 +2001,8 @@ a.lp-guide-card {
   .lp-footer__grid  { grid-template-columns: 1fr 1fr; }
 }
 
-@media (max-width: 768px) {
+/* Collapse desktop nav before the CTA / actions overflow */
+@media (max-width: 1100px) {
   .lp-nav { display: none; }
   .lp-nav.is-open {
     display: flex;
@@ -2009,6 +2028,9 @@ a.lp-guide-card {
   }
   .lp-menu-toggle { display: flex; }
   .lp-header__actions .lp-btn--primary { display: none; }
+}
+
+@media (max-width: 768px) {
 
   .lp-hero__inner {
     grid-template-columns: 1fr;

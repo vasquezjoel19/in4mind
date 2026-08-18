@@ -1,13 +1,21 @@
 /**
  * IN4MIND — Ruta Empleable: progreso de portfolio (proyecto + cert + pitch).
- * Persistencia local-first; sync opcional vía CloudBlobSync si existe tabla.
+ * Local-first + sync a Supabase employability_progress (por path_id).
  */
 'use strict';
 
 const EmployabilityService = (() => {
 
   const STORAGE_KEY = 'in4mind_employability_v1';
-  const BLOB_KIND = 'employability';
+  const NUDGE_KEY = 'in4mind_employable_nudge_v1';
+  const TRUSTED_HOST_HINTS = [
+    'github.com', 'github.io', 'gitlab.com', 'bitbucket.org',
+    'vercel.app', 'netlify.app', 'pages.dev',
+    'powerbi.com', 'app.powerbi.com',
+    'sharepoint.com', 'apps.powerapps.com', 'make.powerautomate.com',
+    'lookerstudio.google.com', 'datastudio.google.com',
+    'replit.app', 'glitch.me', 'codesandbox.io', 'stackblitz.io',
+  ];
 
   function _t(key, params, fallback) {
     if (typeof I18n !== 'undefined') {
@@ -15,6 +23,24 @@ const EmployabilityService = (() => {
       if (out && out !== key) return out;
     }
     return fallback ?? '';
+  }
+
+  function _sb() {
+    return typeof _sbClient !== 'undefined' ? _sbClient : null;
+  }
+
+  async function _userId() {
+    if (typeof UserProfileService !== 'undefined' && UserProfileService.getCurrentUserId) {
+      return UserProfileService.getCurrentUserId();
+    }
+    const sb = _sb();
+    if (!sb) return null;
+    try {
+      const { data } = await sb.auth.getUser();
+      return data?.user?.id || null;
+    } catch {
+      return null;
+    }
   }
 
   function _emptyState() {
@@ -34,6 +60,7 @@ const EmployabilityService = (() => {
       certIssuedAt: 0,
       pitch: null,
       pitchGeneratedAt: 0,
+      projectReview: null,
       updatedAt: 0,
     };
   }
@@ -49,12 +76,56 @@ const EmployabilityService = (() => {
     }
   }
 
+  function _rowPayload(pathId, rec) {
+    const pitch = rec.pitch || {};
+    const cvPitch = Array.isArray(pitch.cvBullets)
+      ? pitch.cvBullets.map((b) => `• ${b}`).join('\n')
+      : '';
+    return {
+      path_id: pathId,
+      project_url: rec.projectUrl || null,
+      cv_pitch: cvPitch || null,
+      linkedin_summary: pitch.linkedinSummary || pitch.linkedinHeadline || null,
+      completed_steps: {
+        hasProject: Boolean(rec.projectUrl && rec.projectSubmittedAt),
+        hasCert: Boolean(rec.certCode),
+        hasPitch: Boolean(rec.pitch),
+        certCode: rec.certCode || '',
+        pitch,
+        projectReview: rec.projectReview || null,
+        projectSubmittedAt: rec.projectSubmittedAt || 0,
+        certIssuedAt: rec.certIssuedAt || 0,
+        pitchGeneratedAt: rec.pitchGeneratedAt || 0,
+      },
+      updated_at: new Date(rec.updatedAt || Date.now()).toISOString(),
+    };
+  }
+
+  async function _syncPathToCloud(pathId, rec) {
+    const sb = _sb();
+    const userId = await _userId();
+    if (!sb || !userId || !pathId) return;
+    try {
+      const payload = {
+        user_id: userId,
+        ..._rowPayload(pathId, rec),
+      };
+      await sb.from('employability_progress').upsert(payload, { onConflict: 'user_id,path_id' });
+    } catch {
+      /* local-first: ignore cloud errors */
+    }
+  }
+
   function _write(state) {
     state.updatedAt = Date.now();
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    if (typeof CloudBlobSync !== 'undefined' && CloudBlobSync.TABLES?.[BLOB_KIND]) {
-      CloudBlobSync.pushBlob(BLOB_KIND, state).catch(() => {});
+    const active = state.activePathId;
+    if (active && state.paths[active]) {
+      void _syncPathToCloud(active, state.paths[active]);
     }
+    Object.keys(state.paths || {}).forEach((pid) => {
+      if (pid !== active) void _syncPathToCloud(pid, state.paths[pid]);
+    });
     return state;
   }
 
@@ -97,6 +168,34 @@ const EmployabilityService = (() => {
     }
   }
 
+  /** Soft hint: known public hosting domains. Never blocks submit. */
+  function getUrlTrustHint(url) {
+    if (!_isValidUrl(url)) {
+      return {
+        ok: false,
+        trusted: false,
+        warning: _t('employable.invalidUrl', null, 'URL inválida. Usa http:// o https://'),
+      };
+    }
+    try {
+      const host = new URL(String(url).trim()).hostname.toLowerCase();
+      const trusted = TRUSTED_HOST_HINTS.some((h) => host === h || host.endsWith(`.${h}`));
+      return {
+        ok: true,
+        trusted,
+        warning: trusted
+          ? ''
+          : _t('employable.urlSoftWarn', null, 'Asegúrate de que sea un enlace público válido.'),
+      };
+    } catch {
+      return {
+        ok: false,
+        trusted: false,
+        warning: _t('employable.invalidUrl', null, 'URL inválida. Usa http:// o https://'),
+      };
+    }
+  }
+
   function _learningPct(path, quizProgress = {}, certifications = []) {
     if (!path || typeof LearningPathService === 'undefined') return 0;
     const fake = { courseIds: path.courseIds || [] };
@@ -104,11 +203,42 @@ const EmployabilityService = (() => {
     return prog?.pct || 0;
   }
 
+  function getChecklist(pathId, opts = {}) {
+    const progress = getPortfolioProgress(pathId, opts);
+    const rec = progress.record;
+    const lessonsDone = progress.learningPct >= 70;
+    const projectBuilt = lessonsDone; // proxy: learning done implies project work stage
+    return [
+      {
+        id: 'lessons',
+        label: _t('employable.checklist.lessons', null, 'Completar lecciones'),
+        done: lessonsDone,
+      },
+      {
+        id: 'build',
+        label: _t('employable.checklist.build', null, 'Crear proyecto'),
+        done: projectBuilt || Boolean(rec.projectUrl),
+      },
+      {
+        id: 'link',
+        label: _t('employable.checklist.link', null, 'Pegar enlace'),
+        done: Boolean(rec.projectUrl && rec.projectSubmittedAt),
+      },
+      {
+        id: 'cert',
+        label: _t('employable.checklist.cert', null, 'Descargar certificado'),
+        done: Boolean(rec.certCode),
+      },
+      {
+        id: 'cv',
+        label: _t('employable.checklist.cv', null, 'Generar CV'),
+        done: Boolean(rec.pitch),
+      },
+    ];
+  }
+
   /**
    * Portfolio progress toward 3 job-ready deliverables.
-   * Path learning never counts as 100% completion without project submission.
-   * @param {string} [pathId]
-   * @param {{ quizProgress?: object, certifications?: array }} [opts]
    */
   function getPortfolioProgress(pathId, opts = {}) {
     const id = pathId || getActivePathId();
@@ -150,8 +280,7 @@ const EmployabilityService = (() => {
     ];
 
     const doneCount = deliverables.filter((d) => d.done).length;
-    // Cap learning contribution; require deliverables for full completion.
-    const learningShare = Math.round(Math.min(learningPct, 70) * 0.5); // max 35
+    const learningShare = Math.round(Math.min(learningPct, 70) * 0.5);
     const deliverableShare = Math.round((doneCount / 3) * 65);
     let portfolioPct = Math.min(100, learningShare + deliverableShare);
     if (doneCount < 3) portfolioPct = Math.min(portfolioPct, 99);
@@ -159,6 +288,13 @@ const EmployabilityService = (() => {
 
     const isComplete = doneCount === 3;
     const isLearningOnlyComplete = learningPct >= 95 && !hasProject;
+
+    let nextAction = 'lessons';
+    if (!hasProject && learningPct >= 70) nextAction = 'project';
+    else if (hasProject && !hasCert) nextAction = 'certificate';
+    else if (hasCert && !hasPitch) nextAction = 'pitch';
+    else if (isComplete) nextAction = 'done';
+    else if (learningPct < 70) nextAction = 'lessons';
 
     return {
       pathId: id,
@@ -170,6 +306,8 @@ const EmployabilityService = (() => {
       isComplete,
       isLearningOnlyComplete,
       record: rec,
+      checklist: getChecklist(id, opts),
+      nextAction,
       next: !hasProject
         ? 'project'
         : !hasCert
@@ -177,6 +315,51 @@ const EmployabilityService = (() => {
           : !hasPitch
             ? 'pitch'
             : 'done',
+    };
+  }
+
+  function getNextCareerStep(opts = {}) {
+    const paths = typeof CareerPathsData !== 'undefined' ? CareerPathsData.getPaths() : [];
+    const activeId = getActivePathId() || paths[0]?.id;
+    if (!activeId) return null;
+    const progress = getPortfolioProgress(activeId, opts);
+    const title = progress.path?.title || activeId;
+    const map = {
+      lessons: {
+        cta: _t('employable.next.lessons', { path: title }, `Continúa las lecciones de ${title}`),
+        route: progress.path?.courseIds?.[0]
+          ? `tutorial.html?course=${encodeURIComponent(progress.path.courseIds[0])}`
+          : 'dashboard.html#employable-root',
+      },
+      project: {
+        cta: _t('employable.next.project', { path: title }, `Envía tu proyecto ${title}`),
+        route: 'dashboard.html#employable-root',
+        openModal: true,
+      },
+      certificate: {
+        cta: _t('employable.next.cert', { path: title }, `Abre tu certificado ${title}`),
+        route: progress.record.certCode && typeof CertVerificationService !== 'undefined'
+          ? CertVerificationService.verifyUrl(progress.record.certCode)
+          : 'dashboard.html#employable-root',
+        openModal: !progress.record.certCode,
+      },
+      pitch: {
+        cta: _t('employable.next.pitch', { path: title }, `Genera tu CV / pitch de ${title}`),
+        route: 'dashboard.html#employable-root',
+        openModal: true,
+      },
+      done: {
+        cta: _t('employable.next.done', { path: title }, `Ver portfolio de ${title}`),
+        route: 'portfolio-public.html',
+      },
+    };
+    const step = map[progress.nextAction] || map.project;
+    return {
+      pathId: activeId,
+      pathTitle: title,
+      nextAction: progress.nextAction,
+      portfolioPct: progress.portfolioPct,
+      ...step,
     };
   }
 
@@ -188,19 +371,16 @@ const EmployabilityService = (() => {
     const id = pathId || getActivePathId();
     if (!id) return { ok: false, error: 'no_path' };
 
+    const hint = getUrlTrustHint(trimmed);
     const state = _read();
     const rec = _pathRec(state, id);
     rec.projectUrl = trimmed;
     rec.projectSubmittedAt = Date.now();
     rec.updatedAt = Date.now();
-    // Reset dependent deliverables if project changes
-    if (rec.certCode) {
-      /* keep previous cert but allow re-issue */
-    }
     _write(state);
 
     const cert = issueCertificate(id);
-    return { ok: true, record: getPathRecord(id), cert };
+    return { ok: true, record: getPathRecord(id), cert, urlHint: hint };
   }
 
   function issueCertificate(pathId) {
@@ -243,6 +423,20 @@ const EmployabilityService = (() => {
     rec.updatedAt = Date.now();
     _write(state);
 
+    if (typeof UserProfileService !== 'undefined' && UserProfileService.tryAwardEmployableCertification) {
+      void UserProfileService.tryAwardEmployableCertification(id, {
+        refId: `employable:${id}`,
+        title: path?.title || id,
+        desc: rec.projectUrl
+          ? `Proyecto: ${rec.projectUrl}`
+          : 'Ruta Empleable — certificado verificable',
+        pct: 100,
+        projectUrl: rec.projectUrl,
+        verifyCode: code,
+        earnedAt: rec.certIssuedAt,
+      });
+    }
+
     return {
       ok: true,
       code,
@@ -271,6 +465,26 @@ const EmployabilityService = (() => {
         { q: '¿Por qué IN4MIND?', a: 'Porque me obliga a terminar con evidencia: proyecto, certificado y pitch listos para aplicar.' },
       ],
     };
+  }
+
+  function formatPitchPlain(pitch, pathTitle) {
+    const p = pitch || {};
+    const lines = [
+      `IN4MIND — Ruta Empleable${pathTitle ? `: ${pathTitle}` : ''}`,
+      '',
+      '## CV bullets',
+      ...(p.cvBullets || []).map((b) => `- ${b}`),
+      '',
+      '## LinkedIn headline',
+      p.linkedinHeadline || '',
+      '',
+      '## LinkedIn summary',
+      p.linkedinSummary || '',
+      '',
+      '## Interview Q&A',
+      ...(p.interviewQA || []).flatMap((qa, i) => [`${i + 1}. ${qa.q}`, `   ${qa.a}`, '']),
+    ];
+    return lines.join('\n').trim() + '\n';
   }
 
   async function generatePitch(pathId) {
@@ -329,21 +543,123 @@ Tono profesional, concreto, junior-friendly.`;
     return { ok: true, pitch };
   }
 
-  async function hydrateFromCloud() {
-    if (typeof CloudBlobSync === 'undefined' || !CloudBlobSync.TABLES?.[BLOB_KIND]) return false;
-    try {
-      const remote = await CloudBlobSync.pullBlob(BLOB_KIND);
-      const blob = remote?.blob;
-      if (!blob || typeof blob !== 'object') return false;
-      const local = _read();
-      if ((blob.updatedAt || 0) >= (local.updatedAt || 0)) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(blob));
-        return true;
-      }
-    } catch {
-      /* ignore */
+  async function reviewSubmittedProject(pathId) {
+    const id = pathId || getActivePathId();
+    const path = typeof CareerPathsData !== 'undefined' ? CareerPathsData.getPathById(id) : null;
+    const rec = getPathRecord(id);
+    if (!rec.projectUrl) {
+      return { ok: false, error: _t('employable.needProjectFirst', null, 'Envía el proyecto antes de la revisión') };
     }
-    return false;
+
+    let review = {
+      score: 70,
+      feedback: _t('employable.reviewFallback', null, 'Buen avance: asegúrate de que el enlace sea público, documentado y demuestre el stack de la ruta.'),
+      source: 'local',
+    };
+
+    if (typeof ProjectReviewService !== 'undefined' && ProjectReviewService.reviewEmployableProject) {
+      try {
+        review = await ProjectReviewService.reviewEmployableProject({
+          path,
+          projectUrl: rec.projectUrl,
+        });
+      } catch { /* keep local */ }
+    }
+
+    const state = _read();
+    const row = _pathRec(state, id);
+    row.projectReview = review;
+    row.updatedAt = Date.now();
+    _write(state);
+    return { ok: true, review };
+  }
+
+  function maybeNudgeProjectSubmission(opts = {}) {
+    const progress = getPortfolioProgress(getActivePathId(), opts);
+    if (!progress.isLearningOnlyComplete && progress.learningPct < 95) return null;
+    if (progress.record.projectUrl) return null;
+
+    let shown = {};
+    try {
+      shown = JSON.parse(localStorage.getItem(NUDGE_KEY) || '{}');
+    } catch { /* ignore */ }
+    const key = progress.pathId || 'default';
+    const last = shown[key] || 0;
+    if (Date.now() - last < 12 * 3600000) return null;
+    shown[key] = Date.now();
+    try {
+      localStorage.setItem(NUDGE_KEY, JSON.stringify(shown));
+    } catch { /* ignore */ }
+
+    const msg = _t(
+      'employable.nudgeMsg',
+      null,
+      '¡Casi terminas! Solo te falta subir tu proyecto para obtener tu certificado.'
+    );
+    if (typeof AppShell !== 'undefined' && AppShell.showToast) {
+      AppShell.showToast(msg, 4200);
+    }
+    return { message: msg, pathId: progress.pathId };
+  }
+
+  async function hydrateFromCloud() {
+    const sb = _sb();
+    const userId = await _userId();
+    if (!sb || !userId) return false;
+    try {
+      const { data, error } = await sb
+        .from('employability_progress')
+        .select('*')
+        .eq('user_id', userId);
+      if (error) throw error;
+      if (!data?.length) return false;
+
+      const local = _read();
+      let changed = false;
+      data.forEach((row) => {
+        const pathId = row.path_id;
+        if (!pathId) return;
+        const remoteAt = row.updated_at ? new Date(row.updated_at).getTime() : 0;
+        const rec = _pathRec(local, pathId);
+        if (remoteAt <= (rec.updatedAt || 0)) return;
+        const steps = row.completed_steps || {};
+        rec.projectUrl = row.project_url || rec.projectUrl || '';
+        rec.projectSubmittedAt = steps.projectSubmittedAt || (rec.projectUrl ? remoteAt : 0);
+        rec.certCode = steps.certCode || rec.certCode || '';
+        rec.certIssuedAt = steps.certIssuedAt || (rec.certCode ? remoteAt : 0);
+        rec.pitch = steps.pitch || rec.pitch;
+        rec.pitchGeneratedAt = steps.pitchGeneratedAt || (rec.pitch ? remoteAt : 0);
+        rec.projectReview = steps.projectReview || rec.projectReview;
+        rec.updatedAt = remoteAt;
+        changed = true;
+      });
+      if (changed) {
+        local.updatedAt = Date.now();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(local));
+      }
+      return changed;
+    } catch {
+      return false;
+    }
+  }
+
+  async function getPublicPortfolio(userId) {
+    const sb = _sb();
+    if (!sb || !userId) return null;
+    try {
+      const [{ data: profile }, { data: rows }, { data: certs }] = await Promise.all([
+        sb.from('profiles').select('id, name, email, public_bio, public_slug, avatar_url').eq('id', userId).maybeSingle(),
+        sb.from('employability_progress').select('*').eq('user_id', userId),
+        sb.from('certifications').select('*').eq('user_id', userId).eq('type', 'employable'),
+      ]);
+      return {
+        profile: profile || null,
+        paths: rows || [],
+        certifications: certs || [],
+      };
+    } catch {
+      return null;
+    }
   }
 
   return {
@@ -352,11 +668,18 @@ Tono profesional, concreto, junior-friendly.`;
     getActivePathId,
     getPathRecord,
     getPortfolioProgress,
+    getChecklist,
+    getNextCareerStep,
     submitProject,
     issueCertificate,
     generatePitch,
+    formatPitchPlain,
+    reviewSubmittedProject,
+    maybeNudgeProjectSubmission,
     hydrateFromCloud,
+    getPublicPortfolio,
     isValidUrl: _isValidUrl,
+    getUrlTrustHint,
   };
 })();
 

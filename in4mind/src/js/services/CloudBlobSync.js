@@ -9,8 +9,7 @@ const CloudBlobSync = (() => {
     notes: 'user_notes',
     projects: 'user_projects',
     quizAttempts: 'quiz_attempts',
-  employability: 'employability_progress',
-};
+  };
 
   function _sb() {
     return typeof _sbClient !== 'undefined' ? _sbClient : null;

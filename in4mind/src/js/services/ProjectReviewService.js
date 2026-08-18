@@ -87,7 +87,82 @@ const ProjectReviewService = (() => {
     }
   }
 
-  return { getRubric, reviewStep, DEFAULT_RUBRIC };
+  async function reviewEmployableProject({ path, projectUrl }) {
+    const rubric = [
+      { id: 'public_access', label: 'Acceso público', weight: 0.25 },
+      { id: 'junior_ready', label: 'Listo para junior', weight: 0.35 },
+      { id: 'stack_fit', label: 'Alineación con la ruta', weight: 0.25 },
+      { id: 'docs', label: 'Claridad / docs', weight: 0.15 },
+    ];
+
+    const host = (() => {
+      try { return new URL(projectUrl).hostname; } catch { return ''; }
+    })();
+
+    let localScore = 55;
+    if (/github|vercel|netlify|powerbi|sharepoint|powerapps/i.test(host)) localScore += 20;
+    if (projectUrl && projectUrl.length > 20) localScore += 10;
+    localScore = Math.min(100, localScore);
+
+    if (typeof GroqService === 'undefined' || !GroqService.isConfigured?.()) {
+      return {
+        score: localScore,
+        feedback: `Revisa que ${projectUrl} sea público y demuestre el stack de ${path?.title || 'la ruta'}. Documenta README o descripción breve.`,
+        rubric: rubric.map((r) => ({ ...r, score: localScore })),
+        source: 'local',
+      };
+    }
+
+    try {
+      const system = [
+        'Eres revisor de portfolio junior de IN4MIND.',
+        'Evalúa si el entregable es junior-ready. Responde SOLO JSON:',
+        '{"score":0-100,"feedback":"2-3 frases en español","rubric":[{"id":"...","score":0-100}]}',
+      ].join(' ');
+      const user = [
+        `Ruta: ${path?.title || path?.id || ''}`,
+        `Cursos: ${(path?.courseIds || []).join(', ')}`,
+        `URL del proyecto: ${projectUrl}`,
+        `Rúbrica: ${JSON.stringify(rubric.map((r) => ({ id: r.id, label: r.label })))}`,
+      ].join('\n');
+
+      let raw = '';
+      if (GroqService.complete) {
+        raw = await GroqService.complete({
+          system,
+          user,
+          model: 'llama-3.1-8b-instant',
+          max_tokens: 260,
+          temperature: 0.2,
+          timeoutMs: 9000,
+        });
+      } else {
+        raw = await GroqService.chat([
+          { role: 'system', content: system },
+          { role: 'user', content: user },
+        ]);
+      }
+      const text = typeof raw === 'string' ? raw : String(raw?.content || '');
+      const match = text.match(/\{[\s\S]*\}/);
+      const parsed = match ? JSON.parse(match[0]) : null;
+      if (!parsed || typeof parsed.score !== 'number') throw new Error('bad_json');
+      return {
+        score: Math.max(0, Math.min(100, Math.round(parsed.score))),
+        feedback: String(parsed.feedback || '').slice(0, 500),
+        rubric: Array.isArray(parsed.rubric) ? parsed.rubric : rubric.map((r) => ({ ...r, score: localScore })),
+        source: 'ai',
+      };
+    } catch {
+      return {
+        score: localScore,
+        feedback: `No se pudo completar la revisión IA. Verifica que el enlace sea público y alineado a ${path?.title || 'tu ruta'}.`,
+        rubric: rubric.map((r) => ({ ...r, score: localScore })),
+        source: 'local_fallback',
+      };
+    }
+  }
+
+  return { getRubric, reviewStep, reviewEmployableProject, DEFAULT_RUBRIC };
 })();
 
 if (typeof module !== 'undefined') module.exports = ProjectReviewService;

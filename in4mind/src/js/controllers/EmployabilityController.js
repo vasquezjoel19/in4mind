@@ -21,6 +21,35 @@ const EmployabilityController = (() => {
       .replace(/"/g, '&quot;');
   }
 
+  async function _copyText(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+        return true;
+      } catch {
+        return false;
+      }
+    }
+  }
+
+  function _downloadText(filename, content, mime = 'text/plain') {
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   function ensureModal() {
     let el = document.getElementById('employable-modal');
     if (el) return el;
@@ -52,6 +81,17 @@ const EmployabilityController = (() => {
     if (el) el.hidden = true;
   }
 
+  function _checklistHtml(checklist) {
+    return `
+      <ol class="employable-checklist" aria-label="${_esc(_t('employable.checklistTitle', null, 'Pasos de la ruta'))}">
+        ${(checklist || []).map((step, i) => `
+          <li class="employable-checklist__item ${step.done ? 'is-done' : ''}">
+            <span class="employable-checklist__num" aria-hidden="true">${step.done ? '✓' : i + 1}</span>
+            <span>${_esc(step.label)}</span>
+          </li>`).join('')}
+      </ol>`;
+  }
+
   function openModal(pathId, opts = {}) {
     if (typeof EmployabilityService === 'undefined') return;
     const modal = ensureModal();
@@ -61,8 +101,10 @@ const EmployabilityController = (() => {
     EmployabilityService.setActivePath(progress.pathId);
 
     const d = progress.deliverables;
+    const review = progress.record.projectReview;
     body.innerHTML = `
       <p class="employable-modal__lead">${_esc(path?.tagline || _t('employable.banner', null, 'No solo aprendes: sales con proyecto real, certificado verificable y perfil listo para aplicar.'))}</p>
+      ${_checklistHtml(progress.checklist)}
       <div class="portfolio-progress portfolio-progress--modal" role="group" aria-label="${_esc(_t('employable.portfolioProgress', null, 'Progreso del portfolio'))}">
         <div class="portfolio-progress__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progress.portfolioPct}">
           <span style="width:${progress.portfolioPct}%"></span>
@@ -85,7 +127,8 @@ const EmployabilityController = (() => {
         <input type="url" id="employable-project-url" required
                placeholder="${_esc(path?.projectHint || 'https://...')}"
                value="${_esc(progress.record.projectUrl || '')}">
-        <p class="employable-form__hint">${_esc((path?.projectExamples || []).join(' · '))}</p>
+        <p class="employable-form__hint" id="employable-url-hint">${_esc((path?.projectExamples || []).join(' · '))}</p>
+        <p class="employable-form__warn" id="employable-url-warn" hidden role="status"></p>
         <button type="submit" class="btn--course">${_esc(_t('employable.submitProject', null, 'Enviar proyecto y emitir certificado'))}</button>
       </form>
 
@@ -95,6 +138,16 @@ const EmployabilityController = (() => {
         <a class="employable-cert__link" id="employable-cert-link" href="${progress.record.certCode && typeof CertVerificationService !== 'undefined' ? _esc(CertVerificationService.verifyUrl(progress.record.certCode)) : '#'}" target="_blank" rel="noopener">
           ${_esc(_t('employable.openVerify', null, 'Abrir verificación pública'))}
         </a>
+      </div>
+
+      <div class="employable-review" id="employable-review-box">
+        <button type="button" class="btn--course btn--ghost" id="employable-review-btn"
+          ${progress.record.projectUrl ? '' : 'disabled'}>
+          ${_esc(_t('employable.reviewBtn', null, 'Revisar proyecto con IA (rúbrica junior)'))}
+        </button>
+        <div id="employable-review-out" class="employable-review__out" ${review ? '' : 'hidden'}>
+          ${review ? `<p><strong>${_esc(_t('employable.reviewScore', { score: review.score }, `Puntaje: ${review.score}/100`))}</strong></p><p>${_esc(review.feedback || '')}</p>` : ''}
+        </div>
       </div>
 
       <div class="employable-pitch">
@@ -113,7 +166,26 @@ const EmployabilityController = (() => {
 
     modal.hidden = false;
 
-    document.getElementById('employable-project-form')?.addEventListener('submit', (e) => {
+    const urlInput = document.getElementById('employable-project-url');
+    const warnEl = document.getElementById('employable-url-warn');
+    const updateWarn = () => {
+      if (!urlInput || !warnEl) return;
+      const hint = EmployabilityService.getUrlTrustHint(urlInput.value);
+      if (urlInput.value.trim() && hint.warning && hint.ok && !hint.trusted) {
+        warnEl.hidden = false;
+        warnEl.textContent = hint.warning;
+      } else if (urlInput.value.trim() && !hint.ok) {
+        warnEl.hidden = false;
+        warnEl.textContent = hint.warning;
+      } else {
+        warnEl.hidden = true;
+        warnEl.textContent = '';
+      }
+    };
+    urlInput?.addEventListener('input', updateWarn);
+    updateWarn();
+
+    document.getElementById('employable-project-form')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const url = document.getElementById('employable-project-url')?.value || '';
       const res = EmployabilityService.submitProject(progress.pathId, url);
@@ -121,11 +193,33 @@ const EmployabilityController = (() => {
         if (typeof AppShell !== 'undefined') AppShell.showToast(res.error || 'Error', 2800);
         return;
       }
-      if (typeof AppShell !== 'undefined') {
+      if (res.urlHint && !res.urlHint.trusted && typeof AppShell !== 'undefined') {
+        AppShell.showToast(res.urlHint.warning || _t('employable.urlSoftWarn', null, 'Asegúrate de que sea un enlace público válido.'), 3200);
+      } else if (typeof AppShell !== 'undefined') {
         AppShell.showToast(_t('employable.projectSaved', null, 'Proyecto guardado y certificado emitido'), 2800);
       }
+      // Soft AI review after submit (non-blocking)
+      void EmployabilityService.reviewSubmittedProject(progress.pathId).then(() => {
+        openModal(progress.pathId, opts);
+      });
       openModal(progress.pathId, opts);
       document.dispatchEvent(new CustomEvent('in4mind-employable-updated'));
+    });
+
+    document.getElementById('employable-review-btn')?.addEventListener('click', async () => {
+      const btn = document.getElementById('employable-review-btn');
+      if (btn) btn.disabled = true;
+      const res = await EmployabilityService.reviewSubmittedProject(progress.pathId);
+      if (btn) btn.disabled = false;
+      if (!res.ok) {
+        if (typeof AppShell !== 'undefined') AppShell.showToast(res.error || 'Error', 2800);
+        return;
+      }
+      const out = document.getElementById('employable-review-out');
+      if (out) {
+        out.hidden = false;
+        out.innerHTML = `<p><strong>${_esc(_t('employable.reviewScore', { score: res.review.score }, `Puntaje: ${res.review.score}/100`))}</strong></p><p>${_esc(res.review.feedback || '')}</p>`;
+      }
     });
 
     document.getElementById('employable-pitch-btn')?.addEventListener('click', async () => {
@@ -137,18 +231,24 @@ const EmployabilityController = (() => {
         if (typeof AppShell !== 'undefined') AppShell.showToast(res.error || 'Error', 2800);
         return;
       }
-      _renderPitch(res.pitch);
+      _renderPitch(res.pitch, path?.title);
       document.dispatchEvent(new CustomEvent('in4mind-employable-updated'));
     });
 
-    if (progress.record.pitch) _renderPitch(progress.record.pitch);
+    if (progress.record.pitch) _renderPitch(progress.record.pitch, path?.title);
   }
 
-  function _renderPitch(pitch) {
+  function _renderPitch(pitch, pathTitle) {
     const out = document.getElementById('employable-pitch-out');
     if (!out || !pitch) return;
     out.hidden = false;
     out.innerHTML = `
+      <div class="employable-pitch__actions">
+        <button type="button" class="prof-btn" data-copy="cv">${_esc(_t('employable.copyCv', null, 'Copiar CV'))}</button>
+        <button type="button" class="prof-btn" data-copy="linkedin">${_esc(_t('employable.copyLinkedin', null, 'Copiar LinkedIn'))}</button>
+        <button type="button" class="prof-btn" data-dl="txt">${_esc(_t('employable.downloadTxt', null, 'Descargar .txt'))}</button>
+        <button type="button" class="prof-btn" data-dl="md">${_esc(_t('employable.downloadMd', null, 'Descargar .md'))}</button>
+      </div>
       <h3>${_esc(_t('employable.cvTitle', null, 'Bullets de CV'))}</h3>
       <ul>${(pitch.cvBullets || []).map((b) => `<li>${_esc(b)}</li>`).join('')}</ul>
       <h3>${_esc(_t('employable.liHeadline', null, 'LinkedIn — titular'))}</h3>
@@ -158,6 +258,31 @@ const EmployabilityController = (() => {
       <h3>${_esc(_t('employable.interviewTitle', null, '5 preguntas de entrevista'))}</h3>
       <ol>${(pitch.interviewQA || []).map((qa) => `
         <li><strong>${_esc(qa.q)}</strong><br>${_esc(qa.a)}</li>`).join('')}</ol>`;
+
+    const cvText = (pitch.cvBullets || []).map((b) => `• ${b}`).join('\n');
+    const liText = `${pitch.linkedinHeadline || ''}\n\n${pitch.linkedinSummary || ''}`.trim();
+    const full = typeof EmployabilityService !== 'undefined'
+      ? EmployabilityService.formatPitchPlain(pitch, pathTitle)
+      : `${cvText}\n\n${liText}`;
+
+    out.querySelector('[data-copy="cv"]')?.addEventListener('click', async () => {
+      const ok = await _copyText(cvText);
+      if (typeof AppShell !== 'undefined') {
+        AppShell.showToast(ok ? _t('employable.copied', null, 'Copiado') : _t('employable.copyFail', null, 'No se pudo copiar'), 2000);
+      }
+    });
+    out.querySelector('[data-copy="linkedin"]')?.addEventListener('click', async () => {
+      const ok = await _copyText(liText);
+      if (typeof AppShell !== 'undefined') {
+        AppShell.showToast(ok ? _t('employable.copied', null, 'Copiado') : _t('employable.copyFail', null, 'No se pudo copiar'), 2000);
+      }
+    });
+    out.querySelector('[data-dl="txt"]')?.addEventListener('click', () => {
+      _downloadText(`in4mind-pitch-${(pathTitle || 'ruta').replace(/\s+/g, '-').toLowerCase()}.txt`, full);
+    });
+    out.querySelector('[data-dl="md"]')?.addEventListener('click', () => {
+      _downloadText(`in4mind-pitch-${(pathTitle || 'ruta').replace(/\s+/g, '-').toLowerCase()}.md`, full, 'text/markdown');
+    });
   }
 
   function renderDashboardSection(container, opts = {}) {
@@ -172,6 +297,7 @@ const EmployabilityController = (() => {
         <h3 class="employable-hero__title">${_esc(_t('employable.heroTitle', null, 'De curso completado a evidencia para empleo'))}</h3>
         <p class="employable-hero__sub">${_esc(_t('employable.banner', null, 'No solo aprendes: sales con proyecto real, certificado verificable y perfil listo para aplicar.'))}</p>
       </div>
+      ${_checklistHtml(progress.checklist)}
       <div class="portfolio-progress" id="portfolio-progress-root">
         <div class="portfolio-progress__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progress.portfolioPct}">
           <span style="width:${progress.portfolioPct}%"></span>
@@ -203,7 +329,10 @@ const EmployabilityController = (() => {
               </button>
             </article>`;
         }).join('')}
-      </div>`;
+      </div>
+      <p class="employable-public-link">
+        <a href="portfolio-public.html">${_esc(_t('employable.publicProfile', null, 'Ver / compartir perfil público de portfolio'))}</a>
+      </p>`;
 
     container.querySelectorAll('[data-open-employable]').forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -221,12 +350,16 @@ const EmployabilityController = (() => {
       ? CareerPathsData.getPathForCourse(courseId)
       : null;
     container.hidden = false;
+    const checklist = path && typeof EmployabilityService !== 'undefined'
+      ? EmployabilityService.getChecklist(path.id)
+      : [];
     container.innerHTML = `
       <div class="employable-course-banner">
         <div>
           <p class="employable-course-banner__eyebrow">${_esc(_t('employable.eyebrow', null, 'Ruta Empleable IN4MIND'))}</p>
           <p class="employable-course-banner__text">${_esc(_t('employable.banner', null, 'No solo aprendes: sales con proyecto real, certificado verificable y perfil listo para aplicar.'))}</p>
           ${path ? `<p class="employable-course-banner__path">${_esc(_t('employable.thisCourseIn', { path: path.title }, `Este curso forma parte de: ${path.title}`))}</p>` : ''}
+          ${checklist.length ? _checklistHtml(checklist) : ''}
         </div>
         <button type="button" class="btn--course" data-employable-open>
           ${_esc(_t('employable.openPanel', null, 'Ver entregables'))}

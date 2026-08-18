@@ -423,6 +423,7 @@ const DashboardController = (() => {
       <article class="dashboard-promo dashboard-promo--${promo.tone || 'ai'}"
                ${promo.courseId ? `data-course="${promo.courseId}"` : ''}
                ${promo.route ? `data-route="${promo.route}"` : ''}
+               ${promo.openEmployable ? `data-open-employable="${promo.pathId || ''}"` : ''}
                role="button" tabindex="0"
                aria-label="${promo.title}">
         <div class="dashboard-promo__icon">${_uiIcon(promo.icon || 'spark')}</div>
@@ -472,6 +473,12 @@ const DashboardController = (() => {
         const href = e.currentTarget.dataset.href;
         const route = e.currentTarget.dataset.route;
         const courseId = e.currentTarget.dataset.course;
+        const openEmp = e.currentTarget.dataset.openEmployable;
+        if (openEmp != null && typeof EmployabilityController !== 'undefined') {
+          if (openEmp) EmployabilityService?.setActivePath?.(openEmp);
+          EmployabilityController.openModal(openEmp || undefined);
+          return;
+        }
         if (href) {
           window.location.href = href;
           return;
@@ -488,6 +495,12 @@ const DashboardController = (() => {
           const href = el.dataset.href;
           const route = el.dataset.route;
           const courseId = el.dataset.course;
+          const openEmp = el.dataset.openEmployable;
+          if (openEmp != null && typeof EmployabilityController !== 'undefined') {
+            if (openEmp) EmployabilityService?.setActivePath?.(openEmp);
+            EmployabilityController.openModal(openEmp || undefined);
+            return;
+          }
           if (href) {
             window.location.href = href;
             return;
@@ -907,7 +920,25 @@ const DashboardController = (() => {
     return [...picked, ...filler];
   }
 
-  function _selectPromo(stats, resumeItems, recommendations) {
+  function _selectPromo(stats, resumeItems, recommendations, quizProgress = {}, certifications = []) {
+    // Priority: next Ruta Empleable career milestone
+    if (typeof EmployabilityService !== 'undefined' && EmployabilityService.getNextCareerStep) {
+      const next = EmployabilityService.getNextCareerStep({ quizProgress, certifications });
+      if (next && next.nextAction !== 'done') {
+        return {
+          tone: 'progress',
+          icon: 'trophy',
+          eyebrow: _t('employable.eyebrow', null, 'Ruta Empleable IN4MIND'),
+          title: next.cta,
+          sub: _t('employable.coreHook', null, 'Crea un proyecto real, obtén tu certificado verificable y sal con tu perfil listo para trabajar.'),
+          cta: next.cta,
+          route: next.route,
+          openEmployable: Boolean(next.openModal),
+          pathId: next.pathId,
+        };
+      }
+    }
+
     const firstResume = resumeItems[0];
     if (firstResume && firstResume.quizPct != null && firstResume.quizPct >= 70 && (stats.certifications || 0) === 0) {
       return {
@@ -1327,7 +1358,10 @@ const DashboardController = (() => {
     _renderRecommendations(recommendations);
     _renderLearningPaths(quizProgress, certifications);
     _renderAnalytics();
-    _renderPromo(_selectPromo(stats, resumeItems, recommendations));
+    _renderPromo(_selectPromo(stats, resumeItems, recommendations, quizProgress, certifications));
+    if (typeof EmployabilityService !== 'undefined') {
+      EmployabilityService.maybeNudgeProjectSubmission({ quizProgress, certifications });
+    }
   }
 
   // ────────────────────────────────────────────

@@ -270,6 +270,23 @@ const NotificationService = (() => {
       });
     }
 
+    // Ruta Empleable: 95%+ learning without project URL
+    if (typeof EmployabilityService !== 'undefined' && typeof CareerPathsData !== 'undefined') {
+      CareerPathsData.getPaths().forEach((path) => {
+        const emp = EmployabilityService.getPortfolioProgress(path.id, { quizProgress, certifications });
+        if (emp.learningPct < 95 || emp.record.projectUrl) return;
+        candidates.push(_finalize({
+          id: `employable-nudge-${path.id}`,
+          type: 'cert',
+          title: _t('employable.eyebrow', null, 'Ruta Empleable'),
+          body: _t('employable.nudgeMsg', null, '¡Casi terminas! Solo te falta subir tu proyecto para obtener tu certificado.'),
+          at: now,
+          route: 'dashboard.html#employable-root',
+          priorityBoost: 10,
+        }));
+      });
+    }
+
     if (typeof SpacedRepetitionService !== 'undefined') {
       SpacedRepetitionService.getDueTopics(3).forEach((topic, i) => {
         candidates.push(_finalize({

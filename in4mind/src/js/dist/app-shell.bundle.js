@@ -1,4 +1,4 @@
-/*! IN4MIND bundle 20260817emp36 — 2026-08-18T19:16:01.034323+00:00 */
+/*! IN4MIND bundle 20260818emp38 — 2026-08-18T19:54:51.281337+00:00 */
 
 ;/* --- src/js/components/In4mindBulb.js --- */
 'use strict';
@@ -1960,8 +1960,7 @@ const CloudBlobSync = (() => {
     notes: 'user_notes',
     projects: 'user_projects',
     quizAttempts: 'quiz_attempts',
-  employability: 'employability_progress',
-};
+  };
 
   function _sb() {
     return typeof _sbClient !== 'undefined' ? _sbClient : null;
@@ -2835,6 +2834,7 @@ const UserProfileService = (() => {
     quizProgress:   null,
     lessonProgress: null,
     certifications: null,
+    certificationsCloud: null,
   };
 
   let _userIdResolved = undefined;
@@ -3622,32 +3622,50 @@ const UserProfileService = (() => {
   // ════════════════════════════════════════════════════════════
 
   async function getCertifications() {
-    if (_cache.certifications) return _cache.certifications;
-    const userId = await getCurrentUserId();
-    if (!userId) return [];
+    if (_cache.certificationsCloud == null) {
+      const userId = await getCurrentUserId();
+      let cloud = [];
 
-    const { data, error } = await _sb
-      .from('certifications')
-      .select('*')
-      .eq('user_id', userId)
-      .order('earned_at', { ascending: false });
+      if (userId) {
+        const { data, error } = await _sb
+          .from('certifications')
+          .select('*')
+          .eq('user_id', userId)
+          .order('earned_at', { ascending: false });
 
-    if (error) { console.error('getCertifications:', error); return []; }
+        if (error) {
+          console.error('getCertifications:', error);
+        } else {
+          cloud = (data || []).map(row => {
+            const isEmployable = row.type === 'employable';
+            const projectUrl = isEmployable && Array.isArray(row.modules) && row.modules[0]
+              ? row.modules[0]
+              : '';
+            const pathId = isEmployable && String(row.ref_id || '').startsWith('employable:')
+              ? String(row.ref_id).slice('employable:'.length)
+              : (isEmployable ? row.ref_id : '');
+            return {
+              id:            row.id,
+              refId:         row.ref_id,
+              type:          row.type,
+              title:         row.title,
+              desc:          row.description,
+              icon:          row.icon_url,
+              pct:           row.pct,
+              modules:       row.modules       || [],
+              levelsCovered: row.levels_covered || [],
+              lessonCount:   row.lesson_count  || 0,
+              earnedAt:      new Date(row.earned_at).getTime(),
+              projectUrl,
+              pathId,
+            };
+          });
+        }
+      }
+      _cache.certificationsCloud = cloud;
+    }
 
-    _cache.certifications = (data || []).map(row => ({
-      id:            row.id,
-      refId:         row.ref_id,
-      type:          row.type,
-      title:         row.title,
-      desc:          row.description,
-      icon:          row.icon_url,
-      pct:           row.pct,
-      modules:       row.modules       || [],
-      levelsCovered: row.levels_covered || [],
-      lessonCount:   row.lesson_count  || 0,
-      earnedAt:      new Date(row.earned_at).getTime(),
-    }));
-
+    _cache.certifications = _mergeEmployableIntoList(_cache.certificationsCloud || []);
     return _cache.certifications;
   }
 
@@ -3684,6 +3702,7 @@ const UserProfileService = (() => {
       .upsert(cert, { onConflict: 'user_id,ref_id,type' });
 
     _cache.certifications = null;
+    _cache.certificationsCloud = null;
     _notify();
     return cert;
   }
@@ -3723,8 +3742,130 @@ const UserProfileService = (() => {
       .upsert(cert, { onConflict: 'user_id,ref_id,type' });
 
     _cache.certifications = null;
+    _cache.certificationsCloud = null;
     _notify();
     return cert;
+  }
+
+  /**
+   * Ruta Empleable → mismo listado de Perfil → Certificaciones (type distinto a quiz/exam).
+   * ref_id estable: employable:{pathId}
+   */
+  async function tryAwardEmployableCertification(pathId, meta = {}) {
+    if (!pathId) return null;
+    const refId = String(meta.refId || `employable:${pathId}`);
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      _cache.certifications = null;
+      _cache.certificationsCloud = null;
+      return null;
+    }
+
+    const earnedAt = meta.earnedAt
+      ? new Date(meta.earnedAt).toISOString()
+      : new Date().toISOString();
+
+    const cert = {
+      user_id:     userId,
+      ref_id:      refId,
+      type:        'employable',
+      title:       meta.title || `Ruta Empleable: ${pathId}`,
+      description: meta.desc || 'Proyecto real + certificado verificable IN4MIND',
+      icon_url:    meta.icon || '',
+      pct:         meta.pct ?? 100,
+      modules:     meta.projectUrl ? [meta.projectUrl] : [],
+      earned_at:   earnedAt,
+    };
+
+    try {
+      await _sb.from('certifications')
+        .upsert(cert, { onConflict: 'user_id,ref_id,type' });
+    } catch (err) {
+      console.error('tryAwardEmployableCertification:', err);
+      return null;
+    }
+
+    _cache.certifications = null;
+    _cache.certificationsCloud = null;
+    _notify();
+    return {
+      refId,
+      type: 'employable',
+      title: cert.title,
+      desc: cert.description,
+      pct: cert.pct,
+      earnedAt: new Date(earnedAt).getTime(),
+      verifyCode: meta.verifyCode || '',
+      projectUrl: meta.projectUrl || '',
+      pathId,
+    };
+  }
+
+  function _localEmployableCerts() {
+    if (typeof EmployabilityService === 'undefined') return [];
+    const state = EmployabilityService.getState?.() || { paths: {} };
+    return Object.values(state.paths || {})
+      .filter((rec) => rec && rec.certCode)
+      .map((rec) => {
+        const path = typeof CareerPathsData !== 'undefined'
+          ? CareerPathsData.getPathById(rec.pathId)
+          : null;
+        const projectUrl = rec.projectUrl || '';
+        return {
+          id: `employable-${rec.pathId}`,
+          refId: `employable:${rec.pathId}`,
+          type: 'employable',
+          title: path?.title || rec.pathId,
+          desc: projectUrl
+            ? `Proyecto: ${projectUrl}`
+            : 'Ruta Empleable — certificado verificable',
+          icon: '',
+          pct: 100,
+          modules: projectUrl ? [projectUrl] : [],
+          earnedAt: rec.certIssuedAt || rec.updatedAt || Date.now(),
+          verifyCode: rec.certCode,
+          projectUrl,
+          pathId: rec.pathId,
+        };
+      });
+  }
+
+  function _mergeEmployableIntoList(cloudList) {
+    const map = new Map();
+    for (const c of cloudList || []) {
+      map.set(`${c.type || 'quiz'}:${c.refId}`, c);
+    }
+    for (const local of _localEmployableCerts()) {
+      const key = `employable:${local.refId}`;
+      const existing = map.get(key);
+      if (!existing) {
+        map.set(key, local);
+      } else {
+        map.set(key, {
+          ...existing,
+          verifyCode: local.verifyCode || existing.verifyCode,
+          projectUrl: local.projectUrl || existing.projectUrl,
+          pathId: local.pathId || existing.pathId,
+          modules: (local.modules && local.modules.length) ? local.modules : existing.modules,
+          desc: existing.desc || local.desc,
+        });
+      }
+    }
+    return [...map.values()].sort((a, b) => (b.earnedAt || 0) - (a.earnedAt || 0));
+  }
+
+  async function syncEmployableCertifications() {
+    const locals = _localEmployableCerts();
+    if (!locals.length) return;
+    await Promise.all(locals.map((c) => tryAwardEmployableCertification(c.pathId, {
+      refId: c.refId,
+      title: c.title,
+      desc: c.desc,
+      pct: 100,
+      projectUrl: c.projectUrl,
+      verifyCode: c.verifyCode,
+      earnedAt: c.earnedAt,
+    })));
   }
 
   async function hasExamCertification(courseId) {
@@ -3969,8 +4110,10 @@ const UserProfileService = (() => {
     getCertifications,
     tryAwardCertification,
     tryAwardExamCertification,
+    tryAwardEmployableCertification,
     hasExamCertification,
     syncCertificationsFromQuizzes,
+    syncEmployableCertifications,
     getExamId,
 
     // Requisitos
@@ -4912,6 +5055,23 @@ const NotificationService = (() => {
           courseId: nextCourse.id,
           route: 'tutorial.html',
           priorityBoost: pct >= 50 ? 5 : 0,
+        }));
+      });
+    }
+
+    // Ruta Empleable: 95%+ learning without project URL
+    if (typeof EmployabilityService !== 'undefined' && typeof CareerPathsData !== 'undefined') {
+      CareerPathsData.getPaths().forEach((path) => {
+        const emp = EmployabilityService.getPortfolioProgress(path.id, { quizProgress, certifications });
+        if (emp.learningPct < 95 || emp.record.projectUrl) return;
+        candidates.push(_finalize({
+          id: `employable-nudge-${path.id}`,
+          type: 'cert',
+          title: _t('employable.eyebrow', null, 'Ruta Empleable'),
+          body: _t('employable.nudgeMsg', null, '¡Casi terminas! Solo te falta subir tu proyecto para obtener tu certificado.'),
+          at: now,
+          route: 'dashboard.html#employable-root',
+          priorityBoost: 10,
         }));
       });
     }

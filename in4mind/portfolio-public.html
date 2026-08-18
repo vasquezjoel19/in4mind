@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es" data-i18n-title="employable.publicProfile">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="IN4MIND — Portfolio público Ruta Empleable">
+  <title>IN4MIND — Portfolio público</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="src/js/dist/boot.bundle.js?v=20260818emp38"></script>
+  <link rel="stylesheet" href="src/css/tokens.css?v=20260812polish">
+  <link rel="stylesheet" href="src/css/base.css?v=20260714fluid3">
+  <link rel="stylesheet" href="src/css/theme.css?v=20260818emp38">
+  <link rel="stylesheet" href="src/css/employable.css?v=20260818emp38">
+  <link rel="icon" type="image/png" sizes="32x32" href="src/img/brand/favicon-32.png">
+  <style>
+    .pub-shell { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 3rem; }
+    .pub-card { border: 1px solid var(--clr-border, #e2e8f0); border-radius: 16px; padding: 1.25rem; margin: 1rem 0; background: var(--clr-bg-elevated, #fff); }
+    .pub-card h2 { margin: 0 0 0.35rem; font-size: 1.15rem; }
+    .pub-card p { margin: 0.35rem 0; color: var(--clr-text-muted, #64748b); line-height: 1.5; }
+    .pub-meta { font-size: 0.85rem; }
+    .pub-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <main class="pub-shell" id="pub-root">
+    <p class="employable-hero__eyebrow" data-i18n="employable.eyebrow">Ruta Empleable IN4MIND</p>
+    <h1 id="pub-name">Portfolio</h1>
+    <p id="pub-bio" class="employable-hero__sub"></p>
+    <div id="pub-paths"></div>
+    <div class="pub-actions">
+      <button type="button" class="btn--course" id="pub-copy-link">Copiar enlace</button>
+      <a class="btn--course btn--ghost" href="dashboard.html">Volver al dashboard</a>
+    </div>
+  </main>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="src/js/config/supabase.config.js"></script>
+  <script defer src="src/js/dist/app-shell.bundle.js?v=20260818emp38"></script>
+  <script defer src="src/js/services/CertVerificationService.js?v=20260818emp38"></script>
+  <script defer src="src/js/data/CareerPathsData.js?v=20260818emp38"></script>
+  <script defer src="src/js/services/EmployabilityService.js?v=20260818emp38"></script>
+  <script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    const params = new URLSearchParams(location.search);
+    const u = params.get('u');
+    const $name = document.getElementById('pub-name');
+    const $bio = document.getElementById('pub-bio');
+    const $paths = document.getElementById('pub-paths');
+
+    function esc(s) {
+      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function renderLocal() {
+      const user = typeof UserProfileService !== 'undefined' ? UserProfileService.getCurrentUser() : null;
+      const display = user?.name || user?.email?.split('@')[0] || 'Usuario IN4MIND';
+      $name.textContent = display;
+      $bio.textContent = (typeof I18n !== 'undefined' ? I18n.t('employable.coreHook') : '')
+        || 'Proyecto real, certificado verificable y perfil listo para trabajar.';
+      const state = EmployabilityService.getState();
+      const cards = Object.values(state.paths || {}).filter(r => r.projectUrl || r.certCode || r.pitch);
+      if (!cards.length) {
+        $paths.innerHTML = '<div class="pub-card"><p>Aún no hay entregables públicos. Completa una Ruta Empleable en el dashboard.</p></div>';
+        return;
+      }
+      $paths.innerHTML = cards.map(rec => {
+        const path = CareerPathsData.getPathById(rec.pathId);
+        const verify = rec.certCode && typeof CertVerificationService !== 'undefined'
+          ? CertVerificationService.verifyUrl(rec.certCode) : '';
+        const pitch = rec.pitch?.linkedinSummary || rec.pitch?.linkedinHeadline || '';
+        return `<article class="pub-card">
+          <h2>${esc(path?.title || rec.pathId)}</h2>
+          ${rec.projectUrl ? `<p><strong>Proyecto:</strong> <a href="${esc(rec.projectUrl)}" target="_blank" rel="noopener">${esc(rec.projectUrl)}</a></p>` : ''}
+          ${verify ? `<p><a href="${esc(verify)}" target="_blank" rel="noopener">Certificado verificable</a></p>` : ''}
+          ${pitch ? `<p class="pub-meta">${esc(pitch)}</p>` : ''}
+        </article>`;
+      }).join('');
+    }
+
+    async function renderRemote(userId) {
+      const data = await EmployabilityService.getPublicPortfolio(userId);
+      if (!data || (!data.profile && !(data.paths || []).length)) {
+        renderLocal();
+        return;
+      }
+      const profile = data.profile || {};
+      $name.textContent = profile.name || profile.email?.split('@')[0] || 'Portfolio IN4MIND';
+      $bio.textContent = profile.public_bio
+        || ((typeof I18n !== 'undefined' ? I18n.t('employable.coreHook') : null)
+          || 'Proyecto real, certificado verificable y perfil listo para trabajar.');
+      const rows = data.paths || [];
+      if (!rows.length) {
+        $paths.innerHTML = '<div class="pub-card"><p>Sin entregables públicos todavía.</p></div>';
+        return;
+      }
+      $paths.innerHTML = rows.map(row => {
+        const path = CareerPathsData.getPathById(row.path_id);
+        const steps = row.completed_steps || {};
+        const verify = steps.certCode && typeof CertVerificationService !== 'undefined'
+          ? CertVerificationService.verifyUrl(steps.certCode) : '';
+        const pitch = row.linkedin_summary || steps.pitch?.linkedinSummary || '';
+        return `<article class="pub-card">
+          <h2>${esc(path?.title || row.path_id)}</h2>
+          ${row.project_url ? `<p><strong>Proyecto:</strong> <a href="${esc(row.project_url)}" target="_blank" rel="noopener">${esc(row.project_url)}</a></p>` : ''}
+          ${verify ? `<p><a href="${esc(verify)}" target="_blank" rel="noopener">Certificado verificable</a></p>` : ''}
+          ${pitch ? `<p class="pub-meta">${esc(pitch)}</p>` : ''}
+        </article>`;
+      }).join('');
+    }
+
+    if (u) await renderRemote(u);
+    else renderLocal();
+
+    // Prefer own public URL with user id when available
+    document.getElementById('pub-copy-link')?.addEventListener('click', async () => {
+      let link = location.href;
+      try {
+        if (!u && typeof UserProfileService !== 'undefined') {
+          const id = await UserProfileService.getCurrentUserId?.();
+          if (id) {
+            const url = new URL(location.href);
+            url.searchParams.set('u', id);
+            link = url.toString();
+            history.replaceState({}, '', link);
+          }
+        }
+        await navigator.clipboard.writeText(link);
+        if (typeof AppShell !== 'undefined') AppShell.showToast('Enlace copiado', 2000);
+      } catch {
+        if (typeof AppShell !== 'undefined') AppShell.showToast('No se pudo copiar', 2000);
+      }
+    });
+  });
+  </script>
+</body>
+</html>

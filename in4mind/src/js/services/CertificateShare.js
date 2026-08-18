@@ -22,23 +22,33 @@ const CertificateShare = (() => {
     const date = cert.earnedAt
       ? new Date(cert.earnedAt).toLocaleDateString()
       : new Date().toLocaleDateString();
-    const code = typeof CertVerificationService !== 'undefined'
-      ? CertVerificationService.register(cert, name)
-      : (cert.id || `IN4MIND-${cert.refId || 'CERT'}-${Date.now().toString(36).toUpperCase()}`);
+    let code = cert.verifyCode || '';
+    if (typeof CertVerificationService !== 'undefined') {
+      code = CertVerificationService.register({ ...cert, verifyCode: code || undefined }, name);
+    } else if (!code) {
+      code = cert.id || `IN4MIND-${cert.refId || 'CERT'}-${Date.now().toString(36).toUpperCase()}`;
+    }
     const verifyUrl = typeof CertVerificationService !== 'undefined'
       ? CertVerificationService.verifyUrl(code)
-      : '';
+      : `verify.html?id=${encodeURIComponent(code)}`;
     const qrSrc = verifyUrl
       ? `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(verifyUrl)}`
       : '';
+    const projectHtml = cert.projectUrl
+      ? `<p class="cert-share-card__code"><strong>${_t('cert.project', null, 'Proyecto')}:</strong> ${cert.projectUrl}</p>`
+      : '';
+    const title = cert.type === 'employable'
+      ? _t('cert.employableTitle', null, 'Certificado Ruta Empleable')
+      : _t('cert.title', null, 'Certificado de finalización');
     return `
       <div class="cert-share-card" id="cert-share-print">
         <div class="cert-share-card__ribbon" aria-hidden="true"></div>
         <p class="cert-share-card__eyebrow">IN4MIND</p>
-        <h2 class="cert-share-card__title">${_t('cert.title', null, 'Certificado de finalización')}</h2>
+        <h2 class="cert-share-card__title">${title}</h2>
         <p class="cert-share-card__name">${name}</p>
         <p class="cert-share-card__course">${cert.title || cert.refId}</p>
         <p class="cert-share-card__date">${_t('cert.issued', { date }, `Emitido el ${date}`)}</p>
+        ${projectHtml}
         <p class="cert-share-card__code">${_t('cert.code', { code }, `Código: ${code}`)}</p>
         ${qrSrc ? `<img class="cert-share-card__qr" src="${qrSrc}" alt="QR verificación" width="120" height="120">` : ''}
       </div>`;

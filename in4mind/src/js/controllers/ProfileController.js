@@ -72,6 +72,22 @@ const ProfileController = (() => {
       window.location.href = 'quizzes.html';
       return;
     }
+    if (item.type === 'employable') {
+      const code = item.verifyCode
+        || (typeof EmployabilityService !== 'undefined' && item.pathId
+          ? EmployabilityService.getPathRecord(item.pathId)?.certCode
+          : '');
+      if (code && typeof CertVerificationService !== 'undefined') {
+        window.location.href = CertVerificationService.verifyUrl(code);
+        return;
+      }
+      if (code) {
+        window.location.href = `verify.html?id=${encodeURIComponent(code)}`;
+        return;
+      }
+      window.location.href = 'dashboard.html#employable-root';
+      return;
+    }
     if (item.type === 'project') {
       window.location.href = `projects.html?project=${encodeURIComponent(item.refId)}`;
       return;
@@ -538,8 +554,13 @@ const ProfileController = (() => {
       ? `<img src="${cert.icon}" alt="" width="40" height="40" loading="lazy">`
       : `<span class="prof-item__icon-fallback">🏆</span>`;
     const isExam = cert.type === 'exam';
-    const badgeLabel = isExam ? _t('profile.profCert') : _t('profile.practiceCert');
-    const btnLabel = isExam ? _t('profile.viewExam') : _t('profile.viewQuiz');
+    const isEmployable = cert.type === 'employable';
+    const badgeLabel = isEmployable
+      ? _t('profile.employableCert', null, 'Ruta Empleable')
+      : (isExam ? _t('profile.profCert') : _t('profile.practiceCert'));
+    const btnLabel = isEmployable
+      ? _t('profile.viewEmployable', null, 'Ver verificación')
+      : (isExam ? _t('profile.viewExam') : _t('profile.viewQuiz'));
 
     const modulesHtml = isExam && cert.modules?.length
       ? `<ul class="prof-cert-modules">${cert.modules.map(m => `<li>${m}</li>`).join('')}</ul>`
@@ -549,23 +570,32 @@ const ProfileController = (() => {
       ? `<p class="prof-cert-levels">Niveles: ${cert.levelsCovered.join(' · ')}</p>`
       : '';
 
+    const projectHtml = isEmployable && cert.projectUrl
+      ? `<p class="prof-cert-levels"><a href="${_escape(cert.projectUrl)}" target="_blank" rel="noopener noreferrer">${_escape(cert.projectUrl)}</a></p>`
+      : '';
+
+    const descFallback = isEmployable
+      ? _t('profile.employableCertDesc', null, 'Proyecto real + certificado verificable')
+      : (isExam ? 'Certificación IN4MIND — examen práctico alineado al curso' : 'Certificación IN4MIND');
+
     return `
-      <article class="prof-item prof-item--cert ${isExam ? 'prof-item--cert-exam' : ''}">
+      <article class="prof-item prof-item--cert ${isExam ? 'prof-item--cert-exam' : ''} ${isEmployable ? 'prof-item--cert-employable' : ''}">
         <div class="prof-item__icon prof-item__icon--cert">${iconHtml}</div>
         <div class="prof-item__body">
-          <h3 class="prof-item__title">${cert.title}</h3>
-          <p class="prof-item__meta">${dateLabel} · <span class="prof-item__score">${_t('profile.accuracy', { pct: cert.pct })}</span></p>
-          <p class="prof-item__desc">${cert.desc || (isExam ? 'Certificación IN4MIND — examen práctico alineado al curso' : 'Certificación IN4MIND')}</p>
+          <h3 class="prof-item__title">${_escape(cert.title)}</h3>
+          <p class="prof-item__meta">${dateLabel}${cert.pct != null ? ` · <span class="prof-item__score">${_t('profile.accuracy', { pct: cert.pct })}</span>` : ''}</p>
+          <p class="prof-item__desc">${_escape(cert.desc || descFallback)}</p>
           ${levelsHtml}
           ${modulesHtml}
+          ${projectHtml}
         </div>
         <div class="prof-item__actions">
           <span class="prof-cert-badge" aria-hidden="true">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/></svg>
             ${badgeLabel}
           </span>
-          <button type="button" class="prof-btn prof-btn--ghost prof-cert-share" data-cert-id="${cert.id || cert.refId}">${_t('cert.share', null, 'Compartir')}</button>
-          <button type="button" class="prof-btn prof-btn--primary prof-item__open" data-ref="${cert.refId}" data-type="${cert.type}">
+          <button type="button" class="prof-btn prof-btn--ghost prof-cert-share" data-cert-id="${_escape(cert.id || cert.refId)}">${_t('cert.share', null, 'Compartir')}</button>
+          <button type="button" class="prof-btn prof-btn--primary prof-item__open" data-ref="${_escape(cert.refId)}" data-type="${_escape(cert.type)}" ${cert.verifyCode ? `data-verify="${_escape(cert.verifyCode)}"` : ''} ${cert.pathId ? `data-path="${_escape(cert.pathId)}"` : ''}>
             ${btnLabel}
           </button>
         </div>
@@ -575,7 +605,12 @@ const ProfileController = (() => {
   function _bindListEvents($list, listType) {
     $list.querySelectorAll('.prof-item__open').forEach(btn => {
       btn.addEventListener('click', () => {
-        _openItem({ refId: btn.dataset.ref, type: btn.dataset.type });
+        _openItem({
+          refId: btn.dataset.ref,
+          type: btn.dataset.type,
+          verifyCode: btn.dataset.verify || '',
+          pathId: btn.dataset.path || '',
+        });
       });
     });
 
@@ -610,8 +645,8 @@ const ProfileController = (() => {
           $action.href = 'tutorial.html';
           $action.textContent = _t('profile.emptyActionCourses', null, 'Explorar cursos');
         } else if (_activeTab === 'certifications') {
-          $action.href = 'quizzes.html';
-          $action.textContent = _t('profile.emptyActionQuizzes', null, 'Hacer un quiz');
+          $action.href = 'dashboard.html#employable-root';
+          $action.textContent = _t('profile.emptyActionCerts', null, 'Ir a Ruta Empleable');
         } else if (_activeTab === 'notes') {
           $action.href = 'notes.html';
           $action.textContent = _t('profile.goNotes', null, 'Abrir Mis Notas');
@@ -634,8 +669,25 @@ const ProfileController = (() => {
       $list.querySelectorAll('.prof-cert-share').forEach(btn => {
         btn.addEventListener('click', e => {
           e.stopPropagation();
-          const cert = items.find(c => (c.id || c.refId) === btn.dataset.certId);
-          if (cert && typeof CertificateShare !== 'undefined') CertificateShare.openModal(cert);
+          const cert = items.find(c => String(c.id || c.refId) === String(btn.dataset.certId));
+          if (!cert) return;
+          let shareCert = { ...cert };
+          if (cert.type === 'employable') {
+            const pathId = cert.pathId
+              || (String(cert.refId || '').startsWith('employable:')
+                ? String(cert.refId).slice('employable:'.length)
+                : '');
+            const rec = pathId && typeof EmployabilityService !== 'undefined'
+              ? EmployabilityService.getPathRecord(pathId)
+              : null;
+            shareCert = {
+              ...shareCert,
+              verifyCode: cert.verifyCode || rec?.certCode || '',
+              projectUrl: cert.projectUrl || rec?.projectUrl || '',
+              pathId,
+            };
+          }
+          if (typeof CertificateShare !== 'undefined') CertificateShare.openModal(shareCert);
         });
       });
     } else if (_activeTab === 'notes') {
@@ -787,6 +839,25 @@ const ProfileController = (() => {
         notes: _notesCount(),
       });
       if (_activeTab === 'certifications') void _renderList();
+    });
+    if (typeof UserProfileService.syncEmployableCertifications === 'function') {
+      void UserProfileService.syncEmployableCertifications().then(() => {
+        _applyStats({
+          ...UserProfileService.getStatsSync(),
+          projects: _projectsCount(),
+          notes: _notesCount(),
+        });
+        if (_activeTab === 'certifications') void _renderList();
+      });
+    }
+
+    document.addEventListener('in4mind-employable-updated', () => {
+      if (typeof UserProfileService !== 'undefined') {
+        void UserProfileService.syncEmployableCertifications?.().then(() => {
+          if (_activeTab === 'certifications') void _renderList();
+          void _loadProfile({ background: true });
+        });
+      }
     });
 
     document.getElementById('profile-logout-btn')?.addEventListener('click', () => {

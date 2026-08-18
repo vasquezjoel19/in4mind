@@ -310,3 +310,76 @@ html[data-theme="dark"] .portfolio-progress__bar {
   border: 1px solid var(--clr-border, #cbd5e1);
   color: inherit;
 }
+
+.employable-checklist {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.employable-checklist__item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.9rem;
+  color: var(--clr-text-muted, #64748b);
+}
+
+.employable-checklist__item.is-done {
+  color: var(--clr-text, #0f172a);
+  font-weight: 600;
+}
+
+.employable-checklist__num {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  background: rgba(13, 148, 136, 0.12);
+  color: #0d9488;
+  flex-shrink: 0;
+}
+
+.employable-checklist__item.is-done .employable-checklist__num {
+  background: #0d9488;
+  color: #fff;
+}
+
+.employable-form__warn {
+  margin: 0.35rem 0 0;
+  color: #b45309;
+  font-size: 0.85rem;
+}
+
+.employable-pitch__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 0.75rem;
+}
+
+.employable-review {
+  margin-top: 1rem;
+}
+
+.employable-review__out {
+  margin-top: 0.65rem;
+  padding: 0.75rem;
+  border-radius: 10px;
+  border: 1px solid var(--clr-border, #e2e8f0);
+  font-size: 0.92rem;
+}
+
+.employable-public-link {
+  margin-top: 1rem;
+  font-size: 0.92rem;
+}
+
+.employable-course-banner .employable-checklist {
+  margin-top: 0.75rem;
+}

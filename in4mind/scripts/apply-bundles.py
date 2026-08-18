@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "src" / "js" / "dist"
-VERSION = "20260817emp36"
+VERSION = "20260818emp38"
 
 BOOT_FILES = [
     "src/js/controllers/ThemeController.js",
@@ -91,6 +91,7 @@ LIGHT_PAGES = [
     "cookies.html",
     "privacidad.html",
     "terminos.html",
+    "portfolio-public.html",
 ]
 
 
@@ -181,11 +182,27 @@ def rewrite_boot_block(html: str) -> str:
     if n:
         return new_html
     if "boot.bundle.js" in html:
+        html = re.sub(
+            r'(src="[^"]*boot\.bundle\.js)\?v=[^"]*"',
+            rf'\1?v={VERSION}"',
+            html,
+            count=1,
+        )
         return INLINE_EARLY_RE.sub("\n", html)
     return html
 
 
 def rewrite_scripts(html: str, replace_set: set[str], bundle_name: str) -> str:
+    matches = list(SCRIPT_RE.finditer(html))
+    if not matches:
+        return html
+
+    # Keep existing bundle query versions in sync with VERSION.
+    html = re.sub(
+        rf'(src="[^"]*{re.escape(bundle_name)})\?v=[^"]*"',
+        rf'\1?v={VERSION}"',
+        html,
+    )
     matches = list(SCRIPT_RE.finditer(html))
     if not matches:
         return html

@@ -268,14 +268,37 @@ const AuthController = (() => {
     return typeof OnboardingService !== 'undefined' && OnboardingService.needsOnboarding();
   }
 
-  function _redirectAfterAuth() {
-    // Prioridad: el contenido compartido al que el usuario intentaba entrar.
+  function _pathOf(target) {
+    try {
+      return new URL(target, window.location.origin).pathname || '';
+    } catch {
+      return String(target || '');
+    }
+  }
+
+  /**
+   * Tras login/registro: onboarding solo la primera vez; no forzar onboarding.html
+   * si ya está completado (evita el flash → dashboard).
+   */
+  async function _redirectAfterAuth() {
+    if (typeof OnboardingService !== 'undefined' && OnboardingService.hydrateFromCloud) {
+      try {
+        await OnboardingService.hydrateFromCloud();
+      } catch { /* offline / sin columna */ }
+    }
+
+    const needsOnboard = _needsOnboarding();
+
     if (typeof AuthGuard !== 'undefined') {
       const next = AuthGuard.consumeRedirect();
       if (next) {
-        const isDash = /dashboard\.html/i.test(next);
-        if (isDash && _needsOnboarding()) {
+        const path = _pathOf(next);
+        if (needsOnboard) {
           window.location.replace('onboarding.html');
+          return;
+        }
+        if (/onboarding\.html/i.test(path)) {
+          window.location.replace('dashboard.html');
           return;
         }
         window.location.replace(next);
@@ -286,19 +309,31 @@ const AuthController = (() => {
     const destination = sessionStorage.getItem('in4mind_open_destination');
     if (destination === 'ai') {
       sessionStorage.removeItem('in4mind_open_destination');
+      if (needsOnboard) {
+        window.location.replace('onboarding.html');
+        return;
+      }
       window.location.href = 'ai.html';
       return;
     }
     if (sessionStorage.getItem('in4mind_open_course')) {
+      if (needsOnboard) {
+        window.location.replace('onboarding.html');
+        return;
+      }
       window.location.href = 'tutorial.html';
       return;
     }
     if (sessionStorage.getItem('in4mind_open_quiz')) {
+      if (needsOnboard) {
+        window.location.replace('onboarding.html');
+        return;
+      }
       window.location.href = 'quizzes.html';
       return;
     }
-    if (_needsOnboarding()) {
-      window.location.href = 'onboarding.html';
+    if (needsOnboard) {
+      window.location.replace('onboarding.html');
       return;
     }
     window.location.href = 'dashboard.html';
@@ -338,7 +373,7 @@ const AuthController = (() => {
           UserProfileService.migrateSessionQuizProgress();
         }
       }
-      _redirectAfterAuth();
+      void _redirectAfterAuth();
     } else {
       _showError($loginError, result.error || _t('auth.errLogin'));
       $loginBtn.disabled = false;
@@ -507,7 +542,7 @@ const AuthController = (() => {
           UserProfileService.migrateSessionQuizProgress();
         }
       }
-      _redirectAfterAuth();
+      void _redirectAfterAuth();
     } else {
       $registerError?.classList.remove('auth-alert--success');
       _showError($registerError, result.error || _t('auth.errRegister'));
@@ -525,7 +560,7 @@ const AuthController = (() => {
     const result = await AuthService.signInWithGoogle();
     if (result.ok && result.redirecting) return;
     if (result.ok) {
-      _redirectAfterAuth();
+      void _redirectAfterAuth();
       return;
     }
     if ($loginError) {
@@ -545,7 +580,7 @@ const AuthController = (() => {
     if (typeof AuthService !== 'undefined' && !isResetLink) {
       const oauth = await AuthService.restoreOAuthSession();
       if (oauth.ok) {
-        _redirectAfterAuth();
+        void _redirectAfterAuth();
         return;
       }
       // Sin sesión Supabase: limpia restos locales para forzar credenciales.

@@ -124,11 +124,14 @@ const OnboardingController = (() => {
   }
 
   async function init() {
+    const page = document.getElementById('ob-page');
+    if (page) page.classList.add('ob-booting');
+
     if (typeof AuthGuard !== 'undefined') {
       const ok = await AuthGuard.requireAsync();
       if (!ok) return;
     } else if (!sessionStorage.getItem('in4mind_user')) {
-      window.location.replace('login.html?next=onboarding.html');
+      window.location.replace('login.html?next=dashboard.html');
       return;
     }
 
@@ -152,8 +155,14 @@ const OnboardingController = (() => {
     if (skip) {
       skip.addEventListener('click', (e) => {
         e.preventDefault();
-        if (typeof OnboardingService !== 'undefined') OnboardingService.markCompleted();
-        window.location.replace('dashboard.html');
+        void (async () => {
+          if (typeof OnboardingService !== 'undefined' && OnboardingService.finishWithoutGoal) {
+            await OnboardingService.finishWithoutGoal();
+          } else if (typeof OnboardingService !== 'undefined') {
+            OnboardingService.markCompleted();
+          }
+          window.location.replace('dashboard.html');
+        })();
       });
     }
 
@@ -168,6 +177,11 @@ const OnboardingController = (() => {
     _showStep(1);
 
     if (typeof I18n !== 'undefined' && I18n.apply) I18n.apply(document);
+
+    if (page) {
+      page.classList.remove('ob-booting');
+      page.classList.add('ob-ready');
+    }
 
     window.addEventListener('in4mind-relocalize', () => {
       if (typeof I18n !== 'undefined' && I18n.apply) I18n.apply(document);

@@ -22,6 +22,11 @@ html[data-theme="dark"] .ob-page {
   padding: 2.5rem 0 3.5rem;
 }
 
+/* Evita flash del título mientras se decide si hace falta onboarding */
+.ob-page.ob-booting .ob-main {
+  visibility: hidden;
+}
+
 .ob-hero {
   text-align: center;
   margin-bottom: 1.75rem;

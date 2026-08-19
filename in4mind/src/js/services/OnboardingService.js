@@ -171,12 +171,13 @@ const OnboardingService = (() => {
     const flag = _readFlag(email);
     if (flag === '1') return true;
     if (flag === '0') return false;
-    // Unset = cuentas anteriores a este flujo (o sin marca local).
-    // Los registros nuevos llaman markIncomplete(); la nube puede bajar false vía hydrate.
+    // Sin marca local: cuentas previas al flujo de Ruta Empleable.
+    // Registros nuevos siempre llaman markIncomplete() → '0' (solo primera vez).
     if (_hasPriorActivity(email)) {
       _writeFlag(true, email);
       return true;
     }
+    // Por defecto no re-mostrar onboarding a cuentas sin flag (evita loops).
     return true;
   }
 
@@ -186,6 +187,13 @@ const OnboardingService = (() => {
 
   function markCompleted(email) {
     _writeFlag(true, email);
+  }
+
+  /** Skip / complete sin elegir ruta: marca local + nube. */
+  async function finishWithoutGoal(email) {
+    markCompleted(email);
+    await _syncCloud({ onboarding_completed: true });
+    return { ok: true, href: 'dashboard.html' };
   }
 
   function lessonUrl(goalOrId) {
@@ -272,6 +280,7 @@ const OnboardingService = (() => {
     isCompleted,
     markIncomplete,
     markCompleted,
+    finishWithoutGoal,
     lessonUrl,
     hydrateFromCloud,
     completeWithGoal,

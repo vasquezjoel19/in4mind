@@ -345,6 +345,12 @@ const LOCALE_ES = {
         responsive: 'Diseño responsive en móvil',
         semantic: 'HTML semántico y estilos organizados',
       },
+      python: {
+        runnable: 'Script / notebook ejecutable de punta a punta',
+        readme: 'README con pasos para correrlo',
+        io: 'Ejemplo claro de entrada y salida',
+        public: 'Enlace público (GitHub / Colab / Gist)',
+      },
       data: {
         charts: 'Al menos 3 gráficos interactivos',
         filter: '1 filtro global funcional',
@@ -357,7 +363,19 @@ const LOCALE_ES = {
         usecase: 'Caso de uso de negocio documentado',
         share: 'Link compartible Power Apps / SharePoint / Flow',
       },
+      cyber: {
+        scope: 'Alcance de la auditoría documentado',
+        findings: 'Hallazgos con severidad y evidencia',
+        plan: 'Plan de remediación a 30 días',
+        public: 'Informe / checklist en enlace público',
+      },
     },
+    downloadStarter: 'Descargar plantilla base',
+    starterDownloaded: 'Plantilla descargada',
+    shareLinkedin: 'Compartir en LinkedIn',
+    shareWhatsapp: 'Compartir en WhatsApp',
+    shareLinkedinText: 'Completé mi Ruta Empleable IN4MIND ({path}). Certificado verificable: {cert}',
+    shareWhatsappText: '¡Completé mi Ruta Empleable IN4MIND ({path})! Portfolio: {portfolio}',
     cvTitle: 'Bullets de CV',
     liHeadline: 'LinkedIn — titular',
     liSummary: 'LinkedIn — resumen',
@@ -385,6 +403,11 @@ const LOCALE_ES = {
         desc: 'HTML/CSS, JavaScript y GitHub hasta un repo desplegado.',
         tagline: 'Sal con una web real y repo verificable.',
       },
+      'python-junior': {
+        title: 'Python Junior',
+        desc: 'Scripting, automatización y manipulación básica de datos.',
+        tagline: 'Sal con un script o notebook público demostrable.',
+      },
       'data-analyst-jr': {
         title: 'Analista de datos Jr',
         desc: 'Excel avanzado, SQL y dashboard en Power BI.',
@@ -394,6 +417,11 @@ const LOCALE_ES = {
         title: 'Office 365 & Automatización',
         desc: 'Power Apps, SharePoint y flujos de trabajo.',
         tagline: 'Sal con una app o flujo automatizado demostrable.',
+      },
+      'cyber-inicial': {
+        title: 'Ciberseguridad Inicial',
+        desc: 'Prácticas fundamentales, checklists y defensa básica.',
+        tagline: 'Sal con un informe de auditoría junior verificable.',
       },
     },
   },
@@ -475,11 +503,12 @@ const LOCALE_ES = {
   },
   signupOnboard: {
     title: 'Empieza tu Ruta Empleable',
-    sub: 'Elige Web Junior, Analista de datos Jr u Office 365 & Automatización. Te llevamos al primer curso.',
+    sub: 'Elige una ruta (Web, Python, Datos, Office 365 o Ciberseguridad). Te llevamos al primer curso.',
     step: 'Paso {n} de {total}',
     skip: 'Saltar por ahora',
     assignTitle: 'Tu primer curso: {course}',
     assignBody: 'Te llevamos a la Lección 1 para empezar ahora.',
+    assignBodyResume: 'Guardamos tu enlace. Al terminar te llevamos a donde ibas.',
     starting: 'Abriendo lección…',
     startLesson: 'Ir a la Lección 1',
     tracksLabel: 'Elige tu Ruta Empleable',
@@ -489,6 +518,14 @@ const LOCALE_ES = {
       'python-basics': {
         title: 'Python básico',
         desc: 'Sintaxis, tipos y tu primera base de programación.',
+      },
+      'python-career': {
+        title: 'Python Junior (Ruta Empleable)',
+        desc: 'Scripting, automatización y datos hasta un repo demostrable.',
+      },
+      'cyber-career': {
+        title: 'Ciberseguridad Inicial (Ruta Empleable)',
+        desc: 'Prácticas, checklists y un informe de auditoría junior.',
       },
       logic: {
         title: 'Lógica',

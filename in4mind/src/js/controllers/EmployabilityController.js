@@ -136,6 +136,11 @@ const EmployabilityController = (() => {
   function _reqChecklistHtml(path) {
     const items = path?.submissionChecklist || [];
     if (!items.length) return '';
+    const hasStarter = typeof EmployabilityStarters !== 'undefined'
+      && EmployabilityStarters.hasStarter(path.id);
+    const starterBtn = hasStarter
+      ? `<button type="button" class="prof-btn" id="employable-download-starter">${_esc(_t('employable.downloadStarter', null, 'Descargar plantilla base'))}</button>`
+      : '';
     const readme = path.readmeTemplate
       ? `<details class="employable-readme"><summary>${_esc(_t('employable.readmeToggle', null, 'Ver plantilla README'))}</summary><pre class="employable-readme__pre">${_esc(path.readmeTemplate)}</pre><button type="button" class="prof-btn" id="employable-copy-readme">${_esc(_t('employable.copyReadme', null, 'Copiar README'))}</button></details>`
       : '';
@@ -145,6 +150,7 @@ const EmployabilityController = (() => {
         <ul class="employable-req__list">
           ${items.map((item) => `<li>○ ${_esc(item.label)}</li>`).join('')}
         </ul>
+        <div class="employable-req__actions">${starterBtn}</div>
         ${readme}
       </div>`;
   }
@@ -219,6 +225,15 @@ const EmployabilityController = (() => {
         <button type="button" class="btn--course" id="employable-copy-portfolio">
           ${_esc(_t('employable.copyPortfolio', null, 'Copiar enlace de mi Portafolio'))}
         </button>
+        <div class="employable-share__social">
+          <button type="button" class="prof-btn" id="employable-share-linkedin"
+            ${progress.record.certCode ? '' : 'disabled'}>
+            ${_esc(_t('employable.shareLinkedin', null, 'Compartir en LinkedIn'))}
+          </button>
+          <button type="button" class="prof-btn" id="employable-share-whatsapp">
+            ${_esc(_t('employable.shareWhatsapp', null, 'Compartir en WhatsApp'))}
+          </button>
+        </div>
       </div>
 
       <div class="employable-review" id="employable-review-box">
@@ -254,12 +269,53 @@ const EmployabilityController = (() => {
       }
     });
 
+    document.getElementById('employable-download-starter')?.addEventListener('click', () => {
+      const ok = typeof EmployabilityStarters !== 'undefined'
+        && EmployabilityStarters.downloadStarter(progress.pathId);
+      if (typeof AppShell !== 'undefined') {
+        AppShell.showToast(
+          ok
+            ? _t('employable.starterDownloaded', null, 'Plantilla descargada')
+            : _t('employable.copyFail', null, 'No se pudo descargar'),
+          2200
+        );
+      }
+    });
+
     document.getElementById('employable-copy-portfolio')?.addEventListener('click', async () => {
       const url = await _portfolioShareUrl();
       const ok = await _copyText(url);
       if (typeof AppShell !== 'undefined') {
         AppShell.showToast(ok ? _t('employable.portfolioCopied', null, 'Enlace de portafolio copiado') : _t('employable.copyFail', null, 'No se pudo copiar'), 2400);
       }
+    });
+
+    document.getElementById('employable-share-linkedin')?.addEventListener('click', () => {
+      const certUrl = progress.record.certCode && typeof CertVerificationService !== 'undefined'
+        ? CertVerificationService.verifyUrl(progress.record.certCode)
+        : '';
+      if (!certUrl) return;
+      const text = _t(
+        'employable.shareLinkedinText',
+        { path: path?.title || progress.pathId, cert: certUrl },
+        `Completé mi Ruta Empleable IN4MIND (${path?.title || progress.pathId}). Certificado verificable: ${certUrl}`
+      );
+      const shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(certUrl)}`;
+      window.open(shareUrl, '_blank', 'noopener,noreferrer');
+      void _copyText(text);
+      if (typeof AppShell !== 'undefined') {
+        AppShell.showToast(_t('employable.copied', null, 'Texto copiado — pégalo en tu publicación'), 2800);
+      }
+    });
+
+    document.getElementById('employable-share-whatsapp')?.addEventListener('click', async () => {
+      const portfolio = await _portfolioShareUrl();
+      const text = _t(
+        'employable.shareWhatsappText',
+        { path: path?.title || progress.pathId, portfolio },
+        `¡Completé mi Ruta Empleable IN4MIND (${path?.title || progress.pathId})! Portfolio: ${portfolio}`
+      );
+      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
     });
 
     const urlInput = document.getElementById('employable-project-url');

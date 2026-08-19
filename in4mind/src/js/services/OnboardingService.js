@@ -17,6 +17,15 @@ const OnboardingService = (() => {
       featured: true,
     },
     {
+      id: 'python-career',
+      pathId: 'programming',
+      courseId: 'python',
+      lesson: 1,
+      icon: 'code',
+      careerPathId: 'python-junior',
+      featured: true,
+    },
+    {
       id: 'data-career',
       pathId: 'programming',
       courseId: 'excel',
@@ -32,6 +41,15 @@ const OnboardingService = (() => {
       lesson: 1,
       icon: 'briefcase',
       careerPathId: 'office365-automation',
+      featured: true,
+    },
+    {
+      id: 'cyber-career',
+      pathId: 'devops',
+      courseId: 'cybersecurity',
+      lesson: 1,
+      icon: 'shield',
+      careerPathId: 'cyber-inicial',
       featured: true,
     },
     {

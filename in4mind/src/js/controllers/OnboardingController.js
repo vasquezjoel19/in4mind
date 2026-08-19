@@ -30,6 +30,7 @@ const OnboardingController = (() => {
       palette: '<circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.5-.7 1.5-1.5 0-.4-.1-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.9.7-1.5 1.5-1.5H16c3.3 0 6-2.7 6-6 0-5.5-4.5-10-10-10z"/>',
       chart: '<path d="M3 3v18h18"/><path d="M7 14l4-4 4 3 5-7"/>',
       briefcase: '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2M12 12v.01"/>',
+      shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
     };
     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name] || icons.code}</svg>`;
   }
@@ -80,6 +81,15 @@ const OnboardingController = (() => {
     });
   }
 
+  function _finishRedirect(fallbackHref) {
+    let dest = fallbackHref || 'dashboard.html';
+    if (typeof AuthGuard !== 'undefined' && AuthGuard.consumePendingRedirect) {
+      const pending = AuthGuard.consumePendingRedirect();
+      if (pending) dest = pending;
+    }
+    window.location.replace(dest);
+  }
+
   async function _goToStep2() {
     if (!_selected || _finishing || typeof OnboardingService === 'undefined') return;
     _finishing = true;
@@ -106,11 +116,20 @@ const OnboardingController = (() => {
       );
     }
     if ($assignBody) {
-      $assignBody.textContent = _t(
-        'signupOnboard.assignBody',
-        null,
-        'Te llevamos a la Lección 1 para empezar ahora.'
-      );
+      const pending = typeof AuthGuard !== 'undefined' && AuthGuard.peekPendingRedirect
+        ? AuthGuard.peekPendingRedirect()
+        : null;
+      $assignBody.textContent = pending
+        ? _t(
+          'signupOnboard.assignBodyResume',
+          null,
+          'Guardamos tu enlace. Al terminar te llevamos a donde ibas.'
+        )
+        : _t(
+          'signupOnboard.assignBody',
+          null,
+          'Te llevamos a la Lección 1 para empezar ahora.'
+        );
     }
     if ($startBtn) {
       $startBtn.disabled = true;
@@ -119,13 +138,19 @@ const OnboardingController = (() => {
 
     const result = await OnboardingService.completeWithGoal(_selected);
     window.setTimeout(() => {
-      window.location.replace(result.href || 'dashboard.html');
+      _finishRedirect(result.href || 'dashboard.html');
     }, 650);
   }
 
   async function init() {
     const page = document.getElementById('ob-page');
     if (page) page.classList.add('ob-booting');
+
+    // Persist ?next= from shared links into durable storage
+    if (typeof AuthGuard !== 'undefined' && AuthGuard.stashPendingRedirect) {
+      const q = new URLSearchParams(window.location.search).get('next');
+      if (q) AuthGuard.stashPendingRedirect(q);
+    }
 
     if (typeof AuthGuard !== 'undefined') {
       const ok = await AuthGuard.requireAsync();
@@ -138,7 +163,7 @@ const OnboardingController = (() => {
     if (typeof OnboardingService !== 'undefined') {
       await OnboardingService.hydrateFromCloud();
       if (OnboardingService.isCompleted()) {
-        window.location.replace('dashboard.html');
+        _finishRedirect('dashboard.html');
         return;
       }
     }
@@ -161,7 +186,7 @@ const OnboardingController = (() => {
           } else if (typeof OnboardingService !== 'undefined') {
             OnboardingService.markCompleted();
           }
-          window.location.replace('dashboard.html');
+          _finishRedirect('dashboard.html');
         })();
       });
     }

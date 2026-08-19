@@ -335,6 +335,12 @@ const LOCALE_EN = {
         responsive: 'Mobile-responsive layout',
         semantic: 'Semantic HTML and organized styles',
       },
+      python: {
+        runnable: 'End-to-end runnable script / notebook',
+        readme: 'README with run steps',
+        io: 'Clear input and output example',
+        public: 'Public link (GitHub / Colab / Gist)',
+      },
       data: {
         charts: 'At least 3 interactive charts',
         filter: '1 working global filter',
@@ -347,6 +353,12 @@ const LOCALE_EN = {
         usecase: 'Documented business use case',
         share: 'Shareable Power Apps / SharePoint / Flow link',
       },
+      cyber: {
+        scope: 'Documented audit scope',
+        findings: 'Findings with severity and evidence',
+        plan: '30-day remediation plan',
+        public: 'Public report / checklist link',
+      },
     },
     next: {
       lessons: 'Continue {path} lessons',
@@ -355,6 +367,12 @@ const LOCALE_EN = {
       pitch: 'Generate your {path} CV / pitch',
       done: 'View {path} portfolio',
     },
+    downloadStarter: 'Download starter template',
+    starterDownloaded: 'Starter downloaded',
+    shareLinkedin: 'Share on LinkedIn',
+    shareWhatsapp: 'Share on WhatsApp',
+    shareLinkedinText: 'I completed my IN4MIND Job-Ready Path ({path}). Verifiable certificate: {cert}',
+    shareWhatsappText: 'I completed my IN4MIND Job-Ready Path ({path})! Portfolio: {portfolio}',
     cvTitle: 'CV bullets',
     liHeadline: 'LinkedIn — headline',
     liSummary: 'LinkedIn — summary',
@@ -382,6 +400,11 @@ const LOCALE_EN = {
         desc: 'HTML/CSS, JavaScript, and GitHub through a deployed repo.',
         tagline: 'Ship a real site and a verifiable repo.',
       },
+      'python-junior': {
+        title: 'Python Junior',
+        desc: 'Scripting, automation, and basic data manipulation.',
+        tagline: 'Ship a public script or notebook.',
+      },
       'data-analyst-jr': {
         title: 'Jr Data Analyst',
         desc: 'Advanced Excel, SQL, and a Power BI dashboard.',
@@ -391,6 +414,11 @@ const LOCALE_EN = {
         title: 'Office 365 & Automation',
         desc: 'Power Apps, SharePoint, and workflows.',
         tagline: 'Ship a demonstrable app or automated flow.',
+      },
+      'cyber-inicial': {
+        title: 'Intro Cybersecurity',
+        desc: 'Foundational practices, checklists, and basic defense.',
+        tagline: 'Ship a junior audit report that is verifiable.',
       },
     },
   },
@@ -471,11 +499,12 @@ const LOCALE_EN = {
   },
   signupOnboard: {
     title: 'Start your Job-Ready Path',
-    sub: 'Choose Web Junior, Jr Data Analyst, or Office 365 & Automation. We take you to Lesson 1.',
+    sub: 'Choose a path (Web, Python, Data, Office 365, or Cybersecurity). We take you to Lesson 1.',
     step: 'Step {n} of {total}',
     skip: 'Skip for now',
     assignTitle: 'Your first course: {course}',
     assignBody: 'Taking you to Lesson 1 so you can start now.',
+    assignBodyResume: 'We saved your link. When you finish, we will take you back there.',
     starting: 'Opening lesson…',
     startLesson: 'Go to Lesson 1',
     tracksLabel: 'Choose your Job-Ready Path',
@@ -485,6 +514,14 @@ const LOCALE_EN = {
       'python-basics': {
         title: 'Basic Python',
         desc: 'Syntax, types, and your first programming foundation.',
+      },
+      'python-career': {
+        title: 'Python Junior (Job-Ready Path)',
+        desc: 'Scripting, automation, and data through a demo repo.',
+      },
+      'cyber-career': {
+        title: 'Intro Cybersecurity (Job-Ready Path)',
+        desc: 'Practices, checklists, and a junior audit report.',
       },
       logic: {
         title: 'Logic',

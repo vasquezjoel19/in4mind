@@ -1498,7 +1498,10 @@ const DashboardController = (() => {
     const user    = userRaw ? JSON.parse(userRaw) : null;
 
     if (typeof OnboardingService !== 'undefined' && OnboardingService.needsOnboarding()) {
-      window.location.replace('onboarding.html');
+      const href = typeof AuthGuard !== 'undefined' && AuthGuard.onboardingUrlWithPending
+        ? AuthGuard.onboardingUrlWithPending()
+        : 'onboarding.html';
+      window.location.replace(href);
       return;
     }
 

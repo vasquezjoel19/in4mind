@@ -1,4 +1,4 @@
-/*! IN4MIND bundle 20260818emp45 — 2026-08-18T21:30:10.315236+00:00 */
+/*! IN4MIND bundle 20260819ruta2 — 2026-08-19T19:19:40.045267+00:00 */
 
 ;/* --- src/js/components/In4mindBulb.js --- */
 'use strict';
@@ -2410,10 +2410,14 @@ const ShareService = (() => {
  *
  * Si no hay sesión, guarda la URL destino y redirige a login; tras entrar,
  * `consumeRedirect()` devuelve al usuario exactamente a donde iba.
+ *
+ * Si hace falta onboarding, `stashPendingRedirect` / `consumePendingRedirect`
+ * conservan el deep-link hasta terminar la Ruta Empleable (IN4MIND_NEXT_REDIRECT).
  */
 const AuthGuard = (() => {
 
   const NEXT_KEY = 'in4mind_next';
+  const PENDING_KEY = 'IN4MIND_NEXT_REDIRECT';
 
   function _hasSession() {
     try {
@@ -2428,9 +2432,38 @@ const AuthGuard = (() => {
   function _isSafe(target) {
     try {
       const url = new URL(target, window.location.origin);
-      return url.origin === window.location.origin;
+      if (url.origin !== window.location.origin) return false;
+      if (url.username || url.password) return false;
+      const href = String(target).trim();
+      if (/^(javascript|data|vbscript):/i.test(href)) return false;
+      if ((url.pathname || '').includes('..')) return false;
+      return true;
     } catch {
       return false;
+    }
+  }
+
+  /**
+   * Normaliza a ruta relativa de la app (pathname + search + hash), o null.
+   * Ej: "tutorial.html?course=python&lesson=1"
+   */
+  function sanitizeNext(raw) {
+    if (raw == null) return null;
+    const trimmed = String(raw).trim();
+    if (!trimmed || /^(javascript|data|vbscript):/i.test(trimmed)) return null;
+    try {
+      const url = new URL(trimmed, window.location.origin);
+      if (!_isSafe(url.href)) return null;
+      let path = url.pathname || '/';
+      // Static hosting: allow /foo.html or /folder/foo.html under same origin
+      const leaf = path.split('/').filter(Boolean).pop() || '';
+      if (leaf && !/\.html$/i.test(leaf)) return null;
+      if (!leaf) return 'dashboard.html';
+      // Prefer site-relative path without leading slash for window.location.replace
+      const relPath = path.replace(/^\//, '');
+      return `${relPath}${url.search || ''}${url.hash || ''}`;
+    } catch {
+      return null;
     }
   }
 
@@ -2445,21 +2478,12 @@ const AuthGuard = (() => {
     window.location.replace(login.toString());
   }
 
-  /**
-   * Exige sesión para ver la página actual.
-   * @returns {boolean} true si puede continuar (síncrono; si hay que esperar
-   *   a Supabase, `requireAsync` se usa en el boot).
-   */
   function require() {
     if (_hasSession()) return true;
     _redirectToLogin();
     return false;
   }
 
-  /**
-   * Igual que require(), pero intenta rehidratar desde Supabase Auth
-   * (p. ej. pestaña nueva con JWT vigente).
-   */
   async function requireAsync() {
     if (_hasSession()) return true;
     if (typeof AuthService !== 'undefined' && AuthService.restoreOAuthSession) {
@@ -2472,10 +2496,6 @@ const AuthGuard = (() => {
     return false;
   }
 
-  /**
-   * Destino pendiente tras iniciar sesión, si lo hay. Lo consume.
-   * @returns {string|null}
-   */
   function consumeRedirect() {
     let target = null;
     try {
@@ -2491,14 +2511,76 @@ const AuthGuard = (() => {
     return target && _isSafe(target) ? target : null;
   }
 
-  /** Guarda un destino explícito (p. ej. antes de mandar a login desde un enlace). */
   function setRedirect(target) {
     try {
       if (_isSafe(target)) sessionStorage.setItem(NEXT_KEY, new URL(target, window.location.href).toString());
     } catch { /* ignore */ }
   }
 
-  return { require, requireAsync, consumeRedirect, setRedirect, hasSession: _hasSession, NEXT_KEY };
+  /** Guarda destino post-onboarding (localStorage + opcionalmente durable). */
+  function stashPendingRedirect(target) {
+    const rel = sanitizeNext(target);
+    if (!rel) return null;
+    try {
+      localStorage.setItem(PENDING_KEY, rel);
+    } catch { /* ignore */ }
+    return rel;
+  }
+
+  /**
+   * Lee y limpia destino pendiente (query ?next= o IN4MIND_NEXT_REDIRECT).
+   * @returns {string|null} ruta relativa segura
+   */
+  function consumePendingRedirect() {
+    let raw = null;
+    try {
+      raw = new URLSearchParams(window.location.search).get('next');
+    } catch { /* ignore */ }
+    if (!raw) {
+      try {
+        raw = localStorage.getItem(PENDING_KEY);
+      } catch { /* ignore */ }
+    }
+    try {
+      localStorage.removeItem(PENDING_KEY);
+    } catch { /* ignore */ }
+
+    return sanitizeNext(raw);
+  }
+
+  function peekPendingRedirect() {
+    let raw = null;
+    try {
+      raw = new URLSearchParams(window.location.search).get('next');
+    } catch { /* ignore */ }
+    if (!raw) {
+      try {
+        raw = localStorage.getItem(PENDING_KEY);
+      } catch { /* ignore */ }
+    }
+    return sanitizeNext(raw);
+  }
+
+  function onboardingUrlWithPending(pendingRel) {
+    const rel = pendingRel || peekPendingRedirect();
+    if (!rel) return 'onboarding.html';
+    return `onboarding.html?next=${encodeURIComponent(rel)}`;
+  }
+
+  return {
+    require,
+    requireAsync,
+    consumeRedirect,
+    setRedirect,
+    hasSession: _hasSession,
+    NEXT_KEY,
+    PENDING_KEY,
+    sanitizeNext,
+    stashPendingRedirect,
+    consumePendingRedirect,
+    peekPendingRedirect,
+    onboardingUrlWithPending,
+  };
 
 })();
 

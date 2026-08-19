@@ -277,8 +277,8 @@ const AuthController = (() => {
   }
 
   /**
-   * Tras login/registro: onboarding solo la primera vez; no forzar onboarding.html
-   * si ya está completado (evita el flash → dashboard).
+   * Tras login/registro: onboarding solo la primera vez; conserva deep-links
+   * en IN4MIND_NEXT_REDIRECT para retomarlos al terminar el onboarding.
    */
   async function _redirectAfterAuth() {
     if (typeof OnboardingService !== 'undefined' && OnboardingService.hydrateFromCloud) {
@@ -288,17 +288,27 @@ const AuthController = (() => {
     }
 
     const needsOnboard = _needsOnboarding();
+    const goOnboarding = (pendingTarget) => {
+      let rel = null;
+      if (typeof AuthGuard !== 'undefined') {
+        if (pendingTarget) rel = AuthGuard.stashPendingRedirect(pendingTarget);
+        window.location.replace(AuthGuard.onboardingUrlWithPending(rel));
+        return;
+      }
+      window.location.replace('onboarding.html');
+    };
 
     if (typeof AuthGuard !== 'undefined') {
       const next = AuthGuard.consumeRedirect();
       if (next) {
         const path = _pathOf(next);
         if (needsOnboard) {
-          window.location.replace('onboarding.html');
+          goOnboarding(next);
           return;
         }
         if (/onboarding\.html/i.test(path)) {
-          window.location.replace('dashboard.html');
+          const pending = AuthGuard.consumePendingRedirect();
+          window.location.replace(pending || 'dashboard.html');
           return;
         }
         window.location.replace(next);
@@ -310,30 +320,38 @@ const AuthController = (() => {
     if (destination === 'ai') {
       sessionStorage.removeItem('in4mind_open_destination');
       if (needsOnboard) {
-        window.location.replace('onboarding.html');
+        goOnboarding('ai.html');
         return;
       }
       window.location.href = 'ai.html';
       return;
     }
     if (sessionStorage.getItem('in4mind_open_course')) {
+      const course = sessionStorage.getItem('in4mind_open_course');
+      const lesson = sessionStorage.getItem('in4mind_open_lesson');
+      let href = `tutorial.html?course=${encodeURIComponent(course)}`;
+      if (lesson) href += `&lesson=${encodeURIComponent(lesson)}`;
       if (needsOnboard) {
-        window.location.replace('onboarding.html');
+        goOnboarding(href);
         return;
       }
       window.location.href = 'tutorial.html';
       return;
     }
     if (sessionStorage.getItem('in4mind_open_quiz')) {
+      const quiz = sessionStorage.getItem('in4mind_open_quiz');
+      const href = quiz
+        ? `quizzes.html?quiz=${encodeURIComponent(quiz)}`
+        : 'quizzes.html';
       if (needsOnboard) {
-        window.location.replace('onboarding.html');
+        goOnboarding(href);
         return;
       }
       window.location.href = 'quizzes.html';
       return;
     }
     if (needsOnboard) {
-      window.location.replace('onboarding.html');
+      goOnboarding(null);
       return;
     }
     window.location.href = 'dashboard.html';

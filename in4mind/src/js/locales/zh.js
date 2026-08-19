@@ -336,6 +336,12 @@ const LOCALE_ZH = {
         responsive: '移动端自适应',
         semantic: '语义化 HTML 与清晰样式',
       },
+      python: {
+        runnable: '端到端可运行的脚本 / 笔记本',
+        readme: '含运行步骤的 README',
+        io: '清晰的输入与输出示例',
+        public: '公开链接（GitHub / Colab / Gist）',
+      },
       data: {
         charts: '至少 3 个交互图表',
         filter: '1 个可用的全局筛选器',
@@ -348,6 +354,12 @@ const LOCALE_ZH = {
         usecase: '已记录的业务用例',
         share: '可分享的 Power Apps / SharePoint / Flow 链接',
       },
+      cyber: {
+        scope: '已记录的审计范围',
+        findings: '带严重级别与证据的发现',
+        plan: '30 天修复计划',
+        public: '公开报告 / 清单链接',
+      },
     },
     next: {
       lessons: '继续 {path} 课时',
@@ -356,6 +368,12 @@ const LOCALE_ZH = {
       pitch: '生成 {path} 简历/简介',
       done: '查看 {path} 作品集',
     },
+    downloadStarter: '下载基础模板',
+    starterDownloaded: '模板已下载',
+    shareLinkedin: '分享到 LinkedIn',
+    shareWhatsapp: '分享到 WhatsApp',
+    shareLinkedinText: '我完成了 IN4MIND 就业就绪路径（{path}）。可验证证书：{cert}',
+    shareWhatsappText: '我完成了 IN4MIND 就业就绪路径（{path}）！作品集：{portfolio}',
     cvTitle: '简历要点',
     liHeadline: 'LinkedIn — 标题',
     liSummary: 'LinkedIn — 简介',
@@ -383,6 +401,11 @@ const LOCALE_ZH = {
         desc: 'HTML/CSS、JavaScript 与 GitHub，直到可部署仓库。',
         tagline: '带走真实网站与可验证仓库。',
       },
+      'python-junior': {
+        title: 'Python 初级',
+        desc: '脚本、自动化与基础数据处理。',
+        tagline: '带走可公开演示的脚本或笔记本。',
+      },
       'data-analyst-jr': {
         title: '初级数据分析师',
         desc: '进阶 Excel、SQL 与 Power BI 仪表板。',
@@ -392,6 +415,11 @@ const LOCALE_ZH = {
         title: 'Office 365 与自动化',
         desc: 'Power Apps、SharePoint 与工作流。',
         tagline: '带走可演示的应用或自动化流程。',
+      },
+      'cyber-inicial': {
+        title: '网络安全入门',
+        desc: '基础实践、清单与基本防护。',
+        tagline: '带走可验证的初级审计报告。',
       },
     },
   },
@@ -473,11 +501,12 @@ const LOCALE_ZH = {
   },
   signupOnboard: {
     title: '开始你的就业就绪路径',
-    sub: '选择 Web 初级、初级数据分析师或 Office 365 与自动化。我们将带你进入第 1 课。',
+    sub: '选择路径（Web、Python、数据、Office 365 或网络安全）。我们将带你进入第 1 课。',
     step: '第 {n} 步，共 {total} 步',
     skip: '暂时跳过',
     assignTitle: '你的第一门课：{course}',
     assignBody: '正在带你进入第 1 课，马上开始学习。',
+    assignBodyResume: '我们已保存你的链接。完成后会带你回到原目标。',
     starting: '正在打开课程…',
     startLesson: '前往第 1 课',
     tracksLabel: '选择你的就业就绪路径',
@@ -487,6 +516,14 @@ const LOCALE_ZH = {
       'python-basics': {
         title: 'Python 入门',
         desc: '语法、类型与编程基础。',
+      },
+      'python-career': {
+        title: 'Python 初级（就业就绪路径）',
+        desc: '脚本、自动化与数据，直到可演示仓库。',
+      },
+      'cyber-career': {
+        title: '网络安全入门（就业就绪路径）',
+        desc: '实践、清单与初级审计报告。',
       },
       logic: {
         title: '逻辑思维',

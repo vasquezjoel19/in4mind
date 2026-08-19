@@ -430,7 +430,23 @@ html[data-theme="dark"] .employable-path-card__bar {
 }
 
 .employable-share {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
   margin-top: 1rem;
+}
+
+.employable-share__social {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.employable-req__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0.35rem;
 }
 
 .ob-goals__label {

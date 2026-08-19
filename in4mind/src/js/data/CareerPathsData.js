@@ -41,6 +41,35 @@ Landing / app web junior desplegada en producción.
       ],
     },
     {
+      id: 'python-junior',
+      icon: 'code',
+      accent: '#f59e0b',
+      courseIds: ['python', 'flowchart'],
+      guidedProjectIds: ['gp-python-csv'],
+      projectHint: 'https://github.com/tu-usuario/python-script  o  Colab / Gist público',
+      projectExamples: ['GitHub repo .py', 'Google Colab', 'Gist público'],
+      readmeTemplate: `# Proyecto Python Junior — IN4MIND
+
+## Objetivo
+Script o notebook que automatice o transforme datos de punta a punta.
+
+## Stack
+- Python 3
+- CSV / automatización básica
+
+## Entrega
+- [ ] Repo o notebook público
+- [ ] README con cómo ejecutar
+- [ ] Ejemplo de entrada/salida
+`,
+      submissionChecklist: [
+        { id: 'runnable', labelKey: 'employable.req.python.runnable', fallback: 'Script / notebook ejecutable de punta a punta' },
+        { id: 'readme', labelKey: 'employable.req.python.readme', fallback: 'README con pasos para correrlo' },
+        { id: 'io', labelKey: 'employable.req.python.io', fallback: 'Ejemplo claro de entrada y salida' },
+        { id: 'public', labelKey: 'employable.req.python.public', fallback: 'Enlace público (GitHub / Colab / Gist)' },
+      ],
+    },
+    {
       id: 'data-analyst-jr',
       icon: 'chart',
       accent: '#22c55e',
@@ -95,6 +124,32 @@ App Power Apps / flujo / sitio SharePoint demostrable.
         { id: 'access', labelKey: 'employable.req.office.access', fallback: 'Instrucciones de acceso (permiso de lectura)' },
         { id: 'usecase', labelKey: 'employable.req.office.usecase', fallback: 'Caso de uso de negocio documentado' },
         { id: 'share', labelKey: 'employable.req.office.share', fallback: 'Link compartible Power Apps / SharePoint / Flow' },
+      ],
+    },
+    {
+      id: 'cyber-inicial',
+      icon: 'shield',
+      accent: '#ef4444',
+      courseIds: ['cybersecurity'],
+      guidedProjectIds: [],
+      projectHint: 'URL del informe / checklist público (Notion, GitHub, Docs)',
+      projectExamples: ['GitHub markdown', 'Notion público', 'Google Docs'],
+      readmeTemplate: `# Auditoría Ciberseguridad Inicial — IN4MIND
+
+## Objetivo
+Checklist / informe junior de prácticas de seguridad básicas.
+
+## Entrega
+- [ ] Alcance definido
+- [ ] Hallazgos con severidad
+- [ ] Plan de mejora a 30 días
+- [ ] Enlace público de revisión
+`,
+      submissionChecklist: [
+        { id: 'scope', labelKey: 'employable.req.cyber.scope', fallback: 'Alcance de la auditoría documentado' },
+        { id: 'findings', labelKey: 'employable.req.cyber.findings', fallback: 'Hallazgos con severidad y evidencia' },
+        { id: 'plan', labelKey: 'employable.req.cyber.plan', fallback: 'Plan de remediación a 30 días' },
+        { id: 'public', labelKey: 'employable.req.cyber.public', fallback: 'Informe / checklist en enlace público' },
       ],
     },
   ];

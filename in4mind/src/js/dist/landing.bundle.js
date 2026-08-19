@@ -1,4 +1,4 @@
-/*! IN4MIND bundle 20260819ruta2 — 2026-08-19T19:19:40.048569+00:00 */
+/*! IN4MIND bundle 20260819ruta3 — 2026-08-19T19:35:33.832177+00:00 */
 
 ;/* --- src/js/components/In4mindBulb.js --- */
 'use strict';
@@ -2260,6 +2260,12 @@ const AuthGuard = (() => {
     return rel;
   }
 
+  function clearPendingRedirect() {
+    try {
+      localStorage.removeItem(PENDING_KEY);
+    } catch { /* ignore */ }
+  }
+
   /**
    * Lee y limpia destino pendiente (query ?next= o IN4MIND_NEXT_REDIRECT).
    * @returns {string|null} ruta relativa segura
@@ -2274,9 +2280,7 @@ const AuthGuard = (() => {
         raw = localStorage.getItem(PENDING_KEY);
       } catch { /* ignore */ }
     }
-    try {
-      localStorage.removeItem(PENDING_KEY);
-    } catch { /* ignore */ }
+    clearPendingRedirect();
 
     return sanitizeNext(raw);
   }
@@ -2310,6 +2314,7 @@ const AuthGuard = (() => {
     PENDING_KEY,
     sanitizeNext,
     stashPendingRedirect,
+    clearPendingRedirect,
     consumePendingRedirect,
     peekPendingRedirect,
     onboardingUrlWithPending,

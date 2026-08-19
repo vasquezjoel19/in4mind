@@ -335,7 +335,7 @@ const AuthController = (() => {
         goOnboarding(href);
         return;
       }
-      window.location.href = 'tutorial.html';
+      window.location.href = href;
       return;
     }
     if (sessionStorage.getItem('in4mind_open_quiz')) {
@@ -347,7 +347,7 @@ const AuthController = (() => {
         goOnboarding(href);
         return;
       }
-      window.location.href = 'quizzes.html';
+      window.location.href = href;
       return;
     }
     if (needsOnboard) {

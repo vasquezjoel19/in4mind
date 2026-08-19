@@ -1559,16 +1559,23 @@ const TutorialController = (() => {
     }
 
     if (previewCourse) {
+      const lessonFromSession = sessionStorage.getItem('in4mind_open_lesson');
       sessionStorage.removeItem('in4mind_open_course');
+      sessionStorage.removeItem('in4mind_open_lesson');
+      if (typeof AuthGuard !== 'undefined' && AuthGuard.clearPendingRedirect) {
+        AuthGuard.clearPendingRedirect();
+      }
       _showDetail(previewCourse);
 
       // Enlace compartido a una lección concreta: ?course=python&lesson=3
-      const lessonParam = parseInt(params.get('lesson'), 10);
+      const lessonParam = parseInt(params.get('lesson') || lessonFromSession, 10);
       if (Number.isInteger(lessonParam) && lessonParam >= 1) {
         const wanted = Math.min(lessonParam, _currentLessons.length) - 1;
         const accessible = _clampAccessibleLesson(wanted);
         if (accessible !== wanted) _toastLessonLocked();
         _showLesson(accessible);
+      } else {
+        _syncDeepLinkUrl();
       }
     }
 

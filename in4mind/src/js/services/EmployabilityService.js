@@ -61,6 +61,7 @@ const EmployabilityService = (() => {
       pitch: null,
       pitchGeneratedAt: 0,
       projectReview: null,
+      reqChecks: {},
       updatedAt: 0,
     };
   }
@@ -96,6 +97,7 @@ const EmployabilityService = (() => {
         projectSubmittedAt: rec.projectSubmittedAt || 0,
         certIssuedAt: rec.certIssuedAt || 0,
         pitchGeneratedAt: rec.pitchGeneratedAt || 0,
+        reqChecks: rec.reqChecks || {},
       },
       updated_at: new Date(rec.updatedAt || Date.now()).toISOString(),
     };
@@ -183,6 +185,7 @@ const EmployabilityService = (() => {
       return {
         ok: true,
         trusted,
+        host,
         warning: trusted
           ? ''
           : _t('employable.urlSoftWarn', null, 'Asegúrate de que sea un enlace público válido.'),
@@ -194,6 +197,111 @@ const EmployabilityService = (() => {
         warning: _t('employable.invalidUrl', null, 'URL inválida. Usa http:// o https://'),
       };
     }
+  }
+
+  function _inferReqChecksFromUrl(pathId, url) {
+    const out = {};
+    if (!_isValidUrl(url)) return out;
+    let host = '';
+    try {
+      host = new URL(String(url).trim()).hostname.toLowerCase();
+    } catch {
+      return out;
+    }
+    const path = typeof CareerPathsData !== 'undefined' ? CareerPathsData.getPathById(pathId) : null;
+    const ids = new Set((path?.submissionChecklist || []).map((i) => i.id));
+    const isGithub = host === 'github.com' || host.endsWith('.github.com') || host.endsWith('github.io');
+    const isDeploy = /vercel\.app|netlify\.app|pages\.dev|github\.io|glitch\.me|replit\.app|codesandbox\.io|stackblitz\.io/.test(host);
+    const isData = /powerbi\.com|lookerstudio\.google\.com|datastudio\.google\.com|onedrive\.live\.com/.test(host);
+    const isOffice = /sharepoint\.com|powerapps\.com|powerautomate\.com/.test(host);
+    const isColab = host.includes('colab') || host.includes('gist.github');
+
+    if (ids.has('repo') && (isGithub || host.includes('gitlab.com') || host.includes('bitbucket.org'))) out.repo = true;
+    if (ids.has('live') && (isDeploy || isGithub)) out.live = true;
+    if (ids.has('public') && (isDeploy || isData || isGithub || isColab || isOffice)) out.public = true;
+    if (ids.has('runnable') && (isGithub || isColab)) out.runnable = true;
+    if (ids.has('readme') && (isGithub || isColab)) out.readme = true;
+    if (ids.has('share') && isOffice) out.share = true;
+    if (ids.has('functional') && isOffice) out.functional = true;
+    if (ids.has('charts') && isData) out.charts = true;
+    if (ids.has('filter') && isData) out.filter = true;
+    if (ids.has('scope') && (isGithub || host.includes('notion') || host.includes('docs.google'))) out.scope = true;
+    if (ids.has('findings') && (isGithub || host.includes('notion') || host.includes('docs.google'))) out.findings = true;
+    if (ids.has('plan') && (isGithub || host.includes('notion') || host.includes('docs.google'))) out.plan = true;
+    return out;
+  }
+
+  function getReqChecklistState(pathId) {
+    const id = pathId || getActivePathId();
+    const path = typeof CareerPathsData !== 'undefined' ? CareerPathsData.getPathById(id) : null;
+    const rec = getPathRecord(id);
+    const saved = rec.reqChecks && typeof rec.reqChecks === 'object' ? rec.reqChecks : {};
+    const inferred = rec.projectUrl ? _inferReqChecksFromUrl(id, rec.projectUrl) : {};
+    return (path?.submissionChecklist || []).map((item) => ({
+      ...item,
+      done: Boolean(saved[item.id] || inferred[item.id]),
+      auto: Boolean(inferred[item.id] && !saved[item.id]),
+    }));
+  }
+
+  function setReqCheck(pathId, itemId, done) {
+    const id = pathId || getActivePathId();
+    if (!id || !itemId) return { ok: false };
+    const state = _read();
+    const rec = _pathRec(state, id);
+    if (!rec.reqChecks || typeof rec.reqChecks !== 'object') rec.reqChecks = {};
+    rec.reqChecks[itemId] = Boolean(done);
+    rec.updatedAt = Date.now();
+    _write(state);
+    return { ok: true, reqChecks: { ...rec.reqChecks } };
+  }
+
+  function applyUrlToReqChecks(pathId, url) {
+    const id = pathId || getActivePathId();
+    if (!id) return { ok: false };
+    const inferred = _inferReqChecksFromUrl(id, url);
+    const state = _read();
+    const rec = _pathRec(state, id);
+    if (!rec.reqChecks || typeof rec.reqChecks !== 'object') rec.reqChecks = {};
+    Object.keys(inferred).forEach((k) => {
+      if (inferred[k]) rec.reqChecks[k] = true;
+    });
+    rec.updatedAt = Date.now();
+    _write(state);
+    return { ok: true, reqChecks: { ...rec.reqChecks }, inferred };
+  }
+
+  /** Preview metadata before issuing certificate (no iframe for hosts that block embeds). */
+  function getProjectPreview(url) {
+    const hint = getUrlTrustHint(url);
+    if (!hint.ok) return { ok: false, error: hint.warning };
+    let parsed;
+    try {
+      parsed = new URL(String(url).trim());
+    } catch {
+      return { ok: false, error: hint.warning };
+    }
+    const host = parsed.hostname.toLowerCase();
+    const isGithubRepo = host === 'github.com' || host.endsWith('.github.com');
+    const canIframe = !isGithubRepo
+      && !host.includes('sharepoint.com')
+      && !host.includes('powerbi.com')
+      && !host.includes('docs.google.com');
+    let kind = 'web';
+    if (isGithubRepo || host.includes('gitlab.com')) kind = 'repo';
+    else if (/powerbi|looker|datastudio/.test(host)) kind = 'dashboard';
+    else if (/powerapps|sharepoint|powerautomate/.test(host)) kind = 'office';
+    else if (/colab|gist\.github/.test(host)) kind = 'notebook';
+    return {
+      ok: true,
+      url: parsed.href,
+      host,
+      kind,
+      trusted: hint.trusted,
+      canIframe,
+      warning: hint.warning,
+      title: host,
+    };
   }
 
   function _learningPct(path, quizProgress = {}, certifications = []) {
@@ -378,6 +486,11 @@ const EmployabilityService = (() => {
     const rec = _pathRec(state, id);
     rec.projectUrl = trimmed;
     rec.projectSubmittedAt = Date.now();
+    const inferred = _inferReqChecksFromUrl(id, trimmed);
+    if (!rec.reqChecks || typeof rec.reqChecks !== 'object') rec.reqChecks = {};
+    Object.keys(inferred).forEach((k) => {
+      if (inferred[k]) rec.reqChecks[k] = true;
+    });
     rec.updatedAt = Date.now();
     _write(state);
 
@@ -632,6 +745,9 @@ Tono profesional, concreto, junior-friendly.`;
         rec.pitch = steps.pitch || rec.pitch;
         rec.pitchGeneratedAt = steps.pitchGeneratedAt || (rec.pitch ? remoteAt : 0);
         rec.projectReview = steps.projectReview || rec.projectReview;
+        if (steps.reqChecks && typeof steps.reqChecks === 'object') {
+          rec.reqChecks = { ...(rec.reqChecks || {}), ...steps.reqChecks };
+        }
         rec.updatedAt = remoteAt;
         changed = true;
       });
@@ -693,6 +809,10 @@ Tono profesional, concreto, junior-friendly.`;
     getPortfolioShareUrl,
     isValidUrl: _isValidUrl,
     getUrlTrustHint,
+    getReqChecklistState,
+    setReqCheck,
+    applyUrlToReqChecks,
+    getProjectPreview,
   };
 })();
 

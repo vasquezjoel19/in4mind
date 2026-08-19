@@ -1665,17 +1665,29 @@ const QuizzesController = (() => {
     const pendingQuiz = urlParams.get('quiz') || sessionStorage.getItem('in4mind_open_quiz');
     if (pendingQuiz) {
       sessionStorage.removeItem('in4mind_open_quiz');
+      if (typeof AuthGuard !== 'undefined' && AuthGuard.clearPendingRedirect) {
+        AuthGuard.clearPendingRedirect();
+      }
       if (_getQuizById(pendingQuiz)) _startQuiz(pendingQuiz);
       else _startQuiz(GENERAL_QUIZ_ID);
+      urlParams.delete('quiz');
+      const qs = urlParams.toString();
+      window.history.replaceState({}, '', `${window.location.pathname}${qs ? `?${qs}` : ''}${window.location.hash || ''}`);
     }
 
     const pendingExam = urlParams.get('exam') || sessionStorage.getItem('in4mind_open_exam');
     if (pendingExam) {
       sessionStorage.removeItem('in4mind_open_exam');
+      if (typeof AuthGuard !== 'undefined' && AuthGuard.clearPendingRedirect) {
+        AuthGuard.clearPendingRedirect();
+      }
       const examId = typeof CertificationExamData !== 'undefined'
         ? CertificationExamData.getExamId(pendingExam)
         : `${pendingExam}-cert-exam`;
       if (_getQuizById(examId)) _startQuiz(examId);
+      urlParams.delete('exam');
+      const qs = urlParams.toString();
+      window.history.replaceState({}, '', `${window.location.pathname}${qs ? `?${qs}` : ''}${window.location.hash || ''}`);
     }
 
     window.addEventListener('in4mind-relocalize', _relocalize);

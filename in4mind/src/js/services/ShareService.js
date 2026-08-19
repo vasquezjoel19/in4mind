@@ -260,6 +260,12 @@ const AuthGuard = (() => {
     return rel;
   }
 
+  function clearPendingRedirect() {
+    try {
+      localStorage.removeItem(PENDING_KEY);
+    } catch { /* ignore */ }
+  }
+
   /**
    * Lee y limpia destino pendiente (query ?next= o IN4MIND_NEXT_REDIRECT).
    * @returns {string|null} ruta relativa segura
@@ -274,9 +280,7 @@ const AuthGuard = (() => {
         raw = localStorage.getItem(PENDING_KEY);
       } catch { /* ignore */ }
     }
-    try {
-      localStorage.removeItem(PENDING_KEY);
-    } catch { /* ignore */ }
+    clearPendingRedirect();
 
     return sanitizeNext(raw);
   }
@@ -310,6 +314,7 @@ const AuthGuard = (() => {
     PENDING_KEY,
     sanitizeNext,
     stashPendingRedirect,
+    clearPendingRedirect,
     consumePendingRedirect,
     peekPendingRedirect,
     onboardingUrlWithPending,

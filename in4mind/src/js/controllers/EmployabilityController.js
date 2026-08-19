@@ -133,8 +133,10 @@ const EmployabilityController = (() => {
       </ol>`;
   }
 
-  function _reqChecklistHtml(path) {
-    const items = path?.submissionChecklist || [];
+  function _reqChecklistHtml(path, pathId) {
+    const items = typeof EmployabilityService !== 'undefined' && EmployabilityService.getReqChecklistState
+      ? EmployabilityService.getReqChecklistState(pathId || path?.id)
+      : (path?.submissionChecklist || []).map((item) => ({ ...item, done: false }));
     if (!items.length) return '';
     const hasStarter = typeof EmployabilityStarters !== 'undefined'
       && EmployabilityStarters.hasStarter(path.id);
@@ -147,11 +149,36 @@ const EmployabilityController = (() => {
     return `
       <div class="employable-req" aria-label="${_esc(_t('employable.reqTitle', null, 'Checklist del proyecto'))}">
         <h3 class="employable-req__title">${_esc(_t('employable.reqTitle', null, 'Checklist del proyecto'))}</h3>
-        <ul class="employable-req__list">
-          ${items.map((item) => `<li>○ ${_esc(item.label)}</li>`).join('')}
+        <ul class="employable-req__list employable-req__list--interactive">
+          ${items.map((item) => `
+            <li>
+              <label class="employable-req__check">
+                <input type="checkbox" data-req-id="${_esc(item.id)}" ${item.done ? 'checked' : ''}>
+                <span>${_esc(item.label)}${item.auto ? ` <em class="employable-req__auto">${_esc(_t('employable.reqAuto', null, 'auto'))}</em>` : ''}</span>
+              </label>
+            </li>`).join('')}
         </ul>
         <div class="employable-req__actions">${starterBtn}</div>
         ${readme}
+      </div>`;
+  }
+
+  function _previewHtml(preview) {
+    if (!preview?.ok) return '';
+    const iframe = preview.canIframe
+      ? `<iframe class="employable-preview__frame" src="${_esc(preview.url)}" title="Project preview" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" loading="lazy"></iframe>`
+      : `<div class="employable-preview__fallback">
+          <p>${_esc(_t('employable.previewNoEmbed', null, 'Este sitio no permite incrustar vista previa. Abre el enlace para verificarlo.'))}</p>
+          <a class="btn--course" href="${_esc(preview.url)}" target="_blank" rel="noopener">${_esc(_t('employable.previewOpen', null, 'Abrir proyecto'))}</a>
+        </div>`;
+    return `
+      <div class="employable-preview" id="employable-preview-box">
+        <p class="employable-preview__meta">
+          <strong>${_esc(preview.host)}</strong>
+          · ${preview.trusted ? _esc(_t('employable.previewTrusted', null, 'Dominio conocido')) : _esc(_t('employable.previewUntrusted', null, 'Revisa que sea público'))}
+          · ${_esc(preview.kind)}
+        </p>
+        ${iframe}
       </div>`;
   }
 
@@ -201,7 +228,7 @@ const EmployabilityController = (() => {
         </ul>
       </div>
 
-      ${_reqChecklistHtml(path)}
+      ${_reqChecklistHtml(path, progress.pathId)}
 
       <form class="employable-form" id="employable-project-form">
         <label for="employable-project-url">${_esc(_t('employable.projectLabel', null, 'URL del proyecto final'))}</label>
@@ -210,7 +237,18 @@ const EmployabilityController = (() => {
                value="${_esc(progress.record.projectUrl || '')}">
         <p class="employable-form__hint" id="employable-url-hint">${_esc((path?.projectExamples || []).join(' · '))}</p>
         <p class="employable-form__warn" id="employable-url-warn" hidden role="status"></p>
-        <button type="submit" class="btn--course">${_esc(_t('employable.submitProject', null, 'Enviar proyecto y emitir certificado'))}</button>
+        <div class="employable-form__actions">
+          <button type="button" class="btn--course btn--ghost" id="employable-preview-btn">
+            ${_esc(_t('employable.previewBtn', null, 'Vista previa del proyecto'))}
+          </button>
+          <button type="submit" class="btn--course" id="employable-submit-btn" ${hasProject ? '' : 'disabled'}>
+            ${_esc(_t('employable.submitProject', null, 'Enviar proyecto y emitir certificado'))}
+          </button>
+        </div>
+        <p class="employable-form__hint" id="employable-preview-hint">
+          ${_esc(_t('employable.previewHint', null, 'Revisa la vista previa antes de emitir el certificado.'))}
+        </p>
+        <div id="employable-preview-slot"></div>
       </form>
 
       <div class="employable-cert" id="employable-cert-box" ${progress.record.certCode ? '' : 'hidden'}>
@@ -320,6 +358,25 @@ const EmployabilityController = (() => {
 
     const urlInput = document.getElementById('employable-project-url');
     const warnEl = document.getElementById('employable-url-warn');
+    const submitBtn = document.getElementById('employable-submit-btn');
+    const previewSlot = document.getElementById('employable-preview-slot');
+    let previewOk = Boolean(hasProject);
+
+    const refreshReqChecksUi = () => {
+      const items = EmployabilityService.getReqChecklistState(progress.pathId);
+      items.forEach((item) => {
+        const input = body.querySelector(`[data-req-id="${item.id}"]`);
+        if (input) input.checked = item.done;
+      });
+    };
+
+    body.querySelectorAll('[data-req-id]').forEach((input) => {
+      input.addEventListener('change', () => {
+        EmployabilityService.setReqCheck(progress.pathId, input.getAttribute('data-req-id'), input.checked);
+        document.dispatchEvent(new CustomEvent('in4mind-employable-updated'));
+      });
+    });
+
     const updateWarn = () => {
       if (!urlInput || !warnEl) return;
       const hint = EmployabilityService.getUrlTrustHint(urlInput.value);
@@ -333,13 +390,45 @@ const EmployabilityController = (() => {
         warnEl.hidden = true;
         warnEl.textContent = '';
       }
+      if (!hasProject && submitBtn) {
+        submitBtn.disabled = !(previewOk && hint.ok);
+      }
     };
-    urlInput?.addEventListener('input', updateWarn);
+    urlInput?.addEventListener('input', () => {
+      previewOk = false;
+      if (previewSlot) previewSlot.innerHTML = '';
+      updateWarn();
+    });
     updateWarn();
+
+    document.getElementById('employable-preview-btn')?.addEventListener('click', () => {
+      const url = urlInput?.value || '';
+      const preview = EmployabilityService.getProjectPreview(url);
+      if (!preview.ok) {
+        if (typeof AppShell !== 'undefined') AppShell.showToast(preview.error || 'Error', 2400);
+        previewOk = false;
+        updateWarn();
+        return;
+      }
+      EmployabilityService.applyUrlToReqChecks(progress.pathId, url);
+      refreshReqChecksUi();
+      if (previewSlot) previewSlot.innerHTML = _previewHtml(preview);
+      previewOk = true;
+      updateWarn();
+      if (typeof AppShell !== 'undefined') {
+        AppShell.showToast(_t('employable.previewReady', null, 'Vista previa lista — confirma para emitir certificado'), 2600);
+      }
+    });
 
     document.getElementById('employable-project-form')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const url = document.getElementById('employable-project-url')?.value || '';
+      if (!previewOk && !hasProject) {
+        if (typeof AppShell !== 'undefined') {
+          AppShell.showToast(_t('employable.previewRequired', null, 'Primero revisa la vista previa del proyecto'), 2800);
+        }
+        return;
+      }
       const res = EmployabilityService.submitProject(progress.pathId, url);
       if (!res.ok) {
         if (typeof AppShell !== 'undefined') AppShell.showToast(res.error || 'Error', 2800);

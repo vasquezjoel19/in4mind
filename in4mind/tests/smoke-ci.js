@@ -184,6 +184,9 @@ assert('starters has web kit', /web-junior/.test(starters));
   assert('consume clears storage', sandbox.localStorage.getItem('IN4MIND_NEXT_REDIRECT') === null);
 }
 
+assert('global chat quizChallengeHref', /quizChallengeHref/.test(read('src/js/services/GlobalChatService.js')));
+assert('global chat relative quiz url', /quizzes\.html\?quiz=/.test(read('src/js/controllers/GlobalChatController.js')));
+
 if (failed) {
   console.error(`\n${failed} smoke check(s) failed`);
   process.exit(1);

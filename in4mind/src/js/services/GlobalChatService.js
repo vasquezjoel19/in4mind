@@ -99,6 +99,21 @@ const GlobalChatService = (() => {
     }
   }
 
+  /** jsonb a veces llega como string por Realtime; unifica a objeto. */
+  function _parseAttachment(raw) {
+    if (!raw) return null;
+    if (typeof raw === 'object') return raw;
+    if (typeof raw === 'string') {
+      try {
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? parsed : null;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
+
   function _rowToMessage(row) {
     return {
       id: row.id,
@@ -107,7 +122,7 @@ const GlobalChatService = (() => {
       level: row.author_level || 1,
       body: row.body,
       kind: row.kind || 'text',
-      attachment: row.attachment || null,
+      attachment: _parseAttachment(row.attachment),
       createdAt: new Date(row.created_at).getTime(),
     };
   }
@@ -296,19 +311,65 @@ const GlobalChatService = (() => {
   }
 
   /**
+   * Href portable del reto (ruta relativa al directorio de la app).
+   * Preferir siempre quizId para que otro origen/preview no rompa el enlace.
+   */
+  function quizChallengeHref(attachmentOrQuizId, maybeUrl) {
+    let quizId = null;
+    let rawUrl = null;
+
+    if (attachmentOrQuizId && typeof attachmentOrQuizId === 'object') {
+      const att = _parseAttachment(attachmentOrQuizId) || attachmentOrQuizId;
+      quizId = att.quizId || null;
+      rawUrl = att.url || null;
+    } else if (attachmentOrQuizId) {
+      quizId = String(attachmentOrQuizId);
+      rawUrl = maybeUrl || null;
+    }
+
+    if (quizId) {
+      const rel = `quizzes.html?quiz=${encodeURIComponent(String(quizId).slice(0, 80))}`;
+      return sanitizeInternalUrl(rel);
+    }
+
+    if (rawUrl) {
+      // Mensajes legacy con URL absoluta de otro deploy: extrae ?quiz= y reescribe.
+      try {
+        const parsed = new URL(String(rawUrl), window.location.origin);
+        const fromQuery = parsed.searchParams.get('quiz');
+        if (fromQuery) {
+          return sanitizeInternalUrl(
+            `quizzes.html?quiz=${encodeURIComponent(fromQuery.slice(0, 80))}`
+          );
+        }
+        const leaf = (parsed.pathname || '').split('/').filter(Boolean).pop() || '';
+        if (/^quizzes\.html$/i.test(leaf)) {
+          return sanitizeInternalUrl(`${leaf}${parsed.search || ''}`);
+        }
+      } catch { /* ignore */ }
+      return sanitizeInternalUrl(rawUrl);
+    }
+
+    return null;
+  }
+
+  /**
    * Comparte un quiz como tarjeta.
-   * @param {{quizId:string, title:string, url:string}} quiz
+   * Guarda URL relativa (`quizzes.html?quiz=…`) para que todos los clientes
+   * la resuelvan contra su propio origen.
+   * @param {{quizId:string, title:string, url?:string}} quiz
    */
   async function sendQuizCard(quiz) {
-    if (!quiz?.quizId || !quiz?.url) return { ok: false, reason: 'empty' };
-    const safeUrl = sanitizeInternalUrl(quiz.url);
+    if (!quiz?.quizId) return { ok: false, reason: 'empty' };
+    const quizId = String(quiz.quizId).slice(0, 80);
+    const safeUrl = quizChallengeHref(quizId, quiz.url);
     if (!safeUrl) return { ok: false, reason: 'empty' };
     return _insert({
-      body: _normalize(quiz.title || quiz.quizId).slice(0, MAX_LENGTH),
+      body: _normalize(quiz.title || quizId).slice(0, MAX_LENGTH),
       kind: 'quiz',
       attachment: {
-        quizId: String(quiz.quizId).slice(0, 80),
-        title: String(quiz.title || quiz.quizId).slice(0, 200),
+        quizId,
+        title: String(quiz.title || quizId).slice(0, 200),
         url: safeUrl,
       },
     });
@@ -333,15 +394,32 @@ const GlobalChatService = (() => {
   }
 
   /**
-   * Solo se aceptan URLs http(s) del propio origen. Un attachment malicioso
-   * podría colar `javascript:` o un dominio externo disfrazado de quiz.
+   * Solo rutas internas .html del mismo origen. Devuelve path relativo al
+   * directorio actual (portable entre localhost / preview / producción).
    */
   function sanitizeInternalUrl(raw) {
     try {
-      const url = new URL(String(raw || ''), window.location.origin);
+      const trimmed = String(raw || '').trim();
+      if (!trimmed || /^(javascript|data|vbscript):/i.test(trimmed)) return null;
+
+      const url = new URL(trimmed, window.location.origin);
       if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
       if (url.origin !== window.location.origin) return null;
-      return url.toString();
+      if ((url.pathname || '').includes('..')) return null;
+
+      const parts = (url.pathname || '/').split('/').filter(Boolean);
+      const leaf = parts[parts.length - 1] || '';
+      if (!leaf || !/\.html$/i.test(leaf)) return null;
+
+      const pageDir = window.location.pathname.replace(/[^/]*$/, '');
+      let relPath = url.pathname.replace(/^\//, '');
+      if (pageDir && pageDir !== '/' && url.pathname.startsWith(pageDir)) {
+        relPath = url.pathname.slice(pageDir.length);
+      } else if (parts.length === 1) {
+        relPath = leaf;
+      }
+
+      return `${relPath}${url.search || ''}${url.hash || ''}`;
     } catch {
       return null;
     }
@@ -357,6 +435,7 @@ const GlobalChatService = (() => {
     canPost,
     getAuthUserId,
     sanitizeInternalUrl,
+    quizChallengeHref,
     resetAuth,
     getState: () => _state,
     getOnlineCount: () => _onlineCount,

@@ -1,4 +1,4 @@
-/*! IN4MIND bundle 20260819ruta3 — 2026-08-19T19:35:33.801264+00:00 */
+/*! IN4MIND bundle 20260819chat1 — 2026-08-19T20:40:43.858913+00:00 */
 
 ;/* --- src/js/controllers/ThemeController.js --- */
 /**

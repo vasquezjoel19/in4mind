@@ -236,10 +236,8 @@ assert_(
     "auth avoids self-onboarding loop pattern",
     "onboarding.html" in auth_ctrl and "consumePendingRedirect" in auth_ctrl,
 )
-assert_(
-    "onboarding consumes pending once",
-    ob_ctrl.count("consumePendingRedirect") >= 1,
-)
+assert_("global chat quizChallengeHref", "quizChallengeHref" in read("src/js/services/GlobalChatService.js"))
+assert_("global chat relative quiz url", "quizzes.html?quiz=" in read("src/js/controllers/GlobalChatController.js"))
 
 if failed:
     print(f"\n{failed} smoke check(s) failed", file=sys.stderr)

@@ -213,11 +213,14 @@ const GlobalChatController = (() => {
   }
 
   function _quizCard(msg) {
-    const safeUrl = GlobalChatService.sanitizeInternalUrl(msg.attachment?.url);
+    const att = msg.attachment || {};
+    const safeUrl = typeof GlobalChatService.quizChallengeHref === 'function'
+      ? GlobalChatService.quizChallengeHref(att)
+      : GlobalChatService.sanitizeInternalUrl(att.url);
     if (!safeUrl) {
       const fallback = document.createElement('p');
       fallback.className = 'gchat-msg__text';
-      _appendRichText(fallback, msg.body || msg.attachment?.title || '');
+      _appendRichText(fallback, msg.body || att.title || '');
       return fallback;
     }
 
@@ -225,6 +228,7 @@ const GlobalChatController = (() => {
     card.className = 'gchat-quiz';
     card.href = safeUrl;
     card.rel = 'noopener';
+    if (att.quizId) card.dataset.quizId = att.quizId;
 
     const icon = document.createElement('span');
     icon.className = 'gchat-quiz__icon';
@@ -237,10 +241,11 @@ const GlobalChatController = (() => {
     eyebrow.className = 'gchat-quiz__eyebrow';
     eyebrow.textContent = _t('chat.quizEyebrow', null, 'Reto de quiz');
 
+    const topic = att.title || msg.body || att.quizId || '';
     const title = document.createElement('span');
     title.className = 'gchat-quiz__title';
-    title.textContent = _t('chat.quizCardTitle', { topic: msg.attachment.title || msg.body },
-      `¡Resuelve este quiz sobre ${msg.attachment.title || msg.body}!`);
+    title.textContent = _t('chat.quizCardTitle', { topic },
+      `¡Resuelve este quiz sobre ${topic}!`);
 
     copy.append(eyebrow, title);
 
@@ -296,7 +301,7 @@ const GlobalChatController = (() => {
       body.appendChild(meta);
     }
 
-    if (msg.kind === 'quiz' && msg.attachment?.url) {
+    if (msg.kind === 'quiz' && (msg.attachment?.quizId || msg.attachment?.url)) {
       body.appendChild(_quizCard(msg));
     } else {
       const text = document.createElement('p');
@@ -455,11 +460,9 @@ const GlobalChatController = (() => {
     return i > 0 ? [list[i], ...list.slice(0, i), ...list.slice(i + 1)] : list;
   }
 
+  /** Ruta relativa portable; el receptor la resuelve en su propio origen. */
   function _quizUrl(quizId) {
-    const base = window.location.href.replace(/[^/]*$/, '');
-    const url = new URL('quizzes.html', base);
-    url.searchParams.set('quiz', quizId);
-    return url.toString();
+    return `quizzes.html?quiz=${encodeURIComponent(quizId)}`;
   }
 
   function _renderPickerList(filter = '') {

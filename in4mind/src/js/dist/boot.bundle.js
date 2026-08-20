@@ -1,4 +1,4 @@
-/*! IN4MIND bundle 20260819chat1 — 2026-08-19T20:40:43.858913+00:00 */
+/*! IN4MIND bundle 20260820notes1 — 2026-08-20T19:41:17.846138+00:00 */
 
 ;/* --- src/js/controllers/ThemeController.js --- */
 /**
@@ -1185,6 +1185,17 @@ const LOCALE_ES = {
     openLesson: 'Ver lección',
     folderNamePrompt: 'Nombre de la carpeta:',
     notesCount: '{n} notas',
+    folderLabel: 'Carpeta',
+    noFolder: '— Sin carpeta —',
+    renameFolder: 'Renombrar',
+    folderOptions: 'Opciones de carpeta',
+    deleteFolderConfirm: '¿Eliminar esta carpeta? Las notas no se borran, solo salen de la carpeta.',
+    folderRenamed: 'Carpeta renombrada',
+    folderDeleted: 'Carpeta eliminada',
+    backToNotes: 'Todas las notas',
+    newNoteInFolder: 'Nueva nota aquí',
+    emptyFolderTitle: 'Esta carpeta está vacía',
+    emptyFolder: 'Crea una nota dentro de esta carpeta.',
   },
   projects: {
     pageTitle: 'Mis Proyectos',
@@ -2516,6 +2527,17 @@ const LOCALE_EN = {
     openLesson: 'View lesson',
     folderNamePrompt: 'Folder name:',
     notesCount: '{n} notes',
+    folderLabel: 'Folder',
+    noFolder: '— No folder —',
+    renameFolder: 'Rename',
+    folderOptions: 'Folder options',
+    deleteFolderConfirm: 'Delete this folder? Notes are kept; they just leave the folder.',
+    folderRenamed: 'Folder renamed',
+    folderDeleted: 'Folder deleted',
+    backToNotes: 'All notes',
+    newNoteInFolder: 'New note here',
+    emptyFolderTitle: 'This folder is empty',
+    emptyFolder: 'Create a note inside this folder.',
   },
   projects: {
     pageTitle: 'My Projects',
@@ -3865,6 +3887,17 @@ const LOCALE_ZH = {
     openLesson: '查看课时',
     folderNamePrompt: '文件夹名称：',
     notesCount: '{n} 条笔记',
+    folderLabel: '文件夹',
+    noFolder: '— 无文件夹 —',
+    renameFolder: '重命名',
+    folderOptions: '文件夹选项',
+    deleteFolderConfirm: '删除此文件夹？笔记会保留，只是离开文件夹。',
+    folderRenamed: '文件夹已重命名',
+    folderDeleted: '文件夹已删除',
+    backToNotes: '全部笔记',
+    newNoteInFolder: '在此新建笔记',
+    emptyFolderTitle: '此文件夹为空',
+    emptyFolder: '在此文件夹中创建笔记。',
   },
   projects: {
     pageTitle: '我的项目',

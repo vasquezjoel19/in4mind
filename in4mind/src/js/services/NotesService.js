@@ -28,7 +28,19 @@ const NotesService = (() => {
     return `${base}:${_userSuffix()}`;
   }
 
+  /** Datos antiguos sin sufijo → cuenta actual (una sola vez por clave). */
+  function _migrateLegacy(base) {
+    const scoped = _scopedKey(base);
+    try {
+      if (localStorage.getItem(scoped)) return;
+      const legacy = localStorage.getItem(base);
+      if (!legacy) return;
+      localStorage.setItem(scoped, legacy);
+    } catch { /* ignore */ }
+  }
+
   function _readNotes() {
+    _migrateLegacy(KEY);
     try {
       const parsed = JSON.parse(localStorage.getItem(_scopedKey(KEY)) || '{}');
       return (parsed && typeof parsed === 'object') ? parsed : {};
@@ -48,6 +60,7 @@ const NotesService = (() => {
   }
 
   function _readFolders() {
+    _migrateLegacy(FOLDERS_KEY);
     try {
       const parsed = JSON.parse(localStorage.getItem(_scopedKey(FOLDERS_KEY)) || '{}');
       return (parsed && typeof parsed === 'object') ? parsed : {};
@@ -108,15 +121,12 @@ const NotesService = (() => {
     return clean.length <= max ? clean : `${clean.slice(0, max)}…`;
   }
 
-  /** Apuntes de lecciones (LessonNotesService) como notas enlazadas. */
+  /** Apuntes de lecciones (LessonNotesService) como notas enlazadas — ya scoped por usuario. */
   function _lessonNotesAsEntries() {
     if (typeof LessonNotesService === 'undefined' || typeof CourseCurriculum === 'undefined') return [];
-    let raw;
-    try {
-      raw = JSON.parse(localStorage.getItem('in4mind_lesson_notes') || '{}');
-    } catch {
-      return [];
-    }
+    const raw = typeof LessonNotesService.getAll === 'function'
+      ? LessonNotesService.getAll()
+      : {};
     const courses = typeof DataService !== 'undefined' ? DataService.getCourses() : [];
     const courseMap = Object.fromEntries(courses.map(c => [c.id, c]));
 
@@ -231,6 +241,11 @@ const NotesService = (() => {
     return Object.values(_readFolders()).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
   }
 
+  function getFolder(id) {
+    if (!id) return null;
+    return _readFolders()[id] || null;
+  }
+
   function saveFolder(data) {
     const map = _readFolders();
     const now = Date.now();
@@ -286,6 +301,7 @@ const NotesService = (() => {
     toggleFavorite,
     togglePin,
     getFolders,
+    getFolder,
     saveFolder,
     deleteFolder,
     search,

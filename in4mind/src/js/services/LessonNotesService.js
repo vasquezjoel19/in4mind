@@ -1,22 +1,66 @@
 'use strict';
 
+/**
+ * IN4MIND — LessonNotesService
+ * Apuntes y valoraciones de lecciones, aislados por cuenta de usuario.
+ */
+
 const LessonNotesService = (() => {
 
   const KEY = 'in4mind_lesson_notes';
   const RATINGS_KEY = 'in4mind_lesson_ratings';
 
+  function _userSuffix() {
+    try {
+      const raw = sessionStorage.getItem('in4mind_user') || localStorage.getItem('in4mind_user');
+      const email = raw ? (JSON.parse(raw).email || '') : '';
+      return email.toLowerCase() || 'guest';
+    } catch {
+      return 'guest';
+    }
+  }
+
+  function _scopedKey(base) {
+    return `${base}:${_userSuffix()}`;
+  }
+
+  /** Migra datos legacy sin sufijo de usuario a la cuenta actual (una vez). */
+  function _migrateLegacy(base) {
+    const scoped = _scopedKey(base);
+    try {
+      if (localStorage.getItem(scoped)) return;
+      const legacy = localStorage.getItem(base);
+      if (!legacy) return;
+      localStorage.setItem(scoped, legacy);
+    } catch { /* ignore */ }
+  }
+
   function _notes() {
-    try { return JSON.parse(localStorage.getItem(KEY) || '{}'); }
+    _migrateLegacy(KEY);
+    try { return JSON.parse(localStorage.getItem(_scopedKey(KEY)) || '{}'); }
     catch { return {}; }
   }
 
   function _ratings() {
-    try { return JSON.parse(localStorage.getItem(RATINGS_KEY) || '{}'); }
+    _migrateLegacy(RATINGS_KEY);
+    try { return JSON.parse(localStorage.getItem(_scopedKey(RATINGS_KEY)) || '{}'); }
     catch { return {}; }
+  }
+
+  function _writeNotes(map) {
+    localStorage.setItem(_scopedKey(KEY), JSON.stringify(map));
+  }
+
+  function _writeRatings(map) {
+    localStorage.setItem(_scopedKey(RATINGS_KEY), JSON.stringify(map));
   }
 
   function _noteId(courseId, lessonId) {
     return `${courseId}::${lessonId}`;
+  }
+
+  function getAll() {
+    return _notes();
   }
 
   function getNote(courseId, lessonId) {
@@ -26,9 +70,9 @@ const LessonNotesService = (() => {
   function saveNote(courseId, lessonId, text) {
     const all = _notes();
     const id = _noteId(courseId, lessonId);
-    if (!text.trim()) delete all[id];
-    else all[id] = text.trim();
-    localStorage.setItem(KEY, JSON.stringify(all));
+    if (!String(text || '').trim()) delete all[id];
+    else all[id] = String(text).trim();
+    _writeNotes(all);
     return all[id] || '';
   }
 
@@ -42,11 +86,11 @@ const LessonNotesService = (() => {
     const v = Math.max(0, Math.min(1, value));
     if (!v) delete all[id];
     else all[id] = v;
-    localStorage.setItem(RATINGS_KEY, JSON.stringify(all));
+    _writeRatings(all);
     return v;
   }
 
-  return { getNote, saveNote, getRating, setRating };
+  return { getNote, saveNote, getRating, setRating, getAll };
 
 })();
 

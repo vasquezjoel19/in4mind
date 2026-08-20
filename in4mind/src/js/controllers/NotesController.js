@@ -1,6 +1,6 @@
 /**
  * IN4MIND — NotesController
- * Hub de notas con carpetas, tarjetas coloridas y editor modal.
+ * Hub de notas con carpetas navegables, tarjetas y editor modal.
  */
 
 'use strict';
@@ -11,9 +11,11 @@ const NotesController = (() => {
   let _period = 'week';
   let _query = '';
   let _editingId = null;
+  let _activeFolderId = null;
 
-  let $grid, $foldersGrid, $search, $filterNav, $editorOverlay;
-  let $editorTitle, $editorContent, $editorTags, $editorColor;
+  let $grid, $foldersGrid, $foldersSection, $search, $filterNav, $editorOverlay;
+  let $editorTitle, $editorContent, $editorTags, $editorColor, $editorFolder;
+  let $folderBanner;
 
   function _t(k, p, fb) {
     if (typeof I18n !== 'undefined') {
@@ -47,6 +49,12 @@ const NotesController = (() => {
     }
   }
 
+  function _activeFolder() {
+    return _activeFolderId && typeof NotesService !== 'undefined'
+      ? NotesService.getFolder(_activeFolderId)
+      : null;
+  }
+
   function _filteredNotes() {
     let notes = NotesService.search(_query);
     if (_filter === 'favorites') notes = notes.filter(n => n.favorite);
@@ -64,54 +72,195 @@ const NotesController = (() => {
     if (typeof ShareService === 'undefined') return;
     ShareService.setContext({
       page: 'notes.html',
-      params: noteId ? { note: noteId } : {},
+      params: noteId ? { note: noteId } : (_activeFolderId ? { folder: _activeFolderId } : {}),
       title: _t('notes.pageTitle', null, 'Mis Notas — IN4MIND'),
+    });
+  }
+
+  function _enterFolder(folderId) {
+    if (!folderId || !NotesService.getFolder(folderId)) return;
+    _activeFolderId = folderId;
+    _filter = `folder:${folderId}`;
+    _syncFolderUrl();
+    _renderAll();
+  }
+
+  function _exitFolder() {
+    _activeFolderId = null;
+    if (_filter.startsWith('folder:')) _filter = 'all';
+    _syncFolderUrl();
+    _renderAll();
+  }
+
+  function _syncFolderUrl() {
+    try {
+      const url = new URL(window.location.href);
+      if (_activeFolderId) url.searchParams.set('folder', _activeFolderId);
+      else url.searchParams.delete('folder');
+      window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+    } catch { /* ignore */ }
+  }
+
+  function _closeFolderMenus() {
+    document.querySelectorAll('.notes-folder-menu').forEach(el => el.remove());
+  }
+
+  function _openFolderMenu(btn, folderId) {
+    _closeFolderMenus();
+    const menu = document.createElement('div');
+    menu.className = 'notes-folder-menu';
+    menu.setAttribute('role', 'menu');
+    menu.innerHTML = `
+      <button type="button" class="notes-folder-menu__item" data-folder-action="rename" role="menuitem">
+        ${_escape(_t('notes.renameFolder', null, 'Renombrar'))}
+      </button>
+      <button type="button" class="notes-folder-menu__item notes-folder-menu__item--danger" data-folder-action="delete" role="menuitem">
+        ${_escape(_t('common.delete', null, 'Eliminar'))}
+      </button>`;
+
+    const rect = btn.getBoundingClientRect();
+    menu.style.top = `${rect.bottom + 6}px`;
+    menu.style.left = `${Math.min(rect.left, window.innerWidth - 180)}px`;
+    document.body.appendChild(menu);
+
+    menu.querySelector('[data-folder-action="rename"]')?.addEventListener('click', () => {
+      _closeFolderMenus();
+      const folder = NotesService.getFolder(folderId);
+      const name = prompt(_t('notes.folderNamePrompt', null, 'Nombre de la carpeta:'), folder?.name || '');
+      if (!name?.trim()) return;
+      NotesService.saveFolder({ id: folderId, name: name.trim(), color: folder?.color });
+      if (_activeFolderId === folderId) _renderFolderBanner();
+      _renderFolders();
+      AppShell.showToast(_t('notes.folderRenamed', null, 'Carpeta renombrada'));
+    });
+
+    menu.querySelector('[data-folder-action="delete"]')?.addEventListener('click', () => {
+      _closeFolderMenus();
+      if (!confirm(_t('notes.deleteFolderConfirm', null, '¿Eliminar esta carpeta? Las notas no se borran, solo salen de la carpeta.'))) return;
+      NotesService.deleteFolder(folderId);
+      if (_activeFolderId === folderId) _exitFolder();
+      else {
+        _renderFolders();
+        _renderGrid();
+      }
+      AppShell.showToast(_t('notes.folderDeleted', null, 'Carpeta eliminada'));
+    });
+
+    const onDoc = (e) => {
+      if (menu.contains(e.target) || btn.contains(e.target)) return;
+      _closeFolderMenus();
+      document.removeEventListener('click', onDoc, true);
+    };
+    setTimeout(() => document.addEventListener('click', onDoc, true), 0);
+  }
+
+  function _renderFolderBanner() {
+    if (!$folderBanner) return;
+    const folder = _activeFolder();
+    if (!folder) {
+      $folderBanner.hidden = true;
+      $folderBanner.innerHTML = '';
+      if ($foldersSection) $foldersSection.hidden = false;
+      return;
+    }
+
+    if ($foldersSection) $foldersSection.hidden = true;
+    const count = NotesService.getByFolder(folder.id).length;
+    $folderBanner.hidden = false;
+    $folderBanner.innerHTML = `
+      <button type="button" class="btn--back notes-folder-banner__back" id="notes-folder-back">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        ${_escape(_t('notes.backToNotes', null, 'Todas las notas'))}
+      </button>
+      <div class="notes-folder-banner__card" style="--folder-color:${folder.color}">
+        <span class="notes-folder-banner__icon" aria-hidden="true">📁</span>
+        <div class="notes-folder-banner__copy">
+          <h2 class="notes-folder-banner__title">${_escape(folder.name)}</h2>
+          <p class="notes-folder-banner__meta">${_escape(_t('notes.notesCount', { n: count }, '{n} notas'))} · ${_formatDate(folder.updatedAt)}</p>
+        </div>
+        <div class="notes-folder-banner__actions">
+          <button type="button" class="btn--course" id="notes-folder-new">${_escape(_t('notes.newNoteInFolder', null, 'Nueva nota aquí'))}</button>
+          <button type="button" class="btn--danger-outline" id="notes-folder-delete">${_escape(_t('common.delete', null, 'Eliminar'))}</button>
+        </div>
+      </div>`;
+
+    document.getElementById('notes-folder-back')?.addEventListener('click', _exitFolder);
+    document.getElementById('notes-folder-new')?.addEventListener('click', () => _openEditor(null, { folderId: folder.id }));
+    document.getElementById('notes-folder-delete')?.addEventListener('click', () => {
+      if (!confirm(_t('notes.deleteFolderConfirm', null, '¿Eliminar esta carpeta? Las notas no se borran, solo salen de la carpeta.'))) return;
+      NotesService.deleteFolder(folder.id);
+      _exitFolder();
+      AppShell.showToast(_t('notes.folderDeleted', null, 'Carpeta eliminada'));
     });
   }
 
   function _renderFolders() {
     if (!$foldersGrid) return;
+    if (_activeFolderId) {
+      $foldersGrid.innerHTML = '';
+      return;
+    }
+
     const folders = NotesService.getFolders();
     const cards = folders.map(f => {
       const count = NotesService.getByFolder(f.id).length;
       return `
         <article class="notes-folder-card" style="--folder-color:${f.color}"
-                 data-folder-id="${f.id}" role="button" tabindex="0">
+                 data-folder-id="${f.id}" role="button" tabindex="0"
+                 aria-label="${_escape(f.name)}">
           <div class="notes-folder-card__top">
-            <span class="notes-folder-card__icon">📁</span>
-            <button type="button" class="notes-folder-card__menu" data-folder-menu="${f.id}" aria-label="Opciones">⋯</button>
+            <span class="notes-folder-card__icon" aria-hidden="true">📁</span>
+            <button type="button" class="notes-folder-card__menu" data-folder-menu="${f.id}"
+                    aria-label="${_escape(_t('notes.folderOptions', null, 'Opciones de carpeta'))}">⋯</button>
           </div>
           <h3 class="notes-folder-card__title">${_escape(f.name)}</h3>
-          <p class="notes-folder-card__meta">${_formatDate(f.updatedAt)} · ${count} ${_t('notes.notesCount', { n: count }, 'notas')}</p>
+          <p class="notes-folder-card__meta">${_formatDate(f.updatedAt)} · ${_escape(_t('notes.notesCount', { n: count }, '{n} notas'))}</p>
         </article>`;
     }).join('');
 
     $foldersGrid.innerHTML = `
       ${cards}
       <button type="button" class="notes-folder-card notes-folder-card--new" id="notes-new-folder">
-        <span class="notes-folder-card__icon">＋</span>
-        <span>${_t('notes.newFolder', null, 'Nueva carpeta')}</span>
+        <span class="notes-folder-card__icon" aria-hidden="true">＋</span>
+        <span>${_escape(_t('notes.newFolder', null, 'Nueva carpeta'))}</span>
       </button>`;
 
     $foldersGrid.querySelectorAll('[data-folder-id]').forEach(el => {
       el.addEventListener('click', e => {
         if (e.target.closest('[data-folder-menu]')) return;
-        _filter = `folder:${el.dataset.folderId}`;
-        _renderFilterNav();
-        _renderGrid();
+        _enterFolder(el.dataset.folderId);
+      });
+      el.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          _enterFolder(el.dataset.folderId);
+        }
+      });
+    });
+
+    $foldersGrid.querySelectorAll('[data-folder-menu]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        _openFolderMenu(btn, btn.dataset.folderMenu);
       });
     });
 
     document.getElementById('notes-new-folder')?.addEventListener('click', () => {
       const name = prompt(_t('notes.folderNamePrompt', null, 'Nombre de la carpeta:'));
       if (!name?.trim()) return;
-      NotesService.saveFolder({ name: name.trim() });
+      const folder = NotesService.saveFolder({ name: name.trim() });
       _renderFolders();
+      if (folder?.id) _enterFolder(folder.id);
     });
   }
 
   function _renderFilterNav() {
     if (!$filterNav) return;
+    if (_activeFolderId) {
+      $filterNav.innerHTML = '';
+      return;
+    }
+
     const items = [
       { id: 'all',       label: _t('notes.allNotes', null, 'Todas') },
       { id: 'favorites', label: _t('notes.favorites', null, 'Favoritas') },
@@ -120,7 +269,7 @@ const NotesController = (() => {
     ];
     $filterNav.innerHTML = items.map(it => `
       <button type="button" class="notes-filter ${it.id === _filter ? 'notes-filter--active' : ''}"
-              data-filter="${it.id}">${it.label}</button>
+              data-filter="${it.id}">${_escape(it.label)}</button>
     `).join('');
 
     $filterNav.querySelectorAll('[data-filter]').forEach(btn => {
@@ -135,6 +284,7 @@ const NotesController = (() => {
   function _renderGrid() {
     if (!$grid) return;
     const notes = _filteredNotes();
+    const folder = _activeFolder();
 
     if (!notes.length) {
       $grid.innerHTML = `
@@ -147,11 +297,17 @@ const NotesController = (() => {
               <line x1="8" y1="17" x2="12" y2="17"/>
             </svg>
           </div>
-          <h3 class="empty-state__title">${_t('notes.emptyTitle', null, 'Aún no tienes notas')}</h3>
-          <p class="empty-state__desc">${_t('notes.empty', null, 'Aún no tienes notas. ¡Crea la primera!')}</p>
-          <button type="button" class="btn--course btn--lg empty-state__action" id="notes-empty-create">${_t('notes.newNote', null, 'Nueva nota')}</button>
+          <h3 class="empty-state__title">${_escape(folder
+            ? _t('notes.emptyFolderTitle', null, 'Esta carpeta está vacía')
+            : _t('notes.emptyTitle', null, 'Aún no tienes notas'))}</h3>
+          <p class="empty-state__desc">${_escape(folder
+            ? _t('notes.emptyFolder', null, 'Crea una nota dentro de esta carpeta.')
+            : _t('notes.empty', null, 'Aún no tienes notas. ¡Crea la primera!'))}</p>
+          <button type="button" class="btn--course btn--lg empty-state__action" id="notes-empty-create">${_escape(_t('notes.newNote', null, 'Nueva nota'))}</button>
         </div>`;
-      document.getElementById('notes-empty-create')?.addEventListener('click', () => _openEditor());
+      document.getElementById('notes-empty-create')?.addEventListener('click', () =>
+        _openEditor(null, { folderId: _activeFolderId || undefined })
+      );
       return;
     }
 
@@ -165,7 +321,8 @@ const NotesController = (() => {
             <div class="notes-card__actions">
               ${note.pinned ? '<span class="notes-card__pin" aria-hidden="true">★</span>' : ''}
               ${note.favorite ? '<span class="notes-card__star" aria-hidden="true">♥</span>' : ''}
-              <button type="button" class="notes-card__edit" data-edit-note="${note.id}" aria-label="Editar">✎</button>
+              <button type="button" class="notes-card__edit" data-edit-note="${note.id}" aria-label="${_escape(_t('common.edit', null, 'Editar'))}">✎</button>
+              ${note.source !== 'lesson' ? `<button type="button" class="notes-card__delete" data-delete-note="${note.id}" aria-label="${_escape(_t('common.delete', null, 'Eliminar'))}">🗑</button>` : ''}
             </div>
           </header>
           <h3 class="notes-card__title">${_escape(note.title)}</h3>
@@ -173,19 +330,19 @@ const NotesController = (() => {
           ${(note.tags || []).length ? `<div class="notes-card__tags">${note.tags.map(t => `<span class="notes-tag">${_escape(t)}</span>`).join('')}</div>` : ''}
           <footer class="notes-card__foot">
             <span>🕐 ${_formatTime(note.updatedAt)}</span>
-            ${note.source === 'lesson' ? `<a class="notes-card__link" href="tutorial.html?course=${note.courseId}&lesson=${note.lessonId}">${_t('notes.openLesson', null, 'Ver lección')}</a>` : ''}
+            ${note.source === 'lesson' ? `<a class="notes-card__link" href="tutorial.html?course=${note.courseId}&lesson=${note.lessonId}">${_escape(_t('notes.openLesson', null, 'Ver lección'))}</a>` : ''}
           </footer>
         </div>
       </article>
     `).join('') + `
       <button type="button" class="notes-card notes-card--new" id="notes-grid-new">
-        <span class="notes-card--new__icon">＋</span>
-        <span>${_t('notes.newNote', null, 'Nueva nota')}</span>
+        <span class="notes-card--new__icon" aria-hidden="true">＋</span>
+        <span>${_escape(_t('notes.newNote', null, 'Nueva nota'))}</span>
       </button>`;
 
     $grid.querySelectorAll('[data-note-id]').forEach(el => {
       el.addEventListener('click', e => {
-        if (e.target.closest('[data-edit-note]')) return;
+        if (e.target.closest('[data-edit-note], [data-delete-note], .notes-card__link')) return;
         _openEditor(el.dataset.noteId);
       });
     });
@@ -197,10 +354,32 @@ const NotesController = (() => {
       });
     });
 
-    document.getElementById('notes-grid-new')?.addEventListener('click', () => _openEditor());
+    $grid.querySelectorAll('[data-delete-note]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        if (!confirm(_t('notes.deleteConfirm', null, '¿Eliminar esta nota?'))) return;
+        NotesService.deleteNote(btn.dataset.deleteNote);
+        _renderAll();
+        AppShell.showToast(_t('notes.deleted', null, 'Nota eliminada'));
+      });
+    });
+
+    document.getElementById('notes-grid-new')?.addEventListener('click', () =>
+      _openEditor(null, { folderId: _activeFolderId || undefined })
+    );
   }
 
-  function _openEditor(noteId = null) {
+  function _fillFolderSelect(selectedId) {
+    if (!$editorFolder) return;
+    const folders = NotesService.getFolders();
+    $editorFolder.innerHTML = `
+      <option value="">${_escape(_t('notes.noFolder', null, '— Sin carpeta —'))}</option>
+      ${folders.map(f => `
+        <option value="${_escape(f.id)}" ${selectedId === f.id ? 'selected' : ''}>${_escape(f.name)}</option>
+      `).join('')}`;
+  }
+
+  function _openEditor(noteId = null, opts = {}) {
     _editingId = noteId;
     const note = noteId ? NotesService.getNote(noteId) : null;
 
@@ -212,6 +391,8 @@ const NotesController = (() => {
     if ($editorTitle) $editorTitle.value = note?.title || '';
     if ($editorContent) $editorContent.value = note?.content || '';
     if ($editorTags) $editorTags.value = (note?.tags || []).join(', ');
+    _fillFolderSelect(note?.folderId || opts.folderId || _activeFolderId || '');
+
     if ($editorColor) {
       $editorColor.innerHTML = NotesService.COLORS.map(c =>
         `<button type="button" class="notes-color-swatch ${note?.color === c ? 'is-active' : ''}"
@@ -224,6 +405,9 @@ const NotesController = (() => {
         });
       });
     }
+
+    const deleteBtn = document.getElementById('notes-editor-delete');
+    if (deleteBtn) deleteBtn.hidden = !noteId;
 
     if ($editorOverlay) {
       $editorOverlay.hidden = false;
@@ -241,16 +425,17 @@ const NotesController = (() => {
   function _saveEditor() {
     const colorBtn = $editorColor?.querySelector('.is-active');
     const tags = ($editorTags?.value || '').split(',').map(t => t.trim()).filter(Boolean);
+    const folderId = $editorFolder?.value || null;
     NotesService.saveNote({
-      id:      _editingId || undefined,
-      title:   $editorTitle?.value || _t('notes.untitled', null, 'Sin título'),
-      content: $editorContent?.value || '',
+      id:       _editingId || undefined,
+      title:    $editorTitle?.value || _t('notes.untitled', null, 'Sin título'),
+      content:  $editorContent?.value || '',
       tags,
-      color:   colorBtn?.dataset.color || NotesService.COLORS[0],
+      color:    colorBtn?.dataset.color || NotesService.COLORS[0],
+      folderId: folderId || null,
     });
     _closeEditor();
-    _renderGrid();
-    _renderFolders();
+    _renderAll();
     AppShell.showToast(_t('notes.saved', null, 'Nota guardada'));
   }
 
@@ -259,8 +444,16 @@ const NotesController = (() => {
     if (!confirm(_t('notes.deleteConfirm', null, '¿Eliminar esta nota?'))) return;
     NotesService.deleteNote(_editingId);
     _closeEditor();
-    _renderGrid();
+    _renderAll();
     AppShell.showToast(_t('notes.deleted', null, 'Nota eliminada'));
+  }
+
+  function _renderAll() {
+    _renderFolderBanner();
+    _renderFolders();
+    _renderFilterNav();
+    _renderGrid();
+    _publishShareContext();
   }
 
   function _bindPeriodTabs() {
@@ -271,7 +464,7 @@ const NotesController = (() => {
           b.classList.toggle('notes-period--active', b === btn)
         );
         if (_filter === 'recent') _renderGrid();
-        _renderFolders();
+        if (!_activeFolderId) _renderFolders();
       });
     });
   }
@@ -279,6 +472,8 @@ const NotesController = (() => {
   function init() {
     $grid = document.getElementById('notes-grid');
     $foldersGrid = document.getElementById('notes-folders-grid');
+    $foldersSection = document.getElementById('notes-folders-section');
+    $folderBanner = document.getElementById('notes-folder-banner');
     $search = document.getElementById('notes-search');
     $filterNav = document.getElementById('notes-filter-nav');
     $editorOverlay = document.getElementById('notes-editor-overlay');
@@ -286,18 +481,24 @@ const NotesController = (() => {
     $editorContent = document.getElementById('notes-editor-content');
     $editorTags = document.getElementById('notes-editor-tags');
     $editorColor = document.getElementById('notes-editor-colors');
+    $editorFolder = document.getElementById('notes-editor-folder');
 
-    _renderFilterNav();
-    _renderFolders();
-    _renderGrid();
     _bindPeriodTabs();
-    _publishShareContext();
 
     const params = new URLSearchParams(window.location.search);
+    const openFolder = params.get('folder');
     const openNote = params.get('note');
+    if (openFolder && NotesService.getFolder(openFolder)) {
+      _activeFolderId = openFolder;
+      _filter = `folder:${openFolder}`;
+    }
+
+    _renderAll();
     if (openNote) _openEditor(openNote);
 
-    document.getElementById('notes-new-btn')?.addEventListener('click', () => _openEditor());
+    document.getElementById('notes-new-btn')?.addEventListener('click', () =>
+      _openEditor(null, { folderId: _activeFolderId || undefined })
+    );
     document.getElementById('notes-editor-save')?.addEventListener('click', _saveEditor);
     document.getElementById('notes-editor-delete')?.addEventListener('click', _deleteEditor);
     document.getElementById('notes-editor-cancel')?.addEventListener('click', _closeEditor);
@@ -312,11 +513,8 @@ const NotesController = (() => {
       _renderGrid();
     });
 
-    window.addEventListener('in4mind-locale-change', () => {
-      _renderFilterNav();
-      _renderFolders();
-      _renderGrid();
-    });
+    window.addEventListener('in4mind-locale-change', _renderAll);
+    window.addEventListener('in4mind-relocalize', _renderAll);
   }
 
   return { init };

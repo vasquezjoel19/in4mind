@@ -10,13 +10,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <script src="src/js/dist/boot.bundle.js?v=20260819chat1"></script>
+  <script src="src/js/dist/boot.bundle.js?v=20260820notes1"></script>
 
   <link rel="stylesheet" href="src/css/tokens.css?v=20260812polish">
   <link rel="stylesheet" href="src/css/base.css?v=20260714fluid3">
   <link rel="stylesheet" href="src/css/dashboard.css?v=20260818emp42">
   <link rel="stylesheet" href="src/css/responsive.css?v=20260812polish">
-  <link rel="stylesheet" href="src/css/notes.css?v=20260813workspace">
+  <link rel="stylesheet" href="src/css/notes.css?v=20260820notes1">
   <link rel="stylesheet" href="src/css/theme.css?v=20260817emp36">
   <link rel="stylesheet" href="src/css/ui-polish.css?v=20260813workspace">
   <link rel="stylesheet" href="src/css/accessibility.css?v=20260707">
@@ -86,7 +86,7 @@
         </div>
       </div>
 
-      <section class="workspace-section anim-fade-up delay-1">
+      <section class="workspace-section anim-fade-up delay-1" id="notes-folders-section">
         <h2 class="notes-section-title workspace-section-title" data-i18n="notes.recentFolders">Carpetas recientes</h2>
         <div class="notes-period-tabs" role="tablist">
           <button type="button" class="notes-period" data-notes-period="today" data-i18n="notes.today">Hoy</button>
@@ -95,6 +95,8 @@
         </div>
         <div class="notes-folders-grid" id="notes-folders-grid"></div>
       </section>
+
+      <div class="notes-folder-banner" id="notes-folder-banner" hidden></div>
 
       <section class="workspace-section anim-fade-up delay-2">
         <h2 class="notes-section-title workspace-section-title" data-i18n="notes.myNotes">Mis notas</h2>
@@ -111,22 +113,24 @@
     <input class="notes-editor__title" id="notes-editor-title" placeholder="Título de la nota" data-i18n-placeholder="notes.titlePlaceholder">
     <textarea class="notes-editor__content" id="notes-editor-content" placeholder="Escribe aquí…" data-i18n-placeholder="notes.contentPlaceholder"></textarea>
     <input class="notes-editor__tags" id="notes-editor-tags" placeholder="Etiquetas separadas por coma" data-i18n-placeholder="notes.tagsPlaceholder">
+    <label class="notes-editor__folder-label" for="notes-editor-folder" data-i18n="notes.folderLabel">Carpeta</label>
+    <select class="notes-editor__folder" id="notes-editor-folder" aria-label="Carpeta"></select>
     <div class="notes-editor__colors" id="notes-editor-colors"></div>
     <div class="notes-editor__actions">
       <button type="button" class="btn--course" id="notes-editor-save" data-i18n="common.save">Guardar</button>
       <button type="button" class="btn--outline" id="notes-editor-cancel" data-i18n="common.cancel">Cancelar</button>
-      <button type="button" class="notes-editor__delete" id="notes-editor-delete" data-i18n="common.delete">Eliminar</button>
+      <button type="button" class="btn--danger notes-editor__delete" id="notes-editor-delete" data-i18n="common.delete">Eliminar</button>
     </div>
   </div>
 </div>
 
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="src/js/config/supabase.config.js"></script>
-<script defer src="src/js/dist/app-shell.bundle.js?v=20260819chat1"></script>
+<script defer src="src/js/dist/app-shell.bundle.js?v=20260820notes1"></script>
 <script defer src="src/js/data/CourseCurriculum.js?v=20260805"></script>
-<script defer src="src/js/services/LessonNotesService.js?v=20260812func"></script>
-<script defer src="src/js/services/NotesService.js?v=20260812func"></script>
-<script defer src="src/js/controllers/NotesController.js?v=20260813workspace"></script>
+<script defer src="src/js/services/LessonNotesService.js?v=20260820notes1"></script>
+<script defer src="src/js/services/NotesService.js?v=20260820notes1"></script>
+<script defer src="src/js/controllers/NotesController.js?v=20260820notes1"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     try { AppShell.initPage('notes'); } catch (e) { console.error(e); AppShell.setupAvatar(); }

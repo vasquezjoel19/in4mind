@@ -25,7 +25,18 @@ const ProjectsService = (() => {
     return `${KEY}:${_userSuffix()}`;
   }
 
+  function _migrateLegacy() {
+    const scoped = _scopedKey();
+    try {
+      if (localStorage.getItem(scoped)) return;
+      const legacy = localStorage.getItem(KEY);
+      if (!legacy) return;
+      localStorage.setItem(scoped, legacy);
+    } catch { /* ignore */ }
+  }
+
   function _readAll() {
+    _migrateLegacy();
     try {
       const parsed = JSON.parse(localStorage.getItem(_scopedKey()) || '{}');
       return (parsed && typeof parsed === 'object') ? parsed : {};

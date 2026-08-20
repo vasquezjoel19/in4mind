@@ -5,6 +5,44 @@
 
 const OfflineCourseService = (() => {
 
+  const KEY = 'in4mind_offline_courses';
+
+  function _userSuffix() {
+    try {
+      const raw = sessionStorage.getItem('in4mind_user') || localStorage.getItem('in4mind_user');
+      const email = raw ? (JSON.parse(raw).email || '') : '';
+      return email.toLowerCase() || 'guest';
+    } catch {
+      return 'guest';
+    }
+  }
+
+  function _scopedKey() {
+    return `${KEY}:${_userSuffix()}`;
+  }
+
+  function _migrateLegacy() {
+    try {
+      if (localStorage.getItem(_scopedKey())) return;
+      const legacy = localStorage.getItem(KEY);
+      if (!legacy) return;
+      localStorage.setItem(_scopedKey(), legacy);
+    } catch { /* ignore */ }
+  }
+
+  function _readMap() {
+    _migrateLegacy();
+    try {
+      return JSON.parse(localStorage.getItem(_scopedKey()) || '{}');
+    } catch {
+      return {};
+    }
+  }
+
+  function _writeMap(map) {
+    localStorage.setItem(_scopedKey(), JSON.stringify(map));
+  }
+
   function _t(k, p, fb) {
     if (typeof I18n !== 'undefined') {
       const out = I18n.t(k, p);
@@ -51,9 +89,9 @@ const OfflineCourseService = (() => {
     const urls = _urlsForCourse(courseId);
     const result = await _cacheUrls(urls);
     try {
-      const map = JSON.parse(localStorage.getItem('in4mind_offline_courses') || '{}');
+      const map = _readMap();
       map[courseId] = { at: Date.now(), cached: result.cached || 0 };
-      localStorage.setItem('in4mind_offline_courses', JSON.stringify(map));
+      _writeMap(map);
     } catch { /* ignore */ }
 
     if (typeof AppShell !== 'undefined') {
@@ -69,7 +107,7 @@ const OfflineCourseService = (() => {
 
   function isDownloaded(courseId) {
     try {
-      const map = JSON.parse(localStorage.getItem('in4mind_offline_courses') || '{}');
+      const map = _readMap();
       return Boolean(map[courseId]);
     } catch {
       return false;
@@ -77,11 +115,7 @@ const OfflineCourseService = (() => {
   }
 
   function listDownloaded() {
-    try {
-      return JSON.parse(localStorage.getItem('in4mind_offline_courses') || '{}');
-    } catch {
-      return {};
-    }
+    return _readMap();
   }
 
   return { downloadCourse, isDownloaded, listDownloaded };

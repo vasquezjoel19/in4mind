@@ -87,7 +87,11 @@ const ProjectsController = (() => {
                  data-project-id="${p.id}" role="button" tabindex="0">
           <div class="projects-card__top">
             <span class="projects-card__icon">${p.icon || '📁'}</span>
-            ${p.pinned ? '<span class="projects-card__pin">★</span>' : ''}
+            <div class="projects-card__actions">
+              ${p.pinned ? '<span class="projects-card__pin" aria-hidden="true">★</span>' : ''}
+              <button type="button" class="projects-card__delete" data-delete-project="${p.id}"
+                      aria-label="${_escape(_t('common.delete', null, 'Eliminar'))}">🗑</button>
+            </div>
           </div>
           <h3 class="projects-card__title">${_escape(p.title)}</h3>
           <p class="projects-card__desc">${_escape(p.description || _t('projects.noDesc', null, 'Sin descripción'))}</p>
@@ -107,7 +111,20 @@ const ProjectsController = (() => {
       </button>`;
 
     $grid.querySelectorAll('[data-project-id]').forEach(el => {
-      el.addEventListener('click', () => _showDetail(el.dataset.projectId));
+      el.addEventListener('click', e => {
+        if (e.target.closest('[data-delete-project]')) return;
+        _showDetail(el.dataset.projectId);
+      });
+    });
+    $grid.querySelectorAll('[data-delete-project]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        if (!confirm(_t('projects.deleteConfirm', null, '¿Eliminar este proyecto?'))) return;
+        ProjectsService.remove(btn.dataset.deleteProject);
+        if (_activeId === btn.dataset.deleteProject) _showList();
+        else _renderGrid();
+        AppShell.showToast(_t('projects.deleted', null, 'Proyecto eliminado'));
+      });
     });
     document.getElementById('projects-grid-new')?.addEventListener('click', _createProject);
   }
@@ -189,7 +206,7 @@ const ProjectsController = (() => {
       <div class="projects-detail__actions">
         <button type="button" class="btn--course" id="proj-save">${_t('common.save', null, 'Guardar')}</button>
         ${p.courseId ? `<a class="btn--outline" href="tutorial.html?course=${p.courseId}">${_t('projects.openCourse', null, 'Abrir curso')}</a>` : ''}
-        <button type="button" class="projects-detail__delete" id="proj-delete">${_t('common.delete', null, 'Eliminar')}</button>
+        <button type="button" class="btn--danger projects-detail__delete" id="proj-delete">${_t('common.delete', null, 'Eliminar')}</button>
       </div>`;
 
     document.getElementById('projects-back')?.addEventListener('click', _showList);

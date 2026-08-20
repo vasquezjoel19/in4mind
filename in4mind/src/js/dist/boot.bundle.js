@@ -1,4 +1,4 @@
-/*! IN4MIND bundle 20260820notes1 — 2026-08-20T19:41:17.846138+00:00 */
+/*! IN4MIND bundle 20260820notes2 — 2026-08-20T19:53:09.132342+00:00 */
 
 ;/* --- src/js/controllers/ThemeController.js --- */
 /**
@@ -1189,9 +1189,9 @@ const LOCALE_ES = {
     noFolder: '— Sin carpeta —',
     renameFolder: 'Renombrar',
     folderOptions: 'Opciones de carpeta',
-    deleteFolderConfirm: '¿Eliminar esta carpeta? Las notas no se borran, solo salen de la carpeta.',
+    deleteFolderConfirm: '¿Eliminar esta carpeta y todas las notas que contiene? Las notas fuera de la carpeta no se borran. Esta acción no se puede deshacer.',
     folderRenamed: 'Carpeta renombrada',
-    folderDeleted: 'Carpeta eliminada',
+    folderDeleted: 'Carpeta y sus notas eliminadas',
     backToNotes: 'Todas las notas',
     newNoteInFolder: 'Nueva nota aquí',
     emptyFolderTitle: 'Esta carpeta está vacía',
@@ -2531,9 +2531,9 @@ const LOCALE_EN = {
     noFolder: '— No folder —',
     renameFolder: 'Rename',
     folderOptions: 'Folder options',
-    deleteFolderConfirm: 'Delete this folder? Notes are kept; they just leave the folder.',
+    deleteFolderConfirm: 'Delete this folder and all notes inside it? Notes outside the folder are kept. This cannot be undone.',
     folderRenamed: 'Folder renamed',
-    folderDeleted: 'Folder deleted',
+    folderDeleted: 'Folder and its notes deleted',
     backToNotes: 'All notes',
     newNoteInFolder: 'New note here',
     emptyFolderTitle: 'This folder is empty',
@@ -3891,9 +3891,9 @@ const LOCALE_ZH = {
     noFolder: '— 无文件夹 —',
     renameFolder: '重命名',
     folderOptions: '文件夹选项',
-    deleteFolderConfirm: '删除此文件夹？笔记会保留，只是离开文件夹。',
+    deleteFolderConfirm: '删除此文件夹及其内的所有笔记？文件夹外的笔记会保留。此操作无法撤销。',
     folderRenamed: '文件夹已重命名',
-    folderDeleted: '文件夹已删除',
+    folderDeleted: '文件夹及其笔记已删除',
     backToNotes: '全部笔记',
     newNoteInFolder: '在此新建笔记',
     emptyFolderTitle: '此文件夹为空',

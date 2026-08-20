@@ -136,14 +136,14 @@ const NotesController = (() => {
 
     menu.querySelector('[data-folder-action="delete"]')?.addEventListener('click', () => {
       _closeFolderMenus();
-      if (!confirm(_t('notes.deleteFolderConfirm', null, '¿Eliminar esta carpeta? Las notas no se borran, solo salen de la carpeta.'))) return;
+      if (!confirm(_t('notes.deleteFolderConfirm', null, '¿Eliminar esta carpeta y todas las notas que contiene? Las notas fuera de la carpeta no se borran. Esta acción no se puede deshacer.'))) return;
       NotesService.deleteFolder(folderId);
       if (_activeFolderId === folderId) _exitFolder();
       else {
         _renderFolders();
         _renderGrid();
       }
-      AppShell.showToast(_t('notes.folderDeleted', null, 'Carpeta eliminada'));
+      AppShell.showToast(_t('notes.folderDeleted', null, 'Carpeta y sus notas eliminadas'));
     });
 
     const onDoc = (e) => {
@@ -187,10 +187,10 @@ const NotesController = (() => {
     document.getElementById('notes-folder-back')?.addEventListener('click', _exitFolder);
     document.getElementById('notes-folder-new')?.addEventListener('click', () => _openEditor(null, { folderId: folder.id }));
     document.getElementById('notes-folder-delete')?.addEventListener('click', () => {
-      if (!confirm(_t('notes.deleteFolderConfirm', null, '¿Eliminar esta carpeta? Las notas no se borran, solo salen de la carpeta.'))) return;
+      if (!confirm(_t('notes.deleteFolderConfirm', null, '¿Eliminar esta carpeta y todas las notas que contiene? Las notas fuera de la carpeta no se borran. Esta acción no se puede deshacer.'))) return;
       NotesService.deleteFolder(folder.id);
       _exitFolder();
-      AppShell.showToast(_t('notes.folderDeleted', null, 'Carpeta eliminada'));
+      AppShell.showToast(_t('notes.folderDeleted', null, 'Carpeta y sus notas eliminadas'));
     });
   }
 

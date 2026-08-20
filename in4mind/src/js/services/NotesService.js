@@ -267,11 +267,16 @@ const NotesService = (() => {
     delete map[id];
     _writeFolders(map);
     const notes = _readNotes();
-    Object.keys(notes).forEach(nid => {
-      if (notes[nid].folderId === id) notes[nid].folderId = null;
+    let removed = 0;
+    Object.keys(notes).forEach((nid) => {
+      if (notes[nid].folderId === id) {
+        delete notes[nid];
+        removed += 1;
+      }
     });
-    _writeNotes(notes);
-    return true;
+    if (removed) _writeNotes(notes);
+    else _scheduleCloudPush();
+    return { ok: true, removed };
   }
 
   function search(query) {

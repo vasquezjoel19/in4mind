@@ -9,6 +9,7 @@ const ProjectsController = (() => {
 
   let _query = '';
   let _activeId = null;
+  let _showArchived = false;
 
   let $grid, $detail, $search, $listView, $detailView;
 
@@ -61,7 +62,8 @@ const ProjectsController = (() => {
 
   function _renderGrid() {
     if (!$grid) return;
-    const projects = ProjectsService.search(_query);
+    const projects = ProjectsService.search(_query, { includeArchived: _showArchived })
+      .filter((p) => _showArchived ? p.archived : !p.archived);
 
     if (!projects.length) {
       $grid.innerHTML = `
@@ -117,9 +119,16 @@ const ProjectsController = (() => {
       });
     });
     $grid.querySelectorAll('[data-delete-project]').forEach(btn => {
-      btn.addEventListener('click', e => {
+      btn.addEventListener('click', async (e) => {
         e.stopPropagation();
-        if (!confirm(_t('projects.deleteConfirm', null, '¿Eliminar este proyecto?'))) return;
+        const ok = typeof UiDialog !== 'undefined'
+          ? await UiDialog.confirm({
+              title: _t('common.delete', null, 'Eliminar'),
+              message: _t('projects.deleteConfirm', null, '¿Eliminar este proyecto?'),
+              danger: true,
+            })
+          : window.confirm(_t('projects.deleteConfirm', null, '¿Eliminar este proyecto?'));
+        if (!ok) return;
         ProjectsService.remove(btn.dataset.deleteProject);
         if (_activeId === btn.dataset.deleteProject) _showList();
         else _renderGrid();
@@ -206,6 +215,8 @@ const ProjectsController = (() => {
       <div class="projects-detail__actions">
         <button type="button" class="btn--course" id="proj-save">${_t('common.save', null, 'Guardar')}</button>
         ${p.courseId ? `<a class="btn--outline" href="tutorial.html?course=${p.courseId}">${_t('projects.openCourse', null, 'Abrir curso')}</a>` : ''}
+        <button type="button" class="btn--danger-outline" id="proj-empty">${_t('projects.emptyProject', null, 'Vaciar proyecto')}</button>
+        <button type="button" class="btn--danger-outline" id="proj-archive">${p.archived ? _t('projects.unarchive', null, 'Desarchivar') : _t('projects.archive', null, 'Archivar proyecto')}</button>
         <button type="button" class="btn--danger projects-detail__delete" id="proj-delete">${_t('common.delete', null, 'Eliminar')}</button>
       </div>`;
 
@@ -254,11 +265,44 @@ const ProjectsController = (() => {
       _renderGrid();
     });
 
-    document.getElementById('proj-delete')?.addEventListener('click', () => {
-      if (!confirm(_t('projects.deleteConfirm', null, '¿Eliminar este proyecto?'))) return;
+    document.getElementById('proj-delete')?.addEventListener('click', async () => {
+      const ok = typeof UiDialog !== 'undefined'
+        ? await UiDialog.confirm({
+            title: _t('common.delete', null, 'Eliminar'),
+            message: _t('projects.deleteConfirm', null, '¿Eliminar este proyecto?'),
+            danger: true,
+          })
+        : window.confirm(_t('projects.deleteConfirm', null, '¿Eliminar este proyecto?'));
+      if (!ok) return;
       ProjectsService.remove(id);
       _showList();
       AppShell.showToast(_t('projects.deleted', null, 'Proyecto eliminado'));
+    });
+
+    document.getElementById('proj-empty')?.addEventListener('click', async () => {
+      const ok = typeof UiDialog !== 'undefined'
+        ? await UiDialog.confirm({
+            title: _t('projects.emptyProject', null, 'Vaciar proyecto'),
+            message: _t('projects.emptyConfirm', null, '¿Quitar todas las tareas de este proyecto?'),
+            danger: true,
+            confirmLabel: _t('projects.emptyProject', null, 'Vaciar'),
+          })
+        : window.confirm(_t('projects.emptyConfirm', null, '¿Vaciar este proyecto?'));
+      if (!ok) return;
+      ProjectsService.emptyTasks(id);
+      _renderDetail(id);
+      _renderGrid();
+      AppShell.showToast(_t('projects.emptied', null, 'Proyecto vaciado'));
+    });
+
+    document.getElementById('proj-archive')?.addEventListener('click', () => {
+      const next = !p.archived;
+      ProjectsService.archive(id, next);
+      AppShell.showToast(next
+        ? _t('projects.archived', null, 'Proyecto archivado')
+        : _t('projects.unarchived', null, 'Proyecto restaurado'));
+      if (next) _showList();
+      else _renderDetail(id);
     });
 
     document.getElementById('proj-add-note')?.addEventListener('click', () => {
@@ -276,8 +320,13 @@ const ProjectsController = (() => {
     });
   }
 
-  function _createProject() {
-    const title = prompt(_t('projects.namePrompt', null, 'Nombre del proyecto:'));
+  async function _createProject() {
+    const title = typeof UiDialog !== 'undefined'
+      ? await UiDialog.prompt({
+          title: _t('projects.newProject', null, 'Nuevo proyecto'),
+          message: _t('projects.namePrompt', null, 'Nombre del proyecto:'),
+        })
+      : window.prompt(_t('projects.namePrompt', null, 'Nombre del proyecto:'));
     if (!title?.trim()) return;
     const p = ProjectsService.save({ title: title.trim(), description: '', icon: '🚀' });
     _showDetail(p.id);
@@ -298,8 +347,19 @@ const ProjectsController = (() => {
     const openProject = params.get('project');
     if (openProject && ProjectsService.get(openProject)) _showDetail(openProject);
 
-    document.getElementById('projects-new-btn')?.addEventListener('click', _createProject);
+    document.getElementById('projects-new-btn')?.addEventListener('click', () => { void _createProject(); });
     document.getElementById('projects-btn-share')?.addEventListener('click', () => ShareService?.share());
+    document.getElementById('projects-archived-toggle')?.addEventListener('click', () => {
+      _showArchived = !_showArchived;
+      const btn = document.getElementById('projects-archived-toggle');
+      if (btn) {
+        btn.setAttribute('aria-pressed', String(_showArchived));
+        btn.textContent = _showArchived
+          ? _t('projects.showActive', null, 'Ver activos')
+          : _t('projects.showArchived', null, 'Ver archivados');
+      }
+      _renderGrid();
+    });
 
     $search?.addEventListener('input', () => {
       _query = $search.value.trim();

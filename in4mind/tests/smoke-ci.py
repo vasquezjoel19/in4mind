@@ -51,6 +51,13 @@ required = [
     "src/js/controllers/AuthController.js",
     "src/js/controllers/TutorialController.js",
     "src/js/controllers/QuizzesController.js",
+    "src/js/services/UserScopedStorage.js",
+    "src/js/services/UiDialog.js",
+    "src/js/services/NotesService.js",
+    "src/js/services/CloudBlobSync.js",
+    "src/js/services/ProjectsService.js",
+    "src/js/services/AppShell.js",
+    "src/js/controllers/NotesController.js",
 ]
 
 for rel in required:
@@ -238,6 +245,24 @@ assert_(
 )
 assert_("global chat quizChallengeHref", "quizChallengeHref" in read("src/js/services/GlobalChatService.js"))
 assert_("global chat relative quiz url", "quizzes.html?quiz=" in read("src/js/controllers/GlobalChatController.js"))
+assert_("chat challenge stashes in4mind_open_quiz", "in4mind_open_quiz" in read("src/js/controllers/GlobalChatController.js"))
+assert_("chat challenge stashes pending redirect", "stashPendingRedirect" in read("src/js/controllers/GlobalChatController.js"))
+assert_("UiDialog custom confirm", "function confirm" in read("src/js/services/UiDialog.js"))
+assert_("UserScopedStorage namespaced key", "${base}:${accountId()}" in read("src/js/services/UserScopedStorage.js"))
+assert_("CloudBlobSync mergeTombstones", "function mergeTombstones" in read("src/js/services/CloudBlobSync.js"))
+assert_("NotesService moveToFolder", "function moveToFolder" in read("src/js/services/NotesService.js"))
+assert_("NotesService restoreNote", "function restoreNote" in read("src/js/services/NotesService.js"))
+assert_("Notes cascade tombstones", "_markTombstones('notes'" in read("src/js/services/NotesService.js"))
+assert_("ProjectsService archive", "function archive" in read("src/js/services/ProjectsService.js"))
+assert_("ProjectsService emptyTasks", "function emptyTasks" in read("src/js/services/ProjectsService.js"))
+assert_("AppShell showUndoToast", "function showUndoToast" in read("src/js/services/AppShell.js"))
+assert_("folder menu Escape handler", "e.key === 'Escape'" in read("src/js/controllers/NotesController.js"))
+assert_("notes drag-and-drop", "text/in4mind-note" in read("src/js/controllers/NotesController.js"))
+assert_("projects archived toggle", "projects-archived-toggle" in read("projects.html"))
+assert_("apply-bundles unifies css hash", "rewrite_asset_versions" in read("scripts/apply-bundles.py"))
+assert_("asset version ux1", "20260820ux1" in read("src/js/config/asset-version.js"))
+assert_("shell bundles UserScopedStorage", "UserScopedStorage.js" in read("scripts/bundle-shell.js"))
+assert_("shell bundles UiDialog", "UiDialog.js" in read("scripts/bundle-shell.js"))
 
 if failed:
     print(f"\n{failed} smoke check(s) failed", file=sys.stderr)

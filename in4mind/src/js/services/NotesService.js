@@ -9,6 +9,7 @@ const NotesService = (() => {
 
   const KEY = 'in4mind_user_notes';
   const FOLDERS_KEY = 'in4mind_note_folders';
+  const TOMB_KEY = 'in4mind_note_tombstones';
 
   const COLORS = [
     '#FFE066', '#FF8A80', '#80DEEA', '#B39DDB', '#A5D6A7', '#FFCC80', '#90CAF9', '#F48FB1',
@@ -79,16 +80,64 @@ const NotesService = (() => {
     }
   }
 
+  function _readTombstones() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(_scopedKey(TOMB_KEY)) || '{}');
+      return parsed && typeof parsed === 'object'
+        ? { notes: parsed.notes || {}, folders: parsed.folders || {} }
+        : { notes: {}, folders: {} };
+    } catch {
+      return { notes: {}, folders: {} };
+    }
+  }
+
+  function _writeTombstones(data) {
+    try {
+      localStorage.setItem(_scopedKey(TOMB_KEY), JSON.stringify({
+        notes: data.notes || {},
+        folders: data.folders || {},
+      }));
+    } catch { /* ignore */ }
+  }
+
+  function _markTombstones(kind, ids) {
+    const tombs = _readTombstones();
+    const now = Date.now();
+    (ids || []).forEach((id) => {
+      if (id) tombs[kind][id] = now;
+    });
+    _writeTombstones(tombs);
+    return tombs;
+  }
+
+  function _clearTombstone(kind, id) {
+    const tombs = _readTombstones();
+    if (tombs[kind]?.[id]) {
+      delete tombs[kind][id];
+      _writeTombstones(tombs);
+    }
+  }
+
   let _pushTimer = null;
-  function _scheduleCloudPush() {
+  function _blobPayload() {
+    return {
+      notes: _readNotes(),
+      folders: _readFolders(),
+      tombstones: _readTombstones(),
+      revisedAt: Date.now(),
+    };
+  }
+
+  function _scheduleCloudPush(immediate = false) {
     if (typeof CloudBlobSync === 'undefined') return;
     clearTimeout(_pushTimer);
-    _pushTimer = setTimeout(() => {
-      void CloudBlobSync.pushBlob('notes', {
-        notes: _readNotes(),
-        folders: _readFolders(),
-      });
-    }, 450);
+    const run = () => { void CloudBlobSync.pushBlob('notes', _blobPayload()); };
+    if (immediate) run();
+    else _pushTimer = setTimeout(run, 450);
+  }
+
+  function flushCloud() {
+    _scheduleCloudPush(true);
   }
 
   async function hydrateFromCloud() {
@@ -97,13 +146,25 @@ const NotesService = (() => {
     if (!remote?.blob) return false;
     const localNotes = _readNotes();
     const localFolders = _readFolders();
+    const localTombs = _readTombstones();
     const remoteNotes = remote.blob.notes || {};
     const remoteFolders = remote.blob.folders || {};
-    const mergedNotes = CloudBlobSync.mergeMaps(localNotes, remoteNotes);
-    const mergedFolders = CloudBlobSync.mergeMaps(localFolders, remoteFolders);
+    const remoteTombs = remote.blob.tombstones || { notes: {}, folders: {} };
+    const tombs = typeof CloudBlobSync.mergeTombstones === 'function'
+      ? {
+          notes: CloudBlobSync.mergeTombstones(localTombs.notes, remoteTombs.notes),
+          folders: CloudBlobSync.mergeTombstones(localTombs.folders, remoteTombs.folders),
+        }
+      : {
+          notes: { ...remoteTombs.notes, ...localTombs.notes },
+          folders: { ...remoteTombs.folders, ...localTombs.folders },
+        };
+    const mergedNotes = CloudBlobSync.mergeMaps(localNotes, remoteNotes, tombs.notes);
+    const mergedFolders = CloudBlobSync.mergeMaps(localFolders, remoteFolders, tombs.folders);
     try {
       localStorage.setItem(_scopedKey(KEY), JSON.stringify(mergedNotes));
       localStorage.setItem(_scopedKey(FOLDERS_KEY), JSON.stringify(mergedFolders));
+      _writeTombstones(tombs);
     } catch { return false; }
     return true;
   }
@@ -207,6 +268,25 @@ const NotesService = (() => {
     return map[id];
   }
 
+  function restoreNote(note) {
+    if (!note?.id || String(note.id).startsWith('lesson::')) return null;
+    _clearTombstone('notes', note.id);
+    const map = _readNotes();
+    map[note.id] = { ...note, updatedAt: Date.now() };
+    _writeNotes(map);
+    return map[note.id];
+  }
+
+  function restoreFolder(folder, notes = []) {
+    if (!folder?.id) return false;
+    _clearTombstone('folders', folder.id);
+    const fmap = _readFolders();
+    fmap[folder.id] = { ...folder, updatedAt: Date.now() };
+    _writeFolders(fmap);
+    (notes || []).forEach((n) => restoreNote({ ...n, folderId: folder.id }));
+    return true;
+  }
+
   function deleteNote(id) {
     if (String(id).startsWith('lesson::')) {
       const key = id.replace(/^lesson::/, '');
@@ -219,6 +299,7 @@ const NotesService = (() => {
     const map = _readNotes();
     if (!(id in map)) return false;
     delete map[id];
+    _markTombstones('notes', [id]);
     return _writeNotes(map);
   }
 
@@ -264,19 +345,30 @@ const NotesService = (() => {
   function deleteFolder(id) {
     const map = _readFolders();
     if (!(id in map)) return false;
-    delete map[id];
-    _writeFolders(map);
+    const removedIds = [];
     const notes = _readNotes();
-    let removed = 0;
     Object.keys(notes).forEach((nid) => {
       if (notes[nid].folderId === id) {
         delete notes[nid];
-        removed += 1;
+        removedIds.push(nid);
       }
     });
-    if (removed) _writeNotes(notes);
-    else _scheduleCloudPush();
-    return { ok: true, removed };
+    delete map[id];
+    _writeFolders(map);
+    _markTombstones('folders', [id]);
+    if (removedIds.length) {
+      _markTombstones('notes', removedIds);
+      _writeNotes(notes);
+    } else {
+      _scheduleCloudPush(true);
+    }
+    return { ok: true, removed: removedIds.length, removedIds };
+  }
+
+  function moveToFolder(noteId, folderId) {
+    const note = getNote(noteId);
+    if (!note || note.source === 'lesson') return null;
+    return saveNote({ id: noteId, folderId: folderId || null });
   }
 
   function search(query) {
@@ -303,6 +395,10 @@ const NotesService = (() => {
     getNote,
     saveNote,
     deleteNote,
+    restoreNote,
+    restoreFolder,
+    moveToFolder,
+    flushCloud,
     toggleFavorite,
     togglePin,
     getFolders,

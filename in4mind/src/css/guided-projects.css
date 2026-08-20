@@ -408,6 +408,27 @@ html[data-theme="dark"] .gp-card,
 html[data-theme="dark"] .gp-panel,
 html[data-theme="dark"] .gp-stepnav {
   background: var(--clr-bg-card);
+  color: var(--clr-text-primary);
+  border-color: var(--clr-border-lt);
+}
+
+html[data-theme="dark"] .gp-card__desc,
+html[data-theme="dark"] .gp-review__source,
+html[data-theme="dark"] .gp-review__loading,
+html[data-theme="dark"] .gp-panel__sub {
+  color: var(--clr-text-secondary);
+}
+
+html[data-theme="dark"] .gp-review {
+  background: var(--clr-bg-input);
+  border-color: var(--clr-border-lt);
+  color: var(--clr-text-primary);
+}
+
+html[data-theme="dark"] .btn--ghost {
+  color: var(--clr-text-primary);
+  border-color: var(--clr-border-lt);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 html[data-theme="dark"] .gp-card__diff--beginner { color: #5eead4; }

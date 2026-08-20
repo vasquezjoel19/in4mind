@@ -1290,3 +1290,36 @@
   border-color: var(--clr-brand-400);
   color: var(--clr-brand-600);
 }
+
+html[data-theme="dark"] .quiz-card,
+html[data-theme="dark"] .quiz-resume-modal,
+html[data-theme="dark"] .quiz-panel {
+  background: var(--clr-bg-card);
+  color: var(--clr-text-primary);
+  border-color: var(--clr-border-lt);
+}
+
+html[data-theme="dark"] .quiz-card__desc,
+html[data-theme="dark"] .quiz-resume-modal__cancel,
+html[data-theme="dark"] .quiz-card__resume {
+  color: var(--clr-text-secondary);
+}
+
+html[data-theme="dark"] .quiz-card__pct,
+html[data-theme="dark"] .quiz-card__resume,
+html[data-theme="dark"] .btn--quiz-share {
+  color: var(--clr-brand-300, #7dd3fc);
+}
+
+html[data-theme="dark"] .quiz-resume-modal__restart,
+html[data-theme="dark"] .btn--quiz-share {
+  color: var(--clr-text-primary);
+  border-color: var(--clr-border-lt);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+html[data-theme="dark"] .quiz-resume-modal__restart:hover,
+html[data-theme="dark"] .btn--quiz-share:hover {
+  color: #fff;
+  border-color: var(--clr-brand-400);
+}

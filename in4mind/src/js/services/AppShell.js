@@ -63,6 +63,53 @@ const AppShell = (() => {
     el._hideTimer = setTimeout(() => el.classList.remove('app-toast--visible'), duration);
   }
 
+  /**
+   * Toast con acción "Deshacer" (5–10 s). Devuelve { cancel } para abortar el commit.
+   */
+  function showUndoToast(message, { onUndo, onCommit, duration = 8000 } = {}) {
+    let el = document.getElementById('app-toast');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'app-toast';
+      el.className = 'app-toast';
+      el.setAttribute('role', 'status');
+      el.setAttribute('aria-live', 'polite');
+      document.body.appendChild(el);
+    }
+    el.innerHTML = '';
+    const text = document.createElement('span');
+    text.textContent = message;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'app-toast__undo';
+    btn.textContent = typeof I18n !== 'undefined' && I18n.t('common.undo') !== 'common.undo'
+      ? I18n.t('common.undo')
+      : 'Deshacer';
+    el.append(text, btn);
+    el.classList.add('app-toast--visible', 'app-toast--undo');
+    clearTimeout(el._hideTimer);
+    let committed = false;
+    const finishHide = () => {
+      el.classList.remove('app-toast--visible', 'app-toast--undo');
+      el.textContent = '';
+    };
+    const commit = () => {
+      if (committed) return;
+      committed = true;
+      finishHide();
+      if (typeof onCommit === 'function') onCommit();
+    };
+    btn.addEventListener('click', () => {
+      if (committed) return;
+      committed = true;
+      clearTimeout(el._hideTimer);
+      finishHide();
+      if (typeof onUndo === 'function') onUndo();
+    });
+    el._hideTimer = setTimeout(commit, duration);
+    return { cancel: commit };
+  }
+
   function _goToProfile() {
     navigateTo(PROFILE_HREF);
   }
@@ -290,6 +337,7 @@ const AppShell = (() => {
     initPage,
     navigateTo,
     showToast,
+    showUndoToast,
     navIcon,
     renderNavItem,
   };

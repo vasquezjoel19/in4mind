@@ -229,6 +229,22 @@ const GlobalChatController = (() => {
     card.href = safeUrl;
     card.rel = 'noopener';
     if (att.quizId) card.dataset.quizId = att.quizId;
+    card.addEventListener('click', (e) => {
+      const quizId = att.quizId || '';
+      try {
+        if (quizId) sessionStorage.setItem('in4mind_open_quiz', quizId);
+      } catch { /* ignore */ }
+      if (typeof AuthGuard !== 'undefined' && AuthGuard.stashPendingRedirect) {
+        AuthGuard.stashPendingRedirect(safeUrl);
+        AuthGuard.setRedirect?.(safeUrl);
+      }
+      if (typeof AuthGuard !== 'undefined' && AuthGuard.hasSession && !AuthGuard.hasSession()) {
+        e.preventDefault();
+        const login = new URL('login.html', window.location.href);
+        login.searchParams.set('next', safeUrl);
+        window.location.replace(login.toString());
+      }
+    });
 
     const icon = document.createElement('span');
     icon.className = 'gchat-quiz__icon';

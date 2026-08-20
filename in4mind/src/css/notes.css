@@ -617,6 +617,41 @@ html[data-theme="dark"] .empty-state__desc {
   color: var(--clr-text-secondary);
 }
 
+.notes-folder-card.is-drop-target {
+  outline: 2px dashed var(--clr-brand-400, #38bdf8);
+  outline-offset: 2px;
+  transform: translateY(-2px);
+}
+
+.notes-card[draggable="true"] {
+  cursor: grab;
+}
+
+.notes-card[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.notes-card__move {
+  display: block;
+  margin: 8px 0 4px;
+}
+
+.notes-card__move select {
+  width: 100%;
+  font: inherit;
+  font-size: 0.75rem;
+  padding: 0.35rem 0.45rem;
+  border-radius: 8px;
+  border: 1px solid var(--clr-border-lt);
+  background: var(--clr-bg-input, #fff);
+  color: var(--clr-text-primary);
+}
+
+.notes-folder-menu__item:focus-visible {
+  outline: 2px solid var(--clr-brand-400, #38bdf8);
+  outline-offset: 1px;
+}
+
 @media (max-width: 640px) {
   .notes-folders-grid,
   .notes-grid { grid-template-columns: 1fr; }

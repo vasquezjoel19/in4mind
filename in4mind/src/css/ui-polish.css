@@ -419,3 +419,156 @@ html[data-theme="dark"] .quiz-card__desc,
 html[data-theme="dark"] .course-card__desc {
   color: var(--clr-text-secondary);
 }
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Custom dialogs (replace native alert/confirm/prompt) */
+#ui-dialog-root {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal, 1300);
+}
+
+#ui-dialog-root[hidden] {
+  display: none !important;
+}
+
+.ui-dialog-backdrop {
+  min-height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+  background: rgba(4, 10, 22, 0.72);
+  backdrop-filter: blur(8px);
+}
+
+.ui-dialog {
+  width: min(100%, 420px);
+  max-height: min(88vh, 640px);
+  overflow: auto;
+  background: var(--clr-bg-elevated, #121826);
+  color: var(--clr-text-primary, #f8fafc);
+  border: 1px solid var(--clr-border-lt, rgba(255, 255, 255, 0.12));
+  border-radius: 18px 18px 14px 14px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+  padding: 1.15rem 1.15rem 1rem;
+}
+
+.ui-dialog__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: inherit;
+}
+
+.ui-dialog__text {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--clr-text-secondary, #cbd5e1);
+}
+
+.ui-dialog__input {
+  width: 100%;
+  margin: 0 0 1rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 12px;
+  border: 1.5px solid var(--clr-border-lt, rgba(255, 255, 255, 0.16));
+  background: var(--clr-bg-input, #0b1220);
+  color: var(--clr-text-primary, #f8fafc);
+  font: inherit;
+  font-size: 1rem;
+}
+
+.ui-dialog__input:focus {
+  outline: 2px solid var(--clr-brand-400, #38bdf8);
+  outline-offset: 1px;
+}
+
+.ui-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.ui-dialog__actions .btn--course,
+.ui-dialog__actions .btn--outline,
+.ui-dialog__actions .btn--danger {
+  min-height: 44px;
+  min-width: 96px;
+}
+
+.ui-dialog--danger .ui-dialog__title {
+  color: #fca5a5;
+}
+
+.btn--danger {
+  background: color-mix(in srgb, var(--clr-danger, #e53935) 14%, transparent);
+  border: 1.5px solid var(--clr-danger, #e53935);
+  color: var(--clr-danger, #e53935);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  font-weight: 700;
+  padding: 0.55rem 1rem;
+  border-radius: var(--rad-lg, 12px);
+}
+
+.btn--danger:hover {
+  background: var(--clr-danger, #e53935);
+  color: #fff;
+}
+
+@media (min-width: 640px) {
+  .ui-dialog-backdrop {
+    align-items: center;
+  }
+
+  .ui-dialog {
+    border-radius: 16px;
+  }
+}
+
+.app-toast--undo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  pointer-events: auto;
+  text-align: left;
+  max-width: min(94vw, 480px);
+  border-radius: 14px;
+  padding: 0.7rem 0.85rem 0.7rem 1.1rem;
+}
+
+.app-toast__undo {
+  margin-left: auto;
+  flex: 0 0 auto;
+  background: transparent;
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  color: #fff;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.app-toast__undo:hover,
+.app-toast__undo:focus-visible {
+  background: rgba(255, 255, 255, 0.16);
+  outline: none;
+}

@@ -10,20 +10,20 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <script src="src/js/dist/boot.bundle.js?v=20260820notes2"></script>
+  <script src="src/js/dist/boot.bundle.js?v=20260820ux1"></script>
 
-  <link rel="stylesheet" href="src/css/tokens.css?v=20260812polish">
-  <link rel="stylesheet" href="src/css/base.css?v=20260714fluid3">
-  <link rel="stylesheet" href="src/css/dashboard.css?v=20260818emp42">
-  <link rel="stylesheet" href="src/css/responsive.css?v=20260812polish">
-  <link rel="stylesheet" href="src/css/projects.css?v=20260820notes1">
-  <link rel="stylesheet" href="src/css/theme.css?v=20260817emp36">
-  <link rel="stylesheet" href="src/css/ui-polish.css?v=20260813workspace">
-  <link rel="stylesheet" href="src/css/accessibility.css?v=20260707">
-  <link rel="stylesheet" href="src/css/i18n.css?v=20260812polish">
-  <link rel="stylesheet" href="src/css/settings-modal.css?v=20260812polish">
-  <link rel="stylesheet" href="src/css/app-features.css?v=20260812polish">
-  <link rel="stylesheet" href="src/css/global-chat.css?v=20260812polish">
+  <link rel="stylesheet" href="src/css/tokens.css?v=20260820ux1">
+  <link rel="stylesheet" href="src/css/base.css?v=20260820ux1">
+  <link rel="stylesheet" href="src/css/dashboard.css?v=20260820ux1">
+  <link rel="stylesheet" href="src/css/responsive.css?v=20260820ux1">
+  <link rel="stylesheet" href="src/css/projects.css?v=20260820ux1">
+  <link rel="stylesheet" href="src/css/theme.css?v=20260820ux1">
+  <link rel="stylesheet" href="src/css/ui-polish.css?v=20260820ux1">
+  <link rel="stylesheet" href="src/css/accessibility.css?v=20260820ux1">
+  <link rel="stylesheet" href="src/css/i18n.css?v=20260820ux1">
+  <link rel="stylesheet" href="src/css/settings-modal.css?v=20260820ux1">
+  <link rel="stylesheet" href="src/css/app-features.css?v=20260820ux1">
+  <link rel="stylesheet" href="src/css/global-chat.css?v=20260820ux1">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" sizes="64x64" href="src/img/brand/favicon-64.png">
   <link rel="icon" type="image/png" sizes="32x32" href="src/img/brand/favicon-32.png">
@@ -83,6 +83,7 @@
             </div>
           </div>
           <div class="workspace-page-header__actions">
+            <button type="button" class="btn--outline" id="projects-archived-toggle" aria-pressed="false" data-i18n="projects.showArchived">Ver archivados</button>
             <button type="button" class="btn--course btn--lg" id="projects-new-btn" data-i18n="projects.newProject">Nuevo proyecto</button>
           </div>
         </div>
@@ -98,12 +99,12 @@
 
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script defer src="src/js/config/supabase.config.js"></script>
-<script defer src="src/js/dist/app-shell.bundle.js?v=20260820notes2"></script>
-<script defer src="src/js/data/CourseCurriculum.js?v=20260805"></script>
-<script defer src="src/js/services/LessonNotesService.js?v=20260820notes1"></script>
-<script defer src="src/js/services/NotesService.js?v=20260820notes1"></script>
-<script defer src="src/js/services/ProjectsService.js?v=20260820notes1"></script>
-<script defer src="src/js/controllers/ProjectsController.js?v=20260820notes1"></script>
+<script defer src="src/js/dist/app-shell.bundle.js?v=20260820ux1"></script>
+<script defer src="src/js/data/CourseCurriculum.js?v=20260820ux1"></script>
+<script defer src="src/js/services/LessonNotesService.js?v=20260820ux1"></script>
+<script defer src="src/js/services/NotesService.js?v=20260820ux1"></script>
+<script defer src="src/js/services/ProjectsService.js?v=20260820ux1"></script>
+<script defer src="src/js/controllers/ProjectsController.js?v=20260820ux1"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     try { AppShell.initPage('projects'); } catch (e) { console.error(e); AppShell.setupAvatar(); }

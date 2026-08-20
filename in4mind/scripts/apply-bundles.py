@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "src" / "js" / "dist"
-VERSION = "20260820notes2"
+VERSION = "20260820ux1"
 
 BOOT_FILES = [
     "src/js/controllers/ThemeController.js",
@@ -29,6 +29,8 @@ SHELL_FILES = [
     "src/js/locales/extended-course-locales.js",
     "src/js/data/extendedCourseLocales.js",
     "src/js/services/SessionStore.js",
+    "src/js/services/UserScopedStorage.js",
+    "src/js/services/UiDialog.js",
     "src/js/services/ErrorReporter.js",
     "src/js/services/SyncOutboxService.js",
     "src/js/services/ConnectivityService.js",
@@ -64,6 +66,7 @@ LANDING_FILES = [
     "src/js/services/QuizProgressService.js",
     "src/js/services/QuizRandomizer.js",
     "src/js/services/SessionStore.js",
+    "src/js/services/UiDialog.js",
     "src/js/services/ShareService.js",
     "src/js/services/DataService.js",
     "src/js/controllers/OtherMenuController.js",
@@ -92,6 +95,7 @@ LIGHT_PAGES = [
     "privacidad.html",
     "terminos.html",
     "portfolio-public.html",
+    "onboarding.html",
 ]
 
 
@@ -243,6 +247,23 @@ def rewrite_scripts(html: str, replace_set: set[str], bundle_name: str) -> str:
     return "".join(out)
 
 
+def rewrite_asset_versions(html: str) -> str:
+    """Unify CSS/JS cache-bust query hashes to VERSION (notes2-style)."""
+    html = re.sub(
+        r'(href="(?:\./)?src/css/[^"?]+\.css)\?v=[^"]*"',
+        rf'\1?v={VERSION}"',
+        html,
+        flags=re.I,
+    )
+    html = re.sub(
+        r'(src="(?:\./)?src/js/[^"?]+\.js)\?v=[^"]*"',
+        rf'\1?v={VERSION}"',
+        html,
+        flags=re.I,
+    )
+    return html
+
+
 def collapse_blank_script_gaps(html: str) -> str:
     html = re.sub(r"(</script>)\n(?:[ \t]*\n){2,}", r"\1\n", html)
     return html
@@ -255,6 +276,7 @@ def process_page(name: str, mode: str) -> None:
         return
     html = path.read_text(encoding="utf-8")
     html = rewrite_boot_block(html)
+    html = rewrite_asset_versions(html)
     if mode == "shell":
         html = rewrite_scripts(html, SHELL_REPLACE, "app-shell.bundle.js")
     elif mode == "landing":

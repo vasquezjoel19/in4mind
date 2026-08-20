@@ -1,4 +1,4 @@
-/*! IN4MIND bundle 20260820notes2 — 2026-08-20T19:53:09.137170+00:00 */
+/*! IN4MIND bundle 20260820ux1 — 2026-08-20T20:31:57.739908+00:00 */
 
 ;/* --- src/js/components/In4mindBulb.js --- */
 'use strict';
@@ -1620,6 +1620,268 @@ if (typeof window !== 'undefined') SessionStore.restore();
 if (typeof module !== 'undefined') module.exports = SessionStore;
 
 
+;/* --- src/js/services/UserScopedStorage.js --- */
+/**
+ * IN4MIND — Claves de localStorage aisladas por cuenta.
+ * Formato: `in4mind_{kind}:{account}` (email o id). Migra valores legacy sin sufijo.
+ */
+'use strict';
+
+const UserScopedStorage = (() => {
+
+  function accountId() {
+    try {
+      const raw = sessionStorage.getItem('in4mind_user') || localStorage.getItem('in4mind_user');
+      const user = raw ? JSON.parse(raw) : null;
+      const id = user?.id || user?.email || '';
+      return String(id || 'guest').toLowerCase();
+    } catch {
+      return 'guest';
+    }
+  }
+
+  function key(base) {
+    return `${base}:${accountId()}`;
+  }
+
+  function migrate(base) {
+    const scoped = key(base);
+    try {
+      if (localStorage.getItem(scoped) != null) return scoped;
+      const legacy = localStorage.getItem(base);
+      if (legacy != null) localStorage.setItem(scoped, legacy);
+    } catch { /* ignore */ }
+    return scoped;
+  }
+
+  function getItem(base) {
+    try {
+      return localStorage.getItem(migrate(base));
+    } catch {
+      return null;
+    }
+  }
+
+  function setItem(base, value) {
+    try {
+      localStorage.setItem(key(base), value);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  function getJson(base, fallback) {
+    try {
+      const raw = getItem(base);
+      if (raw == null || raw === '') return fallback;
+      const parsed = JSON.parse(raw);
+      return parsed == null ? fallback : parsed;
+    } catch {
+      return fallback;
+    }
+  }
+
+  function setJson(base, value) {
+    try {
+      return setItem(base, JSON.stringify(value));
+    } catch {
+      return false;
+    }
+  }
+
+  function removeItem(base) {
+    try {
+      localStorage.removeItem(key(base));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  return { accountId, key, migrate, getItem, setItem, getJson, setJson, removeItem };
+})();
+
+if (typeof module !== 'undefined') module.exports = UserScopedStorage;
+
+
+;/* --- src/js/services/UiDialog.js --- */
+/**
+ * IN4MIND — Diálogos temáticos (reemplazan alert / confirm / prompt).
+ */
+'use strict';
+
+const UiDialog = (() => {
+
+  let _open = null;
+
+  function _t(k, p, fb) {
+    if (typeof I18n !== 'undefined') {
+      const out = I18n.t(k, p);
+      if (out && out !== k) return out;
+    }
+    return fb ?? k;
+  }
+
+  function _esc(str) {
+    return String(str ?? '').replace(/[&<>"']/g, c => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
+  }
+
+  function _ensureRoot() {
+    let root = document.getElementById('ui-dialog-root');
+    if (root) return root;
+    root = document.createElement('div');
+    root.id = 'ui-dialog-root';
+    document.body.appendChild(root);
+    return root;
+  }
+
+  function close() {
+    const root = document.getElementById('ui-dialog-root');
+    if (root) {
+      root.innerHTML = '';
+      root.hidden = true;
+    }
+    const resolve = _open;
+    _open = null;
+    document.removeEventListener('keydown', _onKey, true);
+    if (resolve) resolve(null);
+  }
+
+  function _onKey(e) {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      close();
+      return;
+    }
+    if (e.key !== 'Tab') return;
+    const root = document.getElementById('ui-dialog-root');
+    const focusable = root?.querySelectorAll(
+      'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'
+    );
+    if (!focusable?.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+
+  function _mount({ title, bodyHtml, actions, danger, focusSelector }) {
+    const root = _ensureRoot();
+    root.hidden = false;
+    root.innerHTML = `
+      <div class="ui-dialog-backdrop" data-ui-dialog-dismiss>
+        <div class="ui-dialog ${danger ? 'ui-dialog--danger' : ''}" role="dialog" aria-modal="true" aria-labelledby="ui-dialog-title">
+          <h2 class="ui-dialog__title" id="ui-dialog-title">${_esc(title)}</h2>
+          <div class="ui-dialog__body">${bodyHtml}</div>
+          <div class="ui-dialog__actions">${actions}</div>
+        </div>
+      </div>`;
+    document.addEventListener('keydown', _onKey, true);
+    root.querySelector('[data-ui-dialog-dismiss]')?.addEventListener('click', (e) => {
+      if (e.target.hasAttribute('data-ui-dialog-dismiss')) close();
+    });
+    const focusEl = root.querySelector(focusSelector || '.ui-dialog__actions button, .ui-dialog input');
+    setTimeout(() => focusEl?.focus(), 20);
+    return root;
+  }
+
+  function alert({ title, message } = {}) {
+    return new Promise((resolve) => {
+      close();
+      _open = resolve;
+      const root = _mount({
+        title: title || _t('common.confirm', null, 'Aviso'),
+        bodyHtml: `<p class="ui-dialog__text">${_esc(message || '')}</p>`,
+        actions: `<button type="button" class="btn--course" data-ui-ok>${_esc(_t('common.confirm', null, 'Aceptar'))}</button>`,
+      });
+      root.querySelector('[data-ui-ok]')?.addEventListener('click', () => {
+        const done = _open;
+        _open = null;
+        document.getElementById('ui-dialog-root').innerHTML = '';
+        document.getElementById('ui-dialog-root').hidden = true;
+        document.removeEventListener('keydown', _onKey, true);
+        if (done) done(true);
+      });
+    });
+  }
+
+  function confirm({ title, message, danger, confirmLabel, cancelLabel } = {}) {
+    return new Promise((resolve) => {
+      close();
+      _open = resolve;
+      const okLabel = confirmLabel || (danger
+        ? _t('common.delete', null, 'Eliminar')
+        : _t('common.confirm', null, 'Confirmar'));
+      const root = _mount({
+        title: title || _t('common.confirm', null, 'Confirmar'),
+        danger: Boolean(danger),
+        bodyHtml: `<p class="ui-dialog__text">${_esc(message || '')}</p>`,
+        actions: `
+          <button type="button" class="btn--outline" data-ui-cancel>${_esc(cancelLabel || _t('common.cancel', null, 'Cancelar'))}</button>
+          <button type="button" class="${danger ? 'btn--danger' : 'btn--course'}" data-ui-ok>${_esc(okLabel)}</button>`,
+      });
+      const finish = (value) => {
+        const done = _open;
+        _open = null;
+        const el = document.getElementById('ui-dialog-root');
+        if (el) { el.innerHTML = ''; el.hidden = true; }
+        document.removeEventListener('keydown', _onKey, true);
+        if (done) done(value);
+      };
+      root.querySelector('[data-ui-cancel]')?.addEventListener('click', () => finish(false));
+      root.querySelector('[data-ui-ok]')?.addEventListener('click', () => finish(true));
+    });
+  }
+
+  function prompt({ title, message, value, placeholder, confirmLabel } = {}) {
+    return new Promise((resolve) => {
+      close();
+      _open = resolve;
+      const root = _mount({
+        title: title || _t('common.confirm', null, 'Nombre'),
+        bodyHtml: `
+          ${message ? `<p class="ui-dialog__text">${_esc(message)}</p>` : ''}
+          <input class="ui-dialog__input" id="ui-dialog-input" type="text" maxlength="120"
+                 value="${_esc(value || '')}" placeholder="${_esc(placeholder || '')}">`,
+        actions: `
+          <button type="button" class="btn--outline" data-ui-cancel>${_esc(_t('common.cancel', null, 'Cancelar'))}</button>
+          <button type="button" class="btn--course" data-ui-ok>${_esc(confirmLabel || _t('common.save', null, 'Guardar'))}</button>`,
+        focusSelector: '#ui-dialog-input',
+      });
+      const input = root.querySelector('#ui-dialog-input');
+      const finish = (val) => {
+        const done = _open;
+        _open = null;
+        const el = document.getElementById('ui-dialog-root');
+        if (el) { el.innerHTML = ''; el.hidden = true; }
+        document.removeEventListener('keydown', _onKey, true);
+        if (done) done(val);
+      };
+      root.querySelector('[data-ui-cancel]')?.addEventListener('click', () => finish(null));
+      root.querySelector('[data-ui-ok]')?.addEventListener('click', () => finish(input?.value ?? ''));
+      input?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          finish(input.value);
+        }
+      });
+    });
+  }
+
+  return { alert, confirm, prompt, close, danger: (opts) => confirm({ ...opts, danger: true }) };
+})();
+
+if (typeof module !== 'undefined') module.exports = UiDialog;
+
+
 ;/* --- src/js/services/ErrorReporter.js --- */
 /**
  * IN4MIND — Observabilidad mínima: captura errores JS y eventos de app.
@@ -2058,10 +2320,12 @@ const CloudBlobSync = (() => {
 
   /**
    * Fusiona blob remoto con local por updatedAt (última escritura gana por id).
+   * `tombstones` evita que un id borrado localmente "reviva" desde la nube.
    * @param {Record<string, object>} localMap
    * @param {Record<string, object>} remoteMap
+   * @param {Record<string, number>} [tombstones]
    */
-  function mergeMaps(localMap, remoteMap) {
+  function mergeMaps(localMap, remoteMap, tombstones) {
     const out = { ...(remoteMap || {}) };
     Object.entries(localMap || {}).forEach(([id, local]) => {
       const remote = out[id];
@@ -2069,10 +2333,24 @@ const CloudBlobSync = (() => {
         out[id] = local;
       }
     });
+    Object.entries(tombstones || {}).forEach(([id, ts]) => {
+      const remote = out[id];
+      if (!remote || Number(ts || 0) >= (remote.updatedAt || 0)) {
+        delete out[id];
+      }
+    });
     return out;
   }
 
-  return { pushBlob, pullBlob, mergeMaps, TABLES };
+  function mergeTombstones(localTs, remoteTs) {
+    const out = { ...(remoteTs || {}) };
+    Object.entries(localTs || {}).forEach(([id, ts]) => {
+      out[id] = Math.max(Number(out[id] || 0), Number(ts || 0));
+    });
+    return out;
+  }
+
+  return { pushBlob, pullBlob, mergeMaps, mergeTombstones, TABLES };
 })();
 
 if (typeof module !== 'undefined') module.exports = CloudBlobSync;
@@ -2473,8 +2751,22 @@ const AuthGuard = (() => {
       if (_isSafe(target)) sessionStorage.setItem(NEXT_KEY, target);
     } catch { /* ignore */ }
 
+    try {
+      const current = new URL(target);
+      const quiz = current.searchParams.get('quiz');
+      const exam = current.searchParams.get('exam');
+      if (quiz) sessionStorage.setItem('in4mind_open_quiz', quiz);
+      if (exam) sessionStorage.setItem('in4mind_open_exam', exam);
+      stashPendingRedirect(current.pathname.replace(/^\//, '') + current.search + current.hash);
+    } catch { /* ignore */ }
+
     const login = new URL('login.html', window.location.href);
-    login.searchParams.set('next', new URL(target).pathname + new URL(target).search);
+    try {
+      const here = new URL(target);
+      login.searchParams.set('next', here.pathname.replace(/^\//, '') + here.search);
+    } catch {
+      login.searchParams.set('next', new URL(target).pathname + new URL(target).search);
+    }
     window.location.replace(login.toString());
   }
 
@@ -4512,7 +4804,15 @@ const GamificationService = (() => {
     return fb;
   }
 
+  function _uss() {
+    if (typeof UserScopedStorage !== 'undefined') return UserScopedStorage;
+    if (typeof globalThis !== 'undefined' && globalThis.UserScopedStorage) return globalThis.UserScopedStorage;
+    return null;
+  }
+
   function _read() {
+    const store = _uss();
+    if (store) return store.getJson(STORAGE_KEY, {}) || {};
     try {
       return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
     } catch {
@@ -4521,12 +4821,22 @@ const GamificationService = (() => {
   }
 
   function _write(data) {
+    const store = _uss();
+    if (store) {
+      store.setJson(STORAGE_KEY, data);
+      return;
+    }
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch { /* ignore */ }
   }
 
   function _readActivity() {
+    const store = _uss();
+    if (store) {
+      const log = store.getJson(ACTIVITY_KEY, []);
+      return Array.isArray(log) ? log : [];
+    }
     try {
       return JSON.parse(localStorage.getItem(ACTIVITY_KEY) || '[]');
     } catch {
@@ -4536,6 +4846,11 @@ const GamificationService = (() => {
 
   function _writeActivity(log) {
     const trimmed = log.slice(-90);
+    const store = _uss();
+    if (store) {
+      store.setJson(ACTIVITY_KEY, trimmed);
+      return;
+    }
     try {
       localStorage.setItem(ACTIVITY_KEY, JSON.stringify(trimmed));
     } catch { /* ignore */ }
@@ -4580,10 +4895,17 @@ const GamificationService = (() => {
     if (type === 'quiz') data.quizzesCompleted = (data.quizzesCompleted || 0) + 1;
     data.badges = _computeBadges(data);
     _write(data);
-    window.dispatchEvent(new CustomEvent('in4mind-gamification-updated'));
+    if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+      window.dispatchEvent(new CustomEvent('in4mind-gamification-updated'));
+    }
   }
 
   function _getGoals() {
+    const store = _uss();
+    if (store) {
+      const g = store.getJson(GOALS_KEY, {}) || {};
+      return { lessons: g.lessons || 2, quizzes: g.quizzes || 1 };
+    }
     try {
       const g = JSON.parse(localStorage.getItem(GOALS_KEY) || '{}');
       return {
@@ -4596,11 +4918,16 @@ const GamificationService = (() => {
   }
 
   function setWeeklyGoals(lessons, quizzes) {
-    localStorage.setItem(GOALS_KEY, JSON.stringify({
+    const payload = {
       lessons: Math.max(1, lessons || 2),
       quizzes: Math.max(1, quizzes || 1),
-    }));
-    window.dispatchEvent(new CustomEvent('in4mind-gamification-updated'));
+    };
+    const store = _uss();
+    if (store) store.setJson(GOALS_KEY, payload);
+    else localStorage.setItem(GOALS_KEY, JSON.stringify(payload));
+    if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+      window.dispatchEvent(new CustomEvent('in4mind-gamification-updated'));
+    }
   }
 
   function _computeBadges(data) {
@@ -5960,9 +6287,17 @@ const DataExportService = (() => {
 
     let gamification = {};
     let activity = [];
+    let weeklyGoals = {};
     let aiGuest = [];
-    try { gamification = JSON.parse(localStorage.getItem('in4mind_gamification') || '{}'); } catch { /* */ }
-    try { activity = JSON.parse(localStorage.getItem('in4mind_activity_log') || '[]'); } catch { /* */ }
+    if (typeof UserScopedStorage !== 'undefined') {
+      gamification = UserScopedStorage.getJson('in4mind_gamification', {}) || {};
+      activity = UserScopedStorage.getJson('in4mind_activity_log', []) || [];
+      weeklyGoals = UserScopedStorage.getJson('in4mind_weekly_goals', {}) || {};
+    } else {
+      try { gamification = JSON.parse(localStorage.getItem('in4mind_gamification') || '{}'); } catch { /* */ }
+      try { activity = JSON.parse(localStorage.getItem('in4mind_activity_log') || '[]'); } catch { /* */ }
+      try { weeklyGoals = JSON.parse(localStorage.getItem('in4mind_weekly_goals') || '{}'); } catch { /* */ }
+    }
     try { aiGuest = JSON.parse(localStorage.getItem('in4mind_ai_guest_history') || '[]'); } catch { /* */ }
 
     return {
@@ -5977,6 +6312,7 @@ const DataExportService = (() => {
       certifications,
       gamification,
       activity,
+      weeklyGoals,
       aiGuestHistory: aiGuest,
       locale: typeof I18n !== 'undefined' ? I18n.getLocale() : 'es',
       theme: localStorage.getItem('in4mind_theme'),
@@ -6034,8 +6370,18 @@ const DataExportService = (() => {
       if (data.locale && typeof I18n !== 'undefined' && I18n.setLocale) {
         try { I18n.setLocale(data.locale); } catch { /* */ }
       }
-      if (data.gamification) localStorage.setItem('in4mind_gamification', JSON.stringify(data.gamification));
-      if (data.activity) localStorage.setItem('in4mind_activity_log', JSON.stringify(data.activity));
+      if (data.gamification) {
+        if (typeof UserScopedStorage !== 'undefined') UserScopedStorage.setJson('in4mind_gamification', data.gamification);
+        else localStorage.setItem('in4mind_gamification', JSON.stringify(data.gamification));
+      }
+      if (data.activity) {
+        if (typeof UserScopedStorage !== 'undefined') UserScopedStorage.setJson('in4mind_activity_log', data.activity);
+        else localStorage.setItem('in4mind_activity_log', JSON.stringify(data.activity));
+      }
+      if (data.weeklyGoals) {
+        if (typeof UserScopedStorage !== 'undefined') UserScopedStorage.setJson('in4mind_weekly_goals', data.weeklyGoals);
+        else localStorage.setItem('in4mind_weekly_goals', JSON.stringify(data.weeklyGoals));
+      }
       if (data.aiGuestHistory) localStorage.setItem('in4mind_ai_guest_history', JSON.stringify(data.aiGuestHistory));
 
       if (data.quizProgress) {
@@ -6112,7 +6458,14 @@ const DataExportService = (() => {
   }
 
   async function deleteAccount() {
-    if (!confirm(_t('privacy.deleteConfirm', null, '¿Eliminar todos tus datos locales y cerrar sesión? Esta acción no se puede deshacer.'))) {
+    const ok = typeof UiDialog !== 'undefined'
+      ? await UiDialog.confirm({
+          title: _t('common.delete', null, 'Eliminar'),
+          message: _t('privacy.deleteConfirm', null, '¿Eliminar todos tus datos locales y cerrar sesión? Esta acción no se puede deshacer.'),
+          danger: true,
+        })
+      : window.confirm(_t('privacy.deleteConfirm', null, '¿Eliminar todos tus datos locales y cerrar sesión? Esta acción no se puede deshacer.'));
+    if (!ok) {
       return { ok: false, cancelled: true };
     }
 
@@ -7291,6 +7644,22 @@ const GlobalChatController = (() => {
     card.href = safeUrl;
     card.rel = 'noopener';
     if (att.quizId) card.dataset.quizId = att.quizId;
+    card.addEventListener('click', (e) => {
+      const quizId = att.quizId || '';
+      try {
+        if (quizId) sessionStorage.setItem('in4mind_open_quiz', quizId);
+      } catch { /* ignore */ }
+      if (typeof AuthGuard !== 'undefined' && AuthGuard.stashPendingRedirect) {
+        AuthGuard.stashPendingRedirect(safeUrl);
+        AuthGuard.setRedirect?.(safeUrl);
+      }
+      if (typeof AuthGuard !== 'undefined' && AuthGuard.hasSession && !AuthGuard.hasSession()) {
+        e.preventDefault();
+        const login = new URL('login.html', window.location.href);
+        login.searchParams.set('next', safeUrl);
+        window.location.replace(login.toString());
+      }
+    });
 
     const icon = document.createElement('span');
     icon.className = 'gchat-quiz__icon';
@@ -7848,6 +8217,53 @@ const AppShell = (() => {
     el._hideTimer = setTimeout(() => el.classList.remove('app-toast--visible'), duration);
   }
 
+  /**
+   * Toast con acción "Deshacer" (5–10 s). Devuelve { cancel } para abortar el commit.
+   */
+  function showUndoToast(message, { onUndo, onCommit, duration = 8000 } = {}) {
+    let el = document.getElementById('app-toast');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'app-toast';
+      el.className = 'app-toast';
+      el.setAttribute('role', 'status');
+      el.setAttribute('aria-live', 'polite');
+      document.body.appendChild(el);
+    }
+    el.innerHTML = '';
+    const text = document.createElement('span');
+    text.textContent = message;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'app-toast__undo';
+    btn.textContent = typeof I18n !== 'undefined' && I18n.t('common.undo') !== 'common.undo'
+      ? I18n.t('common.undo')
+      : 'Deshacer';
+    el.append(text, btn);
+    el.classList.add('app-toast--visible', 'app-toast--undo');
+    clearTimeout(el._hideTimer);
+    let committed = false;
+    const finishHide = () => {
+      el.classList.remove('app-toast--visible', 'app-toast--undo');
+      el.textContent = '';
+    };
+    const commit = () => {
+      if (committed) return;
+      committed = true;
+      finishHide();
+      if (typeof onCommit === 'function') onCommit();
+    };
+    btn.addEventListener('click', () => {
+      if (committed) return;
+      committed = true;
+      clearTimeout(el._hideTimer);
+      finishHide();
+      if (typeof onUndo === 'function') onUndo();
+    });
+    el._hideTimer = setTimeout(commit, duration);
+    return { cancel: commit };
+  }
+
   function _goToProfile() {
     navigateTo(PROFILE_HREF);
   }
@@ -8075,6 +8491,7 @@ const AppShell = (() => {
     initPage,
     navigateTo,
     showToast,
+    showUndoToast,
     navIcon,
     renderNavItem,
   };
@@ -8652,7 +9069,10 @@ const OtherMenuController = (() => {
     }
     if (action === 'logout') {
       const msg = _t('profile.logoutConfirm', null, '¿Cerrar sesión?');
-      if (!confirm(msg)) return;
+      const ok = typeof UiDialog !== 'undefined'
+        ? await UiDialog.confirm({ title: msg, message: msg })
+        : window.confirm(msg);
+      if (!ok) return;
       close();
       if (typeof AppShell !== 'undefined') AppShell.logout();
       else if (typeof AuthService !== 'undefined') {
@@ -9153,7 +9573,10 @@ const SettingsController = (() => {
     });
     document.getElementById('settings-logout')?.addEventListener('click', async () => {
       const msg = typeof I18n !== 'undefined' ? I18n.t('profile.logoutConfirm') : '¿Cerrar sesión?';
-      if (!confirm(msg)) return;
+      const ok = typeof UiDialog !== 'undefined'
+        ? await UiDialog.confirm({ title: msg, message: msg })
+        : window.confirm(msg);
+      if (!ok) return;
       close();
       if (typeof AppShell !== 'undefined') AppShell.logout();
       else if (typeof AuthService !== 'undefined') {
@@ -9177,7 +9600,9 @@ const SettingsController = (() => {
     document.getElementById('settings-goal-quizzes')?.addEventListener('change', _saveWeeklyGoals);
     document.getElementById('settings-reset-onboard')?.addEventListener('click', () => {
       localStorage.removeItem('in4mind_onboarding_done');
-      alert(typeof I18n !== 'undefined' ? I18n.t('settingsModal.onboardReset') : 'Tour reiniciado.');
+      const msg = typeof I18n !== 'undefined' ? I18n.t('settingsModal.onboardReset') : 'Tour reiniciado.';
+      if (typeof UiDialog !== 'undefined') UiDialog.alert({ message: msg });
+      else window.alert(msg);
     });
     document.getElementById('settings-export-data')?.addEventListener('click', async () => {
       if (typeof LazyScriptLoader !== 'undefined') await LazyScriptLoader.loadPrivacyTools();
@@ -9190,7 +9615,9 @@ const SettingsController = (() => {
       if (typeof DataExportService !== 'undefined') {
         const result = await DataExportService.importFromFile(file);
         if (!result.ok) {
-          alert(typeof I18n !== 'undefined' ? I18n.t('privacy.importFail') : 'No se pudo importar el archivo.');
+          const fail = typeof I18n !== 'undefined' ? I18n.t('privacy.importFail') : 'No se pudo importar el archivo.';
+          if (typeof UiDialog !== 'undefined') UiDialog.alert({ message: fail });
+          else window.alert(fail);
         }
       }
       e.target.value = '';

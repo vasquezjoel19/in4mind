@@ -85,11 +85,14 @@ const ProjectsService = (() => {
     return `task_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
   }
 
-  function getAll() {
-    return Object.values(_readAll()).sort((a, b) => {
-      if (Boolean(b.pinned) !== Boolean(a.pinned)) return b.pinned ? 1 : -1;
-      return (b.updatedAt || 0) - (a.updatedAt || 0);
-    });
+  function getAll(opts = {}) {
+    const includeArchived = Boolean(opts.includeArchived);
+    return Object.values(_readAll())
+      .filter((p) => includeArchived || !p.archived)
+      .sort((a, b) => {
+        if (Boolean(b.pinned) !== Boolean(a.pinned)) return b.pinned ? 1 : -1;
+        return (b.updatedAt || 0) - (a.updatedAt || 0);
+      });
   }
 
   function get(id) {
@@ -113,6 +116,7 @@ const ProjectsService = (() => {
       noteIds:     Array.isArray(data.noteIds) ? data.noteIds : (existing.noteIds || []),
       tasks:       Array.isArray(data.tasks) ? data.tasks : (existing.tasks || []),
       pinned:      Boolean(data.pinned ?? existing.pinned),
+      archived:    Boolean(data.archived ?? existing.archived),
       createdAt:   existing.createdAt || now,
       updatedAt:   now,
     };
@@ -131,6 +135,18 @@ const ProjectsService = (() => {
     const p = get(id);
     if (!p) return null;
     return save({ id, pinned: !p.pinned });
+  }
+
+  function archive(id, archived = true) {
+    const p = get(id);
+    if (!p) return null;
+    return save({ id, archived: Boolean(archived), pinned: archived ? false : p.pinned });
+  }
+
+  function emptyTasks(id) {
+    const p = get(id);
+    if (!p) return null;
+    return save({ id, tasks: [] });
   }
 
   function addTask(projectId, text) {
@@ -166,10 +182,11 @@ const ProjectsService = (() => {
     return save({ id: projectId, noteIds });
   }
 
-  function search(query) {
+  function search(query, opts = {}) {
     const q = String(query || '').trim().toLowerCase();
-    if (!q) return getAll();
-    return getAll().filter(p => {
+    const list = getAll(opts);
+    if (!q) return list;
+    return list.filter(p => {
       const hay = [p.title, p.description, ...(p.tasks || []).map(t => t.text)].join(' ').toLowerCase();
       return hay.includes(q);
     });
@@ -189,6 +206,8 @@ const ProjectsService = (() => {
     save,
     remove,
     togglePin,
+    archive,
+    emptyTasks,
     addTask,
     toggleTask,
     removeTask,

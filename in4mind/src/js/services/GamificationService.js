@@ -26,7 +26,15 @@ const GamificationService = (() => {
     return fb;
   }
 
+  function _uss() {
+    if (typeof UserScopedStorage !== 'undefined') return UserScopedStorage;
+    if (typeof globalThis !== 'undefined' && globalThis.UserScopedStorage) return globalThis.UserScopedStorage;
+    return null;
+  }
+
   function _read() {
+    const store = _uss();
+    if (store) return store.getJson(STORAGE_KEY, {}) || {};
     try {
       return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
     } catch {
@@ -35,12 +43,22 @@ const GamificationService = (() => {
   }
 
   function _write(data) {
+    const store = _uss();
+    if (store) {
+      store.setJson(STORAGE_KEY, data);
+      return;
+    }
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch { /* ignore */ }
   }
 
   function _readActivity() {
+    const store = _uss();
+    if (store) {
+      const log = store.getJson(ACTIVITY_KEY, []);
+      return Array.isArray(log) ? log : [];
+    }
     try {
       return JSON.parse(localStorage.getItem(ACTIVITY_KEY) || '[]');
     } catch {
@@ -50,6 +68,11 @@ const GamificationService = (() => {
 
   function _writeActivity(log) {
     const trimmed = log.slice(-90);
+    const store = _uss();
+    if (store) {
+      store.setJson(ACTIVITY_KEY, trimmed);
+      return;
+    }
     try {
       localStorage.setItem(ACTIVITY_KEY, JSON.stringify(trimmed));
     } catch { /* ignore */ }
@@ -94,10 +117,17 @@ const GamificationService = (() => {
     if (type === 'quiz') data.quizzesCompleted = (data.quizzesCompleted || 0) + 1;
     data.badges = _computeBadges(data);
     _write(data);
-    window.dispatchEvent(new CustomEvent('in4mind-gamification-updated'));
+    if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+      window.dispatchEvent(new CustomEvent('in4mind-gamification-updated'));
+    }
   }
 
   function _getGoals() {
+    const store = _uss();
+    if (store) {
+      const g = store.getJson(GOALS_KEY, {}) || {};
+      return { lessons: g.lessons || 2, quizzes: g.quizzes || 1 };
+    }
     try {
       const g = JSON.parse(localStorage.getItem(GOALS_KEY) || '{}');
       return {
@@ -110,11 +140,16 @@ const GamificationService = (() => {
   }
 
   function setWeeklyGoals(lessons, quizzes) {
-    localStorage.setItem(GOALS_KEY, JSON.stringify({
+    const payload = {
       lessons: Math.max(1, lessons || 2),
       quizzes: Math.max(1, quizzes || 1),
-    }));
-    window.dispatchEvent(new CustomEvent('in4mind-gamification-updated'));
+    };
+    const store = _uss();
+    if (store) store.setJson(GOALS_KEY, payload);
+    else localStorage.setItem(GOALS_KEY, JSON.stringify(payload));
+    if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+      window.dispatchEvent(new CustomEvent('in4mind-gamification-updated'));
+    }
   }
 
   function _computeBadges(data) {

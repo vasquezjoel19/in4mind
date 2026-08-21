@@ -365,27 +365,6 @@ html[data-theme="dark"] .projects-page-header__logo.in4mind-bulb {
   border-top: 1px solid var(--clr-border-lt);
 }
 
-.btn--danger-outline {
-  background: transparent;
-  border: 1.5px solid var(--clr-danger, #e53935);
-  color: var(--clr-danger, #e53935);
-  cursor: pointer;
-  font-family: var(--font-body);
-  font-size: 0.85rem;
-  font-weight: 700;
-  padding: 0.5rem 0.9rem;
-  border-radius: var(--rad-lg);
-}
-
-.btn--danger-outline:hover {
-  background: var(--clr-danger, #e53935);
-  color: #fff;
-}
-
-html[data-theme="dark"] .btn--danger-outline {
-  background: color-mix(in srgb, var(--clr-danger, #e53935) 12%, transparent);
-}
-
 .projects-detail__delete,
 .btn--danger.projects-detail__delete {
   margin-left: auto;

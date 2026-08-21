@@ -9,7 +9,7 @@ const path = require('path');
 
 const root = path.join(__dirname, '..');
 const outDir = path.join(root, 'src/js/dist');
-const VERSION = '20260820ux1';
+const VERSION = '20260821ux1';
 
 const BOOT_FILES = [
   'src/js/controllers/ThemeController.js',
@@ -30,8 +30,6 @@ const SHELL_FILES = [
   'src/js/locales/extended-course-locales.js',
   'src/js/data/extendedCourseLocales.js',
   'src/js/services/SessionStore.js',
-  'src/js/services/UserScopedStorage.js',
-  'src/js/services/UiDialog.js',
   'src/js/services/ErrorReporter.js',
   'src/js/services/SyncOutboxService.js',
   'src/js/services/ConnectivityService.js',
@@ -68,7 +66,6 @@ const LANDING_FILES = [
   'src/js/services/QuizProgressService.js',
   'src/js/services/QuizRandomizer.js',
   'src/js/services/SessionStore.js',
-  'src/js/services/UiDialog.js',
   'src/js/services/ShareService.js',
   'src/js/services/DataService.js',
   'src/js/controllers/OtherMenuController.js',

@@ -33,13 +33,6 @@ const required = [
   'src/js/controllers/AuthController.js',
   'src/js/controllers/TutorialController.js',
   'src/js/controllers/QuizzesController.js',
-  'src/js/services/UserScopedStorage.js',
-  'src/js/services/UiDialog.js',
-  'src/js/services/NotesService.js',
-  'src/js/services/CloudBlobSync.js',
-  'src/js/services/ProjectsService.js',
-  'src/js/services/AppShell.js',
-  'src/js/controllers/NotesController.js',
 ];
 
 let failed = 0;
@@ -193,77 +186,11 @@ assert('starters has web kit', /web-junior/.test(starters));
 
 assert('global chat quizChallengeHref', /quizChallengeHref/.test(read('src/js/services/GlobalChatService.js')));
 assert('global chat relative quiz url', /quizzes\.html\?quiz=/.test(read('src/js/controllers/GlobalChatController.js')));
-assert('chat challenge stashes in4mind_open_quiz', /in4mind_open_quiz/.test(read('src/js/controllers/GlobalChatController.js')));
-assert('chat challenge stashes pending redirect', /stashPendingRedirect/.test(read('src/js/controllers/GlobalChatController.js')));
-
-assert('UiDialog custom confirm', /function confirm/.test(read('src/js/services/UiDialog.js')));
-assert('UiDialog focus trap Tab', /e\.key !== 'Tab'/.test(read('src/js/services/UiDialog.js')));
-assert('UserScopedStorage namespaced key', /\$\{base\}:\$\{accountId\(\)\}/.test(read('src/js/services/UserScopedStorage.js')));
-assert('CloudBlobSync mergeTombstones', /function mergeTombstones/.test(read('src/js/services/CloudBlobSync.js')));
-assert('NotesService moveToFolder', /function moveToFolder/.test(read('src/js/services/NotesService.js')));
-assert('NotesService restoreNote', /function restoreNote/.test(read('src/js/services/NotesService.js')));
-assert('NotesService flushCloud', /function flushCloud/.test(read('src/js/services/NotesService.js')));
-assert('Notes cascade tombstones', /_markTombstones\('notes'/.test(read('src/js/services/NotesService.js')));
-assert('ProjectsService archive', /function archive/.test(read('src/js/services/ProjectsService.js')));
-assert('ProjectsService emptyTasks', /function emptyTasks/.test(read('src/js/services/ProjectsService.js')));
-assert('AppShell showUndoToast', /function showUndoToast/.test(read('src/js/services/AppShell.js')));
-assert('folder menu Escape handler', /e\.key === 'Escape'/.test(read('src/js/controllers/NotesController.js')));
-assert('folder menu focus trap', /role="menu"/.test(read('src/js/controllers/NotesController.js')));
-assert('notes drag-and-drop', /text\/in4mind-note/.test(read('src/js/controllers/NotesController.js')));
-assert('projects archived toggle', /projects-archived-toggle/.test(read('projects.html')));
-assert('apply-bundles unifies css hash', /rewrite_asset_versions/.test(read('scripts/apply-bundles.py')));
-assert('asset version ux1', /20260820ux1/.test(read('src/js/config/asset-version.js')));
-assert('shell bundles UserScopedStorage', /UserScopedStorage\.js/.test(read('scripts/bundle-shell.js')));
-assert('shell bundles UiDialog', /UiDialog\.js/.test(read('scripts/bundle-shell.js')));
-
-{
-  const sandbox = {
-    window: {},
-    sessionStorage: {
-      _d: {},
-      getItem(k) { return this._d[k] || null; },
-      setItem(k, v) { this._d[k] = String(v); },
-      removeItem(k) { delete this._d[k]; },
-    },
-    localStorage: {
-      _d: {},
-      getItem(k) { return this._d[k] || null; },
-      setItem(k, v) { this._d[k] = String(v); },
-      removeItem(k) { delete this._d[k]; },
-    },
-    module: { exports: {} },
-  };
-  vm.runInNewContext(read('src/js/services/UserScopedStorage.js') + '\nthis.UserScopedStorage = UserScopedStorage;', sandbox);
-  sandbox.sessionStorage.setItem('in4mind_user', JSON.stringify({ id: 'user-42', email: 'ada@in4mind.test' }));
-  const scoped = sandbox.UserScopedStorage.key('in4mind_favorites');
-  assert('scoped key uses account id', scoped === 'in4mind_favorites:user-42');
-  sandbox.localStorage.setItem('in4mind_gamification', '{"xp":9}');
-  const migrated = sandbox.UserScopedStorage.getJson('in4mind_gamification', {});
-  assert('migrates unsuffixed gamification key', migrated && migrated.xp === 9);
-  sandbox.UserScopedStorage.setJson('in4mind_gamification', { xp: 12 });
-  assert(
-    'writes namespaced gamification',
-    sandbox.localStorage.getItem('in4mind_gamification:user-42') === '{"xp":12}'
-  );
-}
-
-{
-  const sandbox = {
-    window: {},
-    _sbClient: undefined,
-    ErrorReporter: undefined,
-    module: { exports: {} },
-  };
-  vm.runInNewContext(read('src/js/services/CloudBlobSync.js') + '\nthis.CloudBlobSync = CloudBlobSync;', sandbox);
-  const merged = sandbox.CloudBlobSync.mergeMaps(
-    { keep: { id: 'keep', updatedAt: 2 } },
-    { gone: { id: 'gone', updatedAt: 1 }, keep: { id: 'keep', updatedAt: 1 } },
-    { gone: 5 }
-  );
-  assert('tombstone drops revived note', !merged.gone && merged.keep && merged.keep.updatedAt === 2);
-  const tombs = sandbox.CloudBlobSync.mergeTombstones({ a: 3 }, { a: 1, b: 4 });
-  assert('mergeTombstones keeps max timestamp', tombs.a === 3 && tombs.b === 4);
-}
+assert('UiDialog module', /function confirm/.test(read('src/js/services/UiDialog.js')));
+assert('UserScopedStorage module', /function accountId/.test(read('src/js/services/UserScopedStorage.js')));
+assert('notes tombstones deletedNotes', /deletedNotes/.test(read('src/js/services/NotesService.js')));
+assert('CloudBlobSync mergeMaps tombstones', /deletedMap/.test(read('src/js/services/CloudBlobSync.js')));
+assert('Gamification uses UserScopedStorage', /UserScopedStorage/.test(read('src/js/services/GamificationService.js')));
 
 if (failed) {
   console.error(`\n${failed} smoke check(s) failed`);

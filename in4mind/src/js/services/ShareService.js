@@ -206,22 +206,8 @@ const AuthGuard = (() => {
       if (_isSafe(target)) sessionStorage.setItem(NEXT_KEY, target);
     } catch { /* ignore */ }
 
-    try {
-      const current = new URL(target);
-      const quiz = current.searchParams.get('quiz');
-      const exam = current.searchParams.get('exam');
-      if (quiz) sessionStorage.setItem('in4mind_open_quiz', quiz);
-      if (exam) sessionStorage.setItem('in4mind_open_exam', exam);
-      stashPendingRedirect(current.pathname.replace(/^\//, '') + current.search + current.hash);
-    } catch { /* ignore */ }
-
     const login = new URL('login.html', window.location.href);
-    try {
-      const here = new URL(target);
-      login.searchParams.set('next', here.pathname.replace(/^\//, '') + here.search);
-    } catch {
-      login.searchParams.set('next', new URL(target).pathname + new URL(target).search);
-    }
+    login.searchParams.set('next', new URL(target).pathname + new URL(target).search);
     window.location.replace(login.toString());
   }
 

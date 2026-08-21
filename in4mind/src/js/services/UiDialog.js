@@ -26,6 +26,7 @@ const UiDialog = (() => {
     if (root) return root;
     root = document.createElement('div');
     root.id = 'ui-dialog-root';
+    root.hidden = true;
     document.body.appendChild(root);
     return root;
   }
@@ -65,6 +66,18 @@ const UiDialog = (() => {
     }
   }
 
+  function _finish(value) {
+    const done = _open;
+    _open = null;
+    const el = document.getElementById('ui-dialog-root');
+    if (el) {
+      el.innerHTML = '';
+      el.hidden = true;
+    }
+    document.removeEventListener('keydown', _onKey, true);
+    if (done) done(value);
+  }
+
   function _mount({ title, bodyHtml, actions, danger, focusSelector }) {
     const root = _ensureRoot();
     root.hidden = false;
@@ -80,7 +93,7 @@ const UiDialog = (() => {
     root.querySelector('[data-ui-dialog-dismiss]')?.addEventListener('click', (e) => {
       if (e.target.hasAttribute('data-ui-dialog-dismiss')) close();
     });
-    const focusEl = root.querySelector(focusSelector || '.ui-dialog__actions button, .ui-dialog input');
+    const focusEl = root.querySelector(focusSelector || '.ui-dialog__actions button:last-child, .ui-dialog input');
     setTimeout(() => focusEl?.focus(), 20);
     return root;
   }
@@ -94,14 +107,7 @@ const UiDialog = (() => {
         bodyHtml: `<p class="ui-dialog__text">${_esc(message || '')}</p>`,
         actions: `<button type="button" class="btn--course" data-ui-ok>${_esc(_t('common.confirm', null, 'Aceptar'))}</button>`,
       });
-      root.querySelector('[data-ui-ok]')?.addEventListener('click', () => {
-        const done = _open;
-        _open = null;
-        document.getElementById('ui-dialog-root').innerHTML = '';
-        document.getElementById('ui-dialog-root').hidden = true;
-        document.removeEventListener('keydown', _onKey, true);
-        if (done) done(true);
-      });
+      root.querySelector('[data-ui-ok]')?.addEventListener('click', () => _finish(true));
     });
   }
 
@@ -120,16 +126,8 @@ const UiDialog = (() => {
           <button type="button" class="btn--outline" data-ui-cancel>${_esc(cancelLabel || _t('common.cancel', null, 'Cancelar'))}</button>
           <button type="button" class="${danger ? 'btn--danger' : 'btn--course'}" data-ui-ok>${_esc(okLabel)}</button>`,
       });
-      const finish = (value) => {
-        const done = _open;
-        _open = null;
-        const el = document.getElementById('ui-dialog-root');
-        if (el) { el.innerHTML = ''; el.hidden = true; }
-        document.removeEventListener('keydown', _onKey, true);
-        if (done) done(value);
-      };
-      root.querySelector('[data-ui-cancel]')?.addEventListener('click', () => finish(false));
-      root.querySelector('[data-ui-ok]')?.addEventListener('click', () => finish(true));
+      root.querySelector('[data-ui-cancel]')?.addEventListener('click', () => _finish(false));
+      root.querySelector('[data-ui-ok]')?.addEventListener('click', () => _finish(true));
     });
   }
 
@@ -149,20 +147,12 @@ const UiDialog = (() => {
         focusSelector: '#ui-dialog-input',
       });
       const input = root.querySelector('#ui-dialog-input');
-      const finish = (val) => {
-        const done = _open;
-        _open = null;
-        const el = document.getElementById('ui-dialog-root');
-        if (el) { el.innerHTML = ''; el.hidden = true; }
-        document.removeEventListener('keydown', _onKey, true);
-        if (done) done(val);
-      };
-      root.querySelector('[data-ui-cancel]')?.addEventListener('click', () => finish(null));
-      root.querySelector('[data-ui-ok]')?.addEventListener('click', () => finish(input?.value ?? ''));
+      root.querySelector('[data-ui-cancel]')?.addEventListener('click', () => _finish(null));
+      root.querySelector('[data-ui-ok]')?.addEventListener('click', () => _finish(input?.value ?? ''));
       input?.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
           e.preventDefault();
-          finish(input.value);
+          _finish(input.value);
         }
       });
     });

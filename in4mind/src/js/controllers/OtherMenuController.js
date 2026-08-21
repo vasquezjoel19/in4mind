@@ -286,7 +286,7 @@ const OtherMenuController = (() => {
     if (action === 'logout') {
       const msg = _t('profile.logoutConfirm', null, '¿Cerrar sesión?');
       const ok = typeof UiDialog !== 'undefined'
-        ? await UiDialog.confirm({ title: msg, message: msg })
+        ? await UiDialog.confirm({ title: msg, message: msg, danger: true })
         : window.confirm(msg);
       if (!ok) return;
       close();

@@ -294,7 +294,8 @@ html[data-theme="dark"] .notes-page-header__logo.in4mind-bulb {
 }
 
 .notes-card__edit,
-.notes-card__delete {
+.notes-card__delete,
+.notes-card__move {
   background: var(--clr-bg-input);
   border: 1px solid var(--clr-border-lt);
   border-radius: var(--rad-full);
@@ -308,10 +309,29 @@ html[data-theme="dark"] .notes-page-header__logo.in4mind-bulb {
   justify-content: center;
 }
 
+.notes-card__move {
+  width: auto;
+  min-width: 28px;
+  padding: 0 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
 .notes-card__delete {
   color: var(--clr-danger, #e53935);
   border-color: color-mix(in srgb, var(--clr-danger, #e53935) 35%, transparent);
   background: color-mix(in srgb, var(--clr-danger, #e53935) 10%, var(--clr-bg-elevated, #fff));
+}
+
+.notes-card--dragging {
+  opacity: 0.55;
+}
+
+.notes-folder-card--drop {
+  outline: 2px solid var(--folder-color, var(--clr-accent, #6366f1));
+  outline-offset: 2px;
+  transform: translateY(-1px);
 }
 
 .notes-card__title {
@@ -546,7 +566,8 @@ html[data-theme="dark"] .notes-card--new {
 }
 
 html[data-theme="dark"] .notes-folder-card__menu,
-html[data-theme="dark"] .notes-card__edit {
+html[data-theme="dark"] .notes-card__edit,
+html[data-theme="dark"] .notes-card__move {
   background: var(--clr-bg-input);
   border-color: var(--clr-border-lt);
   color: var(--clr-text-primary);
@@ -615,41 +636,6 @@ html[data-theme="dark"] .empty-state__desc {
 
 html[data-theme="dark"] .empty-state__desc {
   color: var(--clr-text-secondary);
-}
-
-.notes-folder-card.is-drop-target {
-  outline: 2px dashed var(--clr-brand-400, #38bdf8);
-  outline-offset: 2px;
-  transform: translateY(-2px);
-}
-
-.notes-card[draggable="true"] {
-  cursor: grab;
-}
-
-.notes-card[draggable="true"]:active {
-  cursor: grabbing;
-}
-
-.notes-card__move {
-  display: block;
-  margin: 8px 0 4px;
-}
-
-.notes-card__move select {
-  width: 100%;
-  font: inherit;
-  font-size: 0.75rem;
-  padding: 0.35rem 0.45rem;
-  border-radius: 8px;
-  border: 1px solid var(--clr-border-lt);
-  background: var(--clr-bg-input, #fff);
-  color: var(--clr-text-primary);
-}
-
-.notes-folder-menu__item:focus-visible {
-  outline: 2px solid var(--clr-brand-400, #38bdf8);
-  outline-offset: 1px;
 }
 
 @media (max-width: 640px) {

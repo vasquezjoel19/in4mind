@@ -787,6 +787,8 @@ const LOCALE_ES = {
     folderDeletedUndo: 'Carpeta eliminada',
     deletedUndo: 'Nota eliminada',
     moveToFolder: 'Mover a carpeta',
+    moveShort: 'Mover',
+    noFolderShort: 'Sin carpeta',
     moved: 'Nota movida',
     backToNotes: 'Todas las notas',
     newNoteInFolder: 'Nueva nota aquí',
@@ -826,6 +828,9 @@ const LOCALE_ES = {
     unarchived: 'Proyecto restaurado',
     showArchived: 'Ver archivados',
     showActive: 'Ver activos',
+    archivedBadge: 'Archivado',
+    emptyArchivedTitle: 'Sin proyectos archivados',
+    emptyArchived: 'Los proyectos que archives aparecerán aquí.',
   },
   guided: {
     pageTitle: 'Proyectos guiados',

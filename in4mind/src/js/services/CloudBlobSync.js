@@ -106,38 +106,36 @@ const CloudBlobSync = (() => {
   }
 
   /**
-   * Fusiona blob remoto con local por updatedAt (última escritura gana por id).
-   * `tombstones` evita que un id borrado localmente "reviva" desde la nube.
-   * @param {Record<string, object>} localMap
-   * @param {Record<string, object>} remoteMap
-   * @param {Record<string, number>} [tombstones]
+   * Fusiona blob remoto con local por updatedAt.
+   * `deletedMap` = { id: deletedAt } — tombstones que impiden que IDs borrados
+   * vuelvan desde un blob remoto obsoleto.
    */
-  function mergeMaps(localMap, remoteMap, tombstones) {
+  function mergeMaps(localMap, remoteMap, deletedMap) {
+    const deleted = deletedMap && typeof deletedMap === 'object' ? deletedMap : {};
     const out = { ...(remoteMap || {}) };
+
+    Object.entries(deleted).forEach(([id, deletedAt]) => {
+      const remote = out[id];
+      if (!remote || (deletedAt || 0) >= (remote.updatedAt || 0)) {
+        delete out[id];
+      }
+    });
+
     Object.entries(localMap || {}).forEach(([id, local]) => {
+      const delAt = deleted[id];
+      if (delAt && delAt >= (local.updatedAt || 0)) {
+        delete out[id];
+        return;
+      }
       const remote = out[id];
       if (!remote || (local.updatedAt || 0) >= (remote.updatedAt || 0)) {
         out[id] = local;
       }
     });
-    Object.entries(tombstones || {}).forEach(([id, ts]) => {
-      const remote = out[id];
-      if (!remote || Number(ts || 0) >= (remote.updatedAt || 0)) {
-        delete out[id];
-      }
-    });
     return out;
   }
 
-  function mergeTombstones(localTs, remoteTs) {
-    const out = { ...(remoteTs || {}) };
-    Object.entries(localTs || {}).forEach(([id, ts]) => {
-      out[id] = Math.max(Number(out[id] || 0), Number(ts || 0));
-    });
-    return out;
-  }
-
-  return { pushBlob, pullBlob, mergeMaps, mergeTombstones, TABLES };
+  return { pushBlob, pullBlob, mergeMaps, TABLES };
 })();
 
 if (typeof module !== 'undefined') module.exports = CloudBlobSync;

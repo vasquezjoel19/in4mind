@@ -861,12 +861,10 @@ const ProfileController = (() => {
     });
 
     document.getElementById('profile-logout-btn')?.addEventListener('click', async () => {
+      const msg = _t('profile.logoutConfirm', null, '¿Cerrar sesión?');
       const ok = typeof UiDialog !== 'undefined'
-        ? await UiDialog.confirm({
-            title: _t('profile.logoutConfirm'),
-            message: _t('profile.logoutConfirm'),
-          })
-        : window.confirm(_t('profile.logoutConfirm'));
+        ? await UiDialog.confirm({ title: msg, message: msg, danger: true })
+        : window.confirm(msg);
       if (ok) AppShell.logout();
     });
 

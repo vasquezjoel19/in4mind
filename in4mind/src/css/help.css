@@ -494,28 +494,31 @@
 }
 
 html[data-theme="dark"] .help-hero,
-html[data-theme="dark"] .help-faq,
 html[data-theme="dark"] .help-card,
-html[data-theme="dark"] .help-ai {
-  background: var(--clr-bg-card);
+html[data-theme="dark"] .help-faq,
+html[data-theme="dark"] .help-contact,
+html[data-theme="dark"] .help-ai-panel {
+  background: var(--clr-bg-elevated);
   color: var(--clr-text-primary);
   border-color: var(--clr-border-lt);
 }
 
+html[data-theme="dark"] .help-hero__title,
+html[data-theme="dark"] .help-section__title,
+html[data-theme="dark"] .help-faq__q {
+  color: var(--clr-text-primary);
+}
+
 html[data-theme="dark"] .help-hero__sub,
-html[data-theme="dark"] .help-faq__panel,
-html[data-theme="dark"] .help-search__hint {
+html[data-theme="dark"] .help-faq__a,
+html[data-theme="dark"] .help-card__desc {
   color: var(--clr-text-secondary);
 }
 
-html[data-theme="dark"] .help-search__input,
-html[data-theme="dark"] .help-ai-input {
+html[data-theme="dark"] .help-ai-panel textarea,
+html[data-theme="dark"] .help-search input {
   background: var(--clr-bg-input);
   color: var(--clr-text-primary);
   border-color: var(--clr-border-lt);
   -webkit-text-fill-color: var(--clr-text-primary);
-}
-
-html[data-theme="dark"] .help-faq__q {
-  color: var(--clr-text-primary);
 }

@@ -25,17 +25,9 @@ const DataExportService = (() => {
 
     let gamification = {};
     let activity = [];
-    let weeklyGoals = {};
     let aiGuest = [];
-    if (typeof UserScopedStorage !== 'undefined') {
-      gamification = UserScopedStorage.getJson('in4mind_gamification', {}) || {};
-      activity = UserScopedStorage.getJson('in4mind_activity_log', []) || [];
-      weeklyGoals = UserScopedStorage.getJson('in4mind_weekly_goals', {}) || {};
-    } else {
-      try { gamification = JSON.parse(localStorage.getItem('in4mind_gamification') || '{}'); } catch { /* */ }
-      try { activity = JSON.parse(localStorage.getItem('in4mind_activity_log') || '[]'); } catch { /* */ }
-      try { weeklyGoals = JSON.parse(localStorage.getItem('in4mind_weekly_goals') || '{}'); } catch { /* */ }
-    }
+    try { gamification = JSON.parse(localStorage.getItem('in4mind_gamification') || '{}'); } catch { /* */ }
+    try { activity = JSON.parse(localStorage.getItem('in4mind_activity_log') || '[]'); } catch { /* */ }
     try { aiGuest = JSON.parse(localStorage.getItem('in4mind_ai_guest_history') || '[]'); } catch { /* */ }
 
     return {
@@ -50,7 +42,6 @@ const DataExportService = (() => {
       certifications,
       gamification,
       activity,
-      weeklyGoals,
       aiGuestHistory: aiGuest,
       locale: typeof I18n !== 'undefined' ? I18n.getLocale() : 'es',
       theme: localStorage.getItem('in4mind_theme'),
@@ -108,18 +99,8 @@ const DataExportService = (() => {
       if (data.locale && typeof I18n !== 'undefined' && I18n.setLocale) {
         try { I18n.setLocale(data.locale); } catch { /* */ }
       }
-      if (data.gamification) {
-        if (typeof UserScopedStorage !== 'undefined') UserScopedStorage.setJson('in4mind_gamification', data.gamification);
-        else localStorage.setItem('in4mind_gamification', JSON.stringify(data.gamification));
-      }
-      if (data.activity) {
-        if (typeof UserScopedStorage !== 'undefined') UserScopedStorage.setJson('in4mind_activity_log', data.activity);
-        else localStorage.setItem('in4mind_activity_log', JSON.stringify(data.activity));
-      }
-      if (data.weeklyGoals) {
-        if (typeof UserScopedStorage !== 'undefined') UserScopedStorage.setJson('in4mind_weekly_goals', data.weeklyGoals);
-        else localStorage.setItem('in4mind_weekly_goals', JSON.stringify(data.weeklyGoals));
-      }
+      if (data.gamification) localStorage.setItem('in4mind_gamification', JSON.stringify(data.gamification));
+      if (data.activity) localStorage.setItem('in4mind_activity_log', JSON.stringify(data.activity));
       if (data.aiGuestHistory) localStorage.setItem('in4mind_ai_guest_history', JSON.stringify(data.aiGuestHistory));
 
       if (data.quizProgress) {
@@ -196,14 +177,7 @@ const DataExportService = (() => {
   }
 
   async function deleteAccount() {
-    const ok = typeof UiDialog !== 'undefined'
-      ? await UiDialog.confirm({
-          title: _t('common.delete', null, 'Eliminar'),
-          message: _t('privacy.deleteConfirm', null, '¿Eliminar todos tus datos locales y cerrar sesión? Esta acción no se puede deshacer.'),
-          danger: true,
-        })
-      : window.confirm(_t('privacy.deleteConfirm', null, '¿Eliminar todos tus datos locales y cerrar sesión? Esta acción no se puede deshacer.'));
-    if (!ok) {
+    if (!confirm(_t('privacy.deleteConfirm', null, '¿Eliminar todos tus datos locales y cerrar sesión? Esta acción no se puede deshacer.'))) {
       return { ok: false, cancelled: true };
     }
 

@@ -9,6 +9,9 @@ const VideoProgressService = (() => {
   const NEAR_END_RATIO = 0.95;
 
   function _read() {
+    if (typeof UserScopedStorage !== 'undefined') {
+      return UserScopedStorage.getJson(KEY, {}) || {};
+    }
     try {
       return JSON.parse(localStorage.getItem(KEY) || '{}');
     } catch {
@@ -17,6 +20,10 @@ const VideoProgressService = (() => {
   }
 
   function _write(map) {
+    if (typeof UserScopedStorage !== 'undefined') {
+      UserScopedStorage.setJson(KEY, map);
+      return;
+    }
     try {
       localStorage.setItem(KEY, JSON.stringify(map));
     } catch { /* ignore */ }

@@ -27,6 +27,22 @@ const ProjectsController = (() => {
     ));
   }
 
+  async function _promptDialog({ title, message, value, placeholder } = {}) {
+    if (typeof UiDialog !== 'undefined') {
+      return UiDialog.prompt({ title, message, value, placeholder });
+    }
+    return window.prompt(message || title || '', value || '');
+  }
+
+  async function _confirmDialog({ title, message, danger } = {}) {
+    if (typeof UiDialog !== 'undefined') {
+      return danger
+        ? UiDialog.danger({ title, message })
+        : UiDialog.confirm({ title, message });
+    }
+    return window.confirm(message || title || '');
+  }
+
   function _courseTitle(courseId) {
     if (!courseId || typeof DataService === 'undefined') return '';
     return DataService.getCourses().find(c => c.id === courseId)?.title || courseId;
@@ -47,6 +63,11 @@ const ProjectsController = (() => {
     $detailView?.classList.add('projects-view--hidden');
     _publishShareContext();
     _renderGrid();
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('project');
+      window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+    } catch { /* ignore */ }
   }
 
   function _showDetail(id) {
@@ -60,10 +81,21 @@ const ProjectsController = (() => {
     window.history.replaceState({}, '', url);
   }
 
+  function _syncArchivedToggle() {
+    const btn = document.getElementById('projects-archived-toggle');
+    if (!btn) return;
+    btn.setAttribute('aria-pressed', String(_showArchived));
+    btn.textContent = _showArchived
+      ? _t('projects.showActive', null, 'Ver activos')
+      : _t('projects.showArchived', null, 'Ver archivados');
+  }
+
   function _renderGrid() {
     if (!$grid) return;
-    const projects = ProjectsService.search(_query, { includeArchived: _showArchived })
-      .filter((p) => _showArchived ? p.archived : !p.archived);
+    const projects = ProjectsService.search(_query, {
+      includeArchived: _showArchived,
+      archivedOnly: _showArchived,
+    });
 
     if (!projects.length) {
       $grid.innerHTML = `
@@ -73,11 +105,21 @@ const ProjectsController = (() => {
               <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
             </svg>
           </div>
-          <h3 class="empty-state__title">${_t('projects.emptyTitle', null, 'Sin proyectos todavía')}</h3>
-          <p class="empty-state__desc">${_t('projects.empty', null, 'Organiza tu aprendizaje en proyectos con tareas y cursos vinculados.')}</p>
-          <button type="button" class="btn--course btn--lg empty-state__action" id="projects-empty-create">${_t('projects.newProject', null, 'Nuevo proyecto')}</button>
+          <h3 class="empty-state__title">${_t(
+            _showArchived ? 'projects.emptyArchivedTitle' : 'projects.emptyTitle',
+            null,
+            _showArchived ? 'Sin proyectos archivados' : 'Sin proyectos todavía'
+          )}</h3>
+          <p class="empty-state__desc">${_t(
+            _showArchived ? 'projects.emptyArchived' : 'projects.empty',
+            null,
+            _showArchived
+              ? 'Los proyectos que archives aparecerán aquí.'
+              : 'Organiza tu aprendizaje en proyectos con tareas y cursos vinculados.'
+          )}</p>
+          ${_showArchived ? '' : `<button type="button" class="btn--course btn--lg empty-state__action" id="projects-empty-create">${_t('projects.newProject', null, 'Nuevo proyecto')}</button>`}
         </div>`;
-      document.getElementById('projects-empty-create')?.addEventListener('click', _createProject);
+      document.getElementById('projects-empty-create')?.addEventListener('click', () => { void _createProject(); });
       return;
     }
 
@@ -85,12 +127,13 @@ const ProjectsController = (() => {
       const pct = ProjectsService.getProgress(p);
       const taskCount = (p.tasks || []).length;
       return `
-        <article class="projects-card" style="--proj-color:${p.color}"
+        <article class="projects-card ${p.archived ? 'projects-card--archived' : ''}" style="--proj-color:${p.color}"
                  data-project-id="${p.id}" role="button" tabindex="0">
           <div class="projects-card__top">
             <span class="projects-card__icon">${p.icon || '📁'}</span>
             <div class="projects-card__actions">
               ${p.pinned ? '<span class="projects-card__pin" aria-hidden="true">★</span>' : ''}
+              ${p.archived ? `<span class="projects-card__archived-badge">${_escape(_t('projects.archivedBadge', null, 'Archivado'))}</span>` : ''}
               <button type="button" class="projects-card__delete" data-delete-project="${p.id}"
                       aria-label="${_escape(_t('common.delete', null, 'Eliminar'))}">🗑</button>
             </div>
@@ -106,11 +149,11 @@ const ProjectsController = (() => {
             <span>${pct}%</span>
           </footer>
         </article>`;
-    }).join('') + `
+    }).join('') + (_showArchived ? '' : `
       <button type="button" class="projects-card projects-card--new" id="projects-grid-new">
         <span>＋</span>
         <span>${_t('projects.newProject', null, 'Nuevo proyecto')}</span>
-      </button>`;
+      </button>`);
 
     $grid.querySelectorAll('[data-project-id]').forEach(el => {
       el.addEventListener('click', e => {
@@ -121,13 +164,11 @@ const ProjectsController = (() => {
     $grid.querySelectorAll('[data-delete-project]').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
-        const ok = typeof UiDialog !== 'undefined'
-          ? await UiDialog.confirm({
-              title: _t('common.delete', null, 'Eliminar'),
-              message: _t('projects.deleteConfirm', null, '¿Eliminar este proyecto?'),
-              danger: true,
-            })
-          : window.confirm(_t('projects.deleteConfirm', null, '¿Eliminar este proyecto?'));
+        const ok = await _confirmDialog({
+          title: _t('common.delete', null, 'Eliminar'),
+          message: _t('projects.deleteConfirm', null, '¿Eliminar este proyecto?'),
+          danger: true,
+        });
         if (!ok) return;
         ProjectsService.remove(btn.dataset.deleteProject);
         if (_activeId === btn.dataset.deleteProject) _showList();
@@ -135,7 +176,7 @@ const ProjectsController = (() => {
         AppShell.showToast(_t('projects.deleted', null, 'Proyecto eliminado'));
       });
     });
-    document.getElementById('projects-grid-new')?.addEventListener('click', _createProject);
+    document.getElementById('projects-grid-new')?.addEventListener('click', () => { void _createProject(); });
   }
 
   function _renderDetail(id) {
@@ -151,6 +192,8 @@ const ProjectsController = (() => {
     const courseOptions = courses.map(c =>
       `<option value="${c.id}" ${p.courseId === c.id ? 'selected' : ''}>${_escape(c.title)}</option>`
     ).join('');
+
+    const hasTasks = (p.tasks || []).length > 0;
 
     $detail.innerHTML = `
       <header class="projects-detail__head">
@@ -215,8 +258,14 @@ const ProjectsController = (() => {
       <div class="projects-detail__actions">
         <button type="button" class="btn--course" id="proj-save">${_t('common.save', null, 'Guardar')}</button>
         ${p.courseId ? `<a class="btn--outline" href="tutorial.html?course=${p.courseId}">${_t('projects.openCourse', null, 'Abrir curso')}</a>` : ''}
-        <button type="button" class="btn--danger-outline" id="proj-empty">${_t('projects.emptyProject', null, 'Vaciar proyecto')}</button>
-        <button type="button" class="btn--danger-outline" id="proj-archive">${p.archived ? _t('projects.unarchive', null, 'Desarchivar') : _t('projects.archive', null, 'Archivar proyecto')}</button>
+        <button type="button" class="btn--outline" id="proj-archive">
+          ${p.archived
+            ? _t('projects.unarchive', null, 'Desarchivar')
+            : _t('projects.archive', null, 'Archivar proyecto')}
+        </button>
+        <button type="button" class="btn--outline" id="proj-empty-tasks" ${hasTasks ? '' : 'disabled'}>
+          ${_t('projects.emptyProject', null, 'Vaciar proyecto')}
+        </button>
         <button type="button" class="btn--danger projects-detail__delete" id="proj-delete">${_t('common.delete', null, 'Eliminar')}</button>
       </div>`;
 
@@ -265,44 +314,44 @@ const ProjectsController = (() => {
       _renderGrid();
     });
 
+    document.getElementById('proj-archive')?.addEventListener('click', () => {
+      const next = !p.archived;
+      ProjectsService.setArchived(id, next);
+      AppShell.showToast(
+        next
+          ? _t('projects.archived', null, 'Proyecto archivado')
+          : _t('projects.unarchived', null, 'Proyecto restaurado')
+      );
+      if (next && !_showArchived) _showList();
+      else {
+        _renderDetail(id);
+        _renderGrid();
+      }
+    });
+
+    document.getElementById('proj-empty-tasks')?.addEventListener('click', async () => {
+      const ok = await _confirmDialog({
+        title: _t('projects.emptyProject', null, 'Vaciar proyecto'),
+        message: _t('projects.emptyConfirm', null, '¿Quitar todas las tareas de este proyecto?'),
+        danger: true,
+      });
+      if (!ok) return;
+      ProjectsService.emptyTasks(id);
+      AppShell.showToast(_t('projects.emptied', null, 'Proyecto vaciado'));
+      _renderDetail(id);
+      _renderGrid();
+    });
+
     document.getElementById('proj-delete')?.addEventListener('click', async () => {
-      const ok = typeof UiDialog !== 'undefined'
-        ? await UiDialog.confirm({
-            title: _t('common.delete', null, 'Eliminar'),
-            message: _t('projects.deleteConfirm', null, '¿Eliminar este proyecto?'),
-            danger: true,
-          })
-        : window.confirm(_t('projects.deleteConfirm', null, '¿Eliminar este proyecto?'));
+      const ok = await _confirmDialog({
+        title: _t('common.delete', null, 'Eliminar'),
+        message: _t('projects.deleteConfirm', null, '¿Eliminar este proyecto?'),
+        danger: true,
+      });
       if (!ok) return;
       ProjectsService.remove(id);
       _showList();
       AppShell.showToast(_t('projects.deleted', null, 'Proyecto eliminado'));
-    });
-
-    document.getElementById('proj-empty')?.addEventListener('click', async () => {
-      const ok = typeof UiDialog !== 'undefined'
-        ? await UiDialog.confirm({
-            title: _t('projects.emptyProject', null, 'Vaciar proyecto'),
-            message: _t('projects.emptyConfirm', null, '¿Quitar todas las tareas de este proyecto?'),
-            danger: true,
-            confirmLabel: _t('projects.emptyProject', null, 'Vaciar'),
-          })
-        : window.confirm(_t('projects.emptyConfirm', null, '¿Vaciar este proyecto?'));
-      if (!ok) return;
-      ProjectsService.emptyTasks(id);
-      _renderDetail(id);
-      _renderGrid();
-      AppShell.showToast(_t('projects.emptied', null, 'Proyecto vaciado'));
-    });
-
-    document.getElementById('proj-archive')?.addEventListener('click', () => {
-      const next = !p.archived;
-      ProjectsService.archive(id, next);
-      AppShell.showToast(next
-        ? _t('projects.archived', null, 'Proyecto archivado')
-        : _t('projects.unarchived', null, 'Proyecto restaurado'));
-      if (next) _showList();
-      else _renderDetail(id);
     });
 
     document.getElementById('proj-add-note')?.addEventListener('click', () => {
@@ -321,14 +370,12 @@ const ProjectsController = (() => {
   }
 
   async function _createProject() {
-    const title = typeof UiDialog !== 'undefined'
-      ? await UiDialog.prompt({
-          title: _t('projects.newProject', null, 'Nuevo proyecto'),
-          message: _t('projects.namePrompt', null, 'Nombre del proyecto:'),
-        })
-      : window.prompt(_t('projects.namePrompt', null, 'Nombre del proyecto:'));
-    if (!title?.trim()) return;
-    const p = ProjectsService.save({ title: title.trim(), description: '', icon: '🚀' });
+    const title = await _promptDialog({
+      title: _t('projects.newProject', null, 'Nuevo proyecto'),
+      message: _t('projects.namePrompt', null, 'Nombre del proyecto:'),
+    });
+    if (title == null || !String(title).trim()) return;
+    const p = ProjectsService.save({ title: String(title).trim(), description: '', icon: '🚀' });
     _showDetail(p.id);
     _renderGrid();
   }
@@ -340,6 +387,22 @@ const ProjectsController = (() => {
     $listView = document.getElementById('projects-list-view');
     $detailView = document.getElementById('projects-detail-view');
 
+    const actions = document.querySelector('.workspace-page-header__actions');
+    if (actions && !document.getElementById('projects-archived-toggle')) {
+      const toggle = document.createElement('button');
+      toggle.type = 'button';
+      toggle.className = 'btn--outline';
+      toggle.id = 'projects-archived-toggle';
+      toggle.setAttribute('aria-pressed', 'false');
+      actions.insertBefore(toggle, actions.firstChild);
+    }
+    _syncArchivedToggle();
+    document.getElementById('projects-archived-toggle')?.addEventListener('click', () => {
+      _showArchived = !_showArchived;
+      _syncArchivedToggle();
+      _renderGrid();
+    });
+
     _renderGrid();
     _publishShareContext();
 
@@ -349,17 +412,6 @@ const ProjectsController = (() => {
 
     document.getElementById('projects-new-btn')?.addEventListener('click', () => { void _createProject(); });
     document.getElementById('projects-btn-share')?.addEventListener('click', () => ShareService?.share());
-    document.getElementById('projects-archived-toggle')?.addEventListener('click', () => {
-      _showArchived = !_showArchived;
-      const btn = document.getElementById('projects-archived-toggle');
-      if (btn) {
-        btn.setAttribute('aria-pressed', String(_showArchived));
-        btn.textContent = _showArchived
-          ? _t('projects.showActive', null, 'Ver activos')
-          : _t('projects.showArchived', null, 'Ver archivados');
-      }
-      _renderGrid();
-    });
 
     $search?.addEventListener('input', () => {
       _query = $search.value.trim();
@@ -367,6 +419,7 @@ const ProjectsController = (() => {
     });
 
     window.addEventListener('in4mind-locale-change', () => {
+      _syncArchivedToggle();
       if (_activeId) _renderDetail(_activeId);
       else _renderGrid();
     });

@@ -409,7 +409,7 @@ const SettingsController = (() => {
     document.getElementById('settings-logout')?.addEventListener('click', async () => {
       const msg = typeof I18n !== 'undefined' ? I18n.t('profile.logoutConfirm') : '¿Cerrar sesión?';
       const ok = typeof UiDialog !== 'undefined'
-        ? await UiDialog.confirm({ title: msg, message: msg })
+        ? await UiDialog.confirm({ title: msg, message: msg, danger: true })
         : window.confirm(msg);
       if (!ok) return;
       close();
@@ -433,10 +433,10 @@ const SettingsController = (() => {
     });
     document.getElementById('settings-goal-lessons')?.addEventListener('change', _saveWeeklyGoals);
     document.getElementById('settings-goal-quizzes')?.addEventListener('change', _saveWeeklyGoals);
-    document.getElementById('settings-reset-onboard')?.addEventListener('click', () => {
+    document.getElementById('settings-reset-onboard')?.addEventListener('click', async () => {
       localStorage.removeItem('in4mind_onboarding_done');
       const msg = typeof I18n !== 'undefined' ? I18n.t('settingsModal.onboardReset') : 'Tour reiniciado.';
-      if (typeof UiDialog !== 'undefined') UiDialog.alert({ message: msg });
+      if (typeof UiDialog !== 'undefined') await UiDialog.alert({ message: msg });
       else window.alert(msg);
     });
     document.getElementById('settings-export-data')?.addEventListener('click', async () => {
@@ -450,9 +450,9 @@ const SettingsController = (() => {
       if (typeof DataExportService !== 'undefined') {
         const result = await DataExportService.importFromFile(file);
         if (!result.ok) {
-          const fail = typeof I18n !== 'undefined' ? I18n.t('privacy.importFail') : 'No se pudo importar el archivo.';
-          if (typeof UiDialog !== 'undefined') UiDialog.alert({ message: fail });
-          else window.alert(fail);
+          const msg = typeof I18n !== 'undefined' ? I18n.t('privacy.importFail') : 'No se pudo importar el archivo.';
+          if (typeof UiDialog !== 'undefined') await UiDialog.alert({ message: msg });
+          else window.alert(msg);
         }
       }
       e.target.value = '';

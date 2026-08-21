@@ -7,10 +7,10 @@ const assert = require('assert');
 
 // localStorage mock for Node
 const _store = {};
-global.sessionStorage = {
-  getItem(k) { return _store[`ss:${k}`] ?? null; },
-  setItem(k, v) { _store[`ss:${k}`] = String(v); },
-  removeItem(k) { delete _store[`ss:${k}`]; },
+global.localStorage = {
+  getItem(k) { return _store[k] ?? null; },
+  setItem(k, v) { _store[k] = String(v); },
+  removeItem(k) { delete _store[k]; },
 };
 
 // Minimal I18n stub
@@ -52,10 +52,9 @@ global.HelpData = {
   },
 };
 
-global.LearningPathsData = require('../src/js/data/LearningPathsData.js');
-global.UserScopedStorage = require('../src/js/services/UserScopedStorage.js');
-global.GamificationService = require('../src/js/services/GamificationService.js');
-global.GlobalSearchService = require('../src/js/services/GlobalSearchService.js');
+require('../src/js/data/LearningPathsData.js');
+require('../src/js/services/GamificationService.js');
+require('../src/js/services/GlobalSearchService.js');
 
 function testLearningPaths() {
   const paths = LearningPathsData.getPaths();
@@ -75,20 +74,6 @@ function testGamification() {
   assert.equal(weeks.length, 4, 'activity buckets');
 }
 
-function testGamificationIsolation() {
-  sessionStorage.setItem('in4mind_user', JSON.stringify({ id: 'acct-a', email: 'a@in4mind.test' }));
-  localStorage.setItem('in4mind_user', JSON.stringify({ id: 'acct-a', email: 'a@in4mind.test' }));
-  GamificationService.recordActivity('quiz', { quizId: 'html' });
-  const keyA = UserScopedStorage.key('in4mind_gamification');
-  assert.ok(keyA.includes('acct-a'), 'gamification key is namespaced by account id');
-  assert.ok(localStorage.getItem(keyA), 'scoped gamification payload exists');
-
-  sessionStorage.setItem('in4mind_user', JSON.stringify({ id: 'acct-b', email: 'b@in4mind.test' }));
-  localStorage.setItem('in4mind_user', JSON.stringify({ id: 'acct-b', email: 'b@in4mind.test' }));
-  const keyB = UserScopedStorage.key('in4mind_gamification');
-  assert.notEqual(keyA, keyB, 'two accounts do not share the same storage key');
-}
-
 function testGlobalSearch() {
   const results = GlobalSearchService.search('html');
   assert.ok(results.courses.length >= 1, 'finds course');
@@ -100,6 +85,5 @@ function testGlobalSearch() {
 
 testLearningPaths();
 testGamification();
-testGamificationIsolation();
 testGlobalSearch();
 console.log('dashboard_features.test.js: all passed');

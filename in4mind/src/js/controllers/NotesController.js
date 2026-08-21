@@ -12,8 +12,8 @@ const NotesController = (() => {
   let _query = '';
   let _editingId = null;
   let _activeFolderId = null;
-  let _pendingOp = null;
   let _folderMenuCleanup = null;
+  let _moveMenuCleanup = null;
 
   let $grid, $foldersGrid, $foldersSection, $search, $filterNav, $editorOverlay;
   let $editorTitle, $editorContent, $editorTags, $editorColor, $editorFolder;
@@ -49,6 +49,22 @@ const NotesController = (() => {
     } catch {
       return '';
     }
+  }
+
+  async function _promptDialog({ title, message, value, placeholder } = {}) {
+    if (typeof UiDialog !== 'undefined') {
+      return UiDialog.prompt({ title, message, value, placeholder });
+    }
+    return window.prompt(message || title || '', value || '');
+  }
+
+  async function _confirmDialog({ title, message, danger } = {}) {
+    if (typeof UiDialog !== 'undefined') {
+      return danger
+        ? UiDialog.danger({ title, message })
+        : UiDialog.confirm({ title, message });
+    }
+    return window.confirm(message || title || '');
   }
 
   function _activeFolder() {
@@ -111,89 +127,159 @@ const NotesController = (() => {
     }
   }
 
+  function _closeMoveMenus() {
+    document.querySelectorAll('.notes-move-menu').forEach(el => el.remove());
+    if (_moveMenuCleanup) {
+      _moveMenuCleanup();
+      _moveMenuCleanup = null;
+    }
+  }
+
+  function _bindMenuA11y(menu, { onClose, trigger } = {}) {
+    const items = () => Array.from(menu.querySelectorAll('[role="menuitem"]:not([disabled])'));
+    const focusItem = (idx) => {
+      const list = items();
+      if (!list.length) return;
+      const i = ((idx % list.length) + list.length) % list.length;
+      list[i].focus();
+    };
+
+    const onKey = (e) => {
+      if (!document.body.contains(menu)) return;
+      const list = items();
+      const current = list.indexOf(document.activeElement);
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        onClose?.();
+        trigger?.focus();
+        return;
+      }
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        focusItem(current < 0 ? 0 : current + 1);
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        focusItem(current < 0 ? list.length - 1 : current - 1);
+        return;
+      }
+      if (e.key === 'Home') {
+        e.preventDefault();
+        focusItem(0);
+        return;
+      }
+      if (e.key === 'End') {
+        e.preventDefault();
+        focusItem(list.length - 1);
+        return;
+      }
+      if (e.key === 'Tab') {
+        if (!list.length) return;
+        e.preventDefault();
+        if (e.shiftKey) focusItem(current <= 0 ? list.length - 1 : current - 1);
+        else focusItem(current < 0 || current >= list.length - 1 ? 0 : current + 1);
+      }
+    };
+
+    const onDoc = (e) => {
+      if (menu.contains(e.target) || trigger?.contains?.(e.target)) return;
+      onClose?.();
+    };
+
+    document.addEventListener('keydown', onKey, true);
+    setTimeout(() => document.addEventListener('click', onDoc, true), 0);
+
+    const cleanup = () => {
+      document.removeEventListener('keydown', onKey, true);
+      document.removeEventListener('click', onDoc, true);
+    };
+
+    setTimeout(() => focusItem(0), 0);
+    return cleanup;
+  }
+
   async function _renameFolder(folderId) {
     const folder = NotesService.getFolder(folderId);
-    const name = typeof UiDialog !== 'undefined'
-      ? await UiDialog.prompt({
-          title: _t('notes.renameFolder', null, 'Renombrar'),
-          message: _t('notes.folderNamePrompt', null, 'Nombre de la carpeta:'),
-          value: folder?.name || '',
-        })
-      : window.prompt(_t('notes.folderNamePrompt', null, 'Nombre de la carpeta:'), folder?.name || '');
-    if (!name?.trim()) return;
-    NotesService.saveFolder({ id: folderId, name: name.trim(), color: folder?.color });
-    _renderAll();
+    const name = await _promptDialog({
+      title: _t('notes.renameFolder', null, 'Renombrar'),
+      message: _t('notes.folderNamePrompt', null, 'Nombre de la carpeta:'),
+      value: folder?.name || '',
+    });
+    if (name == null || !String(name).trim()) return;
+    NotesService.saveFolder({ id: folderId, name: String(name).trim(), color: folder?.color });
+    if (_activeFolderId === folderId) _renderFolderBanner();
+    _renderFolders();
     AppShell.showToast(_t('notes.folderRenamed', null, 'Carpeta renombrada'));
   }
 
-  function _scheduleFolderDelete(folderId) {
-    const folder = NotesService.getFolder(folderId);
-    if (!folder) return;
-    const notes = NotesService.getByFolder(folderId).filter(n => n.source !== 'lesson');
-    const result = NotesService.deleteFolder(folderId);
-    if (_activeFolderId === folderId) {
-      _activeFolderId = null;
-      _filter = 'all';
-      _syncFolderUrl();
-    }
-    _renderAll();
-    _pendingOp = { type: 'folder' };
-    if (typeof AppShell.showUndoToast === 'function') {
-      AppShell.showUndoToast(_t('notes.folderDeletedUndo', null, 'Carpeta eliminada'), {
-        duration: 8000,
-        onUndo: () => {
-          NotesService.restoreFolder(folder, notes);
-          _pendingOp = null;
-          _renderAll();
-        },
-        onCommit: () => {
-          _pendingOp = null;
-          NotesService.flushCloud?.();
-        },
-      });
-    } else {
-      NotesService.flushCloud?.();
-    }
-    return result;
-  }
-
-  function _scheduleNoteDelete(noteId) {
-    const snapshot = NotesService.getNote(noteId);
-    if (!snapshot) return;
-    NotesService.deleteNote(noteId);
-    _renderAll();
-    if (typeof AppShell.showUndoToast === 'function') {
-      AppShell.showUndoToast(_t('notes.deletedUndo', null, 'Nota eliminada'), {
-        duration: 8000,
-        onUndo: () => {
-          NotesService.restoreNote(snapshot);
-          _renderAll();
-        },
-        onCommit: () => NotesService.flushCloud?.(),
-      });
-    } else {
-      NotesService.flushCloud?.();
-    }
-  }
-
-  async function _confirmDeleteFolder(folderId) {
-    const ok = typeof UiDialog !== 'undefined'
-      ? await UiDialog.confirm({
-          title: _t('common.delete', null, 'Eliminar'),
-          message: _t('notes.deleteFolderConfirm', null, '¿Eliminar esta carpeta y todas las notas que contiene? Las notas fuera de la carpeta no se borran.'),
-          danger: true,
-        })
-      : window.confirm(_t('notes.deleteFolderConfirm', null, '¿Eliminar esta carpeta?'));
+  async function _deleteFolderWithUndo(folderId) {
+    const ok = await _confirmDialog({
+      title: _t('common.delete', null, 'Eliminar'),
+      message: _t(
+        'notes.deleteFolderConfirm',
+        null,
+        '¿Eliminar esta carpeta y todas las notas que contiene? Las notas fuera de la carpeta no se borran. Tendrás unos segundos para deshacer.'
+      ),
+      danger: true,
+    });
     if (!ok) return;
-    _scheduleFolderDelete(folderId);
+
+    const result = NotesService.deleteFolder(folderId);
+    if (!result?.ok) return;
+
+    if (_activeFolderId === folderId) _exitFolder();
+    else _renderAll();
+
+    const snapshot = result.snapshot;
+    AppShell.showToast(
+      _t('notes.folderDeleted', null, 'Carpeta y sus notas eliminadas'),
+      8000,
+      {
+        onUndo: () => {
+          NotesService.restoreFolderSnapshot(snapshot);
+          _renderAll();
+        },
+      }
+    );
+  }
+
+  async function _deleteNoteWithUndo(noteId) {
+    const ok = await _confirmDialog({
+      title: _t('common.delete', null, 'Eliminar'),
+      message: _t('notes.deleteConfirm', null, '¿Eliminar esta nota?'),
+      danger: true,
+    });
+    if (!ok) return;
+
+    const result = NotesService.deleteNote(noteId);
+    if (_editingId === noteId) _closeEditor();
+    _renderAll();
+
+    const snapshot = result && typeof result === 'object' ? result.snapshot : null;
+    AppShell.showToast(
+      _t('notes.deleted', null, 'Nota eliminada'),
+      8000,
+      snapshot
+        ? {
+            onUndo: () => {
+              NotesService.restoreNote(snapshot);
+              _renderAll();
+            },
+          }
+        : {}
+    );
   }
 
   function _openFolderMenu(btn, folderId) {
     _closeFolderMenus();
+    _closeMoveMenus();
     const menu = document.createElement('div');
     menu.className = 'notes-folder-menu';
     menu.setAttribute('role', 'menu');
-    menu.setAttribute('tabindex', '-1');
+    menu.setAttribute('aria-label', _t('notes.folderOptions', null, 'Opciones de carpeta'));
     menu.innerHTML = `
       <button type="button" class="notes-folder-menu__item" data-folder-action="rename" role="menuitem">
         ${_escape(_t('notes.renameFolder', null, 'Renombrar'))}
@@ -206,56 +292,6 @@ const NotesController = (() => {
     menu.style.top = `${rect.bottom + 6}px`;
     menu.style.left = `${Math.min(rect.left, window.innerWidth - 180)}px`;
     document.body.appendChild(menu);
-    btn.setAttribute('aria-expanded', 'true');
-
-    const items = [...menu.querySelectorAll('[role="menuitem"]')];
-    items[0]?.focus();
-
-    const onKey = (e) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        _closeFolderMenus();
-        btn.focus();
-        return;
-      }
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-        e.preventDefault();
-        const i = items.indexOf(document.activeElement);
-        const next = e.key === 'ArrowDown'
-          ? items[(i + 1) % items.length]
-          : items[(i - 1 + items.length) % items.length];
-        next?.focus();
-      }
-      if (e.key === 'Tab') {
-        e.preventDefault();
-        const i = Math.max(0, items.indexOf(document.activeElement));
-        const next = e.shiftKey
-          ? items[(i - 1 + items.length) % items.length]
-          : items[(i + 1) % items.length];
-        next?.focus();
-      }
-      if (e.key === 'Home') {
-        e.preventDefault();
-        items[0]?.focus();
-      }
-      if (e.key === 'End') {
-        e.preventDefault();
-        items[items.length - 1]?.focus();
-      }
-    };
-
-    const onDoc = (e) => {
-      if (menu.contains(e.target) || btn.contains(e.target)) return;
-      _closeFolderMenus();
-    };
-
-    menu.addEventListener('keydown', onKey);
-    document.addEventListener('click', onDoc, true);
-    _folderMenuCleanup = () => {
-      menu.removeEventListener('keydown', onKey);
-      document.removeEventListener('click', onDoc, true);
-      btn.setAttribute('aria-expanded', 'false');
-    };
 
     menu.querySelector('[data-folder-action="rename"]')?.addEventListener('click', () => {
       _closeFolderMenus();
@@ -264,7 +300,59 @@ const NotesController = (() => {
 
     menu.querySelector('[data-folder-action="delete"]')?.addEventListener('click', () => {
       _closeFolderMenus();
-      void _confirmDeleteFolder(folderId);
+      void _deleteFolderWithUndo(folderId);
+    });
+
+    _folderMenuCleanup = _bindMenuA11y(menu, {
+      onClose: _closeFolderMenus,
+      trigger: btn,
+    });
+  }
+
+  function _openMoveMenu(btn, noteId) {
+    _closeMoveMenus();
+    _closeFolderMenus();
+    const note = NotesService.getNote(noteId);
+    if (!note || note.source === 'lesson') return;
+
+    const folders = NotesService.getFolders();
+    const menu = document.createElement('div');
+    menu.className = 'notes-folder-menu notes-move-menu';
+    menu.setAttribute('role', 'menu');
+    menu.setAttribute('aria-label', _t('notes.moveToFolder', null, 'Mover a carpeta'));
+
+    const folderItems = folders.map(f => `
+      <button type="button" class="notes-folder-menu__item" role="menuitem"
+              data-move-folder="${_escape(f.id)}"
+              ${note.folderId === f.id ? 'aria-current="true"' : ''}>
+        ${_escape(f.name)}
+      </button>`).join('');
+
+    menu.innerHTML = `
+      <button type="button" class="notes-folder-menu__item" role="menuitem" data-move-folder=""
+              ${!note.folderId ? 'aria-current="true"' : ''}>
+        ${_escape(_t('notes.noFolderShort', null, 'Sin carpeta'))}
+      </button>
+      ${folderItems}`;
+
+    const rect = btn.getBoundingClientRect();
+    menu.style.top = `${rect.bottom + 6}px`;
+    menu.style.left = `${Math.min(rect.left, window.innerWidth - 200)}px`;
+    document.body.appendChild(menu);
+
+    menu.querySelectorAll('[data-move-folder]').forEach(item => {
+      item.addEventListener('click', () => {
+        const folderId = item.getAttribute('data-move-folder') || null;
+        _closeMoveMenus();
+        NotesService.moveNoteToFolder(noteId, folderId || null);
+        _renderAll();
+        AppShell.showToast(_t('notes.moved', null, 'Nota movida'));
+      });
+    });
+
+    _moveMenuCleanup = _bindMenuA11y(menu, {
+      onClose: _closeMoveMenus,
+      trigger: btn,
     });
   }
 
@@ -301,7 +389,7 @@ const NotesController = (() => {
     document.getElementById('notes-folder-back')?.addEventListener('click', _exitFolder);
     document.getElementById('notes-folder-new')?.addEventListener('click', () => _openEditor(null, { folderId: folder.id }));
     document.getElementById('notes-folder-delete')?.addEventListener('click', () => {
-      void _confirmDeleteFolder(folder.id);
+      void _deleteFolderWithUndo(folder.id);
     });
   }
 
@@ -322,8 +410,8 @@ const NotesController = (() => {
           <div class="notes-folder-card__top">
             <span class="notes-folder-card__icon" aria-hidden="true">📁</span>
             <button type="button" class="notes-folder-card__menu" data-folder-menu="${f.id}"
-                    aria-haspopup="menu" aria-expanded="false"
-                    aria-label="${_escape(_t('notes.folderOptions', null, 'Opciones de carpeta'))}">⋯</button>
+                    aria-label="${_escape(_t('notes.folderOptions', null, 'Opciones de carpeta'))}"
+                    aria-haspopup="menu">⋯</button>
           </div>
           <h3 class="notes-folder-card__title">${_escape(f.name)}</h3>
           <p class="notes-folder-card__meta">${_formatDate(f.updatedAt)} · ${_escape(_t('notes.notesCount', { n: count }, '{n} notas'))}</p>
@@ -348,17 +436,23 @@ const NotesController = (() => {
           _enterFolder(el.dataset.folderId);
         }
       });
+
       el.addEventListener('dragover', e => {
+        if (!e.dataTransfer?.types?.includes('application/x-in4mind-note')) return;
         e.preventDefault();
-        el.classList.add('is-drop-target');
+        e.dataTransfer.dropEffect = 'move';
+        el.classList.add('notes-folder-card--drop');
       });
-      el.addEventListener('dragleave', () => el.classList.remove('is-drop-target'));
+      el.addEventListener('dragleave', e => {
+        if (!el.contains(e.relatedTarget)) el.classList.remove('notes-folder-card--drop');
+      });
       el.addEventListener('drop', e => {
         e.preventDefault();
-        el.classList.remove('is-drop-target');
-        const noteId = e.dataTransfer.getData('text/in4mind-note') || e.dataTransfer.getData('text/plain');
+        el.classList.remove('notes-folder-card--drop');
+        const noteId = e.dataTransfer.getData('application/x-in4mind-note')
+          || e.dataTransfer.getData('text/plain');
         if (!noteId) return;
-        NotesService.moveToFolder(noteId, el.dataset.folderId);
+        NotesService.moveNoteToFolder(noteId, el.dataset.folderId);
         _renderAll();
         AppShell.showToast(_t('notes.moved', null, 'Nota movida'));
       });
@@ -372,14 +466,12 @@ const NotesController = (() => {
     });
 
     document.getElementById('notes-new-folder')?.addEventListener('click', async () => {
-      const name = typeof UiDialog !== 'undefined'
-        ? await UiDialog.prompt({
-            title: _t('notes.newFolder', null, 'Nueva carpeta'),
-            message: _t('notes.folderNamePrompt', null, 'Nombre de la carpeta:'),
-          })
-        : window.prompt(_t('notes.folderNamePrompt', null, 'Nombre de la carpeta:'));
-      if (!name?.trim()) return;
-      const folder = NotesService.saveFolder({ name: name.trim() });
+      const name = await _promptDialog({
+        title: _t('notes.newFolder', null, 'Nueva carpeta'),
+        message: _t('notes.folderNamePrompt', null, 'Nombre de la carpeta:'),
+      });
+      if (name == null || !String(name).trim()) return;
+      const folder = NotesService.saveFolder({ name: String(name).trim() });
       _renderFolders();
       if (folder?.id) _enterFolder(folder.id);
     });
@@ -443,34 +535,26 @@ const NotesController = (() => {
     }
 
     $grid.innerHTML = notes.map(note => {
-      const folders = NotesService.getFolders();
-      const moveSelect = note.source === 'lesson' ? '' : `
-            <label class="notes-card__move">
-              <span class="visually-hidden">${_escape(_t('notes.moveToFolder', null, 'Mover a carpeta'))}</span>
-              <select data-move-note="${note.id}" onclick="event.stopPropagation()">
-                <option value="">${_escape(_t('notes.noFolder', null, '— Sin carpeta —'))}</option>
-                ${folders.map(f => `<option value="${_escape(f.id)}" ${note.folderId === f.id ? 'selected' : ''}>${_escape(f.name)}</option>`).join('')}
-              </select>
-            </label>`;
+      const canMove = note.source !== 'lesson';
       return `
       <article class="notes-card ${note.pinned ? 'notes-card--pinned' : ''}"
                style="--note-color:${note.color}" data-note-id="${note.id}"
                role="button" tabindex="0" aria-label="${_escape(note.title)}"
-               ${note.source !== 'lesson' ? 'draggable="true"' : ''}>
+               ${canMove ? 'draggable="true"' : ''}>
         <div class="notes-card__inner">
           <header class="notes-card__head">
             <span class="notes-card__date">${_formatDate(note.updatedAt)}</span>
             <div class="notes-card__actions">
               ${note.pinned ? '<span class="notes-card__pin" aria-hidden="true">★</span>' : ''}
               ${note.favorite ? '<span class="notes-card__star" aria-hidden="true">♥</span>' : ''}
+              ${canMove ? `<button type="button" class="notes-card__move" data-move-note="${note.id}" aria-label="${_escape(_t('notes.moveToFolder', null, 'Mover'))}" aria-haspopup="menu">${_escape(_t('notes.moveShort', null, 'Mover'))}</button>` : ''}
               <button type="button" class="notes-card__edit" data-edit-note="${note.id}" aria-label="${_escape(_t('common.edit', null, 'Editar'))}">✎</button>
-              ${note.source !== 'lesson' ? `<button type="button" class="notes-card__delete" data-delete-note="${note.id}" aria-label="${_escape(_t('common.delete', null, 'Eliminar'))}">🗑</button>` : ''}
+              ${canMove ? `<button type="button" class="notes-card__delete" data-delete-note="${note.id}" aria-label="${_escape(_t('common.delete', null, 'Eliminar'))}">🗑</button>` : ''}
             </div>
           </header>
           <h3 class="notes-card__title">${_escape(note.title)}</h3>
           <p class="notes-card__preview">${_escape(note.preview || note.content)}</p>
           ${(note.tags || []).length ? `<div class="notes-card__tags">${note.tags.map(t => `<span class="notes-tag">${_escape(t)}</span>`).join('')}</div>` : ''}
-          ${moveSelect}
           <footer class="notes-card__foot">
             <span>🕐 ${_formatTime(note.updatedAt)}</span>
             ${note.source === 'lesson' ? `<a class="notes-card__link" href="tutorial.html?course=${note.courseId}&lesson=${note.lessonId}">${_escape(_t('notes.openLesson', null, 'Ver lección'))}</a>` : ''}
@@ -488,14 +572,20 @@ const NotesController = (() => {
         if (e.target.closest('[data-edit-note], [data-delete-note], [data-move-note], .notes-card__link')) return;
         _openEditor(el.dataset.noteId);
       });
+
       if (el.getAttribute('draggable') === 'true') {
         el.addEventListener('dragstart', e => {
-          e.dataTransfer.setData('text/in4mind-note', el.dataset.noteId);
+          e.dataTransfer.setData('application/x-in4mind-note', el.dataset.noteId);
           e.dataTransfer.setData('text/plain', el.dataset.noteId);
           e.dataTransfer.effectAllowed = 'move';
-          el.classList.add('is-dragging');
+          el.classList.add('notes-card--dragging');
         });
-        el.addEventListener('dragend', () => el.classList.remove('is-dragging'));
+        el.addEventListener('dragend', () => {
+          el.classList.remove('notes-card--dragging');
+          document.querySelectorAll('.notes-folder-card--drop').forEach(c =>
+            c.classList.remove('notes-folder-card--drop')
+          );
+        });
       }
     });
 
@@ -506,27 +596,17 @@ const NotesController = (() => {
       });
     });
 
-    $grid.querySelectorAll('[data-delete-note]').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
+    $grid.querySelectorAll('[data-move-note]').forEach(btn => {
+      btn.addEventListener('click', e => {
         e.stopPropagation();
-        const ok = typeof UiDialog !== 'undefined'
-          ? await UiDialog.confirm({
-              title: _t('common.delete', null, 'Eliminar'),
-              message: _t('notes.deleteConfirm', null, '¿Eliminar esta nota?'),
-              danger: true,
-            })
-          : window.confirm(_t('notes.deleteConfirm', null, '¿Eliminar esta nota?'));
-        if (!ok) return;
-        _scheduleNoteDelete(btn.dataset.deleteNote);
+        _openMoveMenu(btn, btn.dataset.moveNote);
       });
     });
 
-    $grid.querySelectorAll('[data-move-note]').forEach(sel => {
-      sel.addEventListener('change', (e) => {
+    $grid.querySelectorAll('[data-delete-note]').forEach(btn => {
+      btn.addEventListener('click', e => {
         e.stopPropagation();
-        NotesService.moveToFolder(sel.dataset.moveNote, sel.value || null);
-        _renderAll();
-        AppShell.showToast(_t('notes.moved', null, 'Nota movida'));
+        void _deleteNoteWithUndo(btn.dataset.deleteNote);
       });
     });
 
@@ -607,20 +687,12 @@ const NotesController = (() => {
 
   async function _deleteEditor() {
     if (!_editingId) return;
-    const ok = typeof UiDialog !== 'undefined'
-      ? await UiDialog.confirm({
-          title: _t('common.delete', null, 'Eliminar'),
-          message: _t('notes.deleteConfirm', null, '¿Eliminar esta nota?'),
-          danger: true,
-        })
-      : window.confirm(_t('notes.deleteConfirm', null, '¿Eliminar esta nota?'));
-    if (!ok) return;
-    const id = _editingId;
-    _closeEditor();
-    _scheduleNoteDelete(id);
+    await _deleteNoteWithUndo(_editingId);
   }
 
   function _renderAll() {
+    _closeFolderMenus();
+    _closeMoveMenus();
     _renderFolderBanner();
     _renderFolders();
     _renderFilterNav();

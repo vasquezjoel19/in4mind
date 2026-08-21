@@ -67,16 +67,7 @@ const UserScopedStorage = (() => {
     }
   }
 
-  function removeItem(base) {
-    try {
-      localStorage.removeItem(key(base));
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  return { accountId, key, migrate, getItem, setItem, getJson, setJson, removeItem };
+  return { accountId, key, migrate, getItem, setItem, getJson, setJson };
 })();
 
 if (typeof module !== 'undefined') module.exports = UserScopedStorage;

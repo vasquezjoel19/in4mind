@@ -87,8 +87,13 @@ const ProjectsService = (() => {
 
   function getAll(opts = {}) {
     const includeArchived = Boolean(opts.includeArchived);
+    const archivedOnly = Boolean(opts.archivedOnly);
     return Object.values(_readAll())
-      .filter((p) => includeArchived || !p.archived)
+      .filter((p) => {
+        if (archivedOnly) return Boolean(p.archived);
+        if (includeArchived) return true;
+        return !p.archived;
+      })
       .sort((a, b) => {
         if (Boolean(b.pinned) !== Boolean(a.pinned)) return b.pinned ? 1 : -1;
         return (b.updatedAt || 0) - (a.updatedAt || 0);
@@ -137,18 +142,6 @@ const ProjectsService = (() => {
     return save({ id, pinned: !p.pinned });
   }
 
-  function archive(id, archived = true) {
-    const p = get(id);
-    if (!p) return null;
-    return save({ id, archived: Boolean(archived), pinned: archived ? false : p.pinned });
-  }
-
-  function emptyTasks(id) {
-    const p = get(id);
-    if (!p) return null;
-    return save({ id, tasks: [] });
-  }
-
   function addTask(projectId, text) {
     const p = get(projectId);
     if (!p || !text?.trim()) return null;
@@ -170,6 +163,18 @@ const ProjectsService = (() => {
     if (!p) return null;
     const tasks = (p.tasks || []).filter(t => t.id !== taskId);
     return save({ id: projectId, tasks });
+  }
+
+  function emptyTasks(projectId) {
+    const p = get(projectId);
+    if (!p) return null;
+    return save({ id: projectId, tasks: [] });
+  }
+
+  function setArchived(projectId, archived) {
+    const p = get(projectId);
+    if (!p) return null;
+    return save({ id: projectId, archived: Boolean(archived) });
   }
 
   function linkNote(projectId, noteId) {
@@ -206,11 +211,11 @@ const ProjectsService = (() => {
     save,
     remove,
     togglePin,
-    archive,
-    emptyTasks,
     addTask,
     toggleTask,
     removeTask,
+    emptyTasks,
+    setArchived,
     linkNote,
     search,
     getProgress,

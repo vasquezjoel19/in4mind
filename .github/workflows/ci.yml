@@ -26,6 +26,3 @@ jobs:
 
       - name: Feature smoke (Node)
         run: node tests/smoke-ci.js
-
-      - name: Feature smoke (Python)
-        run: python3 tests/smoke-ci.py

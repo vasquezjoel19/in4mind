@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "src" / "js" / "dist"
-VERSION = "20260821ux1"
+VERSION = "20260821ux2"
 
 BOOT_FILES = [
     "src/js/controllers/ThemeController.js",
@@ -250,6 +250,30 @@ def collapse_blank_script_gaps(html: str) -> str:
     return html
 
 
+def unify_asset_versions(html: str) -> str:
+    """Force every local src/css and src/js ?v= query to VERSION."""
+    html = re.sub(
+        r'((?:href|src)="(?:\./)?src/(?:css|js)/[^"?]+)\?v=[^"]*"',
+        rf'\1?v={VERSION}"',
+        html,
+        flags=re.IGNORECASE,
+    )
+    return html
+
+
+def ensure_ui_dialog_css(html: str) -> str:
+    """Inject ui-dialog.css after theme.css when missing."""
+    if "ui-dialog.css" in html or "theme.css" not in html:
+        return html
+    return re.sub(
+        r'(<link[^>]+href="[^"]*theme\.css\?v=[^"]+"[^>]*>)',
+        rf'\1\n  <link rel="stylesheet" href="src/css/ui-dialog.css?v={VERSION}">',
+        html,
+        count=1,
+        flags=re.IGNORECASE,
+    )
+
+
 def process_page(name: str, mode: str) -> None:
     path = ROOT / name
     if not path.exists():
@@ -264,6 +288,8 @@ def process_page(name: str, mode: str) -> None:
     else:
         html = rewrite_scripts(html, set(), "")
     html = INLINE_EARLY_RE.sub("\n", html)
+    html = ensure_ui_dialog_css(html)
+    html = unify_asset_versions(html)
     html = collapse_blank_script_gaps(html)
     path.write_text(html, encoding="utf-8", newline="\n")
     print(f"Updated {name} ({mode})")
@@ -275,6 +301,16 @@ def main() -> None:
         process_page(name, "shell")
     process_page("index.html", "landing")
     for name in LIGHT_PAGES:
+        process_page(name, "light")
+    # Pages outside APP/LIGHT still need unified ?v=
+    extra = sorted(
+        {
+            p.name
+            for p in ROOT.glob("*.html")
+            if p.name not in set(APP_PAGES) | set(LIGHT_PAGES) | {"index.html"}
+        }
+    )
+    for name in extra:
         process_page(name, "light")
     print("Done.")
 

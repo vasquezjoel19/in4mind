@@ -4,6 +4,6 @@
  */
 'use strict';
 
-const IN4MIND_ASSET_V = '20260821ux1';
+const IN4MIND_ASSET_V = '20260821ux2';
 
 if (typeof module !== 'undefined') module.exports = { IN4MIND_ASSET_V };

@@ -192,6 +192,69 @@ assert('notes tombstones deletedNotes', /deletedNotes/.test(read('src/js/service
 assert('CloudBlobSync mergeMaps tombstones', /deletedMap/.test(read('src/js/services/CloudBlobSync.js')));
 assert('Gamification uses UserScopedStorage', /UserScopedStorage/.test(read('src/js/services/GamificationService.js')));
 
+/* ── Funciones serverless: una sola ubicación ────────────────────────────────
+ * Vercel despliega las funciones desde /api en la RAÍZ del repo. Antes existía
+ * una copia en in4mind/api que no se desplegaba: un arreglo hecho allí no
+ * llegaba a producción. Se eliminó; estas comprobaciones evitan que vuelva.
+ */
+const repoRoot = path.join(root, '..');
+const apiRoutes = [
+  '_lib/groq-env.js',
+  'groq/chat.js',
+  'groq/ping.js',
+  'health.js',
+  'auth/request-reset.js',
+];
+
+assert('no duplicate in4mind/api directory', !fs.existsSync(path.join(root, 'api')));
+
+for (const rel of apiRoutes) {
+  assert(`api route present: ${rel}`, fs.existsSync(path.join(repoRoot, 'api', rel)));
+}
+
+/* Ningún handler debe depender ya de la ruta eliminada. */
+for (const rel of apiRoutes) {
+  const f = path.join(repoRoot, 'api', rel);
+  if (!fs.existsSync(f)) continue;
+  assert(
+    `${rel} has no in4mind/api dependency`,
+    !/in4mind\/api\//.test(fs.readFileSync(f, 'utf8'))
+  );
+}
+
+const groqEnvLib = fs.existsSync(path.join(repoRoot, 'api/_lib/groq-env.js'))
+  ? fs.readFileSync(path.join(repoRoot, 'api/_lib/groq-env.js'), 'utf8')
+  : '';
+assert('groq-env reads GROQ_API_KEY', /process\.env\[ENV_VAR\]/.test(groqEnvLib));
+assert('groq-env trims whitespace', /\.trim\(\)/.test(groqEnvLib));
+assert('groq-env warns when unset', /console\.warn/.test(groqEnvLib));
+
+/* Ningún handler debe volver a leer la variable por su cuenta: el criterio de
+ * validación vive solo en groq-env.js. */
+for (const rel of ['groq/chat.js', 'groq/ping.js', 'health.js']) {
+  const src = fs.readFileSync(path.join(repoRoot, 'api', rel), 'utf8');
+  assert(`${rel} delegates key lookup`, !/process\.env\.GROQ_API_KEY/.test(src));
+}
+
+/* Solo se usa GROQ_API_KEY: sin prefijos de framework (este proyecto no es
+ * Next ni Vite en el cliente, y la clave nunca debe llegar al navegador). */
+const forbiddenEnvNames = /NEXT_PUBLIC_GROQ|VITE_GROQ|REACT_APP_GROQ|IN4MIND_GROQ_KEY/;
+for (const rel of apiRoutes) {
+  const f = path.join(repoRoot, 'api', rel);
+  if (!fs.existsSync(f)) continue;
+  assert(`${rel} has no client-side env prefix`, !forbiddenEnvNames.test(fs.readFileSync(f, 'utf8')));
+}
+
+/* El frontend llama siempre a rutas root-relative: una ruta relativa se
+ * rompería al navegar desde subcarpetas. */
+for (const [file, endpoint] of [
+  ['src/js/services/GroqService.js', '/api/health'],
+  ['src/js/services/GroqService.js', '/api/groq/chat'],
+  ['src/js/services/AuthService.js', '/api/auth/request-reset'],
+]) {
+  assert(`${file} uses root-relative ${endpoint}`, read(file).includes(`'${endpoint}'`));
+}
+
 if (failed) {
   console.error(`\n${failed} smoke check(s) failed`);
   process.exit(1);

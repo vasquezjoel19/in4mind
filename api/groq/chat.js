@@ -5,6 +5,8 @@
  */
 'use strict';
 
+const { resolveGroqKey } = require('../_lib/groq-env.js');
+
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 const ALLOWED_MODELS = new Set([
@@ -107,9 +109,11 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) {
-    return res.status(503).json({ error: 'GROQ_API_KEY_MISSING' });
+  // Mismo criterio que /api/health y /api/groq/ping: evita que un placeholder
+  // pase el filtro aquí y termine en un 401 opaco de Groq.
+  const { ok: keyOk, key: apiKey, reason } = resolveGroqKey();
+  if (!keyOk) {
+    return res.status(503).json({ error: 'GROQ_API_KEY_MISSING', reason });
   }
 
   const body = parseBody(req);

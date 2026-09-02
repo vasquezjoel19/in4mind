@@ -68,6 +68,31 @@ Recargue con **Ctrl + Shift + R** para evitar caché.
 
 ## Paso 4 — Verificar funcionamiento
 
+### Comprobación rápida por endpoint
+
+| Endpoint | Qué comprueba |
+|----------|---------------|
+| `/api/health` | Que la variable **esté configurada** (no hace red). Devuelve `"groq": true`, o `"groqReason"` con el motivo: `missing`, `placeholder` o `malformed`. |
+| `/api/groq/ping` | Que la clave **funcione de verdad**: hace una llamada mínima (1 token) a Groq. Añade `?fresh=1` para saltarse la caché de 60 s. |
+
+Respuesta esperada de `/api/groq/ping` cuando todo está bien:
+
+```json
+{ "ok": true, "configured": true, "model": "llama-3.3-70b-versatile", "latencyMs": 340, "respondedWithChoices": true }
+```
+
+Errores que distingue:
+
+| `error` | Causa habitual |
+|---------|----------------|
+| `GROQ_API_KEY_MISSING` | Variable ausente, vacía, con texto de plantilla o mal formada |
+| `GROQ_API_KEY_INVALID` | Clave revocada o incorrecta (401/403) |
+| `GROQ_RATE_LIMITED` | Cuota agotada (429) |
+| `GROQ_MODEL_NOT_FOUND` | El modelo de `GROQ_MODEL` ya no existe |
+| `GROQ_TIMEOUT` / `GROQ_UNREACHABLE` | Groq no respondió en 8 s |
+
+### Comprobación desde la interfaz
+
 | Indicador | Significado |
 |-----------|-------------|
 | Banner amarillo visible | API Key aún no configurada |
@@ -83,7 +108,9 @@ Si la key es inválida, el asistente mostrará un mensaje de error profesional i
 | Archivo | Función |
 |---------|---------|
 | `api/groq/chat.js` | **Proxy serverless: única pieza que usa `GROQ_API_KEY`** |
+| `api/_lib/groq-env.js` | Lee y valida `GROQ_API_KEY` (única fuente de verdad) |
 | `api/health.js` | Informa al frontend si la clave está configurada |
+| `api/groq/ping.js` | Prueba de conexión real contra Groq (diagnóstico) |
 | `src/js/config/groq.config.js` | Modelo y parámetros (generado en build, sin secretos) |
 | `src/js/config/groq.config.example.js` | Plantilla de referencia |
 | `src/js/services/GroqService.js` | Cliente: usa el proxy y cae a modo local si no hay backend |

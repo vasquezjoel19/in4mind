@@ -60,7 +60,7 @@ const ProjectReviewService = (() => {
       const raw = await GroqService.complete({
         system,
         user,
-        model: 'llama-3.1-8b-instant',
+        model: 'openai/gpt-oss-20b',
         max_tokens: 220,
         temperature: 0.2,
         timeoutMs: 9000,
@@ -131,7 +131,7 @@ const ProjectReviewService = (() => {
         raw = await GroqService.complete({
           system,
           user,
-          model: 'llama-3.1-8b-instant',
+          model: 'openai/gpt-oss-20b',
           max_tokens: 260,
           temperature: 0.2,
           timeoutMs: 9000,

@@ -23,7 +23,7 @@ En Vercel → **Settings → Environment Variables**, cree para *Production* y *
 | Variable | Ejemplo | Obligatoria |
 |---|---|---|
 | `GROQ_API_KEY` | `gsk_xxxxxxxx…` | Sí |
-| `GROQ_MODEL` | `llama-3.3-70b-versatile` | No |
+| `GROQ_MODEL` | `openai/gpt-oss-20b` | No |
 | `GROQ_MAX_TOKENS` | `1200` | No |
 | `GROQ_TEMPERATURE` | `0.45` | No |
 
@@ -36,6 +36,11 @@ Verifique en `https://SU-DOMINIO.vercel.app/api/health` que la respuesta incluya
 > **Importante:** nunca escriba la clave en un archivo versionado. `.env` y
 > `src/js/config/groq.config.js` están en `.gitignore`; si una clave llega a un repo
 > público, GitHub la detecta y Groq la revoca automáticamente.
+
+> **Los modelos cambian.** Groq retira versiones con regularidad; los `llama-3.*`
+> que usaba este proyecto dejaron de estar disponibles y devolvían 404 en cada
+> petición. Si vuelve a pasar, `/api/groq/ping` lista los modelos a los que tu
+> clave sí tiene acceso y basta con cambiar `GROQ_MODEL` en Vercel.
 
 ### Comprobar la clave antes de desplegar
 
@@ -99,7 +104,7 @@ Recargue con **Ctrl + Shift + R** para evitar caché.
 Respuesta esperada de `/api/groq/ping` cuando todo está bien:
 
 ```json
-{ "ok": true, "configured": true, "model": "llama-3.3-70b-versatile", "latencyMs": 340, "respondedWithChoices": true }
+{ "ok": true, "configured": true, "model": "openai/gpt-oss-20b", "latencyMs": 340, "respondedWithChoices": true }
 ```
 
 Errores que distingue:
@@ -147,8 +152,8 @@ Cambie la variable `GROQ_MODEL` en Vercel:
 
 | Modelo | Uso |
 |--------|-----|
-| `llama-3.3-70b-versatile` | Recomendado — respuestas completas |
-| `llama-3.1-8b-instant` | Más rápido, respuestas más breves |
+| `openai/gpt-oss-20b` | Por defecto — rápido y suficiente para el asistente |
+| `openai/gpt-oss-120b` | Más capaz; consume más cuota |
 
 El proxy solo acepta modelos de esa lista (`ALLOWED_MODELS` en `api/groq/chat.js`);
 cualquier otro valor enviado desde el navegador se ignora y usa el predeterminado.

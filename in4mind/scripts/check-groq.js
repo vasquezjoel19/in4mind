@@ -20,7 +20,7 @@ const path = require('path');
 
 const GROQ_BASE = 'https://api.groq.com/openai/v1';
 const CONFIG = path.join(__dirname, '..', 'src/js/config/groq.config.js');
-const FALLBACK_MODEL = 'llama-3.3-70b-versatile';
+const FALLBACK_MODEL = 'openai/gpt-oss-20b';
 
 function readConfigValue(field) {
   if (!fs.existsSync(CONFIG)) return '';

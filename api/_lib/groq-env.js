@@ -95,11 +95,21 @@ function isGroqConfigured() {
  * cualquier valor con forma válida. La lista de conocidos sirve solo para
  * avisar en los logs si parece un typo — nunca para bloquear.
  */
-const FALLBACK_MODEL = 'llama-3.3-70b-versatile';
+/**
+ * Los `llama-3.*` que había aquí dejaron de estar disponibles: Groq respondía
+ * 404 "does not exist or you do not have access to it" a cada petición.
+ * Estos son modelos de chat del catálogo actual; `gpt-oss-20b` va por defecto
+ * porque es rápido y aguanta mejor los límites del plan gratuito.
+ */
+const FALLBACK_MODEL = 'openai/gpt-oss-20b';
 
 const KNOWN_MODELS = Object.freeze([
-  'llama-3.3-70b-versatile',
-  'llama-3.1-8b-instant',
+  'openai/gpt-oss-20b',
+  'openai/gpt-oss-120b',
+  'qwen/qwen3.8-27b',
+  'qwen/qwen3.6-27b',
+  'groq/compound',
+  'groq/compound-mini',
 ]);
 
 /**

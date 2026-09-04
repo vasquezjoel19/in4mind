@@ -7,7 +7,7 @@
 
 const QuizAIFeedbackService = (() => {
 
-  const FEEDBACK_MODEL = 'llama-3.1-8b-instant';
+  const FEEDBACK_MODEL = 'openai/gpt-oss-20b';
   const MAX_TOKENS = 110;
   const TEMPERATURE = 0.35;
 

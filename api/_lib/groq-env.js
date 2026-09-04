@@ -101,11 +101,11 @@ function isGroqConfigured() {
  * Estos son modelos de chat del catálogo actual; `gpt-oss-20b` va por defecto
  * porque es rápido y aguanta mejor los límites del plan gratuito.
  */
-const FALLBACK_MODEL = 'openai/gpt-oss-20b';
+const FALLBACK_MODEL = 'openai/gpt-oss-120b';
 
 const KNOWN_MODELS = Object.freeze([
-  'openai/gpt-oss-20b',
   'openai/gpt-oss-120b',
+  'openai/gpt-oss-20b',
   'qwen/qwen3.8-27b',
   'qwen/qwen3.6-27b',
   'groq/compound',

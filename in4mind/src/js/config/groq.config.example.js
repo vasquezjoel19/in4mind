@@ -18,8 +18,8 @@ const GroqConfig = {
   /** false fuerza el modo directo desde el navegador (expone la clave; solo local) */
   USE_PROXY: true,
 
-  /** Modelos recomendados: openai/gpt-oss-20b | openai/gpt-oss-120b */
-  MODEL: 'openai/gpt-oss-20b',
+  /** Modelos recomendados: openai/gpt-oss-120b | openai/gpt-oss-120b */
+  MODEL: 'openai/gpt-oss-120b',
 
   API_URL: 'https://api.groq.com/openai/v1/chat/completions',
   MAX_TOKENS: 1200,

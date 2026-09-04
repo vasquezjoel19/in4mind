@@ -23,7 +23,7 @@ En Vercel → **Settings → Environment Variables**, cree para *Production* y *
 | Variable | Ejemplo | Obligatoria |
 |---|---|---|
 | `GROQ_API_KEY` | `gsk_xxxxxxxx…` | Sí |
-| `GROQ_MODEL` | `openai/gpt-oss-20b` | No |
+| `GROQ_MODEL` | `openai/gpt-oss-120b` | No |
 | `GROQ_MAX_TOKENS` | `1200` | No |
 | `GROQ_TEMPERATURE` | `0.45` | No |
 
@@ -104,7 +104,7 @@ Recargue con **Ctrl + Shift + R** para evitar caché.
 Respuesta esperada de `/api/groq/ping` cuando todo está bien:
 
 ```json
-{ "ok": true, "configured": true, "model": "openai/gpt-oss-20b", "latencyMs": 340, "respondedWithChoices": true }
+{ "ok": true, "configured": true, "model": "openai/gpt-oss-120b", "latencyMs": 340, "respondedWithChoices": true }
 ```
 
 Errores que distingue:
@@ -152,8 +152,8 @@ Cambie la variable `GROQ_MODEL` en Vercel:
 
 | Modelo | Uso |
 |--------|-----|
-| `openai/gpt-oss-20b` | Por defecto — rápido y suficiente para el asistente |
-| `openai/gpt-oss-120b` | Más capaz; consume más cuota |
+| `openai/gpt-oss-120b` | Por defecto — el más capaz |
+| `openai/gpt-oss-20b` | Más rápido y ligero en cuota |
 
 El proxy solo acepta modelos de esa lista (`ALLOWED_MODELS` en `api/groq/chat.js`);
 cualquier otro valor enviado desde el navegador se ignora y usa el predeterminado.

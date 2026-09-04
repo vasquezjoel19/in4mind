@@ -51,7 +51,7 @@ const groqConfigPath = path.join(CONFIG_DIR, 'groq.config.js');
 if (fs.existsSync(groqConfigPath)) {
   console.log('[build] Groq: groq.config.js local existente — no se sobrescribe');
 } else {
-  const groqModel = env('GROQ_MODEL', 'openai/gpt-oss-20b');
+  const groqModel = env('GROQ_MODEL', 'openai/gpt-oss-120b');
   const groqMaxTokens = Number(env('GROQ_MAX_TOKENS', '1200')) || 1200;
   const groqTemperatureRaw = Number(env('GROQ_TEMPERATURE', '0.45'));
   const groqTemperature = Number.isFinite(groqTemperatureRaw) ? groqTemperatureRaw : 0.45;

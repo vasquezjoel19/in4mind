@@ -1,4 +1,9 @@
-/*! IN4MIND bundle 20260821ux2 — 2026-08-21T21:53:30.592897+00:00 */
+/*! IN4MIND bundle 20260904groq — 2026-09-04T20:55:10.688Z */
+
+;try {
+  if (typeof ThemeController !== 'undefined' && ThemeController.initEarly) ThemeController.initEarly();
+  if (typeof I18n !== 'undefined' && I18n.initEarly) I18n.initEarly();
+} catch (e) { /* boot */ }
 
 ;/* --- src/js/controllers/ThemeController.js --- */
 /**
@@ -1381,6 +1386,10 @@ const LOCALE_ES = {
     errNoKey: '**Configuración requerida**\n\nPara habilitar Groq IA, defina `GROQ_API_KEY` en Vercel (Settings → Environment Variables) y vuelva a desplegar.\n\n- Obtenga su clave en https://console.groq.com/keys\n- La clave permanece en el servidor: nunca se expone en el navegador',
     errInvalidKey: '**Credencial no válida**\n\nLa API Key configurada fue rechazada. Verifique que la clave sea correcta en la consola de Groq.',
     errUnavailable: '**Servicio temporalmente no disponible**\n\nNo fue posible completar la solicitud con Groq. Intente nuevamente en unos momentos.',
+    errModel: '**Modelo no disponible**\n\nGroq ya no sirve el modelo configurado (suele ocurrir cuando se retira una versión). Actualice `GROQ_MODEL` en Vercel con un modelo vigente de https://console.groq.com/docs/models y vuelva a desplegar.',
+    errRateLimit: '**Límite de uso alcanzado**\n\nSe agotó la cuota de Groq para este período. Espere unos minutos e intente de nuevo, o revise su plan en https://console.groq.com',
+    errEmpty: '**Respuesta vacía**\n\nGroq aceptó la solicitud pero no devolvió contenido. Reformule la consulta e intente otra vez.',
+    errStatusHint: 'Código de estado: {status}. Consulte /api/groq/ping para el diagnóstico exacto.',
     errGeneric: '**Error de procesamiento**\n\nOcurrió un inconveniente al generar la respuesta. Reformule su consulta o verifique la conexión a internet.',
     newChat: 'Nueva conversación',
     welcomeTitle: 'Asistente educativo IN4MIND',
@@ -2768,6 +2777,10 @@ const LOCALE_EN = {
     errNoKey: '**Configuration required**\n\nTo enable Groq AI, set `GROQ_API_KEY` in Vercel (Settings → Environment Variables) and redeploy.\n\n- Get your key at https://console.groq.com/keys\n- The key stays on the server: it is never exposed to the browser',
     errInvalidKey: '**Invalid credentials**\n\nThe configured API Key was rejected. Verify the key is correct in the Groq console.',
     errUnavailable: '**Service temporarily unavailable**\n\nCould not complete the request with Groq. Please try again in a few moments.',
+    errModel: '**Model unavailable**\n\nGroq no longer serves the configured model (this usually means the version was retired). Update `GROQ_MODEL` in Vercel with a current model from https://console.groq.com/docs/models and redeploy.',
+    errRateLimit: '**Usage limit reached**\n\nThe Groq quota for this period is exhausted. Wait a few minutes and try again, or review your plan at https://console.groq.com',
+    errEmpty: '**Empty response**\n\nGroq accepted the request but returned no content. Rephrase your question and try again.',
+    errStatusHint: 'Status code: {status}. Check /api/groq/ping for the exact diagnosis.',
     errGeneric: '**Processing error**\n\nAn issue occurred while generating the response. Rephrase your question or check your internet connection.',
     newChat: 'New conversation',
     welcomeTitle: 'IN4MIND educational assistant',
@@ -4149,6 +4162,10 @@ const LOCALE_ZH = {
     errNoKey: '**需要配置**\n\n要启用 Groq AI，请在 Vercel（Settings → Environment Variables）中设置 `GROQ_API_KEY` 并重新部署。\n\n- 在 https://console.groq.com/keys 获取密钥\n- 密钥仅保存在服务器，绝不会暴露给浏览器',
     errInvalidKey: '**凭据无效**\n\n配置的 API Key 被拒绝。请在 Groq 控制台验证密钥是否正确。',
     errUnavailable: '**服务暂时不可用**\n\n无法通过 Groq 完成请求。请稍后再试。',
+    errModel: '**模型不可用**\n\nGroq 已不再提供所配置的模型（通常是该版本已下线）。请在 Vercel 中将 `GROQ_MODEL` 更新为 https://console.groq.com/docs/models 上的现有模型并重新部署。',
+    errRateLimit: '**已达使用上限**\n\n本周期的 Groq 配额已用尽。请稍候几分钟后重试，或在 https://console.groq.com 查看你的套餐。',
+    errEmpty: '**响应为空**\n\nGroq 接受了请求但未返回内容。请换个说法重试。',
+    errStatusHint: '状态码：{status}。请访问 /api/groq/ping 获取确切诊断。',
     errGeneric: '**处理错误**\n\n生成回复时出现问题。请重新表述您的问题或检查网络连接。',
     newChat: '新对话',
     welcomeTitle: 'IN4MIND 教育助手',
@@ -5714,8 +5731,3 @@ const I18n = (() => {
 if (typeof module !== 'undefined') module.exports = I18n;
 
 
-
-;try {
-  if (typeof ThemeController !== 'undefined' && ThemeController.initEarly) ThemeController.initEarly();
-  if (typeof I18n !== 'undefined' && I18n.initEarly) I18n.initEarly();
-} catch (e) { /* boot */ }

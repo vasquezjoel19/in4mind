@@ -59,7 +59,13 @@ const AIEngine = (() => {
     const code = err?.message || '';
     if (code === 'GROQ_API_KEY_MISSING') return _t('ai.errNoKey');
     if (code === 'GROQ_API_KEY_INVALID') return _t('ai.errInvalidKey');
-    if (code.startsWith('GROQ_HTTP_')) return _t('ai.errUnavailable');
+    if (code === 'GROQ_MODEL_NOT_FOUND') return _t('ai.errModel');
+    if (code === 'GROQ_RATE_LIMITED')    return _t('ai.errRateLimit');
+    if (code === 'GROQ_EMPTY_RESPONSE')  return _t('ai.errEmpty');
+
+    const http = code.match(/^GROQ_HTTP_(\d{3})/);
+    if (http) return `${_t('ai.errUnavailable')}\n\n${_t('ai.errStatusHint', { status: http[1] })}`;
+
     if (code === 'NO_ENGINE') return _t('ai.errNoKey');
     return _t('ai.errGeneric');
   }

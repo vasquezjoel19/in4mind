@@ -13,10 +13,11 @@
  */
 'use strict';
 
-const { resolveGroqKey, ENV_VAR } = require('../_lib/groq-env.js');
+const { resolveGroqKey, resolveGroqModel, ENV_VAR } = require('../_lib/groq-env.js');
 
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const DEFAULT_MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+const MODEL_INFO = resolveGroqModel();
+const DEFAULT_MODEL = MODEL_INFO.model;
 
 /** Evita quemar cuota si alguien recarga la página de diagnóstico. */
 const CACHE_MS = 60 * 1000;
@@ -24,10 +25,18 @@ const TIMEOUT_MS = 8000;
 
 let _cache = null; // { at: number, payload: object, status: number }
 
-function _statusToError(status) {
+function _statusToError(status, rawBody) {
   if (status === 401 || status === 403) return 'GROQ_API_KEY_INVALID';
   if (status === 429) return 'GROQ_RATE_LIMITED';
-  if (status === 404) return 'GROQ_MODEL_NOT_FOUND';
+
+  let upstreamCode = '';
+  try {
+    upstreamCode = String(JSON.parse(rawBody)?.error?.code || '');
+  } catch { /* Groq no siempre devuelve JSON */ }
+
+  if (status === 404 || /decommission|model_not_found|does_not_exist/i.test(upstreamCode)) {
+    return 'GROQ_MODEL_NOT_FOUND';
+  }
   return `GROQ_HTTP_${status}`;
 }
 
@@ -94,9 +103,12 @@ module.exports = async function handler(req, res) {
       payload = {
         ok: false,
         configured: true,
-        error: _statusToError(groqRes.status),
+        error: _statusToError(groqRes.status, detail),
         upstreamStatus: groqRes.status,
         model: DEFAULT_MODEL,
+        // Si el modelo no es de los conocidos, es lo primero que hay que mirar.
+        modelSource: MODEL_INFO.source,
+        modelKnown: MODEL_INFO.known,
         latencyMs,
       };
     } else {

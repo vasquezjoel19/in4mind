@@ -265,18 +265,28 @@ const AIChatController = (() => {
     throw new Error('NO_ENGINE');
   }
 
+  /**
+   * Antes, 400, 404, 429, 500 y 502 mostraban todos el mismo texto genérico y
+   * el status quedaba enterrado en el Error, así que era imposible distinguir
+   * "modelo retirado" de "sin cuota" desde la interfaz.
+   */
   function _errorMessage(err) {
     const code = err?.message || '';
-    if (code === 'GROQ_API_KEY_MISSING') {
-      return '**Configuración requerida**\n\nPara activar Groq IA, defina la variable `GROQ_API_KEY` en Vercel (Settings → Environment Variables) y vuelva a desplegar.\n\n- Obtenga la clave en https://console.groq.com/keys\n- La clave permanece en el servidor: nunca se expone en el navegador\n- Recargue esta página con Ctrl + Shift + R';
+
+    if (code === 'GROQ_API_KEY_MISSING')  return _t('ai.errNoKey');
+    if (code === 'GROQ_API_KEY_INVALID')  return _t('ai.errInvalidKey');
+    if (code === 'GROQ_MODEL_NOT_FOUND')  return _t('ai.errModel');
+    if (code === 'GROQ_RATE_LIMITED')     return _t('ai.errRateLimit');
+    if (code === 'GROQ_EMPTY_RESPONSE')   return _t('ai.errEmpty');
+
+    const http = code.match(/^GROQ_HTTP_(\d{3})/);
+    if (http) {
+      const status = http[1];
+      // El status va en el mensaje: sin él no hay forma de saber qué revisar.
+      return `${_t('ai.errUnavailable')}\n\n${_t('ai.errStatusHint', { status })}`;
     }
-    if (code === 'GROQ_API_KEY_INVALID') {
-      return '**Credencial no válida**\n\nLa API Key configurada fue rechazada. Verifique que la clave sea correcta y que no haya expirado en la consola de Groq.';
-    }
-    if (code.startsWith('GROQ_HTTP_')) {
-      return '**Servicio temporalmente no disponible**\n\nNo fue posible completar la solicitud con Groq. Intente nuevamente en unos momentos.';
-    }
-    return '**Error de procesamiento**\n\nOcurrió un inconveniente al generar la respuesta. Reformule su consulta o verifique la conexión a internet.';
+
+    return _t('ai.errGeneric');
   }
 
   async function _sendMessage(text) {

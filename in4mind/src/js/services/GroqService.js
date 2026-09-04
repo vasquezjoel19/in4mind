@@ -174,21 +174,43 @@ DIRECTRICES
       : _directRequest(history, stream);
   }
 
+  /** Códigos que el proxy emite y el cliente sabe explicar. */
+  const KNOWN_CODES = [
+    'GROQ_API_KEY_MISSING',
+    'GROQ_API_KEY_INVALID',
+    'GROQ_MODEL_NOT_FOUND',
+    'GROQ_RATE_LIMITED',
+    'GROQ_EMPTY_RESPONSE',
+  ];
+
   async function _assertOk(response) {
     if (response.ok) return;
 
     const raw = await response.text().catch(() => '');
     let code = '';
     try {
-      code = JSON.parse(raw)?.error || '';
+      const parsed = JSON.parse(raw)?.error;
+      // El proxy devuelve un string; Groq (modo directo) un objeto {code,message}.
+      code = typeof parsed === 'string' ? parsed : String(parsed?.code || '');
     } catch (_) { /* respuesta no JSON */ }
 
-    if (code === 'GROQ_API_KEY_MISSING' || response.status === 503) {
-      throw new Error('GROQ_API_KEY_MISSING');
+    // El cuerpo manda sobre el status: antes cualquier 503 se leía como "falta
+    // la API Key", así que un 503 de Groq saturado pedía configurar una clave
+    // que ya estaba puesta.
+    if (KNOWN_CODES.includes(code)) throw new Error(code);
+
+    // El proxy reenvía el status de Groq dentro del código (GROQ_HTTP_503) aunque
+    // el transporte llegue como 502; se prefiere ese, que es el que explica el fallo.
+    if (/^GROQ_HTTP_\d{3}$/.test(code)) throw new Error(code);
+
+    if (/decommission|model_not_found|does_not_exist/i.test(code)) {
+      throw new Error('GROQ_MODEL_NOT_FOUND');
     }
-    if (code === 'GROQ_API_KEY_INVALID' || response.status === 401 || response.status === 403) {
+    if (response.status === 401 || response.status === 403) {
       throw new Error('GROQ_API_KEY_INVALID');
     }
+    if (response.status === 429) throw new Error('GROQ_RATE_LIMITED');
+
     throw new Error(`GROQ_HTTP_${response.status}: ${raw.slice(0, 200)}`);
   }
 

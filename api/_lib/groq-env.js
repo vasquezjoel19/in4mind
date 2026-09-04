@@ -86,4 +86,60 @@ function isGroqConfigured() {
   return resolveGroqKey().ok;
 }
 
-module.exports = { resolveGroqKey, isGroqConfigured, ENV_VAR };
+/* ── Modelo ────────────────────────────────────────────────────────────────
+ * Groq retira modelos con el tiempo. Cuando eso pasa devuelve 404/400
+ * `model_decommissioned` y toda petición falla, así que el operador tiene que
+ * poder cambiar el modelo por variable de entorno sin tocar código.
+ *
+ * `GROQ_MODEL` es configuración de operador, no entrada del cliente: se acepta
+ * cualquier valor con forma válida. La lista de conocidos sirve solo para
+ * avisar en los logs si parece un typo — nunca para bloquear.
+ */
+const FALLBACK_MODEL = 'llama-3.3-70b-versatile';
+
+const KNOWN_MODELS = Object.freeze([
+  'llama-3.3-70b-versatile',
+  'llama-3.1-8b-instant',
+]);
+
+/**
+ * @returns {{ model: string, source: 'env'|'default', known: boolean }}
+ */
+function resolveGroqModel() {
+  const raw = process.env.GROQ_MODEL;
+  const configured = raw == null ? '' : String(raw).trim();
+
+  if (!configured) {
+    return { model: FALLBACK_MODEL, source: 'default', known: true };
+  }
+
+  // Un valor con espacios o comillas es casi siempre un error de pegado y
+  // provocaría un 400 opaco en cada petición.
+  if (/\s|["']/.test(configured)) {
+    _warnOnce(
+      `GROQ_MODEL contiene espacios o comillas ("${configured}"); se usa ${FALLBACK_MODEL}. ` +
+      'Escríbelo tal cual aparece en https://console.groq.com/docs/models'
+    );
+    return { model: FALLBACK_MODEL, source: 'default', known: true };
+  }
+
+  const known = KNOWN_MODELS.includes(configured);
+  if (!known) {
+    // No se bloquea: puede ser un modelo nuevo posterior a esta versión.
+    _warnOnce(
+      `GROQ_MODEL="${configured}" no está en la lista de modelos conocidos. ` +
+      'Se usará igualmente; si Groq responde 404 model_decommissioned, revisa el nombre.'
+    );
+  }
+
+  return { model: configured, source: 'env', known };
+}
+
+module.exports = {
+  resolveGroqKey,
+  isGroqConfigured,
+  resolveGroqModel,
+  ENV_VAR,
+  KNOWN_MODELS,
+  FALLBACK_MODEL,
+};

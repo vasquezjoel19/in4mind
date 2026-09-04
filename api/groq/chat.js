@@ -5,16 +5,17 @@
  */
 'use strict';
 
-const { resolveGroqKey } = require('../_lib/groq-env.js');
+const { resolveGroqKey, resolveGroqModel, KNOWN_MODELS } = require('../_lib/groq-env.js');
 
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
-const ALLOWED_MODELS = new Set([
-  'llama-3.3-70b-versatile',
-  'llama-3.1-8b-instant',
-]);
+const DEFAULT_MODEL = resolveGroqModel().model;
 
-const DEFAULT_MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+/* El allowlist evita que un tercero use este endpoint como LLM gratuito con el
+ * modelo que quiera. El modelo del operador entra siempre: si no, configurar
+ * GROQ_MODEL con un modelo nuevo (p. ej. tras una retirada) haría que el
+ * cliente pidiera uno y el proxy sirviera otro. */
+const ALLOWED_MODELS = new Set([...KNOWN_MODELS, DEFAULT_MODEL]);
 const MAX_TOKENS_CAP = Number(process.env.GROQ_MAX_TOKENS) || 1200;
 const DEFAULT_TEMPERATURE = Number.isFinite(Number(process.env.GROQ_TEMPERATURE))
   ? Number(process.env.GROQ_TEMPERATURE)
@@ -79,8 +80,30 @@ function upstreamPayload(body, stream) {
   };
 }
 
-function upstreamError(status) {
+/**
+ * Traduce el fallo de Groq a un código que el cliente pueda explicar.
+ * Groq responde `{ error: { code, message } }`; ese `code` distingue un modelo
+ * retirado de una cuota agotada, cosa que el status HTTP por sí solo no hace.
+ *
+ * @param {number} status
+ * @param {string} rawBody
+ */
+function upstreamError(status, rawBody) {
   if (status === 401 || status === 403) return 'GROQ_API_KEY_INVALID';
+  if (status === 429) return 'GROQ_RATE_LIMITED';
+
+  let upstreamCode = '';
+  try {
+    upstreamCode = String(JSON.parse(rawBody)?.error?.code || '');
+  } catch { /* Groq no siempre devuelve JSON */ }
+
+  if (/decommission|model_not_found|does_not_exist/i.test(upstreamCode)) {
+    return 'GROQ_MODEL_NOT_FOUND';
+  }
+  if (status === 404 && /model/i.test(rawBody || '')) {
+    return 'GROQ_MODEL_NOT_FOUND';
+  }
+
   return `GROQ_HTTP_${status}`;
 }
 
@@ -136,7 +159,14 @@ module.exports = async function handler(req, res) {
     if (!groqRes.ok) {
       const detail = await groqRes.text().catch(() => '');
       console.error('[api/groq/chat] upstream', groqRes.status, detail.slice(0, 300));
-      return res.status(groqRes.status).json({ error: upstreamError(groqRes.status) });
+      // Se reenvía el status de Groq salvo el 503: el cliente lo interpretaba
+      // como "falta la API Key" y pedía configurar una que ya estaba puesta.
+      const status = groqRes.status === 503 ? 502 : groqRes.status;
+      return res.status(status).json({
+        error: upstreamError(groqRes.status, detail),
+        upstreamStatus: groqRes.status,
+        model: DEFAULT_MODEL,
+      });
     }
 
     if (wantsStream && groqRes.body && typeof groqRes.body.getReader === 'function') {

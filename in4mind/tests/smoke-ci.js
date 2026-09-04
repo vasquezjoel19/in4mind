@@ -245,6 +245,45 @@ for (const rel of apiRoutes) {
   assert(`${rel} has no client-side env prefix`, !forbiddenEnvNames.test(fs.readFileSync(f, 'utf8')));
 }
 
+/* El modelo se resuelve en groq-env y el allowlist incluye el del operador:
+ * si no, configurar GROQ_MODEL tras una retirada de modelo no serviría. */
+assert('groq-env resolves GROQ_MODEL', /resolveGroqModel/.test(groqEnvLib));
+assert('groq-env warns on unknown model', /no está en la lista de modelos conocidos/.test(groqEnvLib));
+{
+  const chatSrc = fs.readFileSync(path.join(repoRoot, 'api/groq/chat.js'), 'utf8');
+  assert('chat.js allowlist includes operator model', /ALLOWED_MODELS = new Set\(\[\.\.\.KNOWN_MODELS, DEFAULT_MODEL\]\)/.test(chatSrc));
+  assert('chat.js does not read GROQ_MODEL directly', !/process\.env\.GROQ_MODEL/.test(chatSrc));
+  assert('chat.js maps rate limit', /GROQ_RATE_LIMITED/.test(chatSrc));
+  assert('chat.js maps decommissioned model', /GROQ_MODEL_NOT_FOUND/.test(chatSrc));
+  /* Un 503 de Groq no debe llegar al cliente como 503: lo interpretaba como
+   * "falta la API Key" y pedía configurar una que ya estaba puesta. */
+  assert('chat.js remaps upstream 503', /groqRes\.status === 503 \? 502/.test(chatSrc));
+}
+
+/* El cliente debe distinguir cada causa en vez de colapsarlas en un texto. */
+{
+  const groqSvc = read('src/js/services/GroqService.js');
+  assert('GroqService trusts body code over status', /KNOWN_CODES\.includes\(code\)/.test(groqSvc));
+  assert('GroqService keeps upstream status', /\^GROQ_HTTP_\\d\{3\}\$/.test(groqSvc));
+
+  const engine = read('src/js/services/AIEngine.js');
+  const chatCtrl = read('src/js/controllers/AIChatController.js');
+  for (const key of ['ai.errModel', 'ai.errRateLimit', 'ai.errEmpty', 'ai.errStatusHint']) {
+    assert(`AIEngine handles ${key}`, engine.includes(key));
+    assert(`AIChatController handles ${key}`, chatCtrl.includes(key));
+  }
+  /* Los errores del chat pasaban por strings en español fijos: en inglés o
+   * chino se mostraban igualmente en español. */
+  assert('AIChatController errors go through I18n', !/\*\*Configuración requerida\*\*/.test(chatCtrl));
+}
+
+for (const loc of ['es', 'en', 'zh']) {
+  const src = read(`src/js/locales/${loc}.js`);
+  for (const key of ['errModel:', 'errRateLimit:', 'errEmpty:', 'errStatusHint:']) {
+    assert(`${loc}.js has ai.${key.replace(':', '')}`, src.includes(key));
+  }
+}
+
 /* El frontend llama siempre a rutas root-relative: una ruta relativa se
  * rompería al navegar desde subcarpetas. */
 for (const [file, endpoint] of [

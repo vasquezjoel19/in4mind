@@ -9,7 +9,7 @@ const path = require('path');
 
 const root = path.join(__dirname, '..');
 const outDir = path.join(root, 'src/js/dist');
-const VERSION = '20260821ux2';
+const VERSION = '20260904groq';
 
 const BOOT_FILES = [
   'src/js/controllers/ThemeController.js',

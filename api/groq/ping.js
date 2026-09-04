@@ -40,6 +40,34 @@ function _statusToError(status, rawBody) {
   return `GROQ_HTTP_${status}`;
 }
 
+/** Mensaje legible de Groq, recortado. Nunca incluye credenciales. */
+function _upstreamMessage(rawBody) {
+  try {
+    const msg = JSON.parse(rawBody)?.error?.message;
+    if (msg) return String(msg).slice(0, 300);
+  } catch { /* no era JSON */ }
+  return String(rawBody || '').slice(0, 200) || undefined;
+}
+
+/** Modelos a los que la cuenta tiene acceso. GET /models no consume tokens. */
+async function _listModels(apiKey) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/models', {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      signal: controller.signal,
+    });
+    if (!res.ok) return { error: `HTTP_${res.status}` };
+    const data = await res.json();
+    return (data?.data || []).map(m => m.id).sort();
+  } catch (err) {
+    return { error: err && err.name === 'AbortError' ? 'TIMEOUT' : 'UNREACHABLE' };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function _callGroq(apiKey) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -109,8 +137,17 @@ module.exports = async function handler(req, res) {
         // Si el modelo no es de los conocidos, es lo primero que hay que mirar.
         modelSource: MODEL_INFO.source,
         modelKnown: MODEL_INFO.known,
+        // El texto de Groq distingue "no existe" de "no tienes acceso", que es
+        // justo lo que el status 404 por sí solo no aclara.
+        upstreamMessage: _upstreamMessage(detail),
         latencyMs,
       };
+
+      // Un 404 de modelo no dice cuáles sí valen; se consulta el catálogo real
+      // de la cuenta para poder corregir GROQ_MODEL sin adivinar.
+      if (payload.error === 'GROQ_MODEL_NOT_FOUND') {
+        payload.availableModels = await _listModels(apiKey);
+      }
     } else {
       const data = await groqRes.json().catch(() => null);
       status = 200;

@@ -145,6 +145,7 @@ module.exports = async function handler(req, res) {
   }
 
   const wantsStream = body.stream === true;
+  const payload = upstreamPayload(body, wantsStream);
 
   try {
     const groqRes = await fetch(GROQ_URL, {
@@ -153,7 +154,7 @@ module.exports = async function handler(req, res) {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${apiKey}`,
       },
-      body: JSON.stringify(upstreamPayload(body, wantsStream)),
+      body: JSON.stringify(payload),
     });
 
     if (!groqRes.ok) {
@@ -165,7 +166,9 @@ module.exports = async function handler(req, res) {
       return res.status(status).json({
         error: upstreamError(groqRes.status, detail),
         upstreamStatus: groqRes.status,
-        model: DEFAULT_MODEL,
+        // El modelo realmente enviado, no el por defecto: si el cliente pidió
+        // otro, reportar DEFAULT_MODEL despistaba el diagnóstico.
+        model: payload.model,
       });
     }
 

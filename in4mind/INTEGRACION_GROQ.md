@@ -37,6 +37,27 @@ Verifique en `https://SU-DOMINIO.vercel.app/api/health` que la respuesta incluya
 > `src/js/config/groq.config.js` están en `.gitignore`; si una clave llega a un repo
 > público, GitHub la detecta y Groq la revoca automáticamente.
 
+### Comprobar la clave antes de desplegar
+
+`/api/health` solo mira que la variable **exista**: una clave revocada sigue dando
+`"groq": true` y el fallo aparece más tarde, al pedir una respuesta. Para validarla
+de verdad:
+
+```bash
+npm run check:groq
+```
+
+Distingue los tres fallos que se confunden entre sí:
+
+| Salida | Significado |
+|---|---|
+| `✗ CLAVE INVÁLIDA (401)` | Revocada, borrada o mal copiada → genere una nueva |
+| `✗ El modelo … YA NO EXISTE` | Groq retiró el modelo → cambie `GROQ_MODEL` |
+| `✓ Clave válida` + `✓ modelo disponible` | La integración debería funcionar |
+
+Lee `GROQ_API_KEY` del entorno y, si no está, `API_KEY` de `groq.config.js`. Nunca
+imprime la clave.
+
 ### Desarrollo local
 
 - **Con backend (recomendado):** `vercel dev` levanta las funciones de `api/` y lee el

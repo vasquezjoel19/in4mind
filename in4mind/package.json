@@ -6,6 +6,7 @@
   "scripts": {
     "build": "node scripts/generate-config.js && node scripts/bundle-shell.js",
     "build:shell": "node scripts/bundle-shell.js",
+    "check:groq": "node scripts/check-groq.js",
     "dev": "vite",
     "test": "node tests/dataservice.test.js && node tests/dashboard_features.test.js && node tests/smoke-ci.js",
     "start": "npx --yes serve -l 8080 ."

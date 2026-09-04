@@ -284,6 +284,19 @@ for (const loc of ['es', 'en', 'zh']) {
   }
 }
 
+/* Verificador de credencial: cierra el bucle sin necesidad de desplegar. */
+{
+  const check = read('scripts/check-groq.js');
+  assert('check-groq prefers env over file', /process\.env\.GROQ_API_KEY/.test(check));
+  assert('check-groq falls back to groq.config.js', /groq\.config\.js/.test(check));
+  assert('check-groq detects invalid key', /invalid_api_key|CLAVE INVÁLIDA/.test(check));
+  assert('check-groq detects retired model', /YA NO EXISTE/.test(check));
+  /* Nunca debe volcar la credencial en consola. */
+  assert('check-groq masks the key', /function mask/.test(check));
+  const pkg = JSON.parse(read('package.json'));
+  assert('package.json exposes check:groq', pkg.scripts['check:groq'] === 'node scripts/check-groq.js');
+}
+
 /* El frontend llama siempre a rutas root-relative: una ruta relativa se
  * rompería al navegar desde subcarpetas. */
 for (const [file, endpoint] of [

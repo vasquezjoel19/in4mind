@@ -284,6 +284,39 @@ for (const loc of ['es', 'en', 'zh']) {
   }
 }
 
+/* ── Drawer móvil ───────────────────────────────────────────────────────────
+ * Regresiones que ya ocurrieron y no deben volver.
+ */
+{
+  const dash = read('src/css/dashboard.css');
+  const polish = read('src/css/ui-polish.css');
+  const gchat = read('src/css/global-chat.css');
+
+  /* `slideInLeft` tiene fill-mode `both` y las animaciones ganan a las
+   * declaraciones normales: sin `animation: none` el drawer se quedaba en
+   * translateX(0), visible sobre el contenido aunque estuviera cerrado. */
+  const drawerBlock = dash.slice(dash.indexOf('@media (max-width: 900px)'));
+  assert('mobile drawer disables the entrance animation', /\.sidebar\s*\{[^}]*animation:\s*none/s.test(drawerBlock));
+  assert('mobile drawer slides off-canvas', /transform:\s*translateX\(-100%\)/.test(drawerBlock));
+  assert('mobile drawer opens with .is-open', /\.sidebar\.is-open\s*\{[^}]*transform:\s*translateX\(0\)/s.test(drawerBlock));
+  assert('mobile drawer is scrollable', /overflow-y:\s*auto/.test(drawerBlock));
+  assert('mobile drawer is width-capped', /width:\s*min\(300px,\s*80vw\)/.test(drawerBlock));
+
+  /* El FAB estaba en 1100, por encima del drawer (960): se dibujaba sobre el
+   * menú abierto. El orden vive en los tokens y nadie debe volver a fijarlo. */
+  const z = name => Number((new RegExp(`--${name}:\\s*(\\d+)`).exec(polish) || [])[1]);
+  assert('fab sits below the drawer backdrop', z('z-fab') < z('z-drawer-backdrop'));
+  assert('bottom nav sits below the drawer backdrop', z('z-bottom-nav') < z('z-drawer-backdrop'));
+  assert('drawer sits above its backdrop', z('z-drawer') > z('z-drawer-backdrop'));
+  assert('drawer sits below toasts and modals', z('z-drawer') < z('z-toast') && z('z-toast') < z('z-modal'));
+  assert('global chat uses the fab token', /z-index:\s*var\(--z-fab/.test(gchat));
+  assert('global chat no longer hardcodes 1100', !/z-index:\s*1100/.test(gchat));
+
+  /* En apaisado quedan ~350px de alto para 9 entradas más marca y pie. */
+  const resp = read('src/css/responsive.css');
+  assert('landscape breakpoint exists', /@media\s*\(max-height:\s*500px\)/.test(resp));
+}
+
 /* Verificador de credencial: cierra el bucle sin necesidad de desplegar. */
 {
   const check = read('scripts/check-groq.js');

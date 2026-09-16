@@ -2,14 +2,26 @@
  * IN4MIND — UI polish: skeletons, empty states, motion, capas móvil
  */
 
-/* ── Capas fijas (móvil) ── */
+/* ── Capas fijas (móvil) ────────────────────────────────────────────────────
+ * Orden de apilado, de abajo arriba:
+ *   contenido < bottom-nav < flotantes < backdrop < drawer < toast < modal
+ *
+ * El FAB estaba en 1100, por encima del drawer (960): el botón de chat se
+ * dibujaba sobre el menú abierto. Ahora queda por debajo del backdrop, que es
+ * lo que lo oculta junto con el resto del contenido.
+ */
 :root {
-  --z-overlay: 950;
-  --z-sidebar: 960;
   --z-bottom-nav: 900;
-  --z-fab: 1100;
+  --z-fab: 940;
+  --z-below-drawer: 940;
+  --z-drawer-backdrop: 950;
+  --z-drawer: 960;
   --z-toast: 1200;
   --z-modal: 1300;
+
+  /* Alias heredados: algunas hojas aún los referencian. */
+  --z-overlay: var(--z-drawer-backdrop);
+  --z-sidebar: var(--z-drawer);
   --motion-ease: var(--ease);
   --motion-fast: var(--dur-fast);
   --motion-med: var(--dur-med);

@@ -1291,10 +1291,12 @@ html.sidebar-collapsed .nav-item::after {
   }
 
   .sidebar {
-    width: min(280px, 86vw);
-    max-width: 320px;
-    transform: translateX(-105%);
-    z-index: 960;
+    width: min(300px, 80vw);
+    max-width: 300px;
+    height: 100vh;
+    height: 100dvh;
+    transform: translateX(-100%);
+    z-index: var(--z-drawer, 960);
     padding:
       max(var(--sp-lg), env(safe-area-inset-top, 0px))
       var(--sp-md)
@@ -1303,6 +1305,13 @@ html.sidebar-collapsed .nav-item::after {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
     box-shadow: none;
+
+    /* `slideInLeft` anima `transform` con fill-mode `both`, y las animaciones
+       CSS ganan a las declaraciones normales: mantenía el sidebar en
+       translateX(-20px) e ignoraba tanto el estado cerrado como `.is-open`,
+       dejándolo visible sobre el contenido de forma permanente. El propio
+       deslizamiento del drawer ya es la animación de entrada. */
+    animation: none;
   }
 
   .sidebar.is-open {
@@ -1311,8 +1320,8 @@ html.sidebar-collapsed .nav-item::after {
   }
 
   .sidebar-overlay {
-    z-index: 950;
-    background: rgba(0, 0, 0, 0.48);
+    z-index: var(--z-drawer-backdrop, 950);
+    background: rgba(0, 0, 0, 0.5);
   }
 
   .sidebar-overlay.is-visible {

@@ -401,6 +401,59 @@ svg {
   }
 }
 
+/* ══════════════════════════════════════════
+   MÓVIL APAISADO (alto ≤500px)
+   Con el teclado abierto o en horizontal quedan ~350px de alto: el drawer
+   tiene 9 entradas de navegación más marca y pie, así que sin compactar se
+   cortaban las últimas. El scroll ya existe; esto evita tener que usarlo.
+══════════════════════════════════════════ */
+@media (max-height: 500px) and (max-width: 900px) {
+  .sidebar {
+    padding:
+      max(var(--sp-sm), env(safe-area-inset-top, 0px))
+      var(--sp-sm)
+      max(var(--sp-sm), env(safe-area-inset-bottom, 0px));
+  }
+
+  .sidebar__brand {
+    margin-bottom: var(--sp-sm);
+    min-height: 32px;
+  }
+
+  .sidebar__brand-name {
+    font-size: 1.05rem;
+  }
+
+  .sidebar__brand-icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .sidebar__nav {
+    gap: 2px;
+  }
+
+  /* 44px es el mínimo táctil recomendado; 38px es el límite razonable
+     cuando la altura disponible no da para más. */
+  .sidebar .nav-item,
+  .sidebar__footer .nav-item {
+    min-height: 38px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    font-size: 0.86rem;
+  }
+
+  .sidebar__recent,
+  .sidebar__recent-title {
+    display: none;
+  }
+
+  .sidebar__footer {
+    margin-top: var(--sp-sm);
+    padding-top: var(--sp-sm);
+  }
+}
+
 /* Preferencia: menos animaciones */
 @media (prefers-reduced-motion: reduce) {
   .sidebar,

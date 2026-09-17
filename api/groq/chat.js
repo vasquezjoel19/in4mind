@@ -5,7 +5,9 @@
  */
 'use strict';
 
-const { resolveGroqKey, resolveGroqModel, KNOWN_MODELS } = require('../_lib/groq-env.js');
+const {
+  resolveGroqKey, resolveGroqModel, resolveGroqMaxTokens, KNOWN_MODELS,
+} = require('../_lib/groq-env.js');
 
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
@@ -16,7 +18,7 @@ const DEFAULT_MODEL = resolveGroqModel().model;
  * GROQ_MODEL con un modelo nuevo (p. ej. tras una retirada) haría que el
  * cliente pidiera uno y el proxy sirviera otro. */
 const ALLOWED_MODELS = new Set([...KNOWN_MODELS, DEFAULT_MODEL]);
-const MAX_TOKENS_CAP = Number(process.env.GROQ_MAX_TOKENS) || 1200;
+const MAX_TOKENS_CAP = resolveGroqMaxTokens().maxTokens;
 const DEFAULT_TEMPERATURE = Number.isFinite(Number(process.env.GROQ_TEMPERATURE))
   ? Number(process.env.GROQ_TEMPERATURE)
   : 0.45;

@@ -13,11 +13,14 @@
  */
 'use strict';
 
-const { resolveGroqKey, resolveGroqModel, ENV_VAR } = require('../_lib/groq-env.js');
+const {
+  resolveGroqKey, resolveGroqModel, resolveGroqMaxTokens, ENV_VAR,
+} = require('../_lib/groq-env.js');
 
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const MODEL_INFO = resolveGroqModel();
 const DEFAULT_MODEL = MODEL_INFO.model;
+const TOKENS_INFO = resolveGroqMaxTokens();
 
 /** Evita quemar cuota si alguien recarga la página de diagnóstico. */
 const CACHE_MS = 60 * 1000;
@@ -49,8 +52,8 @@ function _upstreamMessage(rawBody) {
   return String(rawBody || '').slice(0, 200) || undefined;
 }
 
-/** Modelos a los que la cuenta tiene acceso. GET /models no consume tokens. */
-async function _listModels(apiKey) {
+/** Catálogo crudo de la cuenta. GET /models no consume tokens. */
+async function _fetchModels(apiKey) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
@@ -60,12 +63,31 @@ async function _listModels(apiKey) {
     });
     if (!res.ok) return { error: `HTTP_${res.status}` };
     const data = await res.json();
-    return (data?.data || []).map(m => m.id).sort();
+    return data?.data || [];
   } catch (err) {
     return { error: err && err.name === 'AbortError' ? 'TIMEOUT' : 'UNREACHABLE' };
   } finally {
     clearTimeout(timer);
   }
+}
+
+/** Identificadores disponibles, ordenados. */
+async function _listModels(apiKey) {
+  const raw = await _fetchModels(apiKey);
+  if (!Array.isArray(raw)) return raw;
+  return raw.map(m => m.id).sort();
+}
+
+/** Límites que declara Groq para el modelo en uso. */
+async function _modelLimits(apiKey, modelId) {
+  const raw = await _fetchModels(apiKey);
+  if (!Array.isArray(raw)) return raw;
+  const found = raw.find(m => m.id === modelId);
+  if (!found) return { note: 'modelo no listado' };
+  return {
+    contextWindow: found.context_window ?? null,
+    maxCompletionTokens: found.max_completion_tokens ?? null,
+  };
 }
 
 async function _callGroq(apiKey) {
@@ -158,6 +180,12 @@ module.exports = async function handler(req, res) {
         latencyMs,
         // Confirma que la respuesta trae la forma esperada, no solo un 200.
         respondedWithChoices: Array.isArray(data?.choices) && data.choices.length > 0,
+        // Presupuesto en uso y de dónde sale: sin esto no se puede saber si la
+        // variable de Vercel está puesta o manda el valor por defecto.
+        maxTokens: TOKENS_INFO.maxTokens,
+        maxTokensSource: TOKENS_INFO.source,
+        // Techo real del modelo, para saber hasta dónde se puede subir.
+        modelLimits: await _modelLimits(apiKey, DEFAULT_MODEL),
       };
     }
   } catch (err) {

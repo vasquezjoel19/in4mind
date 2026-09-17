@@ -145,11 +145,47 @@ function resolveGroqModel() {
   return { model: configured, source: 'env', known };
 }
 
+/* ── Presupuesto de tokens ──────────────────────────────────────────────────
+ * Los modelos `gpt-oss` razonan antes de responder y ese razonamiento consume
+ * del mismo presupuesto, así que con 1200 las respuestas terminaban con
+ * `finish_reason: "length"`, cortadas a media frase.
+ *
+ * El techo protege de un valor absurdo por error de tecleo en la variable:
+ * pedir más de lo que el modelo admite hace fallar la petición entera.
+ */
+const DEFAULT_MAX_TOKENS = 4096;
+const MAX_TOKENS_CEILING = 8192;
+const MIN_MAX_TOKENS = 256;
+
+/**
+ * @returns {{ maxTokens: number, source: 'env'|'default', requested: number|null }}
+ */
+function resolveGroqMaxTokens() {
+  const raw = process.env.GROQ_MAX_TOKENS;
+  const parsed = Number(String(raw == null ? '' : raw).trim());
+
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    if (raw != null && String(raw).trim() !== '') {
+      _warnOnce(`GROQ_MAX_TOKENS="${raw}" no es un número válido; se usan ${DEFAULT_MAX_TOKENS}.`);
+    }
+    return { maxTokens: DEFAULT_MAX_TOKENS, source: 'default', requested: null };
+  }
+
+  const clamped = Math.min(Math.max(Math.floor(parsed), MIN_MAX_TOKENS), MAX_TOKENS_CEILING);
+  if (clamped !== Math.floor(parsed)) {
+    _warnOnce(`GROQ_MAX_TOKENS=${parsed} fuera de rango; se ajusta a ${clamped}.`);
+  }
+  return { maxTokens: clamped, source: 'env', requested: Math.floor(parsed) };
+}
+
 module.exports = {
   resolveGroqKey,
   isGroqConfigured,
   resolveGroqModel,
+  resolveGroqMaxTokens,
   ENV_VAR,
   KNOWN_MODELS,
   FALLBACK_MODEL,
+  DEFAULT_MAX_TOKENS,
+  MAX_TOKENS_CEILING,
 };

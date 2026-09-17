@@ -317,6 +317,43 @@ for (const loc of ['es', 'en', 'zh']) {
   assert('landscape breakpoint exists', /@media\s*\(max-height:\s*500px\)/.test(resp));
 }
 
+/* ── Índice de lección (tutorial.html) ──────────────────────────────────────
+ * Es un segundo panel lateral, independiente del drawer del dashboard.
+ * Se abría con `position: fixed; inset: 0`, tapando todo el viewport — incluido
+ * `.lesson-w3__toolbar`, donde vive el único botón que lo cerraba. Una vez
+ * abierto en móvil no había salida salvo navegar o recargar.
+ */
+{
+  const tut = read('src/css/tutorial.css');
+  const ctrl = read('src/js/controllers/TutorialController.js');
+  const html = read('tutorial.html');
+
+  const block = tut.slice(tut.indexOf('@media (max-width: 700px)'));
+  assert('lesson index is a panel, not a full-screen cover', !/\.lesson-w3__sidebar\s*\{[^}]*inset:\s*0;/s.test(block));
+  assert('lesson index is width-capped', /width:\s*80vw/.test(block) && /max-width:\s*300px/.test(block));
+  assert('lesson index slides off-canvas', /transform:\s*translateX\(-100%\)/.test(block));
+  assert('lesson index opens with --open', /\.lesson-w3__sidebar--open\s*\{[^}]*transform:\s*translateX\(0\)/s.test(block));
+  assert('lesson index is scrollable', /overflow-y:\s*auto/.test(block));
+  assert('lesson index traps overscroll', /overscroll-behavior:\s*contain/.test(block));
+  assert('lesson index stays out of the tab order while closed', /visibility:\s*hidden/.test(block));
+  assert('lesson index sits above its backdrop', /z-index:\s*var\(--z-drawer,/.test(block));
+  assert('lesson backdrop uses the backdrop token', /\.lesson-w3__sidebar-overlay\s*\{[^}]*z-index:\s*var\(--z-drawer-backdrop/s.test(tut));
+  assert('lesson landscape breakpoint exists', /@media\s*\(max-height:\s*500px\)\s*and\s*\(max-width:\s*700px\)/.test(tut));
+
+  assert('lesson backdrop exists in the markup', /id="lesson-sidebar-overlay"/.test(html));
+
+  /* Las tres salidas: tocar el fondo, Escape y elegir lección. Sin ellas el
+   * panel vuelve a ser una trampa, porque su botón queda debajo. */
+  assert('lesson index has a single open/close entry point', /function _setLessonSidebar\(/.test(ctrl));
+  assert('lesson backdrop closes on tap', /lesson-sidebar-overlay'\)\s*\r?\n?\s*\?\.addEventListener\('click'/.test(ctrl));
+  assert('lesson index closes on Escape', /e\.key !== 'Escape'[\s\S]{0,220}_setLessonSidebar\(false\)/.test(ctrl));
+  assert('lesson index closes when a lesson is picked', /_setLessonSidebar\(false\);\s*\r?\n\s*_requestShowLesson/.test(ctrl));
+  /* Cerrar libera el scroll siempre; bloquearlo solo bajo 700px. Si el cierre
+   * dependiera de la media query, girar a escritorio con el panel abierto
+   * dejaba el `overflow: hidden` puesto y la página congelada. */
+  assert('closing always releases body scroll', /if \(!open\) \{\s*\r?\n\s*document\.body\.style\.overflow = '';/.test(ctrl));
+}
+
 /* Verificador de credencial: cierra el bucle sin necesidad de desplegar. */
 {
   const check = read('scripts/check-groq.js');

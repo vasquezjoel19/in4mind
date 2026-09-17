@@ -498,6 +498,34 @@ const TutorialController = (() => {
     return 0;
   }
 
+  /**
+   * Abre o cierra el índice lateral de la lección en móvil.
+   *
+   * Centraliza lo que antes hacía un `classList.toggle` suelto: además de la
+   * clase, sincroniza el fondo, el estado del botón y el bloqueo de scroll del
+   * cuerpo — sin eso, al desplazar el índice se movía la lección de debajo.
+   *
+   * @param {boolean} open
+   */
+  function _setLessonSidebar(open) {
+    const sidebar = document.getElementById('lesson-sidebar');
+    if (!sidebar) return;
+
+    sidebar.classList.toggle('lesson-w3__sidebar--open', open);
+    document.getElementById('lesson-sidebar-overlay')?.classList.toggle('is-visible', open);
+    document.getElementById('lesson-sidebar-toggle')?.setAttribute('aria-expanded', String(open));
+
+    // Cerrar siempre libera el scroll; bloquearlo solo tiene sentido en móvil,
+    // donde el panel flota sobre la lección. El asimétrico es deliberado: si el
+    // cierre también dependiera de la media query, girar a escritorio con el
+    // panel abierto dejaría el `overflow: hidden` puesto para siempre.
+    if (!open) {
+      document.body.style.overflow = '';
+    } else if (window.matchMedia('(max-width: 700px)').matches) {
+      document.body.style.overflow = 'hidden';
+    }
+  }
+
   function _hideLessonCheck() {
     const overlay = document.getElementById('lesson-check');
     if (overlay) overlay.hidden = true;
@@ -1114,6 +1142,9 @@ const TutorialController = (() => {
     $list.querySelectorAll('[data-lesson-idx]').forEach(btn => {
       btn.addEventListener('click', () => {
         const idx = parseInt(btn.dataset.lessonIdx, 10);
+        // Elegir lección es el caso normal de salida en móvil: si el panel
+        // siguiera abierto, taparía la lección recién cargada.
+        _setLessonSidebar(false);
         _requestShowLesson(idx);
       });
     });
@@ -1122,6 +1153,9 @@ const TutorialController = (() => {
     if ($quizLink) {
       $quizLink.onclick = (e) => {
         e.preventDefault();
+        // No siempre navega: si faltan lecciones abre el aviso de bloqueo, y
+        // ese aviso quedaría detrás del panel.
+        _setLessonSidebar(false);
         _goToCourseQuiz();
       };
     }
@@ -1530,10 +1564,28 @@ const TutorialController = (() => {
     document.getElementById('lesson-check-cancel')?.addEventListener('click', _hideLessonCheck);
 
     document.getElementById('lesson-sidebar-toggle')?.addEventListener('click', () => {
-      const sidebar = document.getElementById('lesson-sidebar');
-      const btn = document.getElementById('lesson-sidebar-toggle');
-      const open = sidebar?.classList.toggle('lesson-w3__sidebar--open');
-      btn?.setAttribute('aria-expanded', String(Boolean(open)));
+      _setLessonSidebar(
+        !document.getElementById('lesson-sidebar')?.classList.contains('lesson-w3__sidebar--open')
+      );
+    });
+
+    // El botón que abre el índice está en `.lesson-w3__main`, que el panel tapa
+    // al abrirse; sin estas dos salidas no había forma de cerrarlo en móvil.
+    document.getElementById('lesson-sidebar-overlay')
+      ?.addEventListener('click', () => _setLessonSidebar(false));
+
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Escape') return;
+      if (document.getElementById('lesson-sidebar')?.classList.contains('lesson-w3__sidebar--open')) {
+        _setLessonSidebar(false);
+      }
+    });
+
+    // Al pasar a escritorio el panel vuelve a ser una columna del grid, pero el
+    // `overflow: hidden` del cuerpo seguiría puesto y dejaría la página
+    // bloqueada sin nada visible que lo explicara.
+    window.matchMedia('(max-width: 700px)').addEventListener('change', e => {
+      if (!e.matches) _setLessonSidebar(false);
     });
 
     document.getElementById('lesson-quiz-btn')?.addEventListener('click', _goToCourseQuiz);

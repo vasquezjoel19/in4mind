@@ -1248,6 +1248,16 @@ svg.tut-star,
   box-shadow: var(--shadow-card);
 }
 
+/* Fondo del índice en móvil. En escritorio el sidebar es una columna fija del
+   grid, así que aquí no existe; solo se muestra dentro de la media query. */
+.lesson-w3__sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: var(--z-drawer-backdrop, 950);
+}
+
 .lesson-w3__sidebar-head {
   display: flex;
   align-items: center;
@@ -1774,20 +1784,62 @@ svg.tut-star,
   .lesson-panel__footer { flex-direction: column; align-items: stretch; }
   .lesson-panel__footer button { width: 100%; text-align: center; }
   .lesson-w3 { grid-template-columns: 1fr; }
+  /* Panel lateral, no pantalla completa. Con `inset: 0` el índice cubría todo
+     el viewport por encima de `.lesson-w3__main`, y como el botón que lo cierra
+     (`.lesson-w3__sidebar-toggle`) vive en `.lesson-w3__main`, quedaba tapado:
+     una vez abierto no había forma de cerrarlo salvo navegar o recargar. */
   .lesson-w3__sidebar {
-    display: none;
     position: fixed;
-    inset: 0;
-    z-index: 250;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: auto;
+    width: 80vw;
+    max-width: 300px;
+    height: 100vh;
+    height: 100dvh;
     max-height: none;
     border-radius: 0;
     padding-top: var(--sp-xl);
+    z-index: var(--z-drawer, 960);
+    /* El índice puede ser más largo que la pantalla; `contain` evita que al
+       llegar al final el gesto arrastre la lección que hay debajo. */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    /* Fuera de pantalla en vez de `display: none`: así la entrada y la salida
+       se animan. `visibility` lo mantiene fuera del foco y del lector de
+       pantalla mientras está cerrado, y solo se oculta al terminar la salida. */
+    visibility: hidden;
+    transform: translateX(-100%);
+    transition: transform var(--dur-med, .25s) var(--ease, ease), visibility var(--dur-med, .25s);
   }
-  .lesson-w3__sidebar--open { display: block; }
+  .lesson-w3__sidebar--open {
+    visibility: visible;
+    transform: translateX(0);
+    box-shadow: 12px 0 40px rgba(0, 0, 0, .28);
+  }
+  .lesson-w3__sidebar-overlay.is-visible { display: block; }
   .lesson-w3__sidebar-toggle { display: inline-block; }
   .lesson-w3__article { padding: var(--sp-md); }
   .lesson-w3__footer { flex-direction: column; align-items: stretch; }
   .lesson-w3__footer button { width: 100%; }
+}
+
+/* Móvil en horizontal: quedan ~350 px de alto. Con el espaciado de retrato, la
+   cabecera y el enlace al quiz se comen la pantalla y apenas asoman dos
+   lecciones del índice. Se recorta solo el espaciado decorativo; el relleno de
+   `.lesson-w3__nav-item` se deja intacto para no encoger el área táctil. */
+@media (max-height: 500px) and (max-width: 700px) {
+  .lesson-w3__sidebar {
+    padding-top: var(--sp-md);
+    padding-bottom: var(--sp-md);
+  }
+  .lesson-w3__sidebar-head {
+    padding-bottom: var(--sp-sm);
+    margin-bottom: var(--sp-xs);
+  }
+  .lesson-w3__sidebar-quiz { margin-top: var(--sp-sm); }
 }
 
 .lesson-w3__notes {

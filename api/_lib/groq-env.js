@@ -150,10 +150,12 @@ function resolveGroqModel() {
  * del mismo presupuesto, así que con 1200 las respuestas terminaban con
  * `finish_reason: "length"`, cortadas a media frase.
  *
- * El techo protege de un valor absurdo por error de tecleo en la variable:
+ * El modelo admite hasta 65536 tokens de salida, pero el límite real es el
+ * `maxDuration` de la función. Medido: ~477 tokens/s, así que 8192 tardan
+ * ~17 s. El techo protege además de un error de tecleo en la variable:
  * pedir más de lo que el modelo admite hace fallar la petición entera.
  */
-const DEFAULT_MAX_TOKENS = 4096;
+const DEFAULT_MAX_TOKENS = 8192;
 const MAX_TOKENS_CEILING = 8192;
 const MIN_MAX_TOKENS = 256;
 

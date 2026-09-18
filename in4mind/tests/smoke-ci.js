@@ -634,6 +634,35 @@ for (const [file, endpoint] of [
     /\[data-neural-bg\]:has\(canvas\)/.test(orbCss2));
 }
 
+/* ── QR de los certificados ─────────────────────────────────────────────────
+ * El QR se pedía a `api.qrserver.com`. Eso mandaba el código de verificación
+ * de cada certificado a un servidor ajeno —un código de verificación no
+ * debería salir de aquí— y, desde que hay CSP, la imagen venía bloqueada:
+ * los certificados se generaban sin QR.
+ */
+{
+  const share = read('src/js/services/CertificateShare.js');
+  assert('the qr is generated locally', /_qrDataUrl\(/.test(share));
+  /* Sin comentarios: el propio texto que explica este cambio nombra el
+   * servicio que se retiró, y haría saltar la comprobación. */
+  const shareCode = share.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^
+]*/g, '');
+  assert('no third-party qr service', !/qrserver\.com/.test(shareCode));
+  assert('the qr library is vendored',
+    fs.existsSync(path.join(root, 'src/js/vendor/qrcode.js')));
+  /* La librería tiene que cargarse antes que quien la usa. */
+  for (const page of fs.readdirSync(root).filter(f => f.endsWith('.html'))) {
+    const html = read(page);
+    if (!html.includes('CertificateShare.js')) continue;
+    assert(`${page} loads the qr library first`,
+      html.indexOf('vendor/qrcode.js') !== -1
+      && html.indexOf('vendor/qrcode.js') < html.indexOf('CertificateShare.js'));
+  }
+  /* La URL que codifica el QR no debe cambiar nunca: hay certificados ya
+   * impresos apuntando a ella. */
+  assert('the verify deep-link is unchanged', /verify\.html\?id=/.test(share));
+}
+
 /* ── Limpieza del repositorio ───────────────────────────────────────────── */
 {
   /* Iconos de terceros: cada carga informaba a flaticon de qué miraba cada

@@ -17,6 +17,37 @@ const CertificateShare = (() => {
     return user?.name?.trim() || user?.email?.split('@')[0] || 'Usuario';
   }
 
+  /**
+   * Dibuja el QR en el propio navegador y lo devuelve como `data:` URL.
+   *
+   * Antes esto se pedía a `api.qrserver.com`, lo que tenía dos problemas: el
+   * código del certificado viajaba a un servidor ajeno en cada generación —y un
+   * código de verificación no debería salir de aquí—, y si ese servicio caía o
+   * cambiaba, los certificados se quedaban sin QR.
+   *
+   * La CSP, además, ya no permite imágenes de terceros, así que la petición se
+   * bloqueaba directamente.
+   *
+   * @param {string} url  destino que codifica el QR
+   * @returns {string} `data:image/gif;base64,…`, o '' si no se pudo generar
+   */
+  function _qrDataUrl(url) {
+    if (typeof qrcode === 'undefined') return '';
+    try {
+      /* Tipo 0 = la librería elige la versión mínima que admita el texto, así
+         el QR no sale más denso de lo necesario. 'M' tolera ~15% de daño, que
+         es lo razonable para algo que puede acabar impreso. */
+      const qr = qrcode(0, 'M');
+      qr.addData(url);
+      qr.make();
+      // El 4 es el módulo en píxeles; el 0 quita el margen que añade por
+      // defecto, porque la tarjeta ya tiene el suyo.
+      return qr.createDataURL(4, 0);
+    } catch {
+      return '';
+    }
+  }
+
   function buildCertHtml(cert) {
     const name = _userName();
     const date = cert.earnedAt
@@ -31,9 +62,7 @@ const CertificateShare = (() => {
     const verifyUrl = typeof CertVerificationService !== 'undefined'
       ? CertVerificationService.verifyUrl(code)
       : `verify.html?id=${encodeURIComponent(code)}`;
-    const qrSrc = verifyUrl
-      ? `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(verifyUrl)}`
-      : '';
+    const qrSrc = verifyUrl ? _qrDataUrl(verifyUrl) : '';
     const projectHtml = cert.projectUrl
       ? `<p class="cert-share-card__code"><strong>${_t('cert.project', null, 'Proyecto')}:</strong> ${cert.projectUrl}</p>`
       : '';

@@ -533,6 +533,43 @@ html[data-theme="dark"] .auth-card {
   border-color: rgba(5, 150, 105, 0.35);
 }
 
+/* Segunda línea dentro del aviso: el enlace para reenviar la confirmación.
+   Hereda el color del aviso para no romper el contraste en ninguno de los dos
+   temas, que ya están resueltos arriba. */
+.auth-alert__extra {
+  margin: 8px 0 0;
+}
+
+.auth-link-btn {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  /* El área táctil mínima se consigue con el relleno del propio aviso; aquí
+     solo se amplía la zona pulsable en vertical sin descuadrar el texto. */
+  padding-block: 4px;
+}
+
+.auth-link-btn:hover:not(:disabled) {
+  text-decoration: none;
+}
+
+.auth-link-btn:disabled {
+  cursor: default;
+  opacity: 0.75;
+  text-decoration: none;
+}
+
+.auth-link-btn:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 html[data-theme="dark"] .auth-alert {
   color: #fca5a5;
   background: rgba(239, 68, 68, 0.15);

@@ -483,6 +483,44 @@ for (const [file, endpoint] of [
     drift.length === 0);
 }
 
+/* ── Confirmación de correo ─────────────────────────────────────────────────
+ * Preparado para cuando se active "Confirm email" en Supabase. Mientras esté
+ * desactivado este camino no se recorre, así que sin estas comprobaciones un
+ * fallo aquí no se notaría hasta el día que se encienda.
+ */
+{
+  const auth = read('src/js/services/AuthService.js');
+  const ctrl = read('src/js/controllers/AuthController.js');
+
+  /* Sin `emailRedirectTo` el enlace del correo lleva al Site URL, o sea a la
+   * portada, y el usuario tiene que buscarse el login. */
+  assert('signUp sets the confirmation redirect', /emailRedirectTo:\s*_confirmRedirectUrl/.test(auth));
+  assert('confirmation lands on the login view', /login\.html\?view=confirmed/.test(auth));
+
+  /* Quien no reciba el correo se queda con una cuenta inservible: registrarse
+   * otra vez responde "este correo ya está registrado". */
+  assert('resending the confirmation is possible', /async function resendConfirmation/.test(auth));
+  assert('resend uses the supabase resend endpoint', /_sb\.auth\.resend\(/.test(auth));
+  assert('resendConfirmation is exported', /^\s*resendConfirmation,$/m.test(auth));
+
+  assert('login handles the confirmed deep-link', /vista === 'confirmed'/.test(ctrl));
+  assert('register offers the resend link', /_mostrarReenvio\(/.test(ctrl));
+
+  /* Los mensajes deben existir en los tres idiomas o el usuario vería la clave
+   * en crudo; el test de paridad cubre el resto. */
+  for (const clave of ['emailConfirmed', 'resendConfirm', 'resendDone', 'resendFail',
+                       'errEmailNotConfirmed']) {
+    for (const idioma of ['es', 'en', 'zh']) {
+      assert(`${idioma}: auth.${clave}`,
+        new RegExp(`^\\s*${clave}:`, 'm').test(read(`src/js/locales/${idioma}.js`)));
+    }
+  }
+
+  const authCss = read('src/css/auth.css');
+  assert('resend link has styles', /\.auth-link-btn\s*\{/.test(authCss));
+  assert('resend link is keyboard-visible', /\.auth-link-btn:focus-visible/.test(authCss));
+}
+
 /* ── Limpieza del repositorio ───────────────────────────────────────────── */
 {
   /* Iconos de terceros: cada carga informaba a flaticon de qué miraba cada

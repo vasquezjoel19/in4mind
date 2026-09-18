@@ -132,7 +132,14 @@ const AuthService = (() => {
         const { data, error } = await _sb.auth.signUp({
           email: em,
           password: pass,
-          options: { data: { name: displayName } },
+          options: {
+            data: { name: displayName },
+            /* Sin esto el enlace de confirmación lleva al Site URL, es decir a
+               la portada, y el usuario tiene que buscar el login por su cuenta.
+               Así aterriza en la pantalla de inicio de sesión con su correo ya
+               puesto y un aviso de que la cuenta quedó confirmada. */
+            emailRedirectTo: _confirmRedirectUrl(em),
+          },
         });
 
         if (error) {
@@ -199,6 +206,52 @@ const AuthService = (() => {
     return result;
   }
 
+  /** Carpeta de la página actual, sin el fichero. Base para los enlaces. */
+  function _baseUrl() {
+    return `${window.location.origin}${window.location.pathname.replace(/[^/]+$/, '')}`;
+  }
+
+  /**
+   * Destino del enlace de confirmación de registro.
+   *
+   * Debe estar en Supabase → Authentication → URL Configuration → Redirect
+   * URLs, o Supabase lo ignora y manda al Site URL sin avisar. El comodín
+   * `https://<dominio>/**` cubre esta y la de recuperación de una vez.
+   */
+  function _confirmRedirectUrl(email) {
+    const q = email ? `&email=${encodeURIComponent(email)}` : '';
+    return `${_baseUrl()}login.html?view=confirmed${q}`;
+  }
+
+  /**
+   * Reenvía el correo de confirmación.
+   *
+   * Sin esto, quien no reciba el primero (spam, errata al teclear el dominio,
+   * buzón lleno) se queda sin cuenta utilizable y sin forma de arreglarlo:
+   * volver a registrarse da "este correo ya está registrado".
+   *
+   * @returns {Promise<{ok: boolean, error?: string}>}
+   */
+  async function resendConfirmation(email) {
+    const em = String(email || '').trim().toLowerCase();
+    if (!em) return { ok: false, error: _t('auth.errFillAll', null, 'Introduce tu correo.') };
+    if (!_sb) return { ok: false, error: _t('auth.errRegister', null, 'No disponible.') };
+
+    try {
+      const { error } = await _sb.auth.resend({
+        type: 'signup',
+        email: em,
+        options: { emailRedirectTo: _confirmRedirectUrl(em) },
+      });
+      if (error) {
+        return { ok: false, error: _mapAuthError(error, 'auth.errRegister', 'No se pudo reenviar.') };
+      }
+      return { ok: true };
+    } catch {
+      return { ok: false, error: _t('auth.errRegister', null, 'No se pudo reenviar.') };
+    }
+  }
+
   /**
    * Envía el correo de recuperación a la dirección que escribió el usuario.
    */
@@ -212,8 +265,7 @@ const AuthService = (() => {
        eliminado; sin Supabase no se manda nada. */
     if (_sb) {
       try {
-        const base = `${window.location.origin}${window.location.pathname.replace(/[^/]+$/, '')}`;
-        const redirectTo = `${base}login.html?view=reset`;
+        const redirectTo = `${_baseUrl()}login.html?view=reset`;
         const { error } = await _sb.auth.resetPasswordForEmail(em, { redirectTo });
         if (!error) return { ok: true, email: em, delivered: true, via: 'supabase' };
         return { ok: true, email: em, delivered: false, reason: 'send_failed' };
@@ -343,6 +395,7 @@ const AuthService = (() => {
     login,
     register,
     requestPasswordReset,
+    resendConfirmation,
     resetPassword,
     updateDisplayName,
     logout,

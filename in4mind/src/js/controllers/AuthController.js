@@ -258,8 +258,24 @@ const AuthController = (() => {
    */
   function _applyDeepLink() {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('view') !== 'reset') return;
+    const vista = params.get('view');
     const email = params.get('email') || '';
+
+    /* Vuelta desde el enlace de confirmación de registro. Sin esto el usuario
+       aterriza en un login corriente, sin saber si la confirmación funcionó. */
+    if (vista === 'confirmed') {
+      const loginEmail = $loginForm?.querySelector('#login-email');
+      if (loginEmail && email) loginEmail.value = email;
+      _showError($loginError, _t('auth.emailConfirmed', null,
+        'Correo confirmado. Ya puedes iniciar sesión.'));
+      $loginError?.classList.add('auth-alert--success');
+      $loginForm?.querySelector('#login-password')?.focus();
+      // Se limpia la query para que al recargar no reaparezca el aviso.
+      history.replaceState(null, '', window.location.pathname);
+      return;
+    }
+
+    if (vista !== 'reset') return;
     if (email) _resetEmail = email;
     _openResetView();
   }
@@ -514,6 +530,50 @@ const AuthController = (() => {
   }
 
   /** Maneja el envío del formulario de registro. */
+  /**
+   * Añade bajo el aviso de registro un enlace para reenviar la confirmación.
+   *
+   * Se crea aquí en vez de dejarlo fijo en el HTML porque solo tiene sentido
+   * cuando la confirmación por correo está activada en Supabase; si está
+   * desactivada, este camino no se recorre nunca.
+   */
+  function _mostrarReenvio(email) {
+    if (!$registerError || $registerError.querySelector('[data-resend]')) return;
+
+    const linea = document.createElement('p');
+    linea.className = 'auth-alert__extra';
+
+    const boton = document.createElement('button');
+    boton.type = 'button';
+    boton.dataset.resend = '1';
+    boton.className = 'auth-link-btn';
+    boton.textContent = _t('auth.resendConfirm', null, 'Reenviar correo de confirmación');
+
+    boton.addEventListener('click', async () => {
+      boton.disabled = true;
+      boton.textContent = _t('auth.sending', null, 'Enviando…');
+
+      const res = typeof AuthService !== 'undefined'
+        ? await AuthService.resendConfirmation(email)
+        : { ok: false };
+
+      boton.textContent = res.ok
+        ? _t('auth.resendDone', null, 'Correo reenviado.')
+        : (res.error || _t('auth.resendFail', null, 'No se pudo reenviar.'));
+
+      // Se reactiva tras unos segundos: Supabase limita los reenvíos seguidos.
+      if (!res.ok) {
+        setTimeout(() => {
+          boton.disabled = false;
+          boton.textContent = _t('auth.resendConfirm', null, 'Reenviar correo de confirmación');
+        }, 5000);
+      }
+    });
+
+    linea.appendChild(boton);
+    $registerError.appendChild(linea);
+  }
+
   async function _handleRegister(e) {
     e.preventDefault();
     _clearErrors();
@@ -551,6 +611,10 @@ const AuthController = (() => {
         // Prefill login for after confirmation
         const loginEmail = $loginForm?.querySelector('#login-email');
         if (loginEmail) loginEmail.value = result.email || emailInput.value.trim();
+        /* Si el correo no llega —spam, errata en el dominio, buzón lleno— la
+           cuenta queda inservible y registrarse otra vez responde "este correo
+           ya está registrado". Este enlace es la única salida. */
+        _mostrarReenvio(result.email || emailInput.value.trim());
         return;
       }
       if (typeof AuthService === 'undefined') {

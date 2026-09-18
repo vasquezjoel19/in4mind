@@ -521,6 +521,73 @@ for (const [file, endpoint] of [
   assert('resend link is keyboard-visible', /\.auth-link-btn:focus-visible/.test(authCss));
 }
 
+/* ── Elementos 3D ───────────────────────────────────────────────────────────
+ * Son decoración, así que lo que se comprueba aquí es sobre todo que no le
+ * cuesten nada a quien no los ve.
+ */
+{
+  const neural = read('src/js/services/NeuralBackground.js');
+  const tilt = read('src/js/services/CardTilt.js');
+  const orbJs = read('src/js/components/ChatOrb.js');
+  const orbCss = read('src/css/orb.css');
+
+  /* Three.js pesa 194 KB comprimidos, casi tres veces el arranque entero. */
+  assert('three is vendored, not pulled from a CDN',
+    fs.existsSync(path.join(root, 'src/js/vendor/three.module.js'))
+    && fs.existsSync(path.join(root, 'src/js/vendor/three.core.js')));
+  assert('three is not referenced from any CDN',
+    !fs.readdirSync(root).filter(f => f.endsWith('.html'))
+      .some(f => /cdn[^"']*three/i.test(read(f))));
+  /* El módulo importa `./three.core.js` con ese nombre exacto: si alguien
+   * renombra el fichero al actualizar, la carga falla en tiempo de ejecución. */
+  assert('the vendored module resolves its core',
+    /three\.core\.js/.test(read('src/js/vendor/three.module.js')));
+
+  assert('three loads lazily', /await import\(/.test(neural));
+  assert('the scene is skipped on reduced motion', /prefers-reduced-motion/.test(neural));
+  assert('the scene respects data saver', /saveData/.test(neural));
+  assert('the scene skips low-end devices', /deviceMemory/.test(neural));
+  assert('the scene needs webgl', /getContext\('webgl/.test(neural));
+  assert('the renderer is transparent', /alpha:\s*true/.test(neural));
+
+  /* Sin estas dos pausas el bucle seguiría consumiendo GPU con el hero fuera
+   * de pantalla o la pestaña en segundo plano. */
+  assert('the loop pauses off-screen', /IntersectionObserver/.test(neural));
+  assert('the loop pauses on a hidden tab', /visibilitychange/.test(neural));
+  assert('pausing cancels the frame', /cancelAnimationFrame/.test(neural));
+  assert('the loop state is observable', /dataset\.anim/.test(neural));
+  /* La GPU no se libera sola: geometrías, materiales y texturas hay que
+   * soltarlos a mano o quedan retenidos. */
+  assert('gpu resources are released', /renderer\.dispose\(\)/.test(neural)
+    && /geometry\.dispose\(\)/.test(neural));
+  assert('the canvas follows its host size', /ResizeObserver/.test(neural));
+  assert('the pixel ratio is capped', /Math\.min\(window\.devicePixelRatio/.test(neural));
+
+  /* Se mira dentro del bloque de la regla, no en una ventana de caracteres:
+   * un comentario más largo desplazaba la propiedad fuera del alcance. */
+  assert('the background sits behind content and ignores clicks',
+    /\[data-neural-bg\]\s*\{[^}]*pointer-events:\s*none/.test(orbCss)
+    && /\[data-neural-bg\]\s*\{[^}]*z-index:\s*0/.test(orbCss));
+
+  /* En táctil no existe el hover: el efecto se quedaría pegado tras el toque. */
+  assert('tilt is desktop-only', /pointer:\s*fine/.test(tilt));
+  assert('tilt respects reduced motion', /prefers-reduced-motion/.test(tilt));
+  /* El catálogo se repinta al filtrar, así que hay que enganchar lo nuevo. */
+  assert('tilt catches cards rendered later', /MutationObserver/.test(tilt));
+  assert('tilt uses a 3d transform', /perspective\(900px\)[\s\S]{0,60}rotateX/.test(tilt));
+
+  assert('the orb has its four layers',
+    ['orb__halo', 'orb__core', 'orb__spec', 'orb__ring'].every(c => orbJs.includes(c)));
+  assert('the orb is decorative for screen readers', /aria-hidden/.test(orbJs));
+  assert('the orb reacts to the thinking state',
+    /ChatOrb\.setState\(show \? 'thinking' : 'idle'\)/.test(read('src/js/controllers/AIChatController.js')));
+  assert('the orb breathes', /@keyframes orb-breathe/.test(orbCss));
+  assert('thinking speeds the orb up',
+    /\.orb--thinking[\s\S]{0,180}animation-duration:\s*1\.\d+s/.test(orbCss));
+  assert('all 3d motion stops on reduced motion',
+    /@media \(prefers-reduced-motion: reduce\)[\s\S]*animation:\s*none\s*!important/.test(orbCss));
+}
+
 /* ── Limpieza del repositorio ───────────────────────────────────────────── */
 {
   /* Iconos de terceros: cada carga informaba a flaticon de qué miraba cada

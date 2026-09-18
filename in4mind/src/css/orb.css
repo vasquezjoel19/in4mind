@@ -1,0 +1,216 @@
+/* ══════════════════════════════════════════
+   IN4MIND — Orbe del asistente y efectos 3D
+   ══════════════════════════════════════════
+
+   Todo el movimiento de este fichero está bajo `prefers-reduced-motion`: al
+   final se detiene por completo, dejando el orbe estático pero legible.
+*/
+
+/* ── Orbe del chat ───────────────────────────────────────────────────────── */
+
+.orb {
+  position: relative;
+  display: inline-block;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  /* Aísla el repintado del orbe del resto de la cabecera: sin esto, la
+     animación continua obliga al navegador a revisar vecinos en cada fotograma. */
+  contain: layout paint style;
+}
+
+.orb > span {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Núcleo: el degradado descentrado es lo que lo hace leer como esfera y no
+   como círculo plano. */
+.orb__core {
+  /* Las paradas van juntas cerca del centro y el borde cae a oscuro: es lo que
+     produce el terminador de una esfera iluminada. Un degradado repartido por
+     igual se lee como un disco plano. */
+  background:
+    radial-gradient(circle at 33% 28%,
+      var(--clr-brand-200, #cfe0f5) 0%,
+      var(--clr-brand-400, #7da6dd) 22%,
+      var(--clr-brand-600, #3d6499) 52%,
+      var(--clr-brand-800, #1e3350) 82%,
+      #12203a 100%);
+  /* La sombra interior se define en porcentaje del propio orbe para que el
+     volumen se mantenga igual a 34 px que ampliado. */
+  box-shadow:
+    inset -0.12em -0.16em 0.3em rgba(0, 0, 0, 0.55),
+    inset 0.06em 0.07em 0.2em rgba(255, 255, 255, 0.28);
+  animation: orb-breathe 4.2s ease-in-out infinite;
+}
+
+/* Brillo especular: pequeño, arriba a la izquierda, ligeramente desenfocado. */
+.orb__spec {
+  /* Pequeño y alto a la izquierda: un reflejo grande deslustra la esfera. */
+  inset: 16% 62% 68% 18%;
+  background: radial-gradient(circle,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.45) 45%,
+    rgba(255, 255, 255, 0) 72%);
+  animation: orb-breathe 4.2s ease-in-out infinite;
+}
+
+/* Halo exterior: el que da la sensación de luz propia. */
+.orb__halo {
+  inset: -30%;
+  background: radial-gradient(circle,
+    rgba(var(--clr-accent-rgb, 138, 180, 248), 0.38) 0%,
+    rgba(var(--clr-accent-rgb, 138, 180, 248), 0.10) 45%,
+    rgba(0, 0, 0, 0) 70%);
+  animation: orb-halo 4.2s ease-in-out infinite;
+}
+
+/* Anillo en órbita: inclinado en 3D real para que se lea como un aro alrededor
+   de la esfera y no como un borde. */
+.orb__ring {
+  inset: -12%;
+  border: 1.5px solid rgba(var(--clr-accent-rgb, 138, 180, 248), 0.55);
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+  transform: rotateX(72deg) rotateZ(0deg);
+  transform-style: preserve-3d;
+  opacity: 0.75;
+  animation: orb-orbit 9s linear infinite;
+}
+
+@keyframes orb-breathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.06); }
+}
+
+@keyframes orb-halo {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%      { opacity: 0.85; transform: scale(1.12); }
+}
+
+@keyframes orb-orbit {
+  from { transform: rotateX(72deg) rotateZ(0deg); }
+  to   { transform: rotateX(72deg) rotateZ(360deg); }
+}
+
+/* ── Estado: pensando ────────────────────────────────────────────────────── */
+/* Más rápido y más brillante, pero sin estridencias: acompaña la espera. */
+
+.orb--thinking .orb__core,
+.orb--thinking .orb__spec { animation-duration: 1.15s; }
+.orb--thinking .orb__halo { animation-duration: 1.15s; }
+
+.orb--thinking .orb__ring {
+  animation-duration: 1.6s;
+  border-top-color: rgba(var(--clr-accent-rgb, 138, 180, 248), 0.9);
+  opacity: 1;
+}
+
+/* Segundo anillo que aparece solo al pensar: dos aros a distinta velocidad
+   dan sensación de actividad sin necesidad de un spinner aparte. */
+.orb--thinking::after {
+  content: '';
+  position: absolute;
+  inset: -22%;
+  border-radius: 50%;
+  border: 1px solid rgba(var(--clr-accent-rgb, 138, 180, 248), 0.35);
+  border-left-color: transparent;
+  border-right-color: transparent;
+  animation: orb-orbit 2.4s linear infinite reverse;
+}
+
+/* ── Estado: sin conexión ────────────────────────────────────────────────── */
+
+.orb--offline .orb__core {
+  background: radial-gradient(circle at 34% 30%, #7b8794 0%, #4b5563 55%, #2d333b 100%);
+  animation-duration: 7s;
+}
+.orb--offline .orb__halo { opacity: 0.25; animation: none; }
+.orb--offline .orb__ring { opacity: 0.3; animation-duration: 20s; }
+
+/* ── Fondo de red neuronal ───────────────────────────────────────────────── */
+
+[data-neural-bg] {
+  position: absolute;
+  inset: 0;
+  /* Nunca por encima del contenido ni capturando clics: es decoración.
+     `.lp-ambient` ya vive en z-index 0 y el contenido del hero va por encima. */
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  /* Aparece cuando la escena está lista, para que no se vea el salto del
+     primer fotograma sobre el degradado del hero. */
+  opacity: 0;
+  transition: opacity 900ms ease;
+}
+
+[data-neural-bg].is-ready { opacity: 1; }
+
+[data-neural-bg] canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* En claro la red se apaga bastante: sobre fondo blanco, el mismo trazo que en
+   oscuro resulta sucio en lugar de sutil. */
+html:not([data-theme="dark"]) [data-neural-bg] { opacity: 0; }
+html:not([data-theme="dark"]) [data-neural-bg].is-ready { opacity: 0.45; }
+
+/* ── Inclinación de las tarjetas ─────────────────────────────────────────── */
+
+.has-tilt {
+  transform-style: preserve-3d;
+  /* La transformación la escribe JS en cada fotograma; dejar aquí una
+     transición sobre `transform` competiría con ella y daría un efecto
+     pastoso. El suavizado ya lo hace el propio bucle. */
+  will-change: transform;
+}
+
+/* Reflejo que sigue al cursor. Va en un pseudoelemento para no añadir nodos al
+   DOM en cada tarjeta del catálogo. */
+.has-tilt::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    380px circle at var(--tilt-x, 50%) var(--tilt-y, 50%),
+    rgba(255, 255, 255, 0.10),
+    rgba(255, 255, 255, 0) 45%);
+  opacity: 0;
+  transition: opacity 240ms ease;
+  pointer-events: none;
+}
+
+.has-tilt:hover::after { opacity: 1; }
+
+html[data-theme="dark"] .has-tilt::after {
+  background: radial-gradient(
+    380px circle at var(--tilt-x, 50%) var(--tilt-y, 50%),
+    rgba(var(--clr-accent-rgb, 138, 180, 248), 0.16),
+    rgba(255, 255, 255, 0) 45%);
+}
+
+/* ── Movimiento reducido ─────────────────────────────────────────────────── */
+/* Quien lo pide suele hacerlo por mareo o migraña, así que aquí se para todo:
+   el orbe se queda encendido y quieto, y el fondo 3D ni siquiera se descarga
+   (lo comprueba NeuralBackground antes de pedir la librería). */
+
+@media (prefers-reduced-motion: reduce) {
+  .orb__core,
+  .orb__spec,
+  .orb__halo,
+  .orb__ring,
+  .orb--thinking::after {
+    animation: none !important;
+  }
+
+  .orb--thinking .orb__halo { opacity: 0.85; }
+
+  .has-tilt { will-change: auto; }
+  .has-tilt::after { transition: none; }
+}

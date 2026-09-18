@@ -208,6 +208,13 @@ function minify(code, name) {
       format: undefined,
       target: 'es2020',
       legalComments: 'none',
+      /* Imprescindible: esbuild escapa por defecto todo lo que no sea ASCII a
+         `\uXXXX`, que ocupa 6 bytes por carácter en vez de los 3 de UTF-8. En
+         el diccionario chino eso eran 31.667 escapes y 95 KB de más — un 37%,
+         es decir, minificar lo dejaba más grande que el original. Vercel sirve
+         el JS como `charset=utf-8` y las páginas declaran UTF-8, así que la
+         salida sin escapar se interpreta bien. */
+      charset: 'utf8',
     });
     return { code: res.code, minified: true };
   } catch (err) {

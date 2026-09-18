@@ -955,6 +955,7 @@ const LOCALE_EN = {
     errModel: '**Model unavailable**\n\nGroq no longer serves the configured model (this usually means the version was retired). Update `GROQ_MODEL` in Vercel with a current model from https://console.groq.com/docs/models and redeploy.',
     errRateLimit: '**Usage limit reached**\n\nThe Groq quota for this period is exhausted. Wait a few minutes and try again, or review your plan at https://console.groq.com',
     errEmpty: '**Empty response**\n\nGroq accepted the request but returned no content. Rephrase your question and try again.',
+    errSignedOut: '**Your session has expired**\n\nSign in again to keep using the assistant.',
     errStatusHint: 'Status code: {status}. Check /api/groq/ping for the exact diagnosis.',
     errGeneric: '**Processing error**\n\nAn issue occurred while generating the response. Rephrase your question or check your internet connection.',
     newChat: 'New conversation',

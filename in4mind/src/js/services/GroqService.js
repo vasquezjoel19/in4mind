@@ -125,12 +125,33 @@ DIRECTRICES
     }));
   }
 
-  /** Petición al proxy: el servidor añade la credencial. */
-  function _proxyRequest(history, stream) {
+  /**
+   * Token de la sesión activa de Supabase.
+   *
+   * El proxy exige sesión: sin esto sería un LLM gratuito para cualquiera que
+   * conociera la URL. El token ya lo gestiona la librería (lo refresca sola),
+   * aquí solo se lee el vigente en el momento de enviar.
+   */
+  async function _accessToken() {
+    try {
+      if (typeof _sbClient === 'undefined' || !_sbClient?.auth) return '';
+      const { data } = await _sbClient.auth.getSession();
+      return data?.session?.access_token || '';
+    } catch {
+      return '';
+    }
+  }
+
+  /** Petición al proxy: el servidor añade la credencial de Groq. */
+  async function _proxyRequest(history, stream) {
     const cfg = _config();
+    const token = await _accessToken();
     return fetch(PROXY_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify({
         systemPrompt: _buildSystemPrompt(),
         history: _mapHistory(history),
@@ -181,6 +202,13 @@ DIRECTRICES
     'GROQ_MODEL_NOT_FOUND',
     'GROQ_RATE_LIMITED',
     'GROQ_EMPTY_RESPONSE',
+    /* El proxy exige sesión. Sin estos, un 401 por sesión caducada se
+       confundiría con "la clave de Groq no vale" (ver el tramo de más abajo que
+       traduce 401/403), y el mensaje mandaría a revisar una configuración que
+       está bien. */
+    'UNAUTHENTICATED',
+    'AUTH_UNAVAILABLE',
+    'FORBIDDEN_ORIGIN',
   ];
 
   async function _assertOk(response) {

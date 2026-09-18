@@ -65,6 +65,94 @@ const DataService = (() => {
 
   let _users = _loadUsers();
 
+  /* ── Credenciales del modo demo ──────────────────────────────────────────
+   * Este almacén solo se usa cuando Supabase no está disponible, pero aun así
+   * guardaba la contraseña en claro en localStorage. Cualquier XSS o extensión
+   * podía leerla, y como la gente reutiliza contraseñas el daño se extendía
+   * fuera de esta aplicación. Ahora se guarda una derivación PBKDF2 con sal
+   * por usuario, que no permite recuperar el original.
+   */
+  const PBKDF2_ITERATIONS = 150000;
+  const SALT_BYTES = 16;
+
+  const _crypto = typeof crypto !== 'undefined' ? crypto : null;
+
+  function _toHex(bytes) {
+    return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  function _fromHex(hex) {
+    const out = new Uint8Array(hex.length / 2);
+    for (let i = 0; i < out.length; i++) out[i] = parseInt(hex.substr(i * 2, 2), 16);
+    return out;
+  }
+
+  /**
+   * Token imprevisible. `Math.random()` no es criptográfico: su estado interno
+   * se puede reconstruir observando unas pocas salidas, así que un token de
+   * recuperación generado así es adivinable.
+   */
+  function _randomToken(bytes = 32) {
+    if (_crypto?.getRandomValues) {
+      return _toHex(_crypto.getRandomValues(new Uint8Array(bytes)));
+    }
+    // Sin WebCrypto no se emite token: es preferible fallar a dar uno débil.
+    return '';
+  }
+
+  /** @returns {Promise<{salt: string, hash: string, iterations: number}>} */
+  async function _hashPassword(password, saltHex) {
+    const salt = saltHex ? _fromHex(saltHex) : _crypto.getRandomValues(new Uint8Array(SALT_BYTES));
+    const key = await _crypto.subtle.importKey(
+      'raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']
+    );
+    const bits = await _crypto.subtle.deriveBits(
+      { name: 'PBKDF2', salt, iterations: PBKDF2_ITERATIONS, hash: 'SHA-256' }, key, 256
+    );
+    return { salt: _toHex(salt), hash: _toHex(new Uint8Array(bits)), iterations: PBKDF2_ITERATIONS };
+  }
+
+  /** Comparación en tiempo constante: no revela cuántos caracteres coinciden. */
+  function _safeEqual(a, b) {
+    if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+    let diff = 0;
+    for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+    return diff === 0;
+  }
+
+  async function _verifyPassword(record, password) {
+    if (!record?.hash || !record?.salt) return false;
+    const { hash } = await _hashPassword(password, record.salt);
+    return _safeEqual(hash, record.hash);
+  }
+
+  /**
+   * Migra los usuarios que quedaron guardados con la contraseña en claro.
+   * Se ejecuta al arrancar: dejar de escribirla no la borra de quien ya la
+   * tiene guardada en su navegador.
+   */
+  async function _migrateLegacyPasswords() {
+    if (!_crypto?.subtle) return;
+    const pending = Object.entries(_users).filter(([, u]) => u && typeof u.password === 'string');
+    if (!pending.length) return;
+
+    for (const [email, user] of pending) {
+      try {
+        const { salt, hash, iterations } = await _hashPassword(user.password);
+        const { password, ...rest } = user;   // descarta el texto en claro
+        _users[email] = { ...rest, salt, hash, iterations };
+      } catch {
+        // Si no se puede derivar, se borra igualmente: mejor pedir un registro
+        // nuevo que conservar la contraseña legible.
+        const { password, ...rest } = user;
+        _users[email] = rest;
+      }
+    }
+    _saveUsers(_users);
+  }
+
+  if (typeof window !== 'undefined') _migrateLegacyPasswords();
+
   function _localizedCourses() {
     return COURSES.map(c => {
       const loc = typeof I18n !== 'undefined' ? I18n.t(`courses.${c.id}`) : null;
@@ -145,11 +233,15 @@ const DataService = (() => {
           });
           return;
         }
-        if (registered.password !== password) {
+        _verifyPassword(registered, password).then(valid => {
+          if (!valid) {
+            resolve({ ok: false, error: typeof I18n !== 'undefined' ? I18n.t('auth.wrongPassword') : 'Contraseña incorrecta.' });
+            return;
+          }
+          resolve({ ok: true, user: { name: registered.name, email } });
+        }).catch(() => {
           resolve({ ok: false, error: typeof I18n !== 'undefined' ? I18n.t('auth.wrongPassword') : 'Contraseña incorrecta.' });
-          return;
-        }
-        resolve({ ok: true, user: { name: registered.name, email } });
+        });
       }, 800);
     });
   }
@@ -164,10 +256,20 @@ const DataService = (() => {
           resolve({ ok: false, error: 'Por favor completa todos los campos.' });
           return;
         }
-        // Guardar en memoria para que login lo recupere
-        _users[email.toLowerCase()] = { name, password };
-        _saveUsers(_users);
-        resolve({ ok: true, user: { name, email } });
+        /* Se guarda la derivación PBKDF2, nunca la contraseña. El `resolve` va
+           dentro: si respondiera antes, el usuario podría intentar entrar con
+           una cuenta que todavía no se ha escrito, y un fallo al derivar
+           daría un registro "correcto" sin cuenta creada. */
+        _hashPassword(password).then(({ salt, hash, iterations }) => {
+          _users[email.toLowerCase()] = { name, salt, hash, iterations };
+          _saveUsers(_users);
+          resolve({ ok: true, user: { name, email } });
+        }).catch(() => {
+          resolve({
+            ok: false,
+            error: 'No se pudo completar el registro en este navegador.',
+          });
+        });
       }, 800);
     });
   }
@@ -185,7 +287,11 @@ const DataService = (() => {
           return;
         }
 
-        const token = Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+        const token = _randomToken();
+        if (!token) {
+          resolve({ ok: false, error: 'Este navegador no permite generar un enlace seguro.' });
+          return;
+        }
         const payload = {
           email: normalized,
           token,
@@ -243,17 +349,19 @@ const DataService = (() => {
           return;
         }
 
-        const existing = _users[normalized];
-        if (existing) {
-          _users[normalized] = { ...existing, password: newPassword };
-        } else {
-          const name = normalized.split('@')[0];
-          _users[normalized] = { name, password: newPassword };
-        }
-        _saveUsers(_users);
-        localStorage.removeItem(RESET_KEY);
+        _hashPassword(newPassword).then(({ salt, hash, iterations }) => {
+          const existing = _users[normalized];
+          const name = existing?.name || normalized.split('@')[0];
+          // Se reconstruye el registro entero para no arrastrar un campo
+          // `password` heredado de la versión anterior.
+          _users[normalized] = { name, salt, hash, iterations };
+          _saveUsers(_users);
+          localStorage.removeItem(RESET_KEY);
 
-        resolve({ ok: true, email: normalized });
+          resolve({ ok: true, email: normalized });
+        }).catch(() => {
+          resolve({ ok: false, error: 'No se pudo cambiar la contraseña en este navegador.' });
+        });
       }, 800);
     });
   }

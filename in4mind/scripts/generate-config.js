@@ -35,7 +35,18 @@ write('supabase.config.js', `/**
 const SUPABASE_URL = ${JSON.stringify(supabaseUrl)};
 const SUPABASE_ANON_KEY = ${JSON.stringify(supabaseAnonKey)};
 
-const _sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+/* La sesión entre visitas depende solo de esto: un token con caducidad y
+   refresco, gestionado por la librería. La aplicación ya no guarda ninguna
+   credencial — "Recordar datos" se limita al correo. Las opciones van
+   explícitas aunque coincidan con los valores por defecto, porque ahora son
+   el único mecanismo de persistencia y no deben cambiar por accidente. */
+const _sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+  },
+});
 `);
 
 console.log('[build] Supabase URL:', supabaseUrl ? 'OK' : 'FALTA');

@@ -70,9 +70,9 @@ const AuthService = (() => {
    * @param {object} user
    * @param {boolean|null} remember  true si el usuario marcó "Recordar datos"
    */
-  async function _persistSession(user, remember = null, password = null) {
+  async function _persistSession(user, remember = null) {
     if (typeof SessionStore !== 'undefined') {
-      SessionStore.persist(user, remember, password);
+      SessionStore.persist(user, remember);
     } else {
       sessionStorage.setItem('in4mind_user', JSON.stringify(user));
     }
@@ -98,7 +98,7 @@ const AuthService = (() => {
         if (!error && data?.user && data?.session) {
           const meta = await _upsertProfile(data.user);
           const user = _sessionUser(data.user, meta.name);
-          await _persistSession(user, remember, pass);
+          await _persistSession(user, remember);
           if (typeof OnboardingService !== 'undefined') {
             await OnboardingService.hydrateFromCloud(user.email);
           }
@@ -118,7 +118,7 @@ const AuthService = (() => {
     }
 
     const result = await DataService.login(em, pass);
-    if (result.ok) await _persistSession(result.user, remember, pass);
+    if (result.ok) await _persistSession(result.user, remember);
     return result;
   }
 
@@ -171,7 +171,7 @@ const AuthService = (() => {
 
         await _upsertProfile(user, displayName);
         const sessionUser = _sessionUser(user, displayName);
-        await _persistSession(sessionUser, remember, pass);
+        await _persistSession(sessionUser, remember);
         if (typeof OnboardingService !== 'undefined') {
           OnboardingService.markIncomplete(em);
           try {
@@ -193,7 +193,7 @@ const AuthService = (() => {
 
     const result = await DataService.register(displayName, em, pass);
     if (result.ok) {
-      await _persistSession(result.user, remember, pass);
+      await _persistSession(result.user, remember);
       if (typeof OnboardingService !== 'undefined') OnboardingService.markIncomplete(em);
     }
     return result;
@@ -205,34 +205,28 @@ const AuthService = (() => {
   async function requestPasswordReset(email) {
     const em = String(email || '').trim().toLowerCase();
 
+    /* El envío lo hace Supabase Auth, que firma el enlace y controla su
+       caducidad. Antes había además un endpoint propio (/api/auth/request-reset)
+       como respaldo: aceptaba cualquier dirección sin sesión ni límite, así que
+       servía para enviar correos con la imagen de IN4MIND a quien fuera. Se ha
+       eliminado; sin Supabase no se manda nada. */
     if (_sb) {
       try {
         const base = `${window.location.origin}${window.location.pathname.replace(/[^/]+$/, '')}`;
         const redirectTo = `${base}login.html?view=reset`;
         const { error } = await _sb.auth.resetPasswordForEmail(em, { redirectTo });
         if (!error) return { ok: true, email: em, delivered: true, via: 'supabase' };
-      } catch { /* se intenta el endpoint propio */ }
+        return { ok: true, email: em, delivered: false, reason: 'send_failed' };
+      } catch {
+        return { ok: true, email: em, delivered: false, reason: 'offline' };
+      }
     }
 
+    /* Modo demo (sin Supabase): se genera el enlace en local y se dice con
+       claridad que no se ha enviado ningún correo, en vez de fingirlo. */
     const local = await DataService.requestPasswordReset(em);
     if (!local.ok) return local;
-
-    try {
-      const res = await fetch('/api/auth/request-reset', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: em, token: local.token }),
-      });
-      if (res.ok) return { ok: true, email: em, delivered: true, via: 'api' };
-
-      const data = await res.json().catch(() => ({}));
-      if (data.error === 'RESET_EMAIL_NOT_CONFIGURED' || res.status === 404) {
-        return { ok: true, email: em, delivered: false, reason: 'not_configured' };
-      }
-      return { ok: true, email: em, delivered: false, reason: 'send_failed' };
-    } catch {
-      return { ok: true, email: em, delivered: false, reason: 'offline' };
-    }
+    return { ok: true, email: em, delivered: false, reason: 'not_configured' };
   }
 
   async function resetPassword(email, password, confirm) {

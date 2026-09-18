@@ -62,6 +62,10 @@ const AIEngine = (() => {
     if (code === 'GROQ_MODEL_NOT_FOUND') return _t('ai.errModel');
     if (code === 'GROQ_RATE_LIMITED')    return _t('ai.errRateLimit');
     if (code === 'GROQ_EMPTY_RESPONSE')  return _t('ai.errEmpty');
+    // El proxy exige sesión de Supabase: esto es "vuelve a entrar", no un fallo
+    // de configuración de la IA.
+    if (code === 'UNAUTHENTICATED')       return _t('ai.errSignedOut');
+    if (code === 'AUTH_UNAVAILABLE' || code === 'FORBIDDEN_ORIGIN') return _t('ai.errUnavailable');
 
     const http = code.match(/^GROQ_HTTP_(\d{3})/);
     if (http) return `${_t('ai.errUnavailable')}\n\n${_t('ai.errStatusHint', { status: http[1] })}`;

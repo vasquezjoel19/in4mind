@@ -8,4 +8,12 @@
 const SUPABASE_URL = 'https://TU_PROYECTO.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
 
-const _sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+/* La sesión persistente es responsabilidad exclusiva de Supabase Auth: la
+   aplicación no guarda contraseñas en el navegador. */
+const _sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+  },
+});

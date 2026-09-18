@@ -8,6 +8,7 @@
 const {
   resolveGroqKey, resolveGroqModel, resolveGroqMaxTokens, KNOWN_MODELS,
 } = require('../_lib/groq-env.js');
+const { guard } = require('../_lib/request-auth.js');
 
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
@@ -132,6 +133,14 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  /* Origen + sesión antes de tocar nada. Va primero que la credencial de Groq
+     para no revelar a un tercero si el proyecto tiene clave configurada. */
+  const denied = await guard(req);
+  if (denied) {
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(denied.status).json(denied.body);
   }
 
   // Mismo criterio que /api/health y /api/groq/ping: evita que un placeholder

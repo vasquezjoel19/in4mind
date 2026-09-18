@@ -964,6 +964,7 @@ const LOCALE_ZH = {
     errModel: '**模型不可用**\n\nGroq 已不再提供所配置的模型（通常是该版本已下线）。请在 Vercel 中将 `GROQ_MODEL` 更新为 https://console.groq.com/docs/models 上的现有模型并重新部署。',
     errRateLimit: '**已达使用上限**\n\n本周期的 Groq 配额已用尽。请稍候几分钟后重试，或在 https://console.groq.com 查看你的套餐。',
     errEmpty: '**响应为空**\n\nGroq 接受了请求但未返回内容。请换个说法重试。',
+    errSignedOut: '**登录已过期**\n\n请重新登录后继续使用助手。',
     errStatusHint: '状态码：{status}。请访问 /api/groq/ping 获取确切诊断。',
     errGeneric: '**处理错误**\n\n生成回复时出现问题。请重新表述您的问题或检查网络连接。',
     newChat: '新对话',

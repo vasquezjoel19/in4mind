@@ -99,6 +99,23 @@ const GlobalChatService = (() => {
     }
   }
 
+  /**
+   * Sube el nivel propio al perfil, que es de donde lo lee el trigger al
+   * publicar. La gamificación se calcula en el dispositivo, así que sin esto la
+   * insignia se quedaría clavada en 1.
+   *
+   * Se hace una vez al conectar, no en cada mensaje: es un dato decorativo y no
+   * merece una escritura por envío. La RLS de `profiles` solo deja tocar la
+   * fila propia, y el `check` de la columna acota el rango.
+   */
+  async function _syncLevel(userId) {
+    if (!_sb || !userId) return;
+    const level = Math.max(1, Math.min(_authorLevel() || 1, 999));
+    try {
+      await _sb.from('profiles').update({ level }).eq('id', userId);
+    } catch { /* decorativo: si falla, el trigger usará el nivel guardado */ }
+  }
+
   /** jsonb a veces llega como string por Realtime; unifica a objeto. */
   function _parseAttachment(raw) {
     if (!raw) return null;
@@ -189,6 +206,9 @@ const GlobalChatService = (() => {
       _setState(STATE.CONNECTING);
       const user = await _getAuthUser();
 
+      // El nivel viaja al perfil aquí; el trigger lo lee de ahí al publicar.
+      if (user) _syncLevel(user.id);
+
       _channel = _sb.channel(CHANNEL, {
         config: { presence: { key: user ? user.id : `anon-${Math.random().toString(36).slice(2)}` } },
       });
@@ -275,10 +295,12 @@ const GlobalChatService = (() => {
     // Se marca antes de la red para que dos envíos rápidos no la esquiven.
     _lastSentAt = Date.now();
 
+    /* Solo contenido. `user_id`, `author_name` y `author_level` los pone el
+       trigger `chat_messages_01_set_author_trg` a partir de `profiles` y de
+       `auth.uid()`. Mandarlos desde aquí no serviría de nada —se descartan—,
+       pero además era el agujero: al ser texto libre, cualquiera podía firmar
+       un mensaje con el nombre de otra persona. */
     const row = {
-      user_id: user.id,
-      author_name: _displayName(),
-      author_level: _authorLevel(),
       body,
       kind,
       attachment: attachment || null,

@@ -974,6 +974,7 @@ const LOCALE_ES = {
     errModel: '**Modelo no disponible**\n\nGroq ya no sirve el modelo configurado (suele ocurrir cuando se retira una versión). Actualice `GROQ_MODEL` en Vercel con un modelo vigente de https://console.groq.com/docs/models y vuelva a desplegar.',
     errRateLimit: '**Límite de uso alcanzado**\n\nSe agotó la cuota de Groq para este período. Espere unos minutos e intente de nuevo, o revise su plan en https://console.groq.com',
     errEmpty: '**Respuesta vacía**\n\nGroq aceptó la solicitud pero no devolvió contenido. Reformule la consulta e intente otra vez.',
+    errSignedOut: '**Tu sesión ha caducado**\n\nVuelve a iniciar sesión para seguir usando el asistente.',
     errStatusHint: 'Código de estado: {status}. Consulte /api/groq/ping para el diagnóstico exacto.',
     errGeneric: '**Error de procesamiento**\n\nOcurrió un inconveniente al generar la respuesta. Reformule su consulta o verifique la conexión a internet.',
     newChat: 'Nueva conversación',

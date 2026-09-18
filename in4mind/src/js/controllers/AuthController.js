@@ -384,7 +384,7 @@ const AuthController = (() => {
 
     if (result.ok) {
       if (typeof AuthService === 'undefined') {
-        if (typeof SessionStore !== 'undefined') SessionStore.persist(result.user, remember, passInput.value);
+        if (typeof SessionStore !== 'undefined') SessionStore.persist(result.user, remember);
         else sessionStorage.setItem('in4mind_user', JSON.stringify(result.user));
         if (typeof UserProfileService !== 'undefined') {
           UserProfileService.mergeGuestIntoUser(result.user.email);
@@ -636,7 +636,10 @@ const AuthController = (() => {
     $resetSuccess = document.getElementById('reset-success');
     $rememberBox  = document.getElementById('login-remember');
 
-    // "Recordar datos": restaurar correo, contraseña y preferencia guardados.
+    /* "Recordar datos": restaura solo el correo y la preferencia.
+       La contraseña ya no se guarda ni se precarga — de eso se encarga el
+       gestor de contraseñas del navegador, que sí cifra. La sesión entre
+       visitas la mantiene Supabase Auth con su token, no la credencial. */
     if (typeof SessionStore !== 'undefined') {
       const remembered = SessionStore.getRememberedEmail();
       if ($rememberBox) $rememberBox.checked = SessionStore.isRemembered() || Boolean(remembered);
@@ -645,15 +648,8 @@ const AuthController = (() => {
       if (loginEmail && remembered && !loginEmail.value) {
         loginEmail.value = remembered;
       }
-      if (loginPass && SessionStore.isRemembered()) {
-        const savedPwd = SessionStore.getRememberedPassword();
-        if (savedPwd && !loginPass.value) loginPass.value = savedPwd;
-      }
-      if (loginEmail?.value && loginPass?.value) {
-        loginPass.focus();
-      } else if (loginEmail?.value) {
-        loginPass?.focus();
-      }
+      // Con el correo ya puesto, el foco va a la contraseña.
+      if (loginEmail?.value) loginPass?.focus();
     }
 
     // Inicializar vista

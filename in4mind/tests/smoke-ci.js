@@ -203,8 +203,14 @@ const apiRoutes = [
   'groq/chat.js',
   'groq/ping.js',
   'health.js',
-  'auth/request-reset.js',
+  '_lib/request-auth.js',
 ];
+
+/* El relé de correo se elimino: aceptaba cualquier direccion sin sesion ni
+ * limite, asi que servia para enviar correos con la imagen de IN4MIND a quien
+ * fuera. La recuperacion la hace Supabase Auth. */
+assert('open mail relay endpoint is gone',
+  !fs.existsSync(path.join(repoRoot, 'api', 'auth', 'request-reset.js')));
 
 assert('no duplicate in4mind/api directory', !fs.existsSync(path.join(root, 'api')));
 
@@ -372,7 +378,6 @@ for (const loc of ['es', 'en', 'zh']) {
 for (const [file, endpoint] of [
   ['src/js/services/GroqService.js', '/api/health'],
   ['src/js/services/GroqService.js', '/api/groq/chat'],
-  ['src/js/services/AuthService.js', '/api/auth/request-reset'],
 ]) {
   assert(`${file} uses root-relative ${endpoint}`, read(file).includes(`'${endpoint}'`));
 }

@@ -79,16 +79,10 @@ const GlobalChatService = (() => {
     return _authUser;
   }
 
-  /** Nombre visible, con el mismo criterio que usa el avatar del shell. */
-  function _displayName() {
-    const local = typeof UserProfileService !== 'undefined'
-      ? UserProfileService.getCurrentUser()
-      : null;
-    const fromAuth = _authUser && _authUser !== false
-      ? (_authUser.user_metadata?.name || _authUser.email?.split('@')[0])
-      : null;
-    return (local?.name || fromAuth || local?.email?.split('@')[0] || 'Usuario').slice(0, 80);
-  }
+  /* `_displayName()` vivía aquí. Servía para firmar los mensajes desde el
+     cliente y para la presencia; ahora el autor lo decide el trigger a partir
+     de `profiles` y la presencia no manda nombre, así que no quedaba nadie que
+     lo llamara. */
 
   /** Nivel de gamificación propio, para acompañar al nombre como insignia. */
   function _authorLevel() {
@@ -228,7 +222,12 @@ const GlobalChatService = (() => {
             _setState(STATE.ONLINE);
             if (user) {
               try {
-                await _channel.track({ name: _displayName(), at: Date.now() });
+                /* Solo la marca de tiempo. Aquí se enviaba también el nombre,
+                   pero nadie lo lee: la interfaz solo cuenta las claves del
+                   estado de presencia para mostrar "N en línea". Difundirlo
+                   repartía el nombre de cada persona entre todos los conectados
+                   sin que sirviera para nada. */
+                await _channel.track({ at: Date.now() });
               } catch { /* la presencia es decorativa: no bloquea el chat */ }
             }
             done();

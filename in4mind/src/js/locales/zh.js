@@ -100,6 +100,7 @@ const LOCALE_ZH = {
     undo: '撤销',
     edit: '编辑',
     add: '添加',
+    close: '关闭',
   },
   auth: {
     needHelp: '需要帮助？',
@@ -576,6 +577,14 @@ const LOCALE_ZH = {
     project: '项目',
     path: '路径',
     employableTitle: '就业就绪路径证书',
+    course: '课程',
+    holder: '持有人',
+    verifyBtn: '验证',
+    verifyInvalid: '未找到证书',
+    verifyPageTitle: '验证证书 — IN4MIND',
+    verifySub: '请输入 IN4MIND 证书编号。',
+    verifyTitle: '验证证书',
+    verifyValid: '证书有效',
   },
   video: {
     resumeAt: '从 {time} 继续',
@@ -949,6 +958,7 @@ const LOCALE_ZH = {
     examLockedLessonsLine: '课时：{completed}/{total}，平均分 ≥{min}%（当前 {avg}%）',
     examLockedQuizLine: '测验：需要 ≥{min}%（您的最佳：{pct}%）',
     correctAnswer: '正确答案',
+    timeUp: '时间到，正在显示结果。',
   },
   ai: {
     assistant: 'IN4MIND 助手',
@@ -1136,6 +1146,11 @@ const LOCALE_ZH = {
     importBtn: '导入',
     importOk: '数据已在本设备恢复。',
     importFail: '无法导入该文件。',
+    clearAi: '清除 AI 对话记录',
+    clearAiBtn: '清除',
+    deleteAccount: '删除账号和数据',
+    deleteBtn: '删除',
+    deleteConfirm: '确定要删除所有本地数据并退出登录吗？此操作无法撤销。',
   },
   connectivity: {
     offline: '离线。你的更改会保存在此设备。',

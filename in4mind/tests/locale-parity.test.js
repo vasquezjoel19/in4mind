@@ -23,9 +23,11 @@ const vm = require('vm');
 const root = path.join(__dirname, '..');
 const localesDir = path.join(root, 'src/js/locales');
 
-/* Huecos conocidos el 2026-09-18. Bajar estos números al traducir; si alguno
- * sube, el test falla y dice exactamente qué clave se ha quedado atrás. */
-const DEUDA = { en: 31, zh: 15 };
+/* Los tres idiomas están completos (1265 claves cada uno) desde el 2026-09-18,
+ * así que la tolerancia es cero: cualquier clave nueva sin traducir hace fallar
+ * el test y dice cuál es. Si alguna vez hiciera falta aceptar deuda temporal,
+ * se sube el número aquí y queda constancia de cuánta hay. */
+const DEUDA = { en: 0, zh: 0 };
 
 let failed = 0;
 function assert(name, cond, detail = '') {

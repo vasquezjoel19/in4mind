@@ -645,7 +645,10 @@ for (const [file, endpoint] of [
   assert('the qr is generated locally', /_qrDataUrl\(/.test(share));
   /* Sin comentarios: el propio texto que explica este cambio nombra el
    * servicio que se retiró, y haría saltar la comprobación. */
-  const shareCode = share.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^
+  /* El `(?<!:)` importa: sin él, el `//` de `https://` se toma por el inicio de
+   * un comentario y se borra la URL entera, que es justo lo que se quiere
+   * detectar. Una primera versión de esta línea daba un falso "correcto". */
+  const shareCode = share.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(?<!:)\/\/[^
 ]*/g, '');
   assert('no third-party qr service', !/qrserver\.com/.test(shareCode));
   assert('the qr library is vendored',

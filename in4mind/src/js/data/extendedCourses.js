@@ -4,20 +4,20 @@
 const ExtendedCourses = (() => {
 
   const ICON = {
-    flowchart: 'https://cdn-icons-png.flaticon.com/512/2920/2920277.png',
-    os: 'https://cdn-icons-png.flaticon.com/512/888/888882.png',
-    powerapps: 'https://cdn-icons-png.flaticon.com/512/5968/5968557.png',
-    sharepoint: 'https://cdn-icons-png.flaticon.com/512/2991/2991110.png',
-    outlook: 'https://cdn-icons-png.flaticon.com/512/732/732223.png',
-    onedrive: 'https://cdn-icons-png.flaticon.com/512/2991/2991143.png',
-    scrum: 'https://cdn-icons-png.flaticon.com/512/2920/2920277.png',
-    scratch: 'https://cdn-icons-png.flaticon.com/512/5968/5968242.png',
-    video: 'https://cdn-icons-png.flaticon.com/512/2991/2991108.png',
-    django: 'https://cdn-icons-png.flaticon.com/512/5968/5968350.png',
+    flowchart: 'src/img/courses/process.svg',
+    os: 'src/img/courses/os.svg',
+    powerapps: 'src/img/courses/powerapps.svg',
+    sharepoint: 'src/img/courses/sharepoint.svg',
+    outlook: 'src/img/courses/outlook.svg',
+    onedrive: 'src/img/courses/onedrive.svg',
+    scrum: 'src/img/courses/process.svg',
+    scratch: 'src/img/courses/scratch.svg',
+    video: 'src/img/courses/video.svg',
+    django: 'src/img/courses/django.svg',
     powerbi: 'src/img/courses/powerbi.svg?v=20260713',
-    prompt: 'https://cdn-icons-png.flaticon.com/512/2103/2103633.png',
-    engineering: 'https://cdn-icons-png.flaticon.com/512/2920/2920277.png',
-    game: 'https://cdn-icons-png.flaticon.com/512/686/686589.png',
+    prompt: 'src/img/courses/prompt.svg',
+    engineering: 'src/img/courses/process.svg',
+    game: 'src/img/courses/game.svg',
   };
 
   /** Videos YouTube por curso (uno por m�dulo). Se rellenan hasta 5 si hay menos enlaces. */

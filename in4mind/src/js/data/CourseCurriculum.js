@@ -206,7 +206,7 @@ const CourseCurriculum = (() => {
     figma: {
       title: 'Figma',
       category: 'design',
-      icon: 'https://cdn-icons-png.flaticon.com/512/5968/5968705.png',
+      icon: 'src/img/courses/figma.svg',
       requirements: ['Cuenta en Figma', 'Conexión a internet', 'Nociones básicas de interfaz'],
       docs: { label: 'Centro de ayuda de Figma', url: 'https://help.figma.com/' },
       certModules: ['Fundamentos de Figma', 'Componentes y variantes', 'Prototipado UX', 'Handoff a desarrollo'],
@@ -390,7 +390,7 @@ const CourseCurriculum = (() => {
     javascript: {
       title: 'JavaScript',
       category: 'web',
-      icon: 'https://cdn-icons-png.flaticon.com/512/5968/5968292.png',
+      icon: 'src/img/courses/javascript.svg',
       requirements: ['Navegador moderno', 'Editor de código', 'Conocimientos básicos de HTML/CSS'],
       docs: { label: 'MDN JavaScript', url: 'https://developer.mozilla.org/es/docs/Web/JavaScript' },
       certModules: ['Fundamentos JS', 'Funciones y asincronía', 'DOM y eventos', 'Integración con APIs'],
@@ -430,7 +430,7 @@ const CourseCurriculum = (() => {
     html: {
       title: 'HTML',
       category: 'web',
-      icon: 'https://cdn-icons-png.flaticon.com/512/732/732212.png',
+      icon: 'src/img/courses/html.svg',
       requirements: ['Editor de código', 'Navegador web', 'Bases mínimas de internet'],
       docs: { label: 'MDN HTML', url: 'https://developer.mozilla.org/es/docs/Web/HTML' },
       certModules: ['Estructura HTML5', 'Semántica y accesibilidad', 'Formularios', 'Buenas prácticas SEO'],
@@ -470,7 +470,7 @@ const CourseCurriculum = (() => {
     css: {
       title: 'CSS',
       category: 'web',
-      icon: 'https://cdn-icons-png.flaticon.com/512/732/732190.png',
+      icon: 'src/img/courses/css.svg',
       requirements: ['Conocimientos básicos de HTML', 'Editor de código', 'Navegador con DevTools'],
       docs: { label: 'MDN CSS', url: 'https://developer.mozilla.org/es/docs/Web/CSS' },
       certModules: ['Fundamentos y especificidad', 'Modelo de caja', 'Flexbox/Grid', 'Responsive y animaciones'],
@@ -510,7 +510,7 @@ const CourseCurriculum = (() => {
     github: {
       title: 'GitHub',
       category: 'tools',
-      icon: 'https://cdn-icons-png.flaticon.com/512/25/25231.png',
+      icon: 'src/img/courses/github.svg',
       requirements: ['Cuenta en GitHub', 'Git instalado localmente', 'Terminal básica'],
       docs: { label: 'Documentación oficial de GitHub', url: 'https://docs.github.com/es' },
       certModules: ['Fundamentos Git', 'Ramas y colaboración', 'Pull Requests', 'Automatización con Actions'],
@@ -551,7 +551,7 @@ const CourseCurriculum = (() => {
     excel: {
       title: 'Excel',
       category: 'office',
-      icon: 'https://cdn-icons-png.flaticon.com/512/732/732220.png',
+      icon: 'src/img/courses/excel.svg',
       requirements: ['Microsoft Excel instalado', 'Datos de práctica en hoja', 'Conocimiento básico de celdas'],
       docs: { label: 'Ayuda oficial de Excel', url: 'https://support.microsoft.com/es-es/excel' },
       certModules: ['Fundamentos de hoja', 'Fórmulas clave', 'Búsqueda y análisis', 'Visualización ejecutiva'],
@@ -592,7 +592,7 @@ const CourseCurriculum = (() => {
     powerpoint: {
       title: 'PowerPoint',
       category: 'office',
-      icon: 'https://cdn-icons-png.flaticon.com/512/732/732224.png',
+      icon: 'src/img/courses/powerpoint.svg',
       requirements: ['Microsoft PowerPoint', 'Objetivo de presentación definido', 'Contenido base preparado'],
       docs: { label: 'Ayuda oficial de PowerPoint', url: 'https://support.microsoft.com/es-es/powerpoint' },
       certModules: ['Narrativa visual', 'Diseño de diapositivas', 'Animación efectiva', 'Presentación ejecutiva'],
@@ -673,7 +673,7 @@ const CourseCurriculum = (() => {
     cybersecurity: {
       title: 'Ciberseguridad',
       category: 'security',
-      icon: 'https://cdn-icons-png.flaticon.com/512/2913/2913133.png',
+      icon: 'src/img/courses/security.svg',
       requirements: ['Navegador actualizado', 'Correo electrónico de prueba', 'Conocimiento básico de internet y cuentas'],
       docs: { label: 'OWASP Top 10', url: 'https://owasp.org/www-project-top-ten/' },
       certModules: ['Fundamentos CIA', 'Amenazas comunes', 'Controles preventivos', 'Respuesta a incidentes'],

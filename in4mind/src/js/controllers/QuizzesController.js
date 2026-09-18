@@ -73,7 +73,7 @@ const QuizzesController = (() => {
     {
       id: 'figma', title: 'Figma', category: 'design',
       desc: 'UI/UX y diseño colaborativo.',
-      icon: 'https://cdn-icons-png.flaticon.com/512/5968/5968705.png',
+      icon: 'src/img/courses/figma.svg',
       sections: [
         {
           title: 'Frames y layout',
@@ -146,7 +146,7 @@ const QuizzesController = (() => {
     {
       id: 'excel', title: 'Excel', category: 'office',
       desc: 'Fórmulas y Funciones Clave.',
-      icon: 'https://cdn-icons-png.flaticon.com/512/732/732220.png',
+      icon: 'src/img/courses/excel.svg',
       sections: [
         {
           title: 'Fórmulas básicas',
@@ -179,7 +179,7 @@ const QuizzesController = (() => {
     {
       id: 'html', title: 'HTML', category: 'web',
       desc: 'Arquitectura de Páginas HTML.',
-      icon: 'https://cdn-icons-png.flaticon.com/512/732/732212.png',
+      icon: 'src/img/courses/html.svg',
       sections: [
         {
           title: 'Estructura del documento',
@@ -214,7 +214,7 @@ const QuizzesController = (() => {
     {
       id: 'css', title: 'CSS', category: 'web',
       desc: 'Estética y Experiencia Visual.',
-      icon: 'https://cdn-icons-png.flaticon.com/512/732/732190.png',
+      icon: 'src/img/courses/css.svg',
       sections: [
         {
           title: 'Selectores y propiedades',
@@ -249,7 +249,7 @@ const QuizzesController = (() => {
     {
       id: 'github', title: 'GitHub', category: 'tools',
       desc: 'Integración y Publicación de Proyectos.',
-      icon: 'https://cdn-icons-png.flaticon.com/512/25/25231.png',
+      icon: 'src/img/courses/github.svg',
       sections: [
         {
           title: 'Comandos Git',
@@ -282,7 +282,7 @@ const QuizzesController = (() => {
     {
       id: 'javascript', title: 'JavaScript', category: 'web',
       desc: 'Lógica y Dinamismo Web.',
-      icon: 'https://cdn-icons-png.flaticon.com/512/5968/5968292.png',
+      icon: 'src/img/courses/javascript.svg',
       sections: [
         {
           title: 'Fundamentos',
@@ -317,7 +317,7 @@ const QuizzesController = (() => {
     {
       id: 'powerpoint', title: 'PowerPoint', category: 'office',
       desc: 'Diseño Visual Corporativo.',
-      icon: 'https://cdn-icons-png.flaticon.com/512/732/732224.png',
+      icon: 'src/img/courses/powerpoint.svg',
       sections: [
         {
           title: 'Vistas y presentación',
@@ -388,7 +388,7 @@ const QuizzesController = (() => {
     {
       id: 'cybersecurity', title: 'Ciberseguridad', category: 'security',
       desc: 'Protección de datos y sistemas.',
-      icon: 'https://cdn-icons-png.flaticon.com/512/2913/2913133.png',
+      icon: 'src/img/courses/security.svg',
       sections: [
         {
           title: 'Fundamentos',
@@ -442,7 +442,7 @@ const QuizzesController = (() => {
   }
 
   const GENERAL_QUIZ_ID = 'general';
-  const GENERAL_QUIZ_ICON = 'https://cdn-icons-png.flaticon.com/512/3976/3976625.png';
+  const GENERAL_QUIZ_ICON = 'src/img/courses/quiz.svg';
 
   let _activeFilter  = 'all';
   let _currentQuiz   = null;

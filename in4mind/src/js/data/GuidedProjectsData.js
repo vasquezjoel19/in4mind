@@ -61,7 +61,7 @@ const GuidedProjectsData = (() => {
       courseId: 'css',
       difficulty: 'beginner',
       estimatedMinutes: 40,
-      icon: 'https://cdn-icons-png.flaticon.com/512/732/732190.png',
+      icon: 'src/img/courses/css.svg',
       title: 'Card responsive con Flexbox',
       summary: 'Diseña una tarjeta de producto adaptable usando variables CSS y Flexbox.',
       steps: [
@@ -193,7 +193,7 @@ const GuidedProjectsData = (() => {
       courseId: 'github',
       difficulty: 'advanced',
       estimatedMinutes: 55,
-      icon: 'https://cdn-icons-png.flaticon.com/512/25/25231.png',
+      icon: 'src/img/courses/github.svg',
       title: 'Flujo Git de un feature',
       summary: 'Planifica un flujo real: rama, commits atómicos, PR y resolución de conflictos.',
       steps: [

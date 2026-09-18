@@ -3,6 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const vm = require('vm');
 
 const root = path.join(__dirname, '..');
@@ -91,6 +92,10 @@ assert('Push syncUsefulReminders', /syncUsefulReminders/.test(push));
 
 assert('bundle-shell script', fs.existsSync(path.join(root, 'scripts/bundle-shell.js')));
 
+/* Los bundles ya no se versionan: los genera `npm run build`, que `pretest`
+ * ejecuta antes de esto. Si faltan aquí, es que el build no corrió o falló —
+ * que es justo lo que interesa detectar, porque el sitio serviría código viejo
+ * o ninguno. */
 for (const name of ['boot.bundle.js', 'app-shell.bundle.js', 'landing.bundle.js']) {
   assert(`dist:${name}`, fs.existsSync(path.join(root, 'src/js/dist', name)));
 }
@@ -380,6 +385,127 @@ for (const [file, endpoint] of [
   ['src/js/services/GroqService.js', '/api/groq/chat'],
 ]) {
   assert(`${file} uses root-relative ${endpoint}`, read(file).includes(`'${endpoint}'`));
+}
+
+/* ── Seguridad ──────────────────────────────────────────────────────────────
+ * Cada aserción corresponde a un fallo real que ya ocurrió. No son estilo.
+ */
+{
+  const sessionStore = read('src/js/services/SessionStore.js');
+  const dataService  = read('src/js/services/DataService.js');
+  const authCtrlSec  = read('src/js/controllers/AuthController.js');
+  const chatSvc      = read('src/js/services/GlobalChatService.js');
+
+  /* La contraseña se guardaba en localStorage en Base64, que es reversible sin
+   * secreto: cualquier XSS o extensión la leía en claro. */
+  assert('no base64 password helpers', !/_encodePwd|_decodePwd/.test(sessionStore));
+  assert('no password getter survives', !/getRememberedPassword/.test(sessionStore));
+  assert('login no longer prefills a stored password', !/getRememberedPassword/.test(authCtrlSec));
+  /* Dejar de escribirla no la borra de quien ya la tiene guardada. */
+  assert('legacy stored password is purged on boot', /_purgeLegacyPassword/.test(sessionStore));
+
+  /* El modo demo guardaba `{name, password}` tal cual. */
+  assert('demo store derives the password', /PBKDF2/.test(dataService));
+  assert('demo store never persists a plain password',
+    !/_users\[[^\]]+\]\s*=\s*\{\s*name,\s*password\s*\}/.test(dataService));
+  assert('demo compares in constant time', /_safeEqual/.test(dataService));
+  /* `Math.random()` no es criptográfico: su estado se reconstruye observando
+   * unas pocas salidas, así que el token de recuperación era adivinable. */
+  assert('reset token uses a CSPRNG', /getRandomValues/.test(dataService));
+  assert('no Math.random left in token generation', !/Math\.random\(\)\.toString\(36\)/.test(dataService));
+
+  /* `author_name` era texto libre del cliente: se podía firmar como otro. */
+  assert('chat client no longer sends author_name', !/author_name:\s*_displayName/.test(chatSvc));
+  assert('chat client no longer sends author_level', !/author_level:\s*_authorLevel/.test(chatSvc));
+
+  const migration = fs.readFileSync(
+    path.join(repoRoot, 'supabase/migrations/20260918_chat_author_from_profile.sql'), 'utf8');
+  assert('trigger derives the author from auth.uid()', /new\.user_id\s*:=\s*uid/.test(migration));
+  assert('trigger derives the name from profiles', /from public\.profiles/.test(migration));
+  /* PostgreSQL ordena los triggers BEFORE alfabéticamente: si el limitador de
+   * frecuencia corriera antes, agruparía por el user_id que mande el cliente. */
+  assert('author trigger runs before the rate limiter',
+    /chat_messages_01_set_author_trg/.test(migration) && /chat_messages_02_rate_limit_trg/.test(migration));
+
+  /* `/api/groq/chat` era un proxy de LLM abierto a cualquiera con la URL. */
+  const chatApi = fs.readFileSync(path.join(repoRoot, 'api/groq/chat.js'), 'utf8');
+  const guardLib = fs.readFileSync(path.join(repoRoot, 'api/_lib/request-auth.js'), 'utf8');
+  assert('chat endpoint is guarded', /await guard\(req\)/.test(chatApi));
+  assert('guard checks the origin', /ORIGIN_NOT_ALLOWED/.test(guardLib));
+  assert('guard verifies the Supabase session', /auth\/v1\/user/.test(guardLib));
+  /* Una caída de Supabase no debe convertirse en una puerta abierta. */
+  assert('guard fails closed when auth is unreachable', /AUTH_UNAVAILABLE/.test(guardLib));
+  assert('client sends its access token', /Authorization: `Bearer \$\{token\}`/.test(read('src/js/services/GroqService.js')));
+
+  /* El CDN servía `@2` sin fijar ni verificar: podía entregar cualquier cosa. */
+  for (const page of ['login.html', 'dashboard.html', 'ai.html']) {
+    const html = read(page);
+    assert(`${page} pins the supabase CDN version`, /supabase-js@2\.\d+\.\d+\//.test(html));
+    assert(`${page} verifies the CDN bundle`, /integrity="sha384-/.test(html));
+    assert(`${page} sets crossorigin on the CDN tag`, /crossorigin="anonymous"/.test(html));
+  }
+  assert('no unpinned supabase CDN tag remains',
+    !fs.readdirSync(root).filter(f => f.endsWith('.html'))
+      .some(f => /supabase-js@2"/.test(read(f))));
+
+  /* Cabeceras: sin CSP una inyección tenía vía libre. */
+  const vercel = JSON.parse(fs.readFileSync(path.join(repoRoot, 'vercel.json'), 'utf8'));
+  const hdr = Object.fromEntries(vercel.headers[0].headers.map(h => [h.key, h.value]));
+  assert('CSP present', Boolean(hdr['Content-Security-Policy']));
+  assert('CSP does not allow inline scripts',
+    !/script-src[^;]*'unsafe-inline'/.test(hdr['Content-Security-Policy']));
+  assert('CSP allows the supabase websocket',
+    /wss:\/\/\*\.supabase\.co/.test(hdr['Content-Security-Policy']));
+  assert('clickjacking blocked', hdr['X-Frame-Options'] === 'DENY'
+    && /frame-ancestors 'none'/.test(hdr['Content-Security-Policy']));
+  assert('nosniff present', hdr['X-Content-Type-Options'] === 'nosniff');
+  assert('Permissions-Policy present', Boolean(hdr['Permissions-Policy']));
+
+  /* Los hashes de la CSP se calculan del HTML: si alguien edita un arranque
+   * inline y no los regenera, la página rompe en producción sin avisar. */
+  const csp = hdr['Content-Security-Policy'];
+  const inlinePat = /<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g;
+  let drift = [];
+  for (const f of fs.readdirSync(root).filter(x => x.endsWith('.html'))) {
+    const html = read(f);
+    let m;
+    while ((m = inlinePat.exec(html)) !== null) {
+      const h = 'sha256-' + crypto.createHash('sha256').update(m[1], 'utf8').digest('base64');
+      if (!csp.includes(h)) drift.push(`${f}: ${h}`);
+    }
+  }
+  assert(`every inline script is in the CSP${drift.length ? ' — falta: ' + drift.join(', ') : ''}`,
+    drift.length === 0);
+}
+
+/* ── Limpieza del repositorio ───────────────────────────────────────────── */
+{
+  /* Iconos de terceros: cada carga informaba a flaticon de qué miraba cada
+   * usuario, y una caída suya dejaba el catálogo sin imágenes. */
+  const conIconos = ['src/js/data/CourseCurriculum.js', 'src/js/data/extendedCourses.js',
+                     'src/js/services/DataService.js', 'src/js/controllers/QuizzesController.js',
+                     'src/js/data/GuidedProjectsData.js', 'index.html'];
+  for (const f of conIconos) {
+    assert(`${f} has no third-party icon URLs`, !/cdn-icons-png\.flaticon\.com/.test(read(f)));
+  }
+
+  for (const dead of ['scripts/apply-bundles.py', 'scripts/sync-zh-locale.py',
+                      'tests/smoke-ci.py', 'tests/dataservice_test.js',
+                      'src/js/config/asset-version.js',
+                      'src/img/marketing/theme-light-dark-grid.png']) {
+    assert(`removed: ${dead}`, !fs.existsSync(path.join(root, dead)));
+  }
+
+  const ignore = read('.gitignore');
+  assert('.gitignore blocks zips', /^\*\.zip$/m.test(ignore));
+  assert('.gitignore blocks built bundles', /^src\/js\/dist\/$/m.test(ignore));
+
+  /* El fichero se guardó como UTF-8 y se releyó como cp1252. */
+  const shellRaw = fs.readFileSync(path.join(root, 'scripts/bundle-shell.js'));
+  assert('bundle-shell has no BOM',
+    !(shellRaw[0] === 0xEF && shellRaw[1] === 0xBB && shellRaw[2] === 0xBF));
+  assert('bundle-shell has no mojibake',
+    !/\u00c3\u00a9|\u00c3\u00b3|\u00e2\u0080\u0094|\u00c2\u00bf/.test(shellRaw.toString('utf8')));
 }
 
 if (failed) {

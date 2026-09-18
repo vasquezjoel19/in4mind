@@ -7,10 +7,20 @@ src/js/config/groq.config.js
 # Dependencias
 node_modules/
 
-# Bundles / Vite — commit production *.bundle.js for static hosting
-src/js/dist/*
-!src/js/dist/*.bundle.js
+# Bundles: los genera `npm run build` (scripts/bundle-shell.js), que es lo que
+# ejecuta Vercel. Antes se commiteaban y había que acordarse de regenerarlos a
+# mano en cada cambio de locales o de servicios; cuando alguien lo olvidaba, el
+# sitio servía código viejo sin que nada fallara de forma visible.
+src/js/dist/
 dist-vite/
+
+# `supabase.config.js` sí se versiona a propósito: solo lleva la URL y la clave
+# anónima, que son públicas por diseño (viajan al navegador). Si dependiera del
+# build y este fallara, el sitio caería a modo demo y nadie podría entrar con su
+# cuenta real — un riesgo sin contrapartida.
+
+# Empaquetados: nunca al repositorio
+*.zip
 
 # Sistema
 .DS_Store

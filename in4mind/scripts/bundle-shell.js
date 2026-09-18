@@ -1,5 +1,5 @@
-﻿/**
- * IN4MIND â€” Genera bundles de producciÃ³n (boot + app-shell + landing).
+/**
+ * IN4MIND â€” Genera bundles de producción (boot + app-shell + landing).
  * Uso: node scripts/bundle-shell.js
  */
 'use strict';

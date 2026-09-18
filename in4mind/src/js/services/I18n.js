@@ -99,13 +99,60 @@ const I18n = (() => {
 
 
 
-  function setLocale(locale, { reload = false, force = false } = {}) {
+  /* ── Carga del diccionario bajo demanda ──────────────────────────────────
+   * Inglés y chino ya no viajan en boot.bundle: se sirven en su propio fichero
+   * y solo se descargan si son el idioma activo. Al arrancar los inyecta el
+   * propio boot; aquí se cubre el otro camino, cambiar de idioma sin recargar,
+   * donde el diccionario todavía no está en memoria y sin esto la página se
+   * quedaría en español como si el conmutador no funcionara.
+   */
+  const _cargando = {};
 
+  function _dictLoaded(locale) {
+    if (locale === 'es') return typeof LOCALE_ES !== 'undefined';
+    if (locale === 'en') return typeof LOCALE_EN !== 'undefined';
+    if (locale === 'zh') return typeof LOCALE_ZH !== 'undefined';
+    return true;
+  }
+
+  /** Reaprovecha el `?v=` del boot para no servir un diccionario cacheado. */
+  function _assetQuery() {
+    const tag = document.querySelector('script[src*="boot.bundle.js"]');
+    const src = tag ? tag.getAttribute('src') || '' : '';
+    const q = src.indexOf('?');
+    return q === -1 ? '' : src.slice(q);
+  }
+
+  function _ensureDict(locale, done) {
+    if (_dictLoaded(locale)) { done(true); return; }
+    if (_cargando[locale]) { _cargando[locale].push(done); return; }
+
+    _cargando[locale] = [done];
+    const s = document.createElement('script');
+    s.src = `src/js/dist/locale-${locale}.bundle.js${_assetQuery()}`;
+    const acabar = (ok) => {
+      const espera = _cargando[locale] || [];
+      delete _cargando[locale];
+      espera.forEach(fn => fn(ok));
+    };
+    s.onload = () => acabar(true);
+    // Si no carga se sigue igualmente: `t()` recurre a español antes que a
+    // mostrar identificadores en crudo.
+    s.onerror = () => acabar(false);
+    document.head.appendChild(s);
+  }
+
+  function setLocale(locale, opciones = {}) {
     const next = normalizeLocale(locale);
-
     if (!SUPPORTED.includes(next)) return;
+    if (!opciones.force && next === _locale && !opciones.reload) return;
 
-    if (!force && next === _locale && !reload) return;
+    // El diccionario primero: aplicar antes de tenerlo pintaría la página en
+    // español y luego daría un salto al idioma real.
+    _ensureDict(next, () => _applyLocale(next, opciones));
+  }
+
+  function _applyLocale(next, { reload = false } = {}) {
 
     _locale = next;
 

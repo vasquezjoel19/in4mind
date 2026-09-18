@@ -9,10 +9,18 @@
     "check:groq": "node scripts/check-groq.js",
     "dev": "vite",
     "pretest": "npm run build",
-    "test": "node tests/dataservice.test.js && node tests/dashboard_features.test.js && node tests/smoke-ci.js",
+    "test": "node tests/dataservice.test.js && node tests/dashboard_features.test.js && node tests/locale-parity.test.js && node tests/smoke-ci.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "start": "npx --yes serve -l 8080 ."
   },
   "devDependencies": {
+    "esbuild": "^0.25.0",
+    "eslint": "^9.15.0",
+    "globals": "^15.12.0",
+    "prettier": "^3.4.0",
     "vite": "^6.3.5"
   },
   "engines": {

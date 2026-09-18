@@ -1,4 +1,9 @@
-# Node smoke checks for CI (no browser).
+// Comprobaciones de humo para CI (sin navegador).
+//
+// Este fichero empezaba con "# Node smoke checks…". Node solo ignora la primera
+// línea si es un hashbang (`#!`); un `#` suelto es un token inválido, así que
+// `node tests/smoke-ci.js` fallaba en el primer carácter y `npm test` no llegó
+// a ejecutar ninguna de estas comprobaciones.
 'use strict';
 
 const fs = require('fs');
@@ -504,8 +509,33 @@ for (const [file, endpoint] of [
   const shellRaw = fs.readFileSync(path.join(root, 'scripts/bundle-shell.js'));
   assert('bundle-shell has no BOM',
     !(shellRaw[0] === 0xEF && shellRaw[1] === 0xBB && shellRaw[2] === 0xBF));
-  assert('bundle-shell has no mojibake',
-    !/\u00c3\u00a9|\u00c3\u00b3|\u00e2\u0080\u0094|\u00c2\u00bf/.test(shellRaw.toString('utf8')));
+  /* Ojo con el rango: cp1252 mapea 0x80-0x9F a caracteres como U+20AC (\u20ac) o
+   * U+2014, que NO est\u00e1n en U+0080-U+00BF. Una primera versi\u00f3n de esta
+   * comprobaci\u00f3n solo miraba ese rango y daba por limpio un fichero que a\u00fan
+   * ten\u00eda "IN4MIND \u00e2\u20ac\u201d". Aqu\u00ed se incluyen los s\u00edmbolos de cp1252. */
+  const MOJIBAKE = /[\u00c2\u00c3\u00e2][\u0080-\u00ff\u20ac\u201a\u0192\u201e\u2026\u2020\u2021\u02c6\u2030\u0160\u2039\u0152\u017d\u2018\u2019\u201c\u201d\u2022\u2013\u2014\u02dc\u2122\u0161\u203a\u0153\u017e\u0178]/;
+  assert('bundle-shell has no mojibake', !MOJIBAKE.test(shellRaw.toString('utf8')));
+  /* Y ning\u00fan otro fichero de texto del proyecto. */
+  {
+    const sospechosos = [];
+    const mirar = (dir) => {
+      for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+        if (['node_modules', '.git', 'dist'].includes(e.name)) continue;
+        const full = path.join(dir, e.name);
+        if (e.isDirectory()) { mirar(full); continue; }
+        if (!/\.(js|json|css|html|md|sql)$/.test(e.name)) continue;
+        const buf = fs.readFileSync(full);
+        if (buf[0] === 0xEF && buf[1] === 0xBB && buf[2] === 0xBF) {
+          sospechosos.push(`${path.relative(root, full)} (BOM)`);
+        } else if (MOJIBAKE.test(buf.toString('utf8'))) {
+          sospechosos.push(path.relative(root, full));
+        }
+      }
+    };
+    mirar(root);
+    assert(`no BOM or mojibake anywhere${sospechosos.length ? ': ' + sospechosos.slice(0, 5).join(', ') : ''}`,
+      sospechosos.length === 0);
+  }
 }
 
 if (failed) {

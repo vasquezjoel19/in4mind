@@ -1,0 +1,16 @@
+# Generado por el build
+src/js/dist/
+src/js/config/groq.config.js
+src/js/config/supabase.config.js
+dist-vite/
+node_modules/
+
+# Datos de contenido: reformatearlos produciría diffs enormes que ocultarían
+# los cambios reales de traducción.
+src/js/locales/curriculum-*.js
+src/js/data/extendedCourses.js
+
+# Activos
+*.svg
+*.png
+*.ico

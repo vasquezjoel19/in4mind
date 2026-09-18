@@ -136,6 +136,17 @@
 [data-neural-bg] {
   position: absolute;
   inset: 0;
+  /* Respaldo para cuando la escena 3D no se dibuja —móvil, movimiento
+     reducido, ahorro de datos, sin WebGL—: un degradado estático en la misma
+     gama que la red, para que el hero no quede plano. No cuesta nada: lo
+     compone la GPU una vez y no se vuelve a tocar. */
+  background:
+    radial-gradient(60% 55% at 72% 28%,
+      rgba(var(--clr-accent-rgb, 138, 180, 248), 0.14) 0%,
+      rgba(var(--clr-accent-rgb, 138, 180, 248), 0) 62%),
+    radial-gradient(48% 46% at 22% 74%,
+      rgba(var(--clr-brand-500-rgb, 74, 118, 178), 0.12) 0%,
+      rgba(0, 0, 0, 0) 68%);
   /* Nunca por encima del contenido ni capturando clics: es decoración.
      `.lp-ambient` ya vive en z-index 0 y el contenido del hero va por encima. */
   z-index: 0;
@@ -148,6 +159,12 @@
 }
 
 [data-neural-bg].is-ready { opacity: 1; }
+
+/* Con la escena montada el degradado ya no pinta nada: lo cubre el canvas. */
+[data-neural-bg]:has(canvas) { background: none; }
+
+/* Sin canvas el contenedor es solo el degradado, y ahí sí debe verse. */
+[data-neural-bg]:not(:has(canvas)) { opacity: 1; transition: none; }
 
 [data-neural-bg] canvas {
   display: block;
@@ -214,3 +231,60 @@ html[data-theme="dark"] .has-tilt::after {
   .has-tilt { will-change: auto; }
   .has-tilt::after { transition: none; }
 }
+
+/* ══════════════════════════════════════════
+   Presupuesto de composición en móvil
+   ══════════════════════════════════════════
+
+   `backdrop-filter` es de las propiedades más caras que hay: obliga a componer
+   aparte todo lo que queda por detrás del elemento. En las cabeceras fijas eso
+   se repite en cada fotograma del desplazamiento, y en un teléfono se nota.
+
+   Se sustituye por un fondo más opaco, que consigue el mismo objetivo —que el
+   texto de debajo no atraviese la barra— sin coste de composición. El desenfoque
+   se mantiene intacto en escritorio, donde sí sobra potencia.
+*/
+
+@media (max-width: 768px) {
+  .lp-header,
+  .ai-topbar,
+  .topbar {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .lp-header { background: rgb(248, 251, 255); }
+
+  html[data-theme="dark"] .lp-header,
+  html[data-theme="dark"] .ai-topbar,
+  html[data-theme="dark"] .topbar {
+    background: var(--clr-bg-app, #101828);
+  }
+}
+
+/* ══════════════════════════════════════════
+   Con la red 3D activa, la decoración se aparta
+   ══════════════════════════════════════════
+
+   El hero ya venía con blobs, orbes, aurora, haces, grano, partículas y
+   estrellas. Añadir encima una red de puntos no lo hace más premium: lo hace
+   más ruidoso, y cada capa extra es trabajo de composición.
+
+   Cuando `NeuralBackground` consigue montarse marca el documento, y entonces
+   las capas que compiten con la red por el mismo espacio visual se retiran.
+   Si la escena no se monta —móvil, movimiento reducido, sin WebGL— nada de
+   esto aplica y el hero se queda tal como estaba.
+*/
+
+.has-neural-bg .lp-ambient__beams,
+.has-neural-bg .lp-ambient__orbs {
+  /* `display: none` en vez de opacidad: así el navegador deja de animarlos,
+     que es el objetivo además de la limpieza visual. */
+  display: none;
+}
+
+/* La aurora se queda, pero más discreta: aporta el degradado de fondo sobre el
+   que se recorta la red, y sin ella el hero pierde profundidad. */
+.has-neural-bg .lp-ambient__aurora { opacity: 0.45; }
+
+/* El grano se mantiene: es estático y da textura al degradado. */

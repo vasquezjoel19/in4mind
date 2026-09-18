@@ -23,11 +23,13 @@ const NeuralBackground = (() => {
   /* Ajustado a ojo sobre el hero: suficientes nodos para que se lea como una
      red, pocos para que el coste por fotograma sea despreciable. */
   const CONFIG = {
-    nodos: 90,
-    nodosMovil: 42,
+    /* Bajado de 90 a 55. Con más nodos la malla se cierra y compite con el
+       titular en vez de acompañarlo; el hero ya lleva bastante encima. */
+    nodos: 55,
+    nodosReducidos: 30,
     radio: 46,
-    distanciaEnlace: 17,
-    enlacesMax: 260,
+    distanciaEnlace: 19,
+    enlacesMax: 150,
     velocidadGiro: 0.00022,
     fuerzaRaton: 0.12,
   };
@@ -54,6 +56,12 @@ const NeuralBackground = (() => {
   function _deberiaDibujar(host) {
     if (!host) return false;
     if (_prefiereMenosMovimiento()) return false;
+
+    /* Móvil: fuera. Un teléfono ya va justo repintando el hero —la landing
+       lleva decenas de animaciones CSS y varios `backdrop-filter`— y sumarle
+       WebGL se nota en el desplazamiento. En su lugar queda el degradado
+       estático que define `orb.css`, que cuesta cero. */
+    if (window.matchMedia('(max-width: 768px)').matches) return false;
 
     // Ahorro de datos activado por la persona: se respeta sin discusión.
     const con = navigator.connection;
@@ -140,8 +148,11 @@ const NeuralBackground = (() => {
 
   async function _construir(host, THREE) {
     const paleta = _paleta();
-    const esMovil = window.matchMedia('(max-width: 768px)').matches;
-    const cantidad = esMovil ? CONFIG.nodosMovil : CONFIG.nodos;
+    /* Por debajo de 768 px no se llega aquí (ver `_deberiaDibujar`), así que
+       este escalón es para tablets y portátiles pequeños: menos nodos y sin
+       suavizado, que es donde más cuesta por píxel. */
+    const pantallaJusta = window.matchMedia('(max-width: 1100px)').matches;
+    const cantidad = pantallaJusta ? CONFIG.nodosReducidos : CONFIG.nodos;
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 400);
@@ -149,7 +160,7 @@ const NeuralBackground = (() => {
 
     const renderer = new THREE.WebGLRenderer({
       alpha: true,            // el hero ya tiene su propio degradado detrás
-      antialias: !esMovil,    // en móvil no compensa el coste
+      antialias: !pantallaJusta,   // en pantallas justas no compensa el coste
       powerPreference: 'low-power',
     });
     renderer.setClearAlpha(0);
@@ -164,10 +175,10 @@ const NeuralBackground = (() => {
     geoNodos.setAttribute('position', new THREE.BufferAttribute(posiciones, 3));
 
     const matNodos = new THREE.PointsMaterial({
-      size: esMovil ? 2.6 : 2.1,
+      size: pantallaJusta ? 2.6 : 2.1,
       map: _texturaPunto(THREE, paleta.brillo),
       transparent: true,
-      opacity: 0.55,
+      opacity: 0.42,
       depthWrite: false,                 // sin esto los puntos se recortan entre sí
       blending: THREE.AdditiveBlending,  // da la sensación de luz, no de plástico
       sizeAttenuation: true,
@@ -183,7 +194,7 @@ const NeuralBackground = (() => {
     const matEnlaces = new THREE.LineBasicMaterial({
       color: new THREE.Color(paleta.enlace),
       transparent: true,
-      opacity: 0.22,
+      opacity: 0.16,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
     });
@@ -400,6 +411,10 @@ const NeuralBackground = (() => {
       e.resizeObs.observe(host);
 
       host.classList.add('is-ready');
+      /* Con la red dibujándose, el hero no necesita además haces y orbes
+         moviéndose: se apagan desde CSS con esta marca. Menos cosas a la vez
+         se lee mejor, y de paso se ahorran animaciones. */
+      document.documentElement.classList.add('has-neural-bg');
       if (e.visible && !document.hidden) {
         _bucle(e);
         _marcar(e, 'running');
@@ -419,8 +434,17 @@ const NeuralBackground = (() => {
 /* Arranque propio: asi no hace falta tocar los <script> inline de las paginas,
    cuyos hashes estan fijados en la CSP. */
 if (typeof window !== 'undefined') {
+  /* No compite con la carga: primero termina lo que importa (texto, estilos,
+     el resto de scripts) y solo cuando el hilo principal queda libre se pide
+     Three.js. `requestIdleCallback` no existe en Safari, de ahí el respaldo. */
   const arrancar = () => {
-    if (document.querySelector('[data-neural-bg]')) NeuralBackground.init();
+    if (!document.querySelector('[data-neural-bg]')) return;
+    const lanzar = () => NeuralBackground.init();
+    if (typeof requestIdleCallback === 'function') {
+      requestIdleCallback(lanzar, { timeout: 2500 });
+    } else {
+      setTimeout(lanzar, 900);
+    }
   };
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', arrancar, { once: true });

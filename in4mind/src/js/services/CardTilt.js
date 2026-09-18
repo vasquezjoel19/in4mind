@@ -13,9 +13,19 @@
 
 const CardTilt = (() => {
 
-  /* Catálogo de cursos, quizzes y proyectos guiados. Se admite además
-     `[data-tilt]` para marcar cualquier otra tarjeta sin tocar este fichero. */
-  const SELECTOR = '.tut-grid-card, .tut-lesson-card, .quiz-card, .gp-card, [data-tilt]';
+  /* Catálogo, quizzes, proyectos guiados, el panel y las tarjetas de la
+     landing. Se admite además `[data-tilt]` para marcar cualquier otra sin
+     tocar este fichero.
+     Ojo con lo que NO entra: nada que tenga contenido desplazable dentro ni
+     campos de formulario, porque la transformación 3D crea un contexto de
+     apilamiento y complica la posición del cursor. */
+  const SELECTOR = [
+    '.tut-grid-card', '.tut-lesson-card',
+    '.quiz-card', '.gp-card',
+    '.course-card', '.learning-path-card',
+    '.lp-course-card',
+    '[data-tilt]',
+  ].join(',');
 
   const INCLINACION_MAX = 7;     // grados; más que esto marea y deforma el texto
   const ELEVACION = 10;          // px que la tarjeta "sube" hacia el usuario

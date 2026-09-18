@@ -85,7 +85,12 @@
   border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.35), rgba(74, 118, 178, 0.1) 45%, transparent 70%);
   border: 1px solid rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(2px);
+  /* Aquí había `backdrop-filter: blur(2px)`. Combinado con la animación
+     infinita de abajo era lo más caro de la página: un elemento animado con
+     `backdrop-filter` obliga al navegador a recomponer todo lo que tiene
+     detrás en cada fotograma, y son tres orbes a la vez.
+     A 2 px sobre un degradado suave la diferencia no se aprecia; el volumen ya
+     lo dan el propio degradado radial y el borde. */
   animation: lpOrbFloat 12s ease-in-out infinite;
 }
 

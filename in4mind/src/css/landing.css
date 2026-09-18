@@ -435,11 +435,15 @@ button {
   gap: 6px;
   min-width: 84px;
   padding: 12px 14px 10px;
-  background: rgba(255, 255, 255, 0.96);
+  /* Fondo opaco en lugar de `rgba(…,0.96)` + `backdrop-filter: blur(6px)`.
+     Estas tarjetas flotan con una animación infinita, y un elemento animado
+     con backdrop-filter obliga al navegador a recomponer todo lo que tiene
+     detrás en cada fotograma; son cuatro a la vez sobre el hero. Con un 4 %
+     de transparencia el desenfoque no llegaba a percibirse. */
+  background: rgb(255, 255, 255);
   border: 1px solid rgba(var(--clr-brand-rgb), 0.14);
   border-radius: 18px;
   box-shadow: 0 10px 28px rgba(26, 43, 72, 0.12);
-  backdrop-filter: blur(6px);
   animation: lpFloat 4.5s ease-in-out infinite;
   cursor: pointer;
   font-family: var(--font-body);

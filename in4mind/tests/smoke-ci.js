@@ -588,6 +588,52 @@ for (const [file, endpoint] of [
     /@media \(prefers-reduced-motion: reduce\)[\s\S]*animation:\s*none\s*!important/.test(orbCss));
 }
 
+/* ── Presupuesto de composición ─────────────────────────────────────────────
+ * Lo que hacía lenta la landing no era una cosa grande, sino muchas pequeñas
+ * corriendo a la vez. Estas comprobaciones fijan los dos hallazgos concretos.
+ */
+{
+  const budget = read('src/js/services/AnimationBudget.js');
+  const neural2 = read('src/js/services/NeuralBackground.js');
+  const orbCss2 = read('src/css/orb.css');
+
+  /* Un elemento animado con `backdrop-filter` obliga a recomponer todo lo que
+   * tiene detrás en cada fotograma. Había tres orbes y cuatro tarjetas
+   * flotantes haciéndolo sobre el hero a la vez. */
+  const reglasAnimadasConBackdrop = [];
+  for (const archivo of fs.readdirSync(path.join(root, 'src/css')).filter(f => f.endsWith('.css'))) {
+    // Sin comentarios: si no, el propio texto que explica esta regla la dispara.
+    const css = read(`src/css/${archivo}`).replace(/\/\*[\s\S]*?\*\//g, '');
+    const bloques = css.match(/\{[^{}]*\}/g) || [];
+    for (const b of bloques) {
+      /* Solo las infinitas. Una animación de entrada dura unas décimas y su
+       * coste está acotado; lo grave es recomponer el fondo en cada fotograma
+       * para siempre, que es lo que hacían los orbes y las tarjetas flotantes. */
+      if (/backdrop-filter:\s*(?!none)/.test(b) && /animation:[^;]*infinite/.test(b)) {
+        reglasAnimadasConBackdrop.push(archivo);
+      }
+    }
+  }
+  assert(`no rule loops an animation on a backdrop-filter element${reglasAnimadasConBackdrop.length ? ': ' + [...new Set(reglasAnimadasConBackdrop)].join(', ') : ''}`,
+    reglasAnimadasConBackdrop.length === 0);
+
+  /* Las animaciones CSS no se paran solas fuera de pantalla: el navegador las
+   * sigue componiendo aunque nadie las vea. */
+  assert('off-screen animations are paused', /animationPlayState\s*=\s*'paused'/.test(budget));
+  assert('the budget uses an observer', /IntersectionObserver/.test(budget));
+  assert('the budget stays out of the way on reduced motion',
+    /prefers-reduced-motion/.test(budget));
+  assert('the landing loads the budget', /AnimationBudget\.js/.test(read('index.html')));
+
+  /* Reglas pedidas para la escena 3D. */
+  assert('the 3d scene waits for an idle moment', /requestIdleCallback/.test(neural2));
+  assert('the 3d scene is off on phones', /max-width:\s*768px[\s\S]{0,80}return false/.test(neural2));
+  assert('a css gradient covers the 3d-less case',
+    /\[data-neural-bg\]\s*\{[^}]*radial-gradient/.test(orbCss2));
+  assert('the gradient steps aside when the canvas exists',
+    /\[data-neural-bg\]:has\(canvas\)/.test(orbCss2));
+}
+
 /* ── Limpieza del repositorio ───────────────────────────────────────────── */
 {
   /* Iconos de terceros: cada carga informaba a flaticon de qué miraba cada

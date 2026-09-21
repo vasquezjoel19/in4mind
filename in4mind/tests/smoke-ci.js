@@ -449,6 +449,38 @@ assert('bundle-shell.js sin BOM', !fs.readFileSync(path.join(root, 'scripts/bund
   .slice(0, 3).equals(Buffer.from([0xEF, 0xBB, 0xBF])));
 assert('bundle-shell.js sin mojibake', !/Â|â€|Ã©/.test(bundleScript));
 
+/* ── Límite de uso del proxy de IA ─────────────────────────────────────── */
+const rateLib = fs.existsSync(path.join(repoRoot, 'api/_lib/rate-limit.js'))
+  ? fs.readFileSync(path.join(repoRoot, 'api/_lib/rate-limit.js'), 'utf8')
+  : '';
+assert('existe la librería de rate limit', rateLib.length > 0);
+assert('el límite es por usuario, no global', /checkBurst\(userId/.test(rateLib));
+assert('la cuota diaria se cuenta en Supabase', /ai_usage_hit/.test(rateLib));
+assert('el mapa en memoria está acotado', /MAX_TRACKED_USERS/.test(rateLib));
+
+assert('el proxy limita las ráfagas', /checkBurst\(user\.id\)/.test(chatApi));
+assert('el proxy aplica la cuota diaria', /checkDailyQuota\(/.test(chatApi));
+assert('el proxy responde 429 con Retry-After', /Retry-After/.test(chatApi));
+/* El orden importa: si se llamara a Groq antes de comprobar, el límite no
+ * evitaría el gasto, que es justo lo que protege. */
+assert('se comprueba el límite antes de llamar a Groq',
+  chatApi.indexOf('checkBurst(user.id)') < chatApi.indexOf('fetch(GROQ_URL'));
+assert('la cuota se comprueba antes de llamar a Groq',
+  chatApi.indexOf('checkDailyQuota(') < chatApi.indexOf('fetch(GROQ_URL'));
+assert('la migración de la cuota existe',
+  fs.existsSync(path.join(repoRoot, 'supabase/migrations/20260921_ai_usage_quota.sql')));
+
+const quotaSql = fs.existsSync(path.join(repoRoot, 'supabase/migrations/20260921_ai_usage_quota.sql'))
+  ? fs.readFileSync(path.join(repoRoot, 'supabase/migrations/20260921_ai_usage_quota.sql'), 'utf8')
+  : '';
+/* Sin políticas de UPDATE/DELETE nadie puede rebajar su propio contador. */
+assert('la tabla de uso no permite borrar filas', !/for\s+delete/i.test(quotaSql));
+assert('la tabla de uso no permite modificar filas', !/for\s+update/i.test(quotaSql));
+assert('la cuota usa auth.uid()', /auth\.uid\(\)/.test(quotaSql));
+
+const groqClient = read('src/js/services/GroqService.js');
+assert('el cliente entiende RATE_LIMITED', /'RATE_LIMITED'/.test(groqClient));
+
 const chatService = read('src/js/services/GlobalChatService.js');
 assert('el chat no firma la identidad en el cliente',
   !/author_name:\s*_local|author_name:\s*_display/.test(chatService));

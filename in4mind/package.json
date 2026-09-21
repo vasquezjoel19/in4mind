@@ -10,7 +10,7 @@
     "check:csp": "node scripts/generate-csp.js --check",
     "check:groq": "node scripts/check-groq.js",
     "dev": "vite",
-    "test": "node tests/dataservice.test.js && node tests/dashboard_features.test.js && node tests/i18n-parity.test.js && node tests/smoke-ci.js",
+    "test": "node tests/dataservice.test.js && node tests/dashboard_features.test.js && node tests/rate-limit.test.js && node tests/i18n-parity.test.js && node tests/smoke-ci.js",
     "start": "npm run build:shell && npx --yes serve -l 8080 ."
   },
   "devDependencies": {

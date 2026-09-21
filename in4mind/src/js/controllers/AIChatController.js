@@ -270,8 +270,25 @@ const AIChatController = (() => {
    * el status quedaba enterrado en el Error, así que era imposible distinguir
    * "modelo retirado" de "sin cuota" desde la interfaz.
    */
+  /** "90 s" o "2 h": lo que toque, sin obligar a leer segundos sueltos. */
+  function _waitLabel(seconds) {
+    const s = Math.max(1, Math.round(Number(seconds) || 60));
+    if (s < 90) return _t('ai.waitSeconds', { n: s });
+    const minutes = Math.round(s / 60);
+    if (minutes < 90) return _t('ai.waitMinutes', { n: minutes });
+    return _t('ai.waitHours', { n: Math.round(minutes / 60) });
+  }
+
   function _errorMessage(err) {
     const code = err?.message || '';
+
+    // Límite propio de IN4MIND: el mensaje cambia según sea una ráfaga
+    // (esperar un momento) o la cuota del día (volver mañana).
+    if (code === 'RATE_LIMITED') {
+      return err.scope === 'daily'
+        ? _t('ai.errDailyQuota', { limit: err.limit || '', wait: _waitLabel(err.retryAfter) })
+        : _t('ai.errTooFast', { wait: _waitLabel(err.retryAfter) });
+    }
 
     if (code === 'AUTH_REQUIRED')         return _t('ai.errAuthRequired');
     if (code === 'AUTH_NOT_CONFIGURED')   return _t('ai.errAuthUnavailable');

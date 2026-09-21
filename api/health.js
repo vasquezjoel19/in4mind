@@ -8,6 +8,7 @@
 
 const { resolveGroqKey } = require('./_lib/groq-env.js');
 const { isAuthConfigured } = require('./_lib/supabase-auth.js');
+const { isQuotaConfigured, perMinuteLimit, perDayLimit } = require('./_lib/rate-limit.js');
 
 module.exports = function handler(_req, res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -23,5 +24,12 @@ module.exports = function handler(_req, res) {
     // Si es false, /api/groq/chat rechaza todo con 503 AUTH_NOT_CONFIGURED:
     // falta SUPABASE_JWT_SECRET o SUPABASE_ANON_KEY en el entorno.
     auth: isAuthConfigured(),
+    // Límites del asistente. `quota: false` significa que solo actúa el tope
+    // por instancia: falta SUPABASE_URL/SUPABASE_ANON_KEY o la migración.
+    rateLimit: {
+      perMinute: perMinuteLimit(),
+      perDay: perDayLimit(),
+      quota: isQuotaConfigured(),
+    },
   });
 };

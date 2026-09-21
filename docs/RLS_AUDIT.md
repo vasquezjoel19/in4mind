@@ -100,6 +100,32 @@ values ('prueba', 'Soporte IN4MIND', 99)
 returning author_name, author_level;
 ```
 
+## Cuota del asistente de IA (2026-09-21)
+
+Migración: `supabase/migrations/20260921_ai_usage_quota.sql`
+
+Tabla `ai_usage` (una fila por llamada al asistente). Controles:
+
+| Operación | Política | Por qué |
+|-----------|----------|---------|
+| SELECT | `user_id = auth.uid()` | Cada quien ve solo su consumo |
+| INSERT | `user_id = auth.uid()` | No se puede gastar la cuota de otro |
+| UPDATE | **ninguna** | Modificar la fecha de una fila rebajaría el contador |
+| DELETE | **ninguna** | Borrar filas propias sería saltarse el límite |
+
+La poda del histórico (>7 días) la hace la RPC `ai_usage_hit`, que es
+`SECURITY DEFINER` justo para eso: el permiso de borrado vive en la función,
+no en el rol del usuario. `auth.uid()` dentro de la función sigue siendo el del
+llamante, así que no puede consultar ni gastar la cuota ajena.
+
+```sql
+-- No debe haber políticas de update/delete sobre ai_usage
+select policyname, cmd from pg_policies where tablename = 'ai_usage';
+
+-- La RPC solo es ejecutable por usuarios autenticados
+select proname, proacl from pg_proc where proname = 'ai_usage_hit';
+```
+
 ## Fuera de alcance de este documento
 
 - CMS / panel admin de contenido (no implementado a propósito).

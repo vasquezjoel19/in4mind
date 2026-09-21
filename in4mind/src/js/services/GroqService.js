@@ -198,6 +198,7 @@ DIRECTRICES
 
   /** Códigos que el proxy emite y el cliente sabe explicar. */
   const KNOWN_CODES = [
+    'RATE_LIMITED',
     'AUTH_REQUIRED',
     'AUTH_NOT_CONFIGURED',
     'AUTH_UNAVAILABLE',
@@ -208,13 +209,30 @@ DIRECTRICES
     'GROQ_EMPTY_RESPONSE',
   ];
 
+  /**
+   * Convierte el cuerpo de error en una excepción con código.
+   * Para RATE_LIMITED se conserva el detalle (cuánto esperar, qué límite se
+   * alcanzó) porque el mensaje que ve el usuario depende de eso.
+   */
+  function _error(code, body) {
+    const err = new Error(code);
+    if (body && typeof body === 'object') {
+      err.scope = body.scope;
+      err.limit = body.limit;
+      err.retryAfter = body.retryAfter;
+    }
+    return err;
+  }
+
   async function _assertOk(response) {
     if (response.ok) return;
 
     const raw = await response.text().catch(() => '');
     let code = '';
+    let body = null;
     try {
-      const parsed = JSON.parse(raw)?.error;
+      body = JSON.parse(raw);
+      const parsed = body?.error;
       // El proxy devuelve un string; Groq (modo directo) un objeto {code,message}.
       code = typeof parsed === 'string' ? parsed : String(parsed?.code || '');
     } catch (_) { /* respuesta no JSON */ }
@@ -222,7 +240,7 @@ DIRECTRICES
     // El cuerpo manda sobre el status: antes cualquier 503 se leía como "falta
     // la API Key", así que un 503 de Groq saturado pedía configurar una clave
     // que ya estaba puesta.
-    if (KNOWN_CODES.includes(code)) throw new Error(code);
+    if (KNOWN_CODES.includes(code)) throw _error(code, body);
 
     // El proxy reenvía el status de Groq dentro del código (GROQ_HTTP_503) aunque
     // el transporte llegue como 502; se prefiere ese, que es el que explica el fallo.
@@ -235,7 +253,7 @@ DIRECTRICES
     // confundirlo con la clave mandaba a configurar algo que estaba bien.
     if (response.status === 401) throw new Error('AUTH_REQUIRED');
     if (response.status === 403) throw new Error('GROQ_API_KEY_INVALID');
-    if (response.status === 429) throw new Error('GROQ_RATE_LIMITED');
+    if (response.status === 429) throw _error('GROQ_RATE_LIMITED', body);
 
     throw new Error(`GROQ_HTTP_${response.status}: ${raw.slice(0, 200)}`);
   }

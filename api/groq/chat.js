@@ -8,13 +8,18 @@
  * cualquiera con `curl` —el navegador lo frena la política de mismo origen,
  * pero un cliente fuera del navegador no— a cargo de la cuota de Groq de la
  * cuenta. Ver api/_lib/supabase-auth.js.
+ *
+ * Y con sesión hay límite: exigir cuenta no impide que alguien se registre y
+ * llame en bucle, así que cada usuario tiene un tope por minuto y una cuota
+ * diaria. Ver api/_lib/rate-limit.js.
  */
 'use strict';
 
 const {
   resolveGroqKey, resolveGroqModel, resolveGroqMaxTokens, KNOWN_MODELS,
 } = require('../_lib/groq-env.js');
-const { requireUser } = require('../_lib/supabase-auth.js');
+const { requireUser, bearerToken } = require('../_lib/supabase-auth.js');
+const { checkBurst, checkDailyQuota } = require('../_lib/rate-limit.js');
 
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
@@ -135,6 +140,22 @@ async function pipeStream(groqRes, res) {
   }
 }
 
+/**
+ * Respuesta 429 con la información que el cliente necesita para explicarlo.
+ * `Retry-After` es la cabecera estándar y la entienden también los proxies.
+ */
+function rateLimited(res, scope, info) {
+  res.setHeader('Retry-After', String(info.retryAfter || 60));
+  res.setHeader('Cache-Control', 'no-store');
+  return res.status(429).json({
+    error: 'RATE_LIMITED',
+    scope,
+    limit: info.limit,
+    used: info.used,
+    retryAfter: info.retryAfter,
+  });
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
@@ -145,6 +166,19 @@ module.exports = async function handler(req, res) {
   // requireUser ya responde 401/503 cuando no hay token válido.
   const user = await requireUser(req, res);
   if (!user) return undefined;
+
+  // Ráfaga: se comprueba en memoria, sin red, para cortar un bucle en seco.
+  const burst = checkBurst(user.id);
+  if (!burst.allowed) {
+    return rateLimited(res, 'burst', burst);
+  }
+
+  // Cuota diaria: cuenta en Supabase, así que es la misma para todas las
+  // instancias. Se consulta antes de llamar a Groq para no gastar cuota ajena.
+  const quota = await checkDailyQuota(bearerToken(req));
+  if (!quota.allowed) {
+    return rateLimited(res, 'daily', quota);
+  }
 
   // Mismo criterio que /api/health y /api/groq/ping: evita que un placeholder
   // pase el filtro aquí y termine en un 401 opaco de Groq.

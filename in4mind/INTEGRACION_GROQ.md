@@ -118,6 +118,7 @@ Errores que distingue:
 | `GROQ_TIMEOUT` / `GROQ_UNREACHABLE` | Groq no respondió en 8 s |
 | `AUTH_REQUIRED` (401) | La petición no trae una sesión válida de Supabase |
 | `AUTH_NOT_CONFIGURED` (503) | Faltan `SUPABASE_JWT_SECRET` y `SUPABASE_ANON_KEY` en el entorno |
+| `RATE_LIMITED` (429) | El usuario superó su límite. `scope: "burst"` (por minuto) o `"daily"` (cuota del día); `Retry-After` dice cuánto esperar |
 
 ### Comprobación desde la interfaz
 
@@ -138,6 +139,7 @@ Si la key es inválida, el asistente mostrará un mensaje de error profesional i
 | `api/groq/chat.js` | **Proxy serverless: única pieza que usa `GROQ_API_KEY`** |
 | `api/_lib/groq-env.js` | Lee y valida `GROQ_API_KEY` (única fuente de verdad) |
 | `api/_lib/supabase-auth.js` | Verifica el JWT de Supabase que exige el proxy |
+| `api/_lib/rate-limit.js` | Límite por minuto (memoria) y cuota diaria (Supabase) |
 | `api/health.js` | Informa al frontend si la clave está configurada |
 | `api/groq/ping.js` | Prueba de conexión real contra Groq (diagnóstico) |
 | `src/js/config/groq.config.js` | Modelo y parámetros (generado en build, sin secretos) |
@@ -205,6 +207,32 @@ no hay nada que configurar en el cliente.
 Si falta la verificación en el entorno, el proxy **rechaza todo** con
 `AUTH_NOT_CONFIGURED` en vez de quedarse abierto: fallar cerrado es la única
 opción segura. Comprueba `/api/health` → `"auth": true` tras desplegar.
+
+### Límite de uso por usuario
+
+Tener cuenta no basta como protección: el registro es libre, así que alguien
+podría crearse una y llamar en bucle. Hay dos capas, y las dos se comprueban
+**antes** de tocar Groq, para que una petición rechazada no gaste cuota:
+
+| Capa | Dónde cuenta | Por defecto | Qué resuelve |
+|------|--------------|-------------|--------------|
+| Ráfaga | Memoria de la instancia | 15/min por usuario | Corta un bucle al instante, sin coste ni latencia |
+| Cuota diaria | Tabla `ai_usage` en Supabase | 200/día por usuario | Es la misma para todas las instancias y sobrevive a los reinicios |
+
+La primera capa por sí sola no basta y conviene saber por qué: en Vercel cada
+instancia tiene su propia memoria y puede haber varias vivas, así que el tope
+real se multiplica por el número de instancias y se pierde en cada arranque en
+frío. La cuota diaria es la que de verdad acota el gasto.
+
+La cuota usa el JWT del propio usuario contra la RPC `ai_usage_hit`, así que
+**no hace falta la service_role key**. La política RLS deja insertar y leer las
+filas propias, pero no hay política de UPDATE ni de DELETE: nadie puede rebajar
+su propio contador.
+
+Si Supabase no responde o falta la migración, la cuota se salta con un aviso en
+los logs y queda la capa de ráfaga. Es deliberado: un problema de base de datos
+no debe dejar sin asistente a quien sí tiene cuota. Comprueba
+`/api/health` → `rateLimit.quota === true` para confirmar que está activa.
 
 `GroqService.init()` consulta `/api/health` una sola vez para decidir el modo:
 **proxy** si el backend tiene la clave, **directo** si solo hay una clave local de

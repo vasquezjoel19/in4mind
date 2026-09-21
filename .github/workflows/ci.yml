@@ -18,11 +18,19 @@ jobs:
         with:
           node-version: '24'
 
+      # esbuild (minificador) llega por aquí: sin instalar, el build generaría
+      # bundles sin minificar y la comprobación de minificado fallaría.
+      - name: Install dependencies
+        run: npm install
+
       - name: Build shell bundles
         run: npm run build:shell
 
+      # Los hashes de la CSP viven en vercel.json y se calculan desde el HTML:
+      # si alguien toca un script inline y no regenera, se bloquearía en el
+      # navegador. Mejor que falle aquí.
+      - name: Check CSP is in sync
+        run: npm run check:csp
+
       - name: Unit tests
         run: npm test
-
-      - name: Feature smoke (Node)
-        run: node tests/smoke-ci.js

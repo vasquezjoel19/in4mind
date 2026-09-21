@@ -8,6 +8,11 @@ in4mind/src/js/config/groq.config.js
 node_modules/
 .vercel/
 
+# Bundles generados: los reconstruye `npm run build` en cada despliegue.
+# Estaban versionados y eso provocaba conflictos en cada merge y el riesgo de
+# servir un bundle viejo si alguien olvidaba regenerarlos.
+in4mind/src/js/dist/
+
 *.zip
 in4mind-vercel*.zip
 in4mind_refactored*.zip

@@ -1,6 +1,15 @@
-﻿/**
- * IN4MIND â€” Genera bundles de producciÃ³n (boot + app-shell + landing).
- * Uso: node scripts/bundle-shell.js
+/**
+ * IN4MIND — Genera los bundles de producción (boot + app-shell + landing).
+ *
+ * Uso:
+ *   node scripts/bundle-shell.js               concatena y minifica
+ *   node scripts/bundle-shell.js --no-minify   deja el código legible (depurar)
+ *
+ * Los bundles son concatenaciones de scripts clásicos, no módulos: cada
+ * archivo declara sus símbolos en el ámbito global y las páginas los usan por
+ * nombre. Por eso se minifica con `transform` y no con `bundle`, y por eso
+ * esbuild NO renombra los identificadores de nivel superior: si lo hiciera,
+ * `AppShell`, `AuthService` y compañía dejarían de existir para el HTML.
  */
 'use strict';
 
@@ -10,6 +19,8 @@ const path = require('path');
 const root = path.join(__dirname, '..');
 const outDir = path.join(root, 'src/js/dist');
 const VERSION = '20260916sidebar';
+
+const MINIFY = !process.argv.includes('--no-minify');
 
 const BOOT_FILES = [
   'src/js/controllers/ThemeController.js',
@@ -72,14 +83,55 @@ const LANDING_FILES = [
   'src/js/i18n-boot.js',
 ];
 
+/**
+ * esbuild llega como devDependency. Si falta (por ejemplo, alguien ejecuta el
+ * script sin instalar), se avisa y se sigue sin minificar: es preferible un
+ * bundle grande a un despliegue sin bundles.
+ */
+function loadMinifier() {
+  if (!MINIFY) return null;
+  try {
+    return require('esbuild');
+  } catch {
+    console.warn('[bundle] esbuild no disponible: se generan bundles sin minificar.');
+    console.warn('[bundle] Instálalo con: npm install');
+    return null;
+  }
+}
+
+const esbuild = loadMinifier();
+
 function concat(files, bannerExtra = '') {
   const parts = files.map((rel) => {
     const full = path.join(root, rel);
     if (!fs.existsSync(full)) throw new Error(`Missing: ${rel}`);
     return `\n;/* --- ${rel} --- */\n${fs.readFileSync(full, 'utf8')}\n`;
   });
-  const banner = `/*! IN4MIND bundle ${VERSION} â€” ${new Date().toISOString()} */\n${bannerExtra}`;
-  return banner + parts.join('');
+  return bannerExtra + parts.join('');
+}
+
+/**
+ * `target: es2020` cubre el encadenamiento opcional y `??` que usa el código
+ * sin degradarlo a sintaxis antigua. `keepNames` conserva los nombres de
+ * funciones y clases, que el código consulta en trazas y comprobaciones.
+ */
+function minify(code, name) {
+  if (!esbuild) return code;
+  const result = esbuild.transformSync(code, {
+    minify: true,
+    target: 'es2020',
+    legalComments: 'none',
+    keepNames: true,
+    // Sin esto esbuild escapa cada carácter no ASCII como \uXXXX y el bundle
+    // con los locales de zh/es acaba PESANDO MÁS que el original.
+    charset: 'utf8',
+  });
+  if (result.warnings?.length) {
+    for (const w of result.warnings) {
+      console.warn(`[bundle] ${name}: ${w.text}`);
+    }
+  }
+  return result.code;
 }
 
 fs.mkdirSync(outDir, { recursive: true });
@@ -97,9 +149,24 @@ const outputs = [
   ['landing.bundle.js', concat(LANDING_FILES)],
 ];
 
-for (const [name, body] of outputs) {
+let rawTotal = 0;
+let outTotal = 0;
+
+for (const [name, source] of outputs) {
+  const banner = `/*! IN4MIND bundle ${VERSION} — ${new Date().toISOString()} */\n`;
+  const body = minify(source, name);
   const out = path.join(outDir, name);
-  fs.writeFileSync(out, body, 'utf8');
-  console.log(`Wrote src/js/dist/${name} (${Math.round(fs.statSync(out).size / 1024)} KB)`);
+  fs.writeFileSync(out, banner + body, 'utf8');
+
+  const rawKb = Math.round(Buffer.byteLength(source, 'utf8') / 1024);
+  const outKb = Math.round(fs.statSync(out).size / 1024);
+  rawTotal += rawKb;
+  outTotal += outKb;
+  const saved = rawKb > 0 ? Math.round((1 - outKb / rawKb) * 100) : 0;
+  console.log(`Wrote src/js/dist/${name} (${outKb} KB${MINIFY && esbuild ? ` — ${saved}% menos que ${rawKb} KB` : ''})`);
+}
+
+if (MINIFY && esbuild) {
+  console.log(`Total: ${outTotal} KB (antes ${rawTotal} KB)`);
 }
 console.log(`VERSION=${VERSION}`);

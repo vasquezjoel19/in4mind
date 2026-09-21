@@ -385,6 +385,70 @@ assert('sin verificación disponible, falla cerrado', /AUTH_NOT_CONFIGURED/.test
 const groqService = read('src/js/services/GroqService.js');
 assert('el cliente manda el token de sesión', /Authorization = `Bearer \$\{token\}`/.test(groqService));
 
+/* ── Cabeceras de seguridad y dependencias del HTML ─────────────────────── */
+const vercelCfg = JSON.parse(fs.readFileSync(path.join(repoRoot, 'vercel.json'), 'utf8'));
+const globalHeaders = (vercelCfg.headers || []).find(h => h.source === '/(.*)');
+assert('vercel.json define cabeceras globales', Boolean(globalHeaders));
+
+const headerByKey = Object.fromEntries((globalHeaders?.headers || []).map(h => [h.key, h.value]));
+for (const key of [
+  'Content-Security-Policy',
+  'X-Frame-Options',
+  'Permissions-Policy',
+  'X-Content-Type-Options',
+  'Referrer-Policy',
+]) {
+  assert(`cabecera presente: ${key}`, Boolean(headerByKey[key]));
+}
+
+const csp = headerByKey['Content-Security-Policy'] || '';
+/* 'unsafe-inline' en script-src anularía la protección: cualquier script
+ * inyectado se ejecutaría. Los bloques inline entran por hash. */
+assert('CSP sin unsafe-inline en scripts',
+  !/script-src[^;]*'unsafe-inline'/.test(csp));
+assert('CSP sin unsafe-eval', !/'unsafe-eval'/.test(csp));
+assert('CSP bloquea el encuadre', /frame-ancestors 'none'/.test(csp));
+assert('CSP fija base-uri', /base-uri 'self'/.test(csp));
+assert('CSP bloquea objetos', /object-src 'none'/.test(csp));
+assert('CSP incluye hashes de los scripts inline', /script-src[^;]*'sha256-/.test(csp));
+
+/* Todas las páginas que cargan Supabase deben hacerlo con versión fija y SRI:
+ * con `@2` y sin integridad, un compromiso del CDN ejecuta código arbitrario
+ * en la pantalla de login. */
+const htmlFiles = fs.readdirSync(root).filter(f => f.endsWith('.html'));
+for (const file of htmlFiles) {
+  const html = read(file);
+  if (!html.includes('supabase-js')) continue;
+  assert(`${file}: supabase-js con versión exacta`,
+    /supabase-js@\d+\.\d+\.\d+\//.test(html));
+  assert(`${file}: supabase-js con SRI`,
+    /integrity="sha(256|384|512)-[A-Za-z0-9+/=]+"/.test(html));
+  assert(`${file}: supabase-js con crossorigin`, /crossorigin="anonymous"/.test(html));
+}
+
+/* Los bundles son scripts clásicos: el minificador no puede renombrar los
+ * símbolos globales que el HTML usa por nombre. */
+const bundleSymbols = [
+  ['boot.bundle.js', ['ThemeController', 'I18n']],
+  ['app-shell.bundle.js', ['SessionStore', 'AuthService', 'DataService', 'AppShell', 'AuthGuard', 'GlobalChatService']],
+  ['landing.bundle.js', ['DataService', 'QuizProgressService', 'SessionStore']],
+];
+for (const [name, symbols] of bundleSymbols) {
+  const file = path.join(root, 'src/js/dist', name);
+  if (!fs.existsSync(file)) continue;
+  const code = fs.readFileSync(file, 'utf8');
+  for (const symbol of symbols) {
+    assert(`${name} conserva ${symbol}`, new RegExp(`\\b${symbol}\\s*=`).test(code));
+  }
+}
+
+const bundleScript = read('scripts/bundle-shell.js');
+assert('el build minifica', /minify: true/.test(bundleScript));
+assert('minificado en UTF-8 (no infla los locales)', /charset: 'utf8'/.test(bundleScript));
+assert('bundle-shell.js sin BOM', !fs.readFileSync(path.join(root, 'scripts/bundle-shell.js'))
+  .slice(0, 3).equals(Buffer.from([0xEF, 0xBB, 0xBF])));
+assert('bundle-shell.js sin mojibake', !/Â|â€|Ã©/.test(bundleScript));
+
 const chatService = read('src/js/services/GlobalChatService.js');
 assert('el chat no firma la identidad en el cliente',
   !/author_name:\s*_local|author_name:\s*_display/.test(chatService));

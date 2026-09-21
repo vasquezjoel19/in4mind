@@ -36,6 +36,10 @@ Esta es la **versión refactorizada** de la aplicación original (Python/Flet), 
 
 ## Instalación y Ejecución
 
+> **Antes de nada:** `src/js/dist/` no está versionado. Los bundles se generan
+> con `npm install && npm run build`. Sin ese paso, las páginas cargan vacías
+> porque buscan `boot.bundle.js` y `app-shell.bundle.js`.
+
 ### Opción 1 — Abrir directo (más simple)
 
 ```bash
@@ -58,9 +62,50 @@ start in4mind/index.html  # Windows
 ```bash
 # Desde la carpeta in4mind/
 cd in4mind
-npx --yes serve -l 8080 .
+npm install     # una vez: trae esbuild (minificador) y vite
+npm start       # construye los bundles y sirve en :8080
 # → Abre http://localhost:8080
 ```
+
+### Comandos de build
+
+| Comando | Qué hace |
+|---------|----------|
+| `npm run build` | Config + bundles minificados + verifica la CSP. Es lo que corre Vercel. |
+| `npm run build:shell` | Solo los bundles (`--no-minify` para depurar código legible). |
+| `npm run build:csp` | Recalcula los hashes de la CSP en `vercel.json`. **Obligatorio tras editar cualquier `<script>` inline.** |
+| `npm test` | Unitarias + paridad de i18n + comprobaciones de humo. |
+
+## Seguridad del frontend
+
+Las cabeceras viven en `vercel.json` y se aplican a todas las rutas:
+
+| Cabecera | Valor |
+|----------|-------|
+| `Content-Security-Policy` | `default-src 'self'` + hashes SHA-256 de cada script inline. **Sin `unsafe-inline` ni `unsafe-eval`.** |
+| `X-Frame-Options` / `frame-ancestors` | `DENY` / `'none'` — la app no se puede incrustar |
+| `Permissions-Policy` | Cámara, micrófono, geolocalización, USB, pagos… desactivados |
+| `Strict-Transport-Security` | `max-age=31536000` |
+| `X-Content-Type-Options` | `nosniff` |
+
+Dos consecuencias prácticas:
+
+1. **Si editas un `<script>` inline, ejecuta `npm run build:csp`.** Si no, el
+   navegador bloquea ese bloque y la página se queda a medias. `npm run build`
+   y CI fallan antes de que eso llegue a producción.
+2. **Supabase se carga con versión fija y SRI.** Para actualizarlo hay que
+   cambiar la versión en los 13 HTML y recalcular el hash:
+
+   ```bash
+   npm pack @supabase/supabase-js@2.117.0   # la versión nueva
+   tar xzf supabase-supabase-js-2.117.0.tgz
+   openssl dgst -sha384 -binary package/dist/umd/supabase.js | openssl base64 -A
+   ```
+
+   Sin `integrity` correcto el navegador rechaza el script y el login deja de
+   funcionar: es el comportamiento deseado si el CDN sirve algo distinto.
+
+
 
 ### Opción 3 — Deploy en Vercel
 

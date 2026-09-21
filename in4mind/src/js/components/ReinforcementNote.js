@@ -119,11 +119,27 @@ const ReinforcementNote = (() => {
             'No se ha podido preparar el refuerzo ahora mismo. Vuelve a intentarlo más tarde.');
           return;
         }
+
+        /* Infy acompaña a la explicación. Es decorativo —el texto ya lo dice
+           todo— así que va con alt vacío para no repetirse en un lector de
+           pantalla, y solo si la mascota está cargada en esta página. */
+        const fila = document.createElement('div');
+        fila.className = 'reinforce__lesson-row';
+        if (typeof InfyMascot !== 'undefined') {
+          const infy = InfyMascot.crear('lesson', 'teaching');
+          infy.alt = '';
+          infy.setAttribute('aria-hidden', 'true');
+          fila.appendChild(infy);
+        }
+
+        const texto_ = document.createElement('div');
         for (const parrafo of _parrafos(texto)) {
           const p = document.createElement('p');
           p.textContent = parrafo;   // texto del modelo: nunca como HTML
-          contenido.appendChild(p);
+          texto_.appendChild(p);
         }
+        fila.appendChild(texto_);
+        contenido.appendChild(fila);
         contenido.dataset.ready = '1';
       } catch {
         contenido.textContent = _t('adaptive.reinforceUnavailable', null,

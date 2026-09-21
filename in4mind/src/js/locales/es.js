@@ -972,6 +972,7 @@ const LOCALE_ES = {
     assistantReady: 'Asistente educativo listo',
     generating: 'Generando respuesta…',
     error: 'Error en la solicitud',
+    infyAlt: 'Infy, el asistente de IN4MIND',
     errNoKey: '**Configuración requerida**\n\nPara habilitar Groq IA, defina `GROQ_API_KEY` en Vercel (Settings → Environment Variables) y vuelva a desplegar.\n\n- Obtenga su clave en https://console.groq.com/keys\n- La clave permanece en el servidor: nunca se expone en el navegador',
     errInvalidKey: '**Credencial no válida**\n\nLa API Key configurada fue rechazada. Verifique que la clave sea correcta en la consola de Groq.',
     errUnavailable: '**Servicio temporalmente no disponible**\n\nNo fue posible completar la solicitud con Groq. Intente nuevamente en unos momentos.',

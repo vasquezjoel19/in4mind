@@ -1,0 +1,71 @@
+/**
+ * IN4MIND — Infy, la mascota del asistente.
+ *
+ * Todo el posicionamiento vive aquí; el componente solo pone clases. Así se
+ * puede recolocar o redimensionar la mascota sin tocar JavaScript.
+ */
+
+.infy {
+  display: block;
+  width: auto;
+  object-fit: contain;
+  /* Los dibujos llegan recortados a su silueta, así que no hace falta fondo
+     ni máscara: basta con no deformarlos. */
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Cabecera del chat: el tope de 40 px lo fija el encargo. */
+.infy--header {
+  height: 40px;
+  max-height: 40px;
+  flex: none;
+  margin-right: 0.15rem;
+  /* El cambio de gesto es un cambio de `src`: la transición suaviza el relevo
+     sin necesidad de duplicar nodos ni de animar fotogramas. */
+  transition: transform 220ms ease, opacity 220ms ease;
+}
+
+.infy--header[data-gesto="thinking"] {
+  /* Ligero balanceo mientras piensa: mismo lenguaje que los tres puntos de
+     "escribiendo", pero sin ocupar sitio nuevo. */
+  animation: infy-pensar 1.8s ease-in-out infinite;
+}
+
+.infy--header[data-gesto="success"] { transform: translateY(-2px) scale(1.06); }
+
+@keyframes infy-pensar {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(-2px) rotate(-3deg); }
+}
+
+/* Dentro de la nota de refuerzo: acompaña al texto, no compite con él. */
+.infy--lesson {
+  height: 96px;
+  flex: none;
+  align-self: flex-start;
+  margin-right: 0.9rem;
+}
+
+.reinforce__lesson-row {
+  display: flex;
+  align-items: flex-start;
+}
+
+/* En pantallas estrechas la mascota estorba a la lectura: se aparta. */
+@media (max-width: 560px) {
+  .infy--lesson { height: 64px; margin-right: 0.6rem; }
+}
+
+@media (max-width: 400px) {
+  .infy--lesson { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .infy--header,
+  .infy--header[data-gesto="thinking"] {
+    animation: none;
+    transition: none;
+    transform: none;
+  }
+}

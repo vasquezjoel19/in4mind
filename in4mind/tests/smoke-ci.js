@@ -570,6 +570,46 @@ for (const [file, endpoint] of [
   }
 }
 
+/* ── Infy, la mascota del asistente ───────────────────────────────────────
+ * Los dibujos son assets nuevos: lo que se comprueba es que estén, que vayan
+ * en formato web y que el estado se comunique por evento, no por llamada
+ * directa desde el chat.
+ */
+{
+  const infy = read('src/js/components/InfyMascot.js');
+  assert('infy: el componente existe', infy.length > 0);
+
+  for (const gesto of ['infy-feliz.webp', 'infy-pensando.webp', 'infy-motivado.webp', 'infy-enfocado.webp']) {
+    const ruta = path.join(root, 'src/img/mascot', gesto);
+    assert(`infy: existe ${gesto}`, fs.existsSync(ruta));
+    /* WebP con transparencia. Por encima de 60 KB dejaría de compensar para
+     * una imagen que en la cabecera se ve a 40 px. */
+    if (fs.existsSync(ruta)) {
+      assert(`infy: ${gesto} pesa poco`, fs.statSync(ruta).size < 60 * 1024);
+    }
+  }
+
+  assert('infy: sin estilos en línea', !/\.style\.[a-z]/i.test(infy) && !/style\s*=/.test(infy));
+  assert('infy: el gesto va por clase y data-attr', /infy--\$\{variante\}/.test(infy) && /dataset\.gesto/.test(infy));
+  assert('infy: precarga los gestos', /_precargar/.test(infy));
+
+  const css = read('src/css/infy.css');
+  assert('infy: la cabecera la limita a 40 px', /max-height:\s*40px/.test(css));
+  assert('infy: respeta prefers-reduced-motion', /prefers-reduced-motion/.test(css));
+
+  /* El chat anuncia su estado; no conoce a la mascota. */
+  const chat = read('src/js/controllers/AIChatController.js');
+  assert('infy: el chat anuncia el estado por evento', /in4mind-ai-state/.test(chat));
+  assert('infy: el chat no depende de la mascota', !/InfyMascot/.test(chat));
+  assert('infy: el motor adaptativo también lo anuncia',
+    /in4mind-ai-state/.test(read('src/js/services/AdaptiveLearningService.js')));
+
+  const html = read('ai.html');
+  assert('infy: la cabecera del chat tiene su hueco', /data-infy-slot/.test(html));
+  assert('infy: ai.html carga el componente y sus estilos',
+    /components\/InfyMascot\.js/.test(html) && /css\/infy\.css/.test(html));
+}
+
 /* ── Confirmación de correo ─────────────────────────────────────────────────
  * Preparado para cuando se active "Confirm email" en Supabase. Mientras esté
  * desactivado este camino no se recorre, así que sin estas comprobaciones un

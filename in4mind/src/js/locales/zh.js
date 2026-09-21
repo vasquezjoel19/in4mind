@@ -972,6 +972,7 @@ const LOCALE_ZH = {
     assistantReady: '教育助手已就绪',
     generating: '生成回复中…',
     error: '请求错误',
+    infyAlt: 'Infy，IN4MIND 助手',
     errNoKey: '**需要配置**\n\n要启用 Groq AI，请在 Vercel（Settings → Environment Variables）中设置 `GROQ_API_KEY` 并重新部署。\n\n- 在 https://console.groq.com/keys 获取密钥\n- 密钥仅保存在服务器，绝不会暴露给浏览器',
     errInvalidKey: '**凭据无效**\n\n配置的 API Key 被拒绝。请在 Groq 控制台验证密钥是否正确。',
     errUnavailable: '**服务暂时不可用**\n\n无法通过 Groq 完成请求。请稍后再试。',

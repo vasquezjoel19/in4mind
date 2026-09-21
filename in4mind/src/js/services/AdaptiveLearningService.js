@@ -280,12 +280,20 @@ const AdaptiveLearningService = (() => {
     return null;
   }
 
+  /** Mismo canal que usa el chat: quien quiera reflejar el estado, que escuche. */
+  function _anunciarEstado(estado) {
+    window.dispatchEvent(new CustomEvent('in4mind-ai-state', { detail: { state: estado } }));
+  }
+
   async function _ask(prompt) {
     if (!(await _groqReady())) return null;
+    _anunciarEstado('thinking');
     try {
       const reply = await GroqService.chat([{ role: 'user', content: prompt }]);
+      _anunciarEstado('success');
       return _parseJson(reply);
     } catch (err) {
+      _anunciarEstado('error');
       // Un fallo del asistente no puede estropear la lección que se está
       // leyendo: se anota y el motor sigue en silencio.
       if (typeof ErrorReporter !== 'undefined') {

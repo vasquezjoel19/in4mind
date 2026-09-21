@@ -164,10 +164,19 @@ const AIChatController = (() => {
     });
   }
 
+  /** @param {'thinking'|'success'|'error'} estado */
+  function _anunciarEstado(estado) {
+    window.dispatchEvent(new CustomEvent('in4mind-ai-state', { detail: { state: estado } }));
+  }
+
   function _showTyping(show) {
     /* El orbe se actualiza aunque no exista la fila de "escribiendo": son dos
        indicadores del mismo estado y deben ir juntos pase lo que pase. */
     if (typeof ChatOrb !== 'undefined') ChatOrb.setState(show ? 'thinking' : 'idle');
+    /* Mismo estado, anunciado por evento para quien quiera reflejarlo (hoy la
+       mascota). Va por evento y no por llamada directa para que el chat no
+       dependa de que ese componente exista. */
+    if (show) _anunciarEstado('thinking');
     if (!$typingRow) return;
     $typingRow.style.display = show ? 'flex' : 'none';
     if (show) _scrollToBottom();
@@ -356,6 +365,8 @@ const AIChatController = (() => {
         }
       }
 
+      _anunciarEstado('success');
+
       if (!offTopic) {
         _history.push({ role: 'assistant', content: reply });
 
@@ -373,6 +384,7 @@ const AIChatController = (() => {
       if ($status) $status.textContent = _statusText();
     } catch (err) {
       _showTyping(false);
+      _anunciarEstado('error');
       if (!offTopic) _history.pop();
       _appendTurn('ai', _errorMessage(err));
       if ($status) $status.textContent = _t('ai.error', 'Error en la solicitud');

@@ -1088,6 +1088,10 @@ const LOCALE_ES = {
     quizWrong: 'No era esa. Buscando qué reforzar…',
     quizGap: 'Repasemos {concept}.',
     quizDone: '{n} de {total} correctas.',
+    reinforceTag: 'Refuerzo',
+    reinforceDone: 'Entendido',
+    reinforceLoading: 'Preparando el refuerzo…',
+    reinforceUnavailable: 'No se ha podido preparar el refuerzo ahora mismo. Vuelve a intentarlo más tarde.',
   },
   settingsModal: {
     title: 'Ajustes',

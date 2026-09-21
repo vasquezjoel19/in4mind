@@ -142,3 +142,122 @@
     padding: 0.85rem 0.9rem 1rem;
   }
 }
+
+/* ── Nota de refuerzo ──────────────────────────────────────────────────────
+ * Aparece plegada bajo la comprobación fallada. El color de acento la separa
+ * del contenido de la lección sin gritar: es una oferta, no una alarma.
+ */
+
+.reinforce {
+  max-width: 46rem;
+  margin: -0.5rem 0 1.5rem;
+}
+
+.reinforce__details {
+  border: 1px solid var(--clr-border, #d7e2f0);
+  border-left: 3px solid #f59e0b;
+  border-radius: 12px;
+  background: var(--clr-bg-card, #fff);
+  overflow: hidden;
+}
+
+.reinforce__summary {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.9rem;
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.92rem;
+  color: var(--clr-text-primary, #1a2332);
+}
+
+/* El triángulo por defecto se sustituye por el chevron de `::after`. */
+.reinforce__summary::-webkit-details-marker { display: none; }
+.reinforce__summary::marker { content: ''; }
+
+.reinforce__summary::after {
+  content: '';
+  margin-left: auto;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 2px solid var(--clr-text-muted, #8b9bb0);
+  border-bottom: 2px solid var(--clr-text-muted, #8b9bb0);
+  transform: rotate(45deg);
+  transition: transform 180ms ease;
+}
+
+.reinforce__details[open] .reinforce__summary::after { transform: rotate(-135deg); }
+
+.reinforce__summary:hover,
+.reinforce__summary:focus-visible { background: var(--clr-bg-badge, #e8f0fa); }
+
+.reinforce__tag {
+  flex: none;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.16);
+  color: #b45309;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.reinforce__title { font-weight: 600; }
+
+.reinforce__body {
+  padding: 0 0.9rem 0.9rem;
+  animation: reinforce-open 200ms ease-out both;
+}
+
+@keyframes reinforce-open {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reinforce__body { animation: none; }
+  .reinforce__summary::after { transition: none; }
+}
+
+.reinforce__cause {
+  margin: 0 0 0.6rem;
+  padding-left: 0.7rem;
+  border-left: 2px solid var(--clr-border, #d7e2f0);
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--clr-text-secondary, #5c6b7f);
+}
+
+.reinforce__lesson p {
+  margin: 0 0 0.7rem;
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: var(--clr-text-primary, #1a2332);
+}
+
+.reinforce__lesson p:last-child { margin-bottom: 0; }
+
+.reinforce__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.8rem;
+}
+
+.reinforce__btn {
+  padding: 0.45rem 1rem;
+  border: 1px solid var(--clr-border, #d7e2f0);
+  border-radius: 8px;
+  background: var(--clr-bg-app, #f0f5fb);
+  color: var(--clr-text-primary, #1a2332);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.reinforce__btn:hover,
+.reinforce__btn:focus-visible {
+  border-color: var(--clr-brand-500, #4a76b2);
+  background: var(--clr-bg-badge, #e8f0fa);
+}

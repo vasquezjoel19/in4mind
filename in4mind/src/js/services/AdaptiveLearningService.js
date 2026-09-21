@@ -357,6 +357,72 @@ const AdaptiveLearningService = (() => {
     };
   }
 
+  /**
+   * Micro-lección de refuerzo para un hueco concreto.
+   *
+   * Se pide corta a propósito —unas 150 palabras, menos de un minuto— porque
+   * aparece en mitad de otra cosa: si fuera un artículo, nadie lo leería y
+   * además rompería el hilo de lo que se estaba estudiando.
+   *
+   * El resultado se guarda en el propio tema. Volver a abrir el mismo nodo no
+   * vuelve a gastar una llamada, y sigue disponible sin conexión.
+   *
+   * @returns {Promise<string|null>} texto plano, sin marcado
+   */
+  async function generateMicroLesson(id) {
+    const topic = getTopic(id);
+    if (!topic) return null;
+    if (topic.lesson?.text) return topic.lesson.text;   // ya generada
+
+    const concepto = topic.gap?.concept || topic.label;
+    const causa = topic.gap?.cause || '';
+
+    const prompt = [
+      `Escribe una micro-lección de refuerzo sobre "${concepto}" para un estudiante de IN4MIND.`,
+      causa ? `El error de base detectado es: ${causa}` : '',
+      'Requisitos:',
+      '- Unas 150 palabras, menos de un minuto de lectura.',
+      '- Ataca justo esa carencia, no el temario entero.',
+      '- Empieza por la idea clave en una frase, sigue con un ejemplo concreto y cierra con cómo comprobarlo.',
+      '- Texto corrido en español, sin markdown, sin listas, sin títulos y sin emojis.',
+      'Responde SOLO con JSON válido: {"lesson":"..."}',
+    ].filter(Boolean).join('\n');
+
+    const data = await _ask(prompt);
+    const texto = typeof data?.lesson === 'string' ? data.lesson.trim() : '';
+    if (!texto) return null;
+
+    const state = getState();
+    const entry = state.topics[id];
+    if (entry) {
+      entry.lesson = { text: texto.slice(0, 1500), at: Date.now() };
+      entry.updatedAt = Date.now();
+      _saveState(state);
+    }
+    return texto;
+  }
+
+  /** Lección ya generada para un tema, si la hay. */
+  function getMicroLesson(id) {
+    return getTopic(id)?.lesson?.text || null;
+  }
+
+  /**
+   * Marca el refuerzo como leído.
+   *
+   * No cierra el hueco: haber leído no es haber entendido. El tema sale de
+   * rojo cuando se vuelve a acertar, que es la única señal fiable.
+   */
+  function markReinforced(id) {
+    const state = getState();
+    const entry = state.topics[id];
+    if (!entry?.gap) return null;
+    entry.gap.readAt = Date.now();
+    entry.updatedAt = Date.now();
+    _saveState(state);
+    return entry;
+  }
+
   /* ── Señales ───────────────────────────────────────────────────────────── */
 
   /**
@@ -457,7 +523,7 @@ const AdaptiveLearningService = (() => {
     // Registro
     recordAnswer, recordGap, submitAnswer,
     // Groq
-    generateQuestions, analyseGap,
+    generateQuestions, analyseGap, generateMicroLesson, getMicroLesson, markReinforced,
     // Ciclo de vida
     init, handleSignal,
     // Constantes que comparten los componentes y los tests

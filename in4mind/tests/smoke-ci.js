@@ -514,12 +514,32 @@ for (const [file, endpoint] of [
       /in4mind-learning-signal/.test(code) && !/AdaptiveLearningService/.test(code));
   }
 
+  const note = read('src/js/components/ReinforcementNote.js');
+  assert('adaptive: la nota de refuerzo existe', note.length > 0);
+  /* Modal = detener la lección para decidir. La nota se puede ignorar. */
+  assert('adaptive: el refuerzo no bloquea con un diálogo',
+    !/UiDialog|\b(alert|confirm|prompt)\(/.test(note));
+  assert('adaptive: el refuerzo usa details para plegarse', /createElement\('details'\)/.test(note));
+  assert('adaptive: el refuerzo no usa innerHTML', !/\.innerHTML/.test(note));
+  /* Pedir la lección al desplegar y no al detectar el hueco es lo que evita
+   * gastar una llamada por cada fallo que nadie llega a mirar. */
+  assert('adaptive: la lección se pide al desplegar', /addEventListener\('toggle'/.test(note));
+  assert('adaptive: la lección generada se guarda para no repetir la llamada',
+    /topic\.lesson\?\.text/.test(svc) && /entry\.lesson = \{ text/.test(svc));
+  /* Se comprueba el comportamiento, no el comentario: marcar como leído solo
+   * anota la fecha; el hueco lo cierra volver a acertar. */
+  const marcar = svc.slice(svc.indexOf('function markReinforced'), svc.indexOf('/* ── Señales'));
+  assert('adaptive: leer el refuerzo solo anota la fecha',
+    /entry\.gap\.readAt = Date\.now\(\)/.test(marcar) && !/entry\.gap = null/.test(marcar)
+    && !/STATUS\./.test(marcar));
+
   assert('adaptive: el motor viaja en el bundle del shell',
     /AdaptiveLearningService\.js/.test(read('scripts/bundle-shell.js')));
 
   for (const page of ['ai.html', 'tutorial.html']) {
     const html = read(page);
     assert(`adaptive: ${page} carga la tarjeta`, /components\/MicroQuiz\.js/.test(html));
+    assert(`adaptive: ${page} carga la nota de refuerzo`, /components\/ReinforcementNote\.js/.test(html));
     assert(`adaptive: ${page} carga su hoja de estilos`, /css\/adaptive\.css/.test(html));
   }
 }

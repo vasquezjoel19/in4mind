@@ -263,6 +263,53 @@ console.log('\n🧠 AdaptiveLearningService — ritmo');
     delete global.GroqService;
   });
 
+  console.log('\n🧠 AdaptiveLearningService — refuerzo');
+
+  await asyncTest('genera la micro-lección del hueco y la reutiliza', async () => {
+    Adaptive.setEnabled(true);
+    let llamadas = 0;
+    global.GroqService = {
+      init: async () => 'proxy',
+      isConfigured: () => true,
+      chat: async () => { llamadas++; return '{"lesson":"Un bucle while repite mientras la condición sea cierta."}'; },
+    };
+
+    Adaptive.recordGap('python:while', { gap_concept: 'Condición de salida', root_cause: 'Cree que para solo' });
+
+    const texto = await Adaptive.generateMicroLesson('python:while');
+    assert.match(texto, /condición sea cierta/);
+    assert.equal(llamadas, 1);
+
+    // Segunda vez: sale de lo guardado, sin gastar otra llamada.
+    const otra = await Adaptive.generateMicroLesson('python:while');
+    assert.equal(otra, texto);
+    assert.equal(llamadas, 1, 'una lección ya generada no se vuelve a pedir');
+    assert.equal(Adaptive.getMicroLesson('python:while'), texto);
+    delete global.GroqService;
+  });
+
+  await asyncTest('sin tema no hay lección', async () => {
+    Adaptive.setEnabled(true);
+    assert.equal(await Adaptive.generateMicroLesson('no:existe'), null);
+  });
+
+  await asyncTest('si el modelo no devuelve lección, no se guarda nada', async () => {
+    Adaptive.setEnabled(true);
+    global.GroqService = { init: async () => 'proxy', isConfigured: () => true, chat: async () => 'no puedo' };
+    Adaptive.recordGap('js:async', { gap_concept: 'Promesas', root_cause: 'x' });
+    assert.equal(await Adaptive.generateMicroLesson('js:async'), null);
+    assert.equal(Adaptive.getMicroLesson('js:async'), null);
+    delete global.GroqService;
+  });
+
+  test('leer el refuerzo no cierra el hueco por sí solo', () => {
+    Adaptive.setEnabled(true);
+    Adaptive.recordGap('sql:joins', { gap_concept: 'Claves', root_cause: 'x' });
+    const topic = Adaptive.markReinforced('sql:joins');
+    assert.ok(topic.gap.readAt, 'debería anotar cuándo se leyó');
+    assert.equal(topic.status, Adaptive.STATUS.GAP, 'haber leído no es haber entendido');
+  });
+
   console.log('\nadaptive-learning.test.js: all passed');
   console.log(`  Total: ${passed}`);
 })();

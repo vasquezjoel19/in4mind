@@ -1088,6 +1088,10 @@ const LOCALE_EN = {
     quizWrong: 'Not that one. Looking for what to reinforce…',
     quizGap: 'Let us revisit {concept}.',
     quizDone: '{n} of {total} correct.',
+    reinforceTag: 'Reinforce',
+    reinforceDone: 'Got it',
+    reinforceLoading: 'Preparing the reinforcement…',
+    reinforceUnavailable: 'The reinforcement could not be prepared right now. Try again later.',
   },
   settingsModal: {
     title: 'Settings',

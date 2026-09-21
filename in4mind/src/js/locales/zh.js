@@ -1088,6 +1088,10 @@ const LOCALE_ZH = {
     quizWrong: '不是这个。正在找出需要强化的内容…',
     quizGap: '我们来复习 {concept}。',
     quizDone: '答对 {n} 题，共 {total} 题。',
+    reinforceTag: '强化',
+    reinforceDone: '明白了',
+    reinforceLoading: '正在准备强化内容…',
+    reinforceUnavailable: '目前无法准备强化内容，请稍后再试。',
   },
   settingsModal: {
     title: '设置',

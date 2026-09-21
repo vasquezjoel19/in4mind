@@ -533,6 +533,32 @@ for (const [file, endpoint] of [
     /entry\.gap\.readAt = Date\.now\(\)/.test(marcar) && !/entry\.gap = null/.test(marcar)
     && !/STATUS\./.test(marcar));
 
+  const graph = read('src/js/components/SkillGraph3D.js');
+  assert('adaptive: el mapa existe', graph.length > 0);
+  /* Los tres colores son parte del encargo: si cambian, que sea a propósito. */
+  assert('adaptive: usa los colores acordados',
+    /'#10B981'/.test(graph) && /'#F59E0B'/.test(graph) && /'#EF4444'/.test(graph));
+  /* Three.js son 194 KB: entra por import() dinámico y solo si toca. */
+  assert('adaptive: Three.js se carga bajo demanda', /await import\('\.\.\/vendor\/three\.module\.js'\)/.test(graph));
+  assert('adaptive: hay respaldo 2D sin WebGL', /_render2D/.test(graph) && /puede3D/.test(graph));
+  /* Sin esto, un fallo de WebGL tumbaría la página de perfil entera. */
+  assert('adaptive: el fallo de WebGL cae al 2D, no explota',
+    /catch \(err\)[\s\S]{0,400}_render2D|_render2D[\s\S]{0,80}$/m.test(graph)
+    || /skillgraph_webgl/.test(graph));
+  assert('adaptive: el bucle se detiene fuera del viewport',
+    /IntersectionObserver/.test(graph) && /cancelAnimationFrame/.test(graph));
+  assert('adaptive: también se detiene con la pestaña oculta', /visibilitychange/.test(graph));
+  assert('adaptive: libera la GPU al desmontar',
+    /renderer\?\.dispose\(\)/.test(graph) && /geoNodo\?\.dispose\(\)/.test(graph));
+  assert('adaptive: el mapa no usa innerHTML', !/\.innerHTML/.test(graph));
+
+  const perfil = read('profile.html');
+  assert('adaptive: el perfil monta el mapa', /data-skill-graph\b/.test(perfil));
+  /* La sección nace oculta: sin el motor activo no debe dejar un hueco. */
+  assert('adaptive: la sección del mapa nace oculta', /data-skill-graph-section hidden/.test(perfil));
+  assert('adaptive: el perfil carga el mapa y el refuerzo',
+    /components\/SkillGraph3D\.js/.test(perfil) && /components\/ReinforcementNote\.js/.test(perfil));
+
   assert('adaptive: el motor viaja en el bundle del shell',
     /AdaptiveLearningService\.js/.test(read('scripts/bundle-shell.js')));
 

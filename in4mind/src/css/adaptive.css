@@ -261,3 +261,103 @@
   border-color: var(--clr-brand-500, #4a76b2);
   background: var(--clr-bg-badge, #e8f0fa);
 }
+
+/* ── Mapa de dominio ───────────────────────────────────────────────────────
+ * Dos modos con la misma pinta: lienzo WebGL o constelación plana en CSS. El
+ * contenedor manda la altura en los dos, así que cambiar de modo no descoloca
+ * la página.
+ */
+
+.skillgraph__host {
+  position: relative;
+  width: 100%;
+  height: clamp(220px, 38vw, 360px);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(var(--clr-brand-rgb, 74, 118, 178), 0.10), transparent 68%),
+    var(--clr-bg-app, #f0f5fb);
+  overflow: hidden;
+}
+
+.skillgraph__canvas,
+.skillgraph__flat {
+  position: absolute;
+  inset: 0;
+}
+
+.skillgraph__canvas canvas { display: block; width: 100%; height: 100%; }
+
+/* Modo plano: los puntos se colocan en porcentaje, así que acompañan al
+   contenedor sin recalcular nada al cambiar de tamaño. */
+.skillgraph__dot {
+  position: absolute;
+  width: 0.9rem;
+  height: 0.9rem;
+  padding: 0;
+  transform: translate(-50%, -50%);
+  border: 0;
+  border-radius: 50%;
+  background: var(--dot, #4a76b2);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  transition: transform 140ms ease;
+}
+
+.skillgraph__dot--curso {
+  width: 1.3rem;
+  height: 1.3rem;
+  opacity: 0.85;
+}
+
+.skillgraph__dot:hover,
+.skillgraph__dot:focus-visible { transform: translate(-50%, -50%) scale(1.25); }
+
+@media (prefers-reduced-motion: reduce) {
+  .skillgraph__dot { transition: none; }
+}
+
+.skillgraph__panel {
+  margin-top: 0.9rem;
+  min-height: 1.5rem;
+}
+
+.skillgraph__panel-title {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--clr-text-primary, #1a2332);
+}
+
+.skillgraph__panel-text {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--clr-text-secondary, #5c6b7f);
+}
+
+.skillgraph__empty,
+.skillgraph__legend {
+  margin: 0.9rem 0 0;
+  font-size: 0.82rem;
+  color: var(--clr-text-secondary, #5c6b7f);
+}
+
+.skillgraph__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+}
+
+/* El punto de color acompaña al texto; el texto es el que informa. */
+.skillgraph__key::before {
+  content: '';
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+  margin-right: 0.35rem;
+  border-radius: 50%;
+  vertical-align: baseline;
+}
+
+.skillgraph__key--mastered::before { background: #10B981; }
+.skillgraph__key--progress::before { background: #F59E0B; }
+.skillgraph__key--gap::before      { background: #EF4444; }

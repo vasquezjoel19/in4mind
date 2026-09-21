@@ -187,7 +187,7 @@ const AuthGuard = (() => {
     try {
       const url = new URL(trimmed, window.location.origin);
       if (!_isSafe(url.href)) return null;
-      let path = url.pathname || '/';
+      const path = url.pathname || '/';
       // Static hosting: allow /foo.html or /folder/foo.html under same origin
       const leaf = path.split('/').filter(Boolean).pop() || '';
       if (leaf && !/\.html$/i.test(leaf)) return null;

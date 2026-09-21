@@ -202,7 +202,7 @@ const EmployabilityService = (() => {
   function _inferReqChecksFromUrl(pathId, url) {
     const out = {};
     if (!_isValidUrl(url)) return out;
-    let host = '';
+    let host;
     try {
       host = new URL(String(url).trim()).hostname.toLowerCase();
     } catch {
@@ -526,7 +526,7 @@ const EmployabilityService = (() => {
       pathId: id,
     };
 
-    let code = rec.certCode;
+    let code;
     if (typeof CertVerificationService !== 'undefined') {
       code = CertVerificationService.register(certPayload, userName);
     } else {

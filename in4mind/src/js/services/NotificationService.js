@@ -85,10 +85,6 @@ const NotificationService = (() => {
     return courses.find(c => c.id === id) || null;
   }
 
-  function _hasCert(certifications, courseId) {
-    return certifications.some(c => c.refId === courseId);
-  }
-
   /** @param {object} raw */
   function _finalize(raw) {
     const base = TYPE_PRIORITY[raw.type] ?? 50;

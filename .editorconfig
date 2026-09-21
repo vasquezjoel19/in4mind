@@ -1,0 +1,20 @@
+# IN4MIND — convenciones de formato compartidas entre editores.
+# No reformatea nada por sí solo: solo evita que cada editor guarde con un
+# estilo distinto (tabs vs espacios, finales de línea CRLF, BOM).
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.md]
+# Dos espacios al final son un salto de línea en Markdown.
+trim_trailing_whitespace = false
+
+[*.{png,jpg,jpeg,gif,svg,ico,webp,zip}]
+insert_final_newline = false
+trim_trailing_whitespace = false

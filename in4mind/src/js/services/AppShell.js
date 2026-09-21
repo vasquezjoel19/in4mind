@@ -298,9 +298,6 @@ const AppShell = (() => {
           }
         }
       })();
-      if (typeof LazyScriptLoader !== 'undefined') {
-        void LazyScriptLoader.loadPushOptional().catch(() => {});
-      }
     });
 
     const main = document.querySelector('.main-area');

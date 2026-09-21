@@ -195,7 +195,7 @@ const AuthController = (() => {
     // Solo ASCII imprimible (codes 32-126), sin espacios
     const isAsciiOnly = /^[\x21-\x7E]+$/.test(val);
     // Formato estricto: letras/números/guiones/puntos @ dominio . extensión (2-10 letras)
-    const isValidFormat = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,10}$/.test(val);
+    const isValidFormat = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,10}$/.test(val);
     const ok = isAsciiOnly && isValidFormat;
     if (!ok) input.closest('.form-group')?.classList.add('is-invalid');
     return ok;

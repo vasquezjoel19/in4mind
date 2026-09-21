@@ -75,6 +75,27 @@ npm start       # construye los bundles y sirve en :8080
 | `npm run build:shell` | Solo los bundles (`--no-minify` para depurar código legible). |
 | `npm run build:csp` | Recalcula los hashes de la CSP en `vercel.json`. **Obligatorio tras editar cualquier `<script>` inline.** |
 | `npm test` | Unitarias + paridad de i18n + comprobaciones de humo. |
+| `npm run lint` (en la **raíz** del repo) | ESLint sobre `in4mind/src`, `api/`, scripts y tests. `npm run lint:fix` aplica lo autocorregible. |
+
+El linter conoce el estilo del proyecto: los archivos de `src/js` son *scripts
+clásicos*, no módulos, así que `eslint.config.js` los trata como tal y deriva
+del propio código la lista de globales que publican. Al añadir un servicio
+nuevo no hay que tocar la configuración.
+
+### Pendiente: iconos servidos desde un CDN externo
+
+20 iconos del catálogo se piden a `cdn-icons-png.flaticon.com`. Eso hace que la
+app dependa de un tercero para verse entera y filtra la IP de cada estudiante a
+ese dominio. `scripts/localize-icons.js` los trae a local y reescribe las rutas:
+
+```bash
+node scripts/localize-icons.js --dry-run   # qué haría
+node scripts/localize-icons.js             # descarga + reescritura
+```
+
+Después hay que quitar flaticon de `SOURCES.img` en `scripts/generate-csp.js`,
+ejecutar `npm run build:csp` y mantener la atribución que exige la licencia
+gratuita de Flaticon en los créditos.
 
 ## Seguridad del frontend
 

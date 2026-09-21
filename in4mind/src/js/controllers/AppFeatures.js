@@ -6,9 +6,7 @@
 const AppFeatures = (() => {
 
   const ONBOARD_KEY = 'in4mind_onboarding_done';
-  let _activeNav = null;
   let _notifOpen = false;
-  let _searchOpen = false;
   let _notifications = [];
 
   function _t(k, p, fb = '') {
@@ -282,7 +280,6 @@ const AppFeatures = (() => {
   function _openSearch(prefill = '') {
     const modal = _ensureSearchModal();
     modal.hidden = false;
-    _searchOpen = true;
     const input = document.getElementById('global-search-input');
     if (input) {
       input.value = prefill;
@@ -294,7 +291,6 @@ const AppFeatures = (() => {
   function _closeSearch() {
     const modal = document.getElementById('global-search-modal');
     if (modal) modal.hidden = true;
-    _searchOpen = false;
   }
 
   function _bindGlobalSearch() {
@@ -422,7 +418,6 @@ const AppFeatures = (() => {
   // ── Init ───────────────────────────────────────────────────
 
   function init(activeNavId = null) {
-    _activeNav = activeNavId;
     if (typeof AccessibilityService !== 'undefined') AccessibilityService.initEarly();
     if (typeof CookieConsent !== 'undefined') CookieConsent.init();
     _bindNotifications();

@@ -25,7 +25,7 @@ const UserProfileService = (() => {
   const QUIZ_UNLOCK_EXAM_PCT   = 70;
 
   // ── Cache local para evitar llamadas repetidas ───────────────
-  let _cache = {
+  const _cache = {
     favorites:      null,
     saved:          null,
     visits:         null,
@@ -39,16 +39,6 @@ const UserProfileService = (() => {
   let _userIdPromise  = null;
   let _prefetchPromise = null;
   let _certSyncPromise = null;
-
-  function _invalidateUserIdCache() {
-    _userIdResolved = undefined;
-    _userIdPromise = null;
-  }
-
-  function _clearCache() {
-    Object.keys(_cache).forEach(k => { _cache[k] = null; });
-    _prefetchPromise = null;
-  }
 
   function _notify() {
     const user = getCurrentUser();

@@ -9,6 +9,13 @@
     "build": "npm run build --prefix in4mind",
     "start": "npm start --prefix in4mind",
     "test": "npm test --prefix in4mind",
-    "build:shell": "npm run build:shell --prefix in4mind"
+    "build:shell": "npm run build:shell --prefix in4mind",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.11.0",
+    "globals": "^17.12.0"
   }
 }

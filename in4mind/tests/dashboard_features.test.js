@@ -28,7 +28,7 @@ if (typeof global.CustomEvent === 'undefined') {
 
 // Minimal I18n stub
 global.I18n = {
-  t(key, params) {
+  t(key) {
     if (key === 'paths.web-dev.title') return 'Desarrollo web';
     if (key === 'paths.web-dev.desc') return 'HTML, CSS y JS';
     if (key.startsWith('paths.')) return key;

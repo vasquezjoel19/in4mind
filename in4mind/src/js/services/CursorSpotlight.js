@@ -12,8 +12,8 @@ const CursorSpotlight = (() => {
   let raf = 0;
   let bound = false;
   let intensity = 'landing';
-  let mouse = { x: 0.5, y: 0.5, px: 0.5, py: 0.5, moving: false };
-  let velS = { x: 0, y: 0 };
+  const mouse = { x: 0.5, y: 0.5, px: 0.5, py: 0.5, moving: false };
+  const velS = { x: 0, y: 0 };
   let lastMove = 0;
   let dpr = 1;
 

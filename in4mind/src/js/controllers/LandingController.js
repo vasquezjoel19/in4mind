@@ -15,8 +15,6 @@ const LandingController = (() => {
   }
 
   function _bindSearch() {
-    const btn = document.querySelector('.lp-header__actions .lp-icon-btn[aria-label], .lp-header__actions button[data-lp-search]');
-    const searchBtn = document.querySelector('.lp-header__actions .lp-icon-btn');
     const buttons = document.querySelectorAll('.lp-header__actions .lp-icon-btn');
     const searchTrigger = buttons[0];
     if (!searchTrigger) return;
@@ -152,6 +150,7 @@ const LandingController = (() => {
 
   function init() {
     _bindThemeToggle();
+    _bindSearch();
     _bindIntroModal();
     _publicCatalogLinks();
     if (typeof CookieConsent !== 'undefined') CookieConsent.init();

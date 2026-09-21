@@ -29,19 +29,22 @@ const LazyScriptLoader = (() => {
     return Promise.all(srcs.map(src => load(src).catch(() => false)));
   }
 
-  /** Scripts opcionales del dashboard/settings. */
+  /**
+   * Scripts opcionales de ajustes/privacidad.
+   *
+   * Solo entra aquí lo que NO está en app-shell.bundle.js. Cargar de nuevo un
+   * archivo ya empaquetado redeclara su `const` de nivel superior y el
+   * navegador aborta el script con "has already been declared": es lo que
+   * pasaba con DataExportService y PushNotificationService, que ya viajan en
+   * el bundle (ver scripts/bundle-shell.js).
+   */
   function loadPrivacyTools() {
     return loadMany([
-      'src/js/services/DataExportService.js?v=20260812func',
       'src/js/services/CertVerificationService.js?v=20260812func',
     ]);
   }
 
-  function loadPushOptional() {
-    return load('src/js/services/PushNotificationService.js?v=20260812func');
-  }
-
-  return { load, loadMany, loadPrivacyTools, loadPushOptional };
+  return { load, loadMany, loadPrivacyTools };
 })();
 
 if (typeof module !== 'undefined') module.exports = LazyScriptLoader;

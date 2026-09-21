@@ -602,7 +602,7 @@ const ProfileController = (() => {
       </article>`;
   }
 
-  function _bindListEvents($list, listType) {
+  function _bindListEvents($list) {
     $list.querySelectorAll('.prof-item__open').forEach(btn => {
       btn.addEventListener('click', () => {
         _openItem({
@@ -711,7 +711,7 @@ const ProfileController = (() => {
       $list.innerHTML = items.map(item => _renderItemCard(item, listType)).join('');
     }
     _clearListLoading();
-    if (_activeTab !== 'notes') _bindListEvents($list, listType);
+    if (_activeTab !== 'notes') _bindListEvents($list);
     _animateListEnter();
   }
 

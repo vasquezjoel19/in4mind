@@ -40,7 +40,7 @@ const LearningPathService = (() => {
     else if (guidedPct > 0) score += Math.round(20 * (guidedPct / 100));
     if (hasCert) score += 15;
 
-    let next = null;
+    let next;
     if (lessonCount < 2) {
       next = { kind: 'lesson', href: `tutorial.html?course=${encodeURIComponent(courseId)}`, label: _t('paths.nextLesson', null, 'Continuar lección') };
     } else if (quizPct < 70) {

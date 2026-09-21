@@ -48,7 +48,6 @@ const TutorialController = (() => {
   let _quizGateQuestions = [];
   let _quizGateIdx = 0;
   let _quizGateCorrect = 0;
-  let _quizGateMode = false;
   const QUIZ_GATE_PASS_PCT = 70;
 
   let $listView, $detailView, $lessonView;
@@ -64,28 +63,7 @@ const TutorialController = (() => {
     more:     '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',
   };
 
-  function _svgIcon(id) {
-    return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      ${NAV_ICONS[id] || ''}</svg>`;
-  }
 
-  function _navItem(item, active = false) {
-    const href = item.href || '';
-    const inner = `${_svgIcon(item.icon)}<span>${item.label}</span>`;
-    if (!href) {
-      return `<li class="nav-item ${active ? 'nav-item--active' : ''}"
-                  data-nav="${item.id}" data-label="${item.label}" role="button" tabindex="0">
-        ${inner}
-      </li>`;
-    }
-    return `<li role="none">
-      <a class="nav-item ${active ? 'nav-item--active' : ''}"
-         href="${href}" data-nav="${item.id}" data-label="${item.label}">
-        ${inner}
-      </a>
-    </li>`;
-  }
 
   function _renderFilters() {
     $filtersWrap.innerHTML = _categories().map(cat => `
@@ -307,12 +285,6 @@ const TutorialController = (() => {
       </article>`;
   }
 
-  function _firstLessonForSection(groups, sectionName, fallbackIdx) {
-    const items = groups[sectionName];
-    if (items?.length) return items[0].index;
-    return fallbackIdx;
-  }
-
   function _renderLessonCard(lesson, course, globalIdx) {
     const color = TutorialData.getLevelColor(lesson.level);
     const done = typeof UserProfileService !== 'undefined'
@@ -504,7 +476,6 @@ const TutorialController = (() => {
     _lessonCheckCallback = null;
     _lessonCheckSelected = -1;
     _lessonCheckAttempts = 0;
-    _quizGateMode = false;
     _quizGateQuestions = [];
     _quizGateIdx = 0;
     _quizGateCorrect = 0;
@@ -549,7 +520,6 @@ const TutorialController = (() => {
     _lessonCheckAttempts = 0;
     _lessonCheckSelected = -1;
     _lessonCheckCallback = onSuccess;
-    _quizGateMode = false;
 
     const overlay = document.getElementById('lesson-check');
     const $title = document.getElementById('lesson-check-title');
@@ -633,7 +603,6 @@ const TutorialController = (() => {
   }
 
   function _startQuizGate(checks) {
-    _quizGateMode = true;
     _quizGateQuestions = checks;
     _quizGateIdx = 0;
     _quizGateCorrect = 0;

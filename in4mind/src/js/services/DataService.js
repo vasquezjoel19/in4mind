@@ -81,7 +81,7 @@ const DataService = (() => {
     return Array.from(buf, b => b.toString(16).padStart(2, '0')).join('');
   }
 
-  let _users = _loadUsers();
+  const _users = _loadUsers();
 
   function _localizedCourses() {
     return COURSES.map(c => {

@@ -9,7 +9,6 @@
 const DashboardController = (() => {
 
   // ── Estado ──
-  let _currentNav   = 'home';
   let _searchTimeout = null;
   const _expanded = { featured: false, learning: false, recent: false };
   const _PREVIEW_LIMIT = { recent: 3 };
@@ -59,60 +58,16 @@ const DashboardController = (() => {
   }
 
   // ── Refs DOM ──
-  let $sidebarNav, $sidebarFooter, $welcomeTitle;
-    let $summaryGrid, $quickActionsGrid, $resumeGrid, $recommendedTrack;
-    let $employableRoot;
+  let $welcomeTitle;
+  let $summaryGrid, $quickActionsGrid, $resumeGrid, $recommendedTrack;
+  let $employableRoot;
   let $learningPathsGrid, $analyticsPanel;
   let $featuredTrack, $learningTrack, $recentTrack, $promoSlot;
   let $searchInput;
-  let $sidebar, $overlay;
 
   // ────────────────────────────────────────────
   // Helpers de render
   // ────────────────────────────────────────────
-
-  /**
-   * Genera el SVG de ícono de navegación según id.
-   * @param {string} iconId
-   * @returns {string} SVG HTML
-   */
-  function _navIcon(iconId) {
-    const ICONS = {
-      home:      '<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
-      book:      '<path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>',
-      quiz:      '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
-      bot:       '<rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="15" x2="8" y2="15"/><line x1="16" y1="15" x2="16" y2="15"/>',
-      settings:  '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>',
-      user:      '<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>',
-      more:      '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',
-    };
-    return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[iconId] || ''}</svg>`;
-  }
-
-  /**
-   * Construye el HTML de un nav-item del sidebar.
-   * @param {{ id: string, label: string, icon: string }} item
-   * @param {boolean} isActive
-   * @returns {string}
-   */
-  function _renderNavItem(item, isActive = false) {
-    const href = item.href || '';
-    const inner = `${_navIcon(item.icon)}<span>${item.label}</span>`;
-    if (!href) {
-      return `
-        <li class="nav-item ${isActive ? 'nav-item--active' : ''}"
-            data-nav="${item.id}" data-label="${item.label}" role="button" tabindex="0">
-          ${inner}
-        </li>`;
-    }
-    return `
-      <li role="none">
-        <a class="nav-item ${isActive ? 'nav-item--active' : ''}"
-           href="${href}" data-nav="${item.id}" data-label="${item.label}">
-          ${inner}
-        </a>
-      </li>`;
-  }
 
   /**
    * Construye el HTML de una tarjeta de curso.
@@ -516,7 +471,7 @@ const DashboardController = (() => {
   }
 
   function _buildQuickActions(stats, resumeItems, context = {}) {
-    const { affinity, topCourse, quizProgress } = context;
+    const { topCourse, quizProgress } = context;
     const segment = _getTimeSegment();
     // Un quiz suelto no sirve de foco: las acciones rápidas abren un curso.
     const primaryResume = resumeItems.find(item => item.courseId);
@@ -1015,15 +970,6 @@ const DashboardController = (() => {
   // Render de secciones
   // ────────────────────────────────────────────
 
-  /** Renderiza los ítems de navegación del sidebar. */
-  function _renderNav() {
-    const main   = DataService.getNavItems();
-    const footer = DataService.getNavFooter();
-
-    $sidebarNav.innerHTML   = main.map((it, i) => _renderNavItem(it, it.id === _currentNav)).join('');
-    $sidebarFooter.innerHTML = footer.map(it => _renderNavItem(it)).join('');
-  }
-
   /**
    * Renderiza los carruseles de cursos.
    * @param {string} [query=''] - Texto de búsqueda para filtrar
@@ -1061,7 +1007,7 @@ const DashboardController = (() => {
 
   /** Renderiza la sección de recién vistos desde el perfil del usuario. */
   async function _renderRecent() {
-    let visits = [];
+    let visits;
     try {
       const result = UserProfileService.getRecentVisits(_expanded.recent ? 24 : _PREVIEW_LIMIT.recent);
       visits = result && typeof result.then === 'function' ? await result : (result || []);
@@ -1394,38 +1340,6 @@ const DashboardController = (() => {
   // Event handlers
   // ────────────────────────────────────────────
 
-  /** Manejador de clic en ítem de navegación. */
-  function _handleNavClick(e) {
-    const navId = e.currentTarget.dataset.nav;
-    if (!navId || navId === _currentNav) return;
-
-    _currentNav = navId;
-    _renderNav();
-    _closeSidebar();
-
-    // Secciones con página propia → redirigir
-    const SECTION_ROUTES = {
-      quizzes:   'quizzes.html',
-      tutorials: 'tutorial.html',
-      ai:        'ai.html',        // ← ruta a la página IA
-    };
-
-    if (SECTION_ROUTES[navId]) {
-      window.location.href = SECTION_ROUTES[navId];
-      return;
-    }
-
-    // Mostrar estado básico por sección (extensible)
-    const SECTION_TITLES = {
-      home:     '¡Bienvenido, User!',
-      settings: 'Ajustes',
-    };
-
-    if ($welcomeTitle) {
-      $welcomeTitle.textContent = SECTION_TITLES[navId] || 'IN4MIND';
-    }
-  }
-
   /**
    * Manejador de clic en tarjeta de curso.
    * @param {string} courseId
@@ -1448,27 +1362,12 @@ const DashboardController = (() => {
     }
   }
 
-  /** Cierra el sidebar en móvil. */
-  function _closeSidebar() {
-    SidebarController.closeMobile();
-  }
-
-  /** Abre el sidebar en móvil. */
-  function _openSidebar() {
-    SidebarController.openMobile();
-  }
-
   /** Maneja búsqueda con debounce de 300ms. */
   function _handleSearch() {
     clearTimeout(_searchTimeout);
     _searchTimeout = setTimeout(() => {
       _renderCourses($searchInput.value);
     }, 300);
-  }
-
-  /** Maneja el cierre de sesión. */
-  function _handleLogout() {
-    AppShell.logout();
   }
 
   function _relocalize() {
@@ -1509,8 +1408,6 @@ const DashboardController = (() => {
     // if (!user) { window.location.href = 'login.html'; return; }
 
     // Cachear DOM
-    $sidebarNav    = document.getElementById('sidebar-nav');
-    $sidebarFooter = document.getElementById('sidebar-footer');
     $welcomeTitle  = document.getElementById('welcome-title');
     $summaryGrid   = document.getElementById('dashboard-summary-grid');
     $quickActionsGrid = document.getElementById('quick-actions-grid');
@@ -1524,8 +1421,6 @@ const DashboardController = (() => {
     $recentTrack   = document.getElementById('recent-track');
     $promoSlot     = document.getElementById('dashboard-promo-slot');
     $searchInput   = document.getElementById('search-input');
-    $sidebar       = document.getElementById('sidebar');
-    $overlay       = document.getElementById('sidebar-overlay');
 
     // Personalizar con nombre de usuario
     if (user && $welcomeTitle) {

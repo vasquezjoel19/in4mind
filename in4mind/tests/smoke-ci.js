@@ -1,4 +1,4 @@
-# Node smoke checks for CI (no browser).
+// Node smoke checks for CI (no browser).
 'use strict';
 
 const fs = require('fs');
@@ -200,10 +200,10 @@ assert('Gamification uses UserScopedStorage', /UserScopedStorage/.test(read('src
 const repoRoot = path.join(root, '..');
 const apiRoutes = [
   '_lib/groq-env.js',
+  '_lib/supabase-auth.js',
   'groq/chat.js',
   'groq/ping.js',
   'health.js',
-  'auth/request-reset.js',
 ];
 
 assert('no duplicate in4mind/api directory', !fs.existsSync(path.join(root, 'api')));
@@ -335,10 +335,61 @@ for (const loc of ['es', 'en', 'zh']) {
 for (const [file, endpoint] of [
   ['src/js/services/GroqService.js', '/api/health'],
   ['src/js/services/GroqService.js', '/api/groq/chat'],
-  ['src/js/services/AuthService.js', '/api/auth/request-reset'],
 ]) {
   assert(`${file} uses root-relative ${endpoint}`, read(file).includes(`'${endpoint}'`));
 }
+
+/* ── Seguridad: hallazgos de la auditoría que no deben reaparecer ───────────
+ * Cada assert corresponde a un arreglo concreto; si alguien revierte uno, CI
+ * lo dice en vez de que vuelva en silencio.
+ */
+const sessionStore = read('src/js/services/SessionStore.js');
+assert('SessionStore no guarda contraseñas', !/PWD_KEY\s*=\s*'in4mind_remember_pwd'/.test(sessionStore)
+  || /LEGACY_PWD_KEY/.test(sessionStore));
+assert('SessionStore no codifica contraseñas', !/_encodePwd|getRememberedPassword/.test(sessionStore));
+assert('SessionStore purga la contraseña heredada', /purgeLegacyCredentials/.test(sessionStore));
+
+const authController = read('src/js/controllers/AuthController.js');
+assert('login no precarga la contraseña', !/getRememberedPassword/.test(authController));
+
+const supabaseConfig = read('src/js/config/supabase.config.js');
+assert('Supabase persiste la sesión', /persistSession:\s*true/.test(supabaseConfig));
+assert('Supabase renueva el token', /autoRefreshToken:\s*true/.test(supabaseConfig));
+
+const dataService = read('src/js/services/DataService.js');
+assert('token de reset con CSPRNG', /getRandomValues/.test(dataService));
+assert('token de reset sin Math.random', !/const token = Math\.random/.test(dataService));
+
+const authService = read('src/js/services/AuthService.js');
+assert('reset delegado a Supabase', /resetPasswordForEmail/.test(authService));
+// Se comprueba la llamada, no la mención: el comentario del módulo explica
+// por qué se retiró ese endpoint.
+assert('sin endpoint propio de correo', !/fetch\('\/api\/auth/.test(authService));
+assert('no existe api/auth/request-reset.js',
+  !fs.existsSync(path.join(repoRoot, 'api/auth/request-reset.js')));
+
+const chatApi = fs.existsSync(path.join(repoRoot, 'api/groq/chat.js'))
+  ? fs.readFileSync(path.join(repoRoot, 'api/groq/chat.js'), 'utf8')
+  : '';
+assert('proxy Groq exige sesión', /requireUser\(req, res\)/.test(chatApi));
+assert('proxy Groq valida antes de llamar a Groq',
+  chatApi.indexOf('requireUser(req, res)') < chatApi.indexOf('fetch(GROQ_URL'));
+
+const authLib = fs.existsSync(path.join(repoRoot, 'api/_lib/supabase-auth.js'))
+  ? fs.readFileSync(path.join(repoRoot, 'api/_lib/supabase-auth.js'), 'utf8')
+  : '';
+assert('verificación JWT con comparación en tiempo constante', /timingSafeEqual/.test(authLib));
+assert('verificación JWT comprueba expiración', /payload\.exp/.test(authLib));
+assert('sin verificación disponible, falla cerrado', /AUTH_NOT_CONFIGURED/.test(authLib));
+
+const groqService = read('src/js/services/GroqService.js');
+assert('el cliente manda el token de sesión', /Authorization = `Bearer \$\{token\}`/.test(groqService));
+
+const chatService = read('src/js/services/GlobalChatService.js');
+assert('el chat no firma la identidad en el cliente',
+  !/author_name:\s*_local|author_name:\s*_display/.test(chatService));
+assert('la identidad del chat la fija el servidor',
+  fs.existsSync(path.join(repoRoot, 'supabase/migrations/20260921_chat_author_identity.sql')));
 
 if (failed) {
   console.error(`\n${failed} smoke check(s) failed`);

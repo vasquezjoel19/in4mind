@@ -63,6 +63,24 @@ const DataService = (() => {
     localStorage.setItem(USERS_KEY, JSON.stringify(users));
   }
 
+  /**
+   * Token de un solo uso para el restablecimiento local (modo demo).
+   *
+   * Math.random() no es criptográficamente seguro: su estado es predecible a
+   * partir de salidas previas, así que un token generado así se puede adivinar.
+   * crypto.getRandomValues sí lo es y está en todos los navegadores objetivo.
+   */
+  function _secureToken(bytes = 24) {
+    const cryptoObj = typeof crypto !== 'undefined' ? crypto : null;
+    if (!cryptoObj || typeof cryptoObj.getRandomValues !== 'function') {
+      // Sin CSPRNG no se emite un token débil: el flujo falla de forma visible.
+      throw new Error('SECURE_RANDOM_UNAVAILABLE');
+    }
+    const buf = new Uint8Array(bytes);
+    cryptoObj.getRandomValues(buf);
+    return Array.from(buf, b => b.toString(16).padStart(2, '0')).join('');
+  }
+
   let _users = _loadUsers();
 
   function _localizedCourses() {
@@ -185,7 +203,7 @@ const DataService = (() => {
           return;
         }
 
-        const token = Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+        const token = _secureToken();
         const payload = {
           email: normalized,
           token,

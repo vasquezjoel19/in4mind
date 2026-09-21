@@ -125,12 +125,34 @@ DIRECTRICES
     }));
   }
 
-  /** Petición al proxy: el servidor añade la credencial. */
-  function _proxyRequest(history, stream) {
+  /**
+   * Access token de la sesión de Supabase Auth.
+   *
+   * El proxy exige sesión: sin este encabezado responde 401 AUTH_REQUIRED.
+   * Todas las páginas que usan el asistente están detrás de `data-requires-auth`,
+   * así que en condiciones normales siempre hay token.
+   */
+  async function _accessToken() {
+    const sb = typeof _sbClient !== 'undefined' ? _sbClient : null;
+    if (!sb) return '';
+    try {
+      const { data } = await sb.auth.getSession();
+      return data?.session?.access_token || '';
+    } catch {
+      return '';
+    }
+  }
+
+  /** Petición al proxy: el servidor añade la credencial de Groq. */
+  async function _proxyRequest(history, stream) {
     const cfg = _config();
+    const token = await _accessToken();
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers.Authorization = `Bearer ${token}`;
+
     return fetch(PROXY_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         systemPrompt: _buildSystemPrompt(),
         history: _mapHistory(history),
@@ -176,6 +198,9 @@ DIRECTRICES
 
   /** Códigos que el proxy emite y el cliente sabe explicar. */
   const KNOWN_CODES = [
+    'AUTH_REQUIRED',
+    'AUTH_NOT_CONFIGURED',
+    'AUTH_UNAVAILABLE',
     'GROQ_API_KEY_MISSING',
     'GROQ_API_KEY_INVALID',
     'GROQ_MODEL_NOT_FOUND',
@@ -206,9 +231,10 @@ DIRECTRICES
     if (/decommission|model_not_found|does_not_exist/i.test(code)) {
       throw new Error('GROQ_MODEL_NOT_FOUND');
     }
-    if (response.status === 401 || response.status === 403) {
-      throw new Error('GROQ_API_KEY_INVALID');
-    }
+    // Un 401 del proxy es de sesión (el de Groq llega traducido en el cuerpo);
+    // confundirlo con la clave mandaba a configurar algo que estaba bien.
+    if (response.status === 401) throw new Error('AUTH_REQUIRED');
+    if (response.status === 403) throw new Error('GROQ_API_KEY_INVALID');
     if (response.status === 429) throw new Error('GROQ_RATE_LIMITED');
 
     throw new Error(`GROQ_HTTP_${response.status}: ${raw.slice(0, 200)}`);

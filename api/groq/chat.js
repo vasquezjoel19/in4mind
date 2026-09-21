@@ -2,12 +2,19 @@
  * Vercel Serverless — proxy hacia Groq.
  * La API Key vive solo aquí (GROQ_API_KEY); nunca se envía al navegador.
  * Soporta respuesta completa (JSON) y streaming (SSE, mismo formato que Groq).
+ *
+ * Requiere sesión: hay que mandar el access token de Supabase Auth en
+ * `Authorization: Bearer <jwt>`. Sin eso el endpoint era un LLM gratuito para
+ * cualquiera con `curl` —el navegador lo frena la política de mismo origen,
+ * pero un cliente fuera del navegador no— a cargo de la cuota de Groq de la
+ * cuenta. Ver api/_lib/supabase-auth.js.
  */
 'use strict';
 
 const {
   resolveGroqKey, resolveGroqModel, resolveGroqMaxTokens, KNOWN_MODELS,
 } = require('../_lib/groq-env.js');
+const { requireUser } = require('../_lib/supabase-auth.js');
 
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
@@ -134,6 +141,11 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Primero la sesión: sin usuario no se gasta ni una llamada a Groq.
+  // requireUser ya responde 401/503 cuando no hay token válido.
+  const user = await requireUser(req, res);
+  if (!user) return undefined;
+
   // Mismo criterio que /api/health y /api/groq/ping: evita que un placeholder
   // pase el filtro aquí y termine en un 401 opaco de Groq.
   const { ok: keyOk, key: apiKey, reason } = resolveGroqKey();
@@ -161,7 +173,7 @@ module.exports = async function handler(req, res) {
 
     if (!groqRes.ok) {
       const detail = await groqRes.text().catch(() => '');
-      console.error('[api/groq/chat] upstream', groqRes.status, detail.slice(0, 300));
+      console.error('[api/groq/chat] upstream', groqRes.status, `user=${user.id}`, detail.slice(0, 300));
       // Se reenvía el status de Groq salvo el 503: el cliente lo interpretaba
       // como "falta la API Key" y pedía configurar una que ya estaba puesta.
       const status = groqRes.status === 503 ? 502 : groqRes.status;

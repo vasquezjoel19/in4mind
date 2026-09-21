@@ -67,12 +67,15 @@ const AuthService = (() => {
   }
 
   /**
+   * Copia ligera de la sesión para la UI. La sesión real (token renovable) la
+   * guarda Supabase Auth; aquí nunca entra la contraseña.
+   *
    * @param {object} user
    * @param {boolean|null} remember  true si el usuario marcó "Recordar datos"
    */
-  async function _persistSession(user, remember = null, password = null) {
+  async function _persistSession(user, remember = null) {
     if (typeof SessionStore !== 'undefined') {
-      SessionStore.persist(user, remember, password);
+      SessionStore.persist(user, remember);
     } else {
       sessionStorage.setItem('in4mind_user', JSON.stringify(user));
     }
@@ -98,7 +101,7 @@ const AuthService = (() => {
         if (!error && data?.user && data?.session) {
           const meta = await _upsertProfile(data.user);
           const user = _sessionUser(data.user, meta.name);
-          await _persistSession(user, remember, pass);
+          await _persistSession(user, remember);
           if (typeof OnboardingService !== 'undefined') {
             await OnboardingService.hydrateFromCloud(user.email);
           }
@@ -118,7 +121,7 @@ const AuthService = (() => {
     }
 
     const result = await DataService.login(em, pass);
-    if (result.ok) await _persistSession(result.user, remember, pass);
+    if (result.ok) await _persistSession(result.user, remember);
     return result;
   }
 
@@ -171,7 +174,7 @@ const AuthService = (() => {
 
         await _upsertProfile(user, displayName);
         const sessionUser = _sessionUser(user, displayName);
-        await _persistSession(sessionUser, remember, pass);
+        await _persistSession(sessionUser, remember);
         if (typeof OnboardingService !== 'undefined') {
           OnboardingService.markIncomplete(em);
           try {
@@ -193,14 +196,22 @@ const AuthService = (() => {
 
     const result = await DataService.register(displayName, em, pass);
     if (result.ok) {
-      await _persistSession(result.user, remember, pass);
+      await _persistSession(result.user, remember);
       if (typeof OnboardingService !== 'undefined') OnboardingService.markIncomplete(em);
     }
     return result;
   }
 
   /**
-   * Envía el correo de recuperación a la dirección que escribió el usuario.
+   * Recuperación de contraseña — flujo nativo de Supabase Auth.
+   *
+   * El correo lo envía Supabase con su propio token de un solo uso. La app no
+   * tiene (ni debe tener) un endpoint propio de envío: el anterior
+   * `/api/auth/request-reset` aceptaba cualquier destinatario y cualquier
+   * token del cliente, así que era un relé de correo abierto con el dominio
+   * de IN4MIND como remitente.
+   *
+   * Nunca se revela si el correo existe: eso permitiría enumerar cuentas.
    */
   async function requestPasswordReset(email) {
     const em = String(email || '').trim().toLowerCase();
@@ -211,38 +222,58 @@ const AuthService = (() => {
         const redirectTo = `${base}login.html?view=reset`;
         const { error } = await _sb.auth.resetPasswordForEmail(em, { redirectTo });
         if (!error) return { ok: true, email: em, delivered: true, via: 'supabase' };
-      } catch { /* se intenta el endpoint propio */ }
+        return {
+          ok: false,
+          error: _mapAuthError(error, 'auth.errProcess', 'No se pudo enviar el correo de recuperación.'),
+        };
+      } catch {
+        return {
+          ok: false,
+          error: _t('auth.errProcess', null, 'No se pudo enviar el correo de recuperación.'),
+        };
+      }
     }
 
+    // Modo demo (sin Supabase): el restablecimiento ocurre en este dispositivo.
+    // No hay envío de correo, y la UI lo dice en vez de fingirlo.
     const local = await DataService.requestPasswordReset(em);
     if (!local.ok) return local;
-
-    try {
-      const res = await fetch('/api/auth/request-reset', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: em, token: local.token }),
-      });
-      if (res.ok) return { ok: true, email: em, delivered: true, via: 'api' };
-
-      const data = await res.json().catch(() => ({}));
-      if (data.error === 'RESET_EMAIL_NOT_CONFIGURED' || res.status === 404) {
-        return { ok: true, email: em, delivered: false, reason: 'not_configured' };
-      }
-      return { ok: true, email: em, delivered: false, reason: 'send_failed' };
-    } catch {
-      return { ok: true, email: em, delivered: false, reason: 'offline' };
-    }
+    return { ok: true, email: em, delivered: false, reason: 'local_demo' };
   }
 
+  /**
+   * Fija la nueva contraseña. Con Supabase activo requiere la sesión de
+   * recuperación que crea el enlace del correo (`detectSessionInUrl`); si no
+   * la hay, se devuelve el error real en lugar de caer al almacén demo, que
+   * daría un "listo" falso sin cambiar nada en la cuenta real.
+   */
   async function resetPassword(email, password, confirm) {
     const em = String(email || '').trim().toLowerCase();
 
     if (_sb) {
       try {
+        const { data } = await _sb.auth.getSession();
+        if (!data?.session) {
+          return {
+            ok: false,
+            error: _t('auth.errResetLink', null,
+              'Abre el enlace del correo de recuperación para poder cambiar la contraseña.'),
+          };
+        }
         const { error } = await _sb.auth.updateUser({ password });
-        if (!error) return { ok: true, email: em };
-      } catch { /* fallback */ }
+        if (error) {
+          return {
+            ok: false,
+            error: _mapAuthError(error, 'auth.errUpdatePassword', 'No se pudo actualizar la contraseña.'),
+          };
+        }
+        return { ok: true, email: em };
+      } catch {
+        return {
+          ok: false,
+          error: _t('auth.errUpdatePassword', null, 'No se pudo actualizar la contraseña.'),
+        };
+      }
     }
 
     return DataService.resetPassword(em, password, confirm);
@@ -308,7 +339,12 @@ const AuthService = (() => {
     }
   }
 
-  async function restoreOAuthSession() {
+  /**
+   * Rehidrata la sesión de la app desde el token que guarda Supabase Auth.
+   * Sirve para cualquier origen de sesión: email+contraseña, Google o el
+   * enlace de recuperación. Es lo que sustituye a la contraseña guardada.
+   */
+  async function restoreSession() {
     if (!_sb) return { ok: false };
     try {
       const { data, error } = await _sb.auth.getSession();
@@ -353,7 +389,9 @@ const AuthService = (() => {
     updateDisplayName,
     logout,
     getSession,
-    restoreOAuthSession,
+    restoreSession,
+    // Alias histórico: el nombre anterior sugería que solo valía para OAuth.
+    restoreOAuthSession: restoreSession,
     signInWithGoogle,
     isSupabaseEnabled: () => !!_sb,
   };

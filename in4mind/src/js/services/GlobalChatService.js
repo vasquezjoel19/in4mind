@@ -45,6 +45,8 @@ const GlobalChatService = (() => {
   let _onlineCount = 0;
   let _lastSentAt = 0;
   let _authUser = null;
+  /** "nombre|nivel" ya volcado en profiles; evita reescribirlo en cada envío. */
+  let _profileSignature = null;
   let _connectPromise = null;
   /** ids ya emitidos: el eco del propio INSERT llega también por Realtime. */
   const _seenIds = new Set();
@@ -79,19 +81,25 @@ const GlobalChatService = (() => {
     return _authUser;
   }
 
-  /** Nombre visible, con el mismo criterio que usa el avatar del shell. */
-  function _displayName() {
+  /**
+   * Nombre visible según lo que hay en este dispositivo.
+   * @param {boolean} [strict] true = null en vez del genérico "Usuario", para
+   *   no pisar el nombre bueno del perfil con un valor de relleno.
+   */
+  function _localDisplayName(strict = false) {
     const local = typeof UserProfileService !== 'undefined'
       ? UserProfileService.getCurrentUser()
       : null;
     const fromAuth = _authUser && _authUser !== false
       ? (_authUser.user_metadata?.name || _authUser.email?.split('@')[0])
       : null;
-    return (local?.name || fromAuth || local?.email?.split('@')[0] || 'Usuario').slice(0, 80);
+    const resolved = local?.name || fromAuth || local?.email?.split('@')[0] || null;
+    if (!resolved) return strict ? null : 'Usuario';
+    return resolved.slice(0, 80);
   }
 
   /** Nivel de gamificación propio, para acompañar al nombre como insignia. */
-  function _authorLevel() {
+  function _localLevel() {
     try {
       return typeof GamificationService !== 'undefined' ? GamificationService.getLevel() : 1;
     } catch {
@@ -208,7 +216,7 @@ const GlobalChatService = (() => {
             _setState(STATE.ONLINE);
             if (user) {
               try {
-                await _channel.track({ name: _displayName(), at: Date.now() });
+                await _channel.track({ name: _localDisplayName(), at: Date.now() });
               } catch { /* la presencia es decorativa: no bloquea el chat */ }
             }
             done();
@@ -247,6 +255,7 @@ const GlobalChatService = (() => {
   /** Invalida el usuario cacheado tras un login o logout. */
   function resetAuth() {
     _authUser = null;
+    _profileSignature = null;
     _seenIds.clear();
     _lastSentAt = 0;
   }
@@ -265,6 +274,38 @@ const GlobalChatService = (() => {
     return Math.max(0, COOLDOWN_MS - (Date.now() - _lastSentAt));
   }
 
+  /**
+   * Vuelca nombre y nivel locales en el propio perfil.
+   *
+   * La identidad de cada mensaje ya no viaja en el INSERT: el trigger
+   * `chat_messages_author_trg` la lee de `profiles` usando auth.uid(), así que
+   * nadie puede firmar con el nombre de otra persona. `profiles` es la única
+   * fila que el usuario puede escribir (policy `users_own_profile`), y aquí se
+   * mantiene al día para que la insignia siga reflejando su progreso.
+   *
+   * Solo escribe cuando algo cambió: no añade una petición por mensaje.
+   */
+  async function _syncAuthorProfile(user) {
+    const name = _localDisplayName(true);
+    const level = _localLevel();
+    const signature = `${name || ''}|${level}`;
+    if (signature === _profileSignature) return;
+
+    // El nombre solo se manda si de verdad lo hay: escribir el genérico
+    // "Usuario" borraría el nombre real que ya tenga el perfil.
+    const patch = { level, updated_at: new Date().toISOString() };
+    if (name) patch.name = name;
+
+    try {
+      const { error } = await _sb.from('profiles')
+        .update(patch)
+        .eq('id', user.id);
+      // Un perfil desactualizado no debe impedir publicar: el trigger tiene
+      // su propio fallback al usuario del correo.
+      if (!error) _profileSignature = signature;
+    } catch { /* offline: se reintenta en el siguiente envío */ }
+  }
+
   async function _insert({ body, kind, attachment }) {
     const user = await _getAuthUser();
     if (!user) return { ok: false, reason: 'unauthenticated' };
@@ -272,13 +313,13 @@ const GlobalChatService = (() => {
     const waitMs = _cooldownLeft();
     if (waitMs > 0) return { ok: false, reason: 'cooldown', waitMs };
 
+    await _syncAuthorProfile(user);
+
     // Se marca antes de la red para que dos envíos rápidos no la esquiven.
     _lastSentAt = Date.now();
 
+    // Sin user_id, author_name ni author_level: los fija el servidor.
     const row = {
-      user_id: user.id,
-      author_name: _displayName(),
-      author_level: _authorLevel(),
       body,
       kind,
       attachment: attachment || null,

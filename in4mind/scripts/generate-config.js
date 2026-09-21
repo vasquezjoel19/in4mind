@@ -35,7 +35,23 @@ write('supabase.config.js', `/**
 const SUPABASE_URL = ${JSON.stringify(supabaseUrl)};
 const SUPABASE_ANON_KEY = ${JSON.stringify(supabaseAnonKey)};
 
-const _sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+/**
+ * Persistencia de sesión delegada por completo a Supabase Auth.
+ *
+ * 'persistSession' guarda el token renovable en el navegador y
+ * 'autoRefreshToken' lo renueva solo, así que volver a entrar no exige
+ * reescribir credenciales. Esto es lo que sustituye a la contraseña que
+ * versiones anteriores guardaban en localStorage.
+ *
+ * 'detectSessionInUrl' es lo que convierte el enlace del correo de
+ * recuperación (y el retorno de Google) en una sesión válida.
+ */
+const SUPABASE_AUTH_OPTIONS = {
+  persistSession: true,
+  autoRefreshToken: true,
+  detectSessionInUrl: true,
+};
+const _sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: SUPABASE_AUTH_OPTIONS });
 `);
 
 console.log('[build] Supabase URL:', supabaseUrl ? 'OK' : 'FALTA');

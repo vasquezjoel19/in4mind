@@ -1,4 +1,4 @@
-/*! IN4MIND bundle 20260821ux2 — 2026-08-21T21:53:30.603148+00:00 */
+/*! IN4MIND bundle 20260916sidebar â€” 2026-09-21T19:20:58.231Z */
 
 ;/* --- src/js/components/In4mindBulb.js --- */
 'use strict';
@@ -1496,11 +1496,16 @@ if (typeof module !== 'undefined') module.exports = ExtendedCourseLocales;
 /**
  * IN4MIND — SessionStore
  *
- * Sesión activa: solo en sessionStorage (se pierde al cerrar la pestaña).
+ * Sesión activa de la app: solo en sessionStorage (se pierde al cerrar la
+ * pestaña). La sesión *real* la mantiene Supabase Auth con su propio token
+ * renovable (`persistSession: true`, ver src/js/config/supabase.config.js);
+ * esto es únicamente la copia ligera que usan la UI y los guards.
  *
- * "Recordar mis datos" guarda únicamente correo/contraseña para precargar el
- * formulario de login. NO rehidrata la sesión automáticamente: el usuario debe
- * iniciar sesión de nuevo (o tener sesión válida de Supabase Auth).
+ * "Recordar mis datos" guarda SOLO el correo para precargar el formulario.
+ * Nunca la contraseña: hasta la versión anterior se guardaba en localStorage
+ * codificada en Base64 —que no es cifrado— y cualquier script de terceros,
+ * extensión o XSS podía leerla en claro. La persistencia entre visitas es
+ * ahora responsabilidad exclusiva del token de Supabase Auth.
  */
 
 'use strict';
@@ -1510,14 +1515,19 @@ const SessionStore = (() => {
   const USER_KEY     = 'in4mind_user';
   const REMEMBER_KEY = 'in4mind_remember';
   const EMAIL_KEY    = 'in4mind_remember_email';
-  const PWD_KEY      = 'in4mind_remember_pwd';
 
-  function _encodePwd(pwd) {
-    try { return btoa(unescape(encodeURIComponent(pwd))); } catch { return ''; }
-  }
+  /** Clave heredada: contraseñas guardadas por versiones anteriores. */
+  const LEGACY_PWD_KEY = 'in4mind_remember_pwd';
 
-  function _decodePwd(raw) {
-    try { return decodeURIComponent(escape(atob(raw))); } catch { return ''; }
+  /**
+   * Borra la contraseña que dejaron versiones previas en el navegador.
+   * Se ejecuta en cada carga: el usuario no tiene otra forma de limpiarla.
+   */
+  function purgeLegacyCredentials() {
+    try {
+      localStorage.removeItem(LEGACY_PWD_KEY);
+      sessionStorage.removeItem(LEGACY_PWD_KEY);
+    } catch { /* almacenamiento bloqueado */ }
   }
 
   function isRemembered() {
@@ -1537,17 +1547,6 @@ const SessionStore = (() => {
     }
   }
 
-  /** Contraseña recordada (solo si el usuario marcó "Recordar mis datos"). */
-  function getRememberedPassword() {
-    if (!isRemembered()) return '';
-    try {
-      const raw = localStorage.getItem(PWD_KEY);
-      return raw ? _decodePwd(raw) : '';
-    } catch {
-      return '';
-    }
-  }
-
   /**
    * Limpia restos de versiones anteriores que auto-iniciaban sesión desde
    * localStorage. Ya no se restaura `in4mind_user` automáticamente.
@@ -1557,16 +1556,16 @@ const SessionStore = (() => {
       // Legacy: había un auto-login copiando localStorage → sessionStorage.
       localStorage.removeItem(USER_KEY);
     } catch { /* ignore */ }
+    purgeLegacyCredentials();
     return Boolean(sessionStorage.getItem(USER_KEY));
   }
 
   /**
-   * Guarda la sesión activa en la pestaña y, si aplica, credenciales recordadas.
+   * Guarda la sesión activa en la pestaña y, si aplica, el correo recordado.
    * @param {object} user
    * @param {boolean|null} remember
-   * @param {string|null} [password]
    */
-  function persist(user, remember = null, password = null) {
+  function persist(user, remember = null) {
     if (!user) return;
     const raw = JSON.stringify(user);
     try {
@@ -1581,286 +1580,38 @@ const SessionStore = (() => {
       if (keep) {
         localStorage.setItem(REMEMBER_KEY, '1');
         if (user.email) localStorage.setItem(EMAIL_KEY, user.email);
-        if (password) localStorage.setItem(PWD_KEY, _encodePwd(password));
       } else {
         localStorage.removeItem(REMEMBER_KEY);
         localStorage.removeItem(EMAIL_KEY);
-        localStorage.removeItem(PWD_KEY);
       }
+      purgeLegacyCredentials();
     } catch { /* sin espacio: la sesión de pestaña sigue funcionando */ }
   }
 
   /** Cierre de sesión: borra la sesión; el correo recordado es opcional. */
-  function clear({ keepEmail = true, keepPassword = true } = {}) {
+  function clear({ keepEmail = true } = {}) {
     try {
       sessionStorage.removeItem(USER_KEY);
       localStorage.removeItem(USER_KEY);
-      if (!keepEmail || !keepPassword) {
+      purgeLegacyCredentials();
+      if (!keepEmail) {
         localStorage.removeItem(REMEMBER_KEY);
-      }
-      if (!keepEmail) localStorage.removeItem(EMAIL_KEY);
-      if (!keepPassword) localStorage.removeItem(PWD_KEY);
-      // Si se borra la contraseña pero se quiere conservar el correo, mantener flag.
-      if (keepEmail && !keepPassword && getRememberedEmail()) {
-        localStorage.setItem(REMEMBER_KEY, '1');
+        localStorage.removeItem(EMAIL_KEY);
       }
     } catch { /* ignore */ }
   }
 
   return {
     restore, persist, clear, isRemembered,
-    getRememberedEmail, getRememberedPassword, USER_KEY,
+    getRememberedEmail, purgeLegacyCredentials, USER_KEY,
   };
 
 })();
 
-// Limpia legacy de auto-login al cargar.
+// Limpia legacy de auto-login (y contraseñas guardadas) al cargar.
 if (typeof window !== 'undefined') SessionStore.restore();
 
 if (typeof module !== 'undefined') module.exports = SessionStore;
-
-
-;/* --- src/js/services/UserScopedStorage.js --- */
-/**
- * IN4MIND — Claves de localStorage aisladas por cuenta.
- * Formato: `in4mind_{kind}:{account}` (email o id). Migra valores legacy sin sufijo.
- */
-'use strict';
-
-const UserScopedStorage = (() => {
-
-  function accountId() {
-    try {
-      const raw = sessionStorage.getItem('in4mind_user') || localStorage.getItem('in4mind_user');
-      const user = raw ? JSON.parse(raw) : null;
-      const id = user?.id || user?.email || '';
-      return String(id || 'guest').toLowerCase();
-    } catch {
-      return 'guest';
-    }
-  }
-
-  function key(base) {
-    return `${base}:${accountId()}`;
-  }
-
-  function migrate(base) {
-    const scoped = key(base);
-    try {
-      if (localStorage.getItem(scoped) != null) return scoped;
-      const legacy = localStorage.getItem(base);
-      if (legacy != null) localStorage.setItem(scoped, legacy);
-    } catch { /* ignore */ }
-    return scoped;
-  }
-
-  function getItem(base) {
-    try {
-      return localStorage.getItem(migrate(base));
-    } catch {
-      return null;
-    }
-  }
-
-  function setItem(base, value) {
-    try {
-      localStorage.setItem(key(base), value);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  function getJson(base, fallback) {
-    try {
-      const raw = getItem(base);
-      if (raw == null || raw === '') return fallback;
-      const parsed = JSON.parse(raw);
-      return parsed == null ? fallback : parsed;
-    } catch {
-      return fallback;
-    }
-  }
-
-  function setJson(base, value) {
-    try {
-      return setItem(base, JSON.stringify(value));
-    } catch {
-      return false;
-    }
-  }
-
-  return { accountId, key, migrate, getItem, setItem, getJson, setJson };
-})();
-
-if (typeof module !== 'undefined') module.exports = UserScopedStorage;
-
-
-;/* --- src/js/services/UiDialog.js --- */
-/**
- * IN4MIND — Diálogos temáticos (reemplazan alert / confirm / prompt).
- */
-'use strict';
-
-const UiDialog = (() => {
-
-  let _open = null;
-
-  function _t(k, p, fb) {
-    if (typeof I18n !== 'undefined') {
-      const out = I18n.t(k, p);
-      if (out && out !== k) return out;
-    }
-    return fb ?? k;
-  }
-
-  function _esc(str) {
-    return String(str ?? '').replace(/[&<>"']/g, c => (
-      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
-    ));
-  }
-
-  function _ensureRoot() {
-    let root = document.getElementById('ui-dialog-root');
-    if (root) return root;
-    root = document.createElement('div');
-    root.id = 'ui-dialog-root';
-    root.hidden = true;
-    document.body.appendChild(root);
-    return root;
-  }
-
-  function close() {
-    const root = document.getElementById('ui-dialog-root');
-    if (root) {
-      root.innerHTML = '';
-      root.hidden = true;
-    }
-    const resolve = _open;
-    _open = null;
-    document.removeEventListener('keydown', _onKey, true);
-    if (resolve) resolve(null);
-  }
-
-  function _onKey(e) {
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      close();
-      return;
-    }
-    if (e.key !== 'Tab') return;
-    const root = document.getElementById('ui-dialog-root');
-    const focusable = root?.querySelectorAll(
-      'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'
-    );
-    if (!focusable?.length) return;
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
-    }
-  }
-
-  function _finish(value) {
-    const done = _open;
-    _open = null;
-    const el = document.getElementById('ui-dialog-root');
-    if (el) {
-      el.innerHTML = '';
-      el.hidden = true;
-    }
-    document.removeEventListener('keydown', _onKey, true);
-    if (done) done(value);
-  }
-
-  function _mount({ title, bodyHtml, actions, danger, focusSelector }) {
-    const root = _ensureRoot();
-    root.hidden = false;
-    root.innerHTML = `
-      <div class="ui-dialog-backdrop" data-ui-dialog-dismiss>
-        <div class="ui-dialog ${danger ? 'ui-dialog--danger' : ''}" role="dialog" aria-modal="true" aria-labelledby="ui-dialog-title">
-          <h2 class="ui-dialog__title" id="ui-dialog-title">${_esc(title)}</h2>
-          <div class="ui-dialog__body">${bodyHtml}</div>
-          <div class="ui-dialog__actions">${actions}</div>
-        </div>
-      </div>`;
-    document.addEventListener('keydown', _onKey, true);
-    root.querySelector('[data-ui-dialog-dismiss]')?.addEventListener('click', (e) => {
-      if (e.target.hasAttribute('data-ui-dialog-dismiss')) close();
-    });
-    const focusEl = root.querySelector(focusSelector || '.ui-dialog__actions button:last-child, .ui-dialog input');
-    setTimeout(() => focusEl?.focus(), 20);
-    return root;
-  }
-
-  function alert({ title, message } = {}) {
-    return new Promise((resolve) => {
-      close();
-      _open = resolve;
-      const root = _mount({
-        title: title || _t('common.confirm', null, 'Aviso'),
-        bodyHtml: `<p class="ui-dialog__text">${_esc(message || '')}</p>`,
-        actions: `<button type="button" class="btn--course" data-ui-ok>${_esc(_t('common.confirm', null, 'Aceptar'))}</button>`,
-      });
-      root.querySelector('[data-ui-ok]')?.addEventListener('click', () => _finish(true));
-    });
-  }
-
-  function confirm({ title, message, danger, confirmLabel, cancelLabel } = {}) {
-    return new Promise((resolve) => {
-      close();
-      _open = resolve;
-      const okLabel = confirmLabel || (danger
-        ? _t('common.delete', null, 'Eliminar')
-        : _t('common.confirm', null, 'Confirmar'));
-      const root = _mount({
-        title: title || _t('common.confirm', null, 'Confirmar'),
-        danger: Boolean(danger),
-        bodyHtml: `<p class="ui-dialog__text">${_esc(message || '')}</p>`,
-        actions: `
-          <button type="button" class="btn--outline" data-ui-cancel>${_esc(cancelLabel || _t('common.cancel', null, 'Cancelar'))}</button>
-          <button type="button" class="${danger ? 'btn--danger' : 'btn--course'}" data-ui-ok>${_esc(okLabel)}</button>`,
-      });
-      root.querySelector('[data-ui-cancel]')?.addEventListener('click', () => _finish(false));
-      root.querySelector('[data-ui-ok]')?.addEventListener('click', () => _finish(true));
-    });
-  }
-
-  function prompt({ title, message, value, placeholder, confirmLabel } = {}) {
-    return new Promise((resolve) => {
-      close();
-      _open = resolve;
-      const root = _mount({
-        title: title || _t('common.confirm', null, 'Nombre'),
-        bodyHtml: `
-          ${message ? `<p class="ui-dialog__text">${_esc(message)}</p>` : ''}
-          <input class="ui-dialog__input" id="ui-dialog-input" type="text" maxlength="120"
-                 value="${_esc(value || '')}" placeholder="${_esc(placeholder || '')}">`,
-        actions: `
-          <button type="button" class="btn--outline" data-ui-cancel>${_esc(_t('common.cancel', null, 'Cancelar'))}</button>
-          <button type="button" class="btn--course" data-ui-ok>${_esc(confirmLabel || _t('common.save', null, 'Guardar'))}</button>`,
-        focusSelector: '#ui-dialog-input',
-      });
-      const input = root.querySelector('#ui-dialog-input');
-      root.querySelector('[data-ui-cancel]')?.addEventListener('click', () => _finish(null));
-      root.querySelector('[data-ui-ok]')?.addEventListener('click', () => _finish(input?.value ?? ''));
-      input?.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          _finish(input.value);
-        }
-      });
-    });
-  }
-
-  return { alert, confirm, prompt, close, danger: (opts) => confirm({ ...opts, danger: true }) };
-})();
-
-if (typeof module !== 'undefined') module.exports = UiDialog;
 
 
 ;/* --- src/js/services/ErrorReporter.js --- */
@@ -2743,10 +2494,12 @@ const AuthGuard = (() => {
 
   async function requireAsync() {
     if (_hasSession()) return true;
-    if (typeof AuthService !== 'undefined' && AuthService.restoreOAuthSession) {
+    // Sesión persistida por Supabase Auth (email+contraseña, Google o enlace
+    // de recuperación): es lo que evita pedir credenciales en cada visita.
+    if (typeof AuthService !== 'undefined' && AuthService.restoreSession) {
       try {
-        const oauth = await AuthService.restoreOAuthSession();
-        if (oauth?.ok) return true;
+        const restored = await AuthService.restoreSession();
+        if (restored?.ok) return true;
       } catch { /* sin sesión cloud */ }
     }
     _redirectToLogin();
@@ -2947,6 +2700,24 @@ const DataService = (() => {
     localStorage.setItem(USERS_KEY, JSON.stringify(users));
   }
 
+  /**
+   * Token de un solo uso para el restablecimiento local (modo demo).
+   *
+   * Math.random() no es criptográficamente seguro: su estado es predecible a
+   * partir de salidas previas, así que un token generado así se puede adivinar.
+   * crypto.getRandomValues sí lo es y está en todos los navegadores objetivo.
+   */
+  function _secureToken(bytes = 24) {
+    const cryptoObj = typeof crypto !== 'undefined' ? crypto : null;
+    if (!cryptoObj || typeof cryptoObj.getRandomValues !== 'function') {
+      // Sin CSPRNG no se emite un token débil: el flujo falla de forma visible.
+      throw new Error('SECURE_RANDOM_UNAVAILABLE');
+    }
+    const buf = new Uint8Array(bytes);
+    cryptoObj.getRandomValues(buf);
+    return Array.from(buf, b => b.toString(16).padStart(2, '0')).join('');
+  }
+
   let _users = _loadUsers();
 
   function _localizedCourses() {
@@ -3069,7 +2840,7 @@ const DataService = (() => {
           return;
         }
 
-        const token = Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+        const token = _secureToken();
         const payload = {
           email: normalized,
           token,
@@ -5915,12 +5686,15 @@ const AuthService = (() => {
   }
 
   /**
+   * Copia ligera de la sesión para la UI. La sesión real (token renovable) la
+   * guarda Supabase Auth; aquí nunca entra la contraseña.
+   *
    * @param {object} user
    * @param {boolean|null} remember  true si el usuario marcó "Recordar datos"
    */
-  async function _persistSession(user, remember = null, password = null) {
+  async function _persistSession(user, remember = null) {
     if (typeof SessionStore !== 'undefined') {
-      SessionStore.persist(user, remember, password);
+      SessionStore.persist(user, remember);
     } else {
       sessionStorage.setItem('in4mind_user', JSON.stringify(user));
     }
@@ -5946,7 +5720,7 @@ const AuthService = (() => {
         if (!error && data?.user && data?.session) {
           const meta = await _upsertProfile(data.user);
           const user = _sessionUser(data.user, meta.name);
-          await _persistSession(user, remember, pass);
+          await _persistSession(user, remember);
           if (typeof OnboardingService !== 'undefined') {
             await OnboardingService.hydrateFromCloud(user.email);
           }
@@ -5966,7 +5740,7 @@ const AuthService = (() => {
     }
 
     const result = await DataService.login(em, pass);
-    if (result.ok) await _persistSession(result.user, remember, pass);
+    if (result.ok) await _persistSession(result.user, remember);
     return result;
   }
 
@@ -6019,7 +5793,7 @@ const AuthService = (() => {
 
         await _upsertProfile(user, displayName);
         const sessionUser = _sessionUser(user, displayName);
-        await _persistSession(sessionUser, remember, pass);
+        await _persistSession(sessionUser, remember);
         if (typeof OnboardingService !== 'undefined') {
           OnboardingService.markIncomplete(em);
           try {
@@ -6041,14 +5815,22 @@ const AuthService = (() => {
 
     const result = await DataService.register(displayName, em, pass);
     if (result.ok) {
-      await _persistSession(result.user, remember, pass);
+      await _persistSession(result.user, remember);
       if (typeof OnboardingService !== 'undefined') OnboardingService.markIncomplete(em);
     }
     return result;
   }
 
   /**
-   * Envía el correo de recuperación a la dirección que escribió el usuario.
+   * Recuperación de contraseña — flujo nativo de Supabase Auth.
+   *
+   * El correo lo envía Supabase con su propio token de un solo uso. La app no
+   * tiene (ni debe tener) un endpoint propio de envío: el anterior
+   * `/api/auth/request-reset` aceptaba cualquier destinatario y cualquier
+   * token del cliente, así que era un relé de correo abierto con el dominio
+   * de IN4MIND como remitente.
+   *
+   * Nunca se revela si el correo existe: eso permitiría enumerar cuentas.
    */
   async function requestPasswordReset(email) {
     const em = String(email || '').trim().toLowerCase();
@@ -6059,38 +5841,58 @@ const AuthService = (() => {
         const redirectTo = `${base}login.html?view=reset`;
         const { error } = await _sb.auth.resetPasswordForEmail(em, { redirectTo });
         if (!error) return { ok: true, email: em, delivered: true, via: 'supabase' };
-      } catch { /* se intenta el endpoint propio */ }
+        return {
+          ok: false,
+          error: _mapAuthError(error, 'auth.errProcess', 'No se pudo enviar el correo de recuperación.'),
+        };
+      } catch {
+        return {
+          ok: false,
+          error: _t('auth.errProcess', null, 'No se pudo enviar el correo de recuperación.'),
+        };
+      }
     }
 
+    // Modo demo (sin Supabase): el restablecimiento ocurre en este dispositivo.
+    // No hay envío de correo, y la UI lo dice en vez de fingirlo.
     const local = await DataService.requestPasswordReset(em);
     if (!local.ok) return local;
-
-    try {
-      const res = await fetch('/api/auth/request-reset', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: em, token: local.token }),
-      });
-      if (res.ok) return { ok: true, email: em, delivered: true, via: 'api' };
-
-      const data = await res.json().catch(() => ({}));
-      if (data.error === 'RESET_EMAIL_NOT_CONFIGURED' || res.status === 404) {
-        return { ok: true, email: em, delivered: false, reason: 'not_configured' };
-      }
-      return { ok: true, email: em, delivered: false, reason: 'send_failed' };
-    } catch {
-      return { ok: true, email: em, delivered: false, reason: 'offline' };
-    }
+    return { ok: true, email: em, delivered: false, reason: 'local_demo' };
   }
 
+  /**
+   * Fija la nueva contraseña. Con Supabase activo requiere la sesión de
+   * recuperación que crea el enlace del correo (`detectSessionInUrl`); si no
+   * la hay, se devuelve el error real en lugar de caer al almacén demo, que
+   * daría un "listo" falso sin cambiar nada en la cuenta real.
+   */
   async function resetPassword(email, password, confirm) {
     const em = String(email || '').trim().toLowerCase();
 
     if (_sb) {
       try {
+        const { data } = await _sb.auth.getSession();
+        if (!data?.session) {
+          return {
+            ok: false,
+            error: _t('auth.errResetLink', null,
+              'Abre el enlace del correo de recuperación para poder cambiar la contraseña.'),
+          };
+        }
         const { error } = await _sb.auth.updateUser({ password });
-        if (!error) return { ok: true, email: em };
-      } catch { /* fallback */ }
+        if (error) {
+          return {
+            ok: false,
+            error: _mapAuthError(error, 'auth.errUpdatePassword', 'No se pudo actualizar la contraseña.'),
+          };
+        }
+        return { ok: true, email: em };
+      } catch {
+        return {
+          ok: false,
+          error: _t('auth.errUpdatePassword', null, 'No se pudo actualizar la contraseña.'),
+        };
+      }
     }
 
     return DataService.resetPassword(em, password, confirm);
@@ -6156,7 +5958,12 @@ const AuthService = (() => {
     }
   }
 
-  async function restoreOAuthSession() {
+  /**
+   * Rehidrata la sesión de la app desde el token que guarda Supabase Auth.
+   * Sirve para cualquier origen de sesión: email+contraseña, Google o el
+   * enlace de recuperación. Es lo que sustituye a la contraseña guardada.
+   */
+  async function restoreSession() {
     if (!_sb) return { ok: false };
     try {
       const { data, error } = await _sb.auth.getSession();
@@ -6201,7 +6008,9 @@ const AuthService = (() => {
     updateDisplayName,
     logout,
     getSession,
-    restoreOAuthSession,
+    restoreSession,
+    // Alias histórico: el nombre anterior sugería que solo valía para OAuth.
+    restoreOAuthSession: restoreSession,
     signInWithGoogle,
     isSupabaseEnabled: () => !!_sb,
   };
@@ -6933,6 +6742,8 @@ const GlobalChatService = (() => {
   let _onlineCount = 0;
   let _lastSentAt = 0;
   let _authUser = null;
+  /** "nombre|nivel" ya volcado en profiles; evita reescribirlo en cada envío. */
+  let _profileSignature = null;
   let _connectPromise = null;
   /** ids ya emitidos: el eco del propio INSERT llega también por Realtime. */
   const _seenIds = new Set();
@@ -6967,19 +6778,25 @@ const GlobalChatService = (() => {
     return _authUser;
   }
 
-  /** Nombre visible, con el mismo criterio que usa el avatar del shell. */
-  function _displayName() {
+  /**
+   * Nombre visible según lo que hay en este dispositivo.
+   * @param {boolean} [strict] true = null en vez del genérico "Usuario", para
+   *   no pisar el nombre bueno del perfil con un valor de relleno.
+   */
+  function _localDisplayName(strict = false) {
     const local = typeof UserProfileService !== 'undefined'
       ? UserProfileService.getCurrentUser()
       : null;
     const fromAuth = _authUser && _authUser !== false
       ? (_authUser.user_metadata?.name || _authUser.email?.split('@')[0])
       : null;
-    return (local?.name || fromAuth || local?.email?.split('@')[0] || 'Usuario').slice(0, 80);
+    const resolved = local?.name || fromAuth || local?.email?.split('@')[0] || null;
+    if (!resolved) return strict ? null : 'Usuario';
+    return resolved.slice(0, 80);
   }
 
   /** Nivel de gamificación propio, para acompañar al nombre como insignia. */
-  function _authorLevel() {
+  function _localLevel() {
     try {
       return typeof GamificationService !== 'undefined' ? GamificationService.getLevel() : 1;
     } catch {
@@ -7096,7 +6913,7 @@ const GlobalChatService = (() => {
             _setState(STATE.ONLINE);
             if (user) {
               try {
-                await _channel.track({ name: _displayName(), at: Date.now() });
+                await _channel.track({ name: _localDisplayName(), at: Date.now() });
               } catch { /* la presencia es decorativa: no bloquea el chat */ }
             }
             done();
@@ -7135,6 +6952,7 @@ const GlobalChatService = (() => {
   /** Invalida el usuario cacheado tras un login o logout. */
   function resetAuth() {
     _authUser = null;
+    _profileSignature = null;
     _seenIds.clear();
     _lastSentAt = 0;
   }
@@ -7153,6 +6971,38 @@ const GlobalChatService = (() => {
     return Math.max(0, COOLDOWN_MS - (Date.now() - _lastSentAt));
   }
 
+  /**
+   * Vuelca nombre y nivel locales en el propio perfil.
+   *
+   * La identidad de cada mensaje ya no viaja en el INSERT: el trigger
+   * `chat_messages_author_trg` la lee de `profiles` usando auth.uid(), así que
+   * nadie puede firmar con el nombre de otra persona. `profiles` es la única
+   * fila que el usuario puede escribir (policy `users_own_profile`), y aquí se
+   * mantiene al día para que la insignia siga reflejando su progreso.
+   *
+   * Solo escribe cuando algo cambió: no añade una petición por mensaje.
+   */
+  async function _syncAuthorProfile(user) {
+    const name = _localDisplayName(true);
+    const level = _localLevel();
+    const signature = `${name || ''}|${level}`;
+    if (signature === _profileSignature) return;
+
+    // El nombre solo se manda si de verdad lo hay: escribir el genérico
+    // "Usuario" borraría el nombre real que ya tenga el perfil.
+    const patch = { level, updated_at: new Date().toISOString() };
+    if (name) patch.name = name;
+
+    try {
+      const { error } = await _sb.from('profiles')
+        .update(patch)
+        .eq('id', user.id);
+      // Un perfil desactualizado no debe impedir publicar: el trigger tiene
+      // su propio fallback al usuario del correo.
+      if (!error) _profileSignature = signature;
+    } catch { /* offline: se reintenta en el siguiente envío */ }
+  }
+
   async function _insert({ body, kind, attachment }) {
     const user = await _getAuthUser();
     if (!user) return { ok: false, reason: 'unauthenticated' };
@@ -7160,13 +7010,13 @@ const GlobalChatService = (() => {
     const waitMs = _cooldownLeft();
     if (waitMs > 0) return { ok: false, reason: 'cooldown', waitMs };
 
+    await _syncAuthorProfile(user);
+
     // Se marca antes de la red para que dos envíos rápidos no la esquiven.
     _lastSentAt = Date.now();
 
+    // Sin user_id, author_name ni author_level: los fija el servidor.
     const row = {
-      user_id: user.id,
-      author_name: _displayName(),
-      author_level: _authorLevel(),
       body,
       kind,
       attachment: attachment || null,
@@ -8098,8 +7948,7 @@ const AppShell = (() => {
   function clearSession() {
     SESSION_KEYS.forEach(k => sessionStorage.removeItem(k));
     if (typeof SessionStore !== 'undefined') {
-      const remembered = SessionStore.isRemembered();
-      SessionStore.clear({ keepEmail: true, keepPassword: remembered });
+      SessionStore.clear({ keepEmail: true });
     }
   }
 

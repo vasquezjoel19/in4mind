@@ -1,4 +1,4 @@
-/*! IN4MIND bundle 20260904groq — 2026-09-04T20:55:10.688Z */
+/*! IN4MIND bundle 20260916sidebar â€” 2026-09-21T19:20:58.222Z */
 
 ;try {
   if (typeof ThemeController !== 'undefined' && ThemeController.initEarly) ThemeController.initEarly();
@@ -585,6 +585,7 @@ const LOCALE_ES = {
     errRegister: 'Error al registrarse.',
     errProcess: 'No se pudo procesar la solicitud.',
     errUpdatePassword: 'No se pudo actualizar la contraseña.',
+    errResetLink: 'Abre el enlace del correo de recuperación para poder cambiar la contraseña.',
     forgotSent: 'Enviamos las instrucciones a {email}. Revisa tu bandeja de entrada y la carpeta de spam; el enlace caduca en 30 minutos.',
     forgotNotSent: 'No pudimos enviar el correo a {email} porque el servicio de email aún no está configurado. Puedes establecer una nueva contraseña ahora en este dispositivo.',
     rememberMe: 'Recordar mis datos',
@@ -1385,6 +1386,8 @@ const LOCALE_ES = {
     error: 'Error en la solicitud',
     errNoKey: '**Configuración requerida**\n\nPara habilitar Groq IA, defina `GROQ_API_KEY` en Vercel (Settings → Environment Variables) y vuelva a desplegar.\n\n- Obtenga su clave en https://console.groq.com/keys\n- La clave permanece en el servidor: nunca se expone en el navegador',
     errInvalidKey: '**Credencial no válida**\n\nLa API Key configurada fue rechazada. Verifique que la clave sea correcta en la consola de Groq.',
+    errAuthRequired: '**Sesión requerida**\n\nEl asistente solo responde a usuarios con sesión iniciada. Vuelve a iniciar sesión y reintenta.',
+    errAuthUnavailable: '**Verificación no disponible**\n\nNo se pudo comprobar tu sesión en este momento. Inténtalo de nuevo en unos segundos.',
     errUnavailable: '**Servicio temporalmente no disponible**\n\nNo fue posible completar la solicitud con Groq. Intente nuevamente en unos momentos.',
     errModel: '**Modelo no disponible**\n\nGroq ya no sirve el modelo configurado (suele ocurrir cuando se retira una versión). Actualice `GROQ_MODEL` en Vercel con un modelo vigente de https://console.groq.com/docs/models y vuelva a desplegar.',
     errRateLimit: '**Límite de uso alcanzado**\n\nSe agotó la cuota de Groq para este período. Espere unos minutos e intente de nuevo, o revise su plan en https://console.groq.com',
@@ -1993,6 +1996,7 @@ const LOCALE_EN = {
     errRegister: 'Could not register.',
     errProcess: 'Could not process the request.',
     errUpdatePassword: 'Could not update the password.',
+    errResetLink: 'Open the link from the recovery email to change your password.',
     forgotSent: 'We sent the instructions to {email}. Check your inbox and spam folder; the link expires in 30 minutes.',
     forgotNotSent: 'We could not email {email} because the mail service is not configured yet. You can set a new password now on this device.',
     rememberMe: 'Remember me',
@@ -2776,6 +2780,8 @@ const LOCALE_EN = {
     error: 'Request error',
     errNoKey: '**Configuration required**\n\nTo enable Groq AI, set `GROQ_API_KEY` in Vercel (Settings → Environment Variables) and redeploy.\n\n- Get your key at https://console.groq.com/keys\n- The key stays on the server: it is never exposed to the browser',
     errInvalidKey: '**Invalid credentials**\n\nThe configured API Key was rejected. Verify the key is correct in the Groq console.',
+    errAuthRequired: '**Sign-in required**\n\nThe assistant only answers signed-in users. Sign in again and retry.',
+    errAuthUnavailable: '**Verification unavailable**\n\nYour session could not be checked right now. Try again in a few seconds.',
     errUnavailable: '**Service temporarily unavailable**\n\nCould not complete the request with Groq. Please try again in a few moments.',
     errModel: '**Model unavailable**\n\nGroq no longer serves the configured model (this usually means the version was retired). Update `GROQ_MODEL` in Vercel with a current model from https://console.groq.com/docs/models and redeploy.',
     errRateLimit: '**Usage limit reached**\n\nThe Groq quota for this period is exhausted. Wait a few minutes and try again, or review your plan at https://console.groq.com',
@@ -3368,6 +3374,7 @@ const LOCALE_ZH = {
     errRegister: '无法注册。',
     errProcess: '无法处理请求。',
     errUpdatePassword: '无法更新密码。',
+    errResetLink: '请打开恢复邮件中的链接后再修改密码。',
     forgotSent: '我们已将说明发送至 {email}。请查看收件箱和垃圾邮件文件夹；链接将在 30 分钟后失效。',
     forgotNotSent: '邮件服务尚未配置，无法向 {email} 发送邮件。你可以现在在本设备上设置新密码。',
     rememberMe: '记住我的信息',
@@ -4161,6 +4168,8 @@ const LOCALE_ZH = {
     error: '请求错误',
     errNoKey: '**需要配置**\n\n要启用 Groq AI，请在 Vercel（Settings → Environment Variables）中设置 `GROQ_API_KEY` 并重新部署。\n\n- 在 https://console.groq.com/keys 获取密钥\n- 密钥仅保存在服务器，绝不会暴露给浏览器',
     errInvalidKey: '**凭据无效**\n\n配置的 API Key 被拒绝。请在 Groq 控制台验证密钥是否正确。',
+    errAuthRequired: '**需要登录**\n\n助手仅回复已登录的用户。请重新登录后再试。',
+    errAuthUnavailable: '**暂时无法验证**\n\n目前无法验证你的会话。请稍候几秒后重试。',
     errUnavailable: '**服务暂时不可用**\n\n无法通过 Groq 完成请求。请稍后再试。',
     errModel: '**模型不可用**\n\nGroq 已不再提供所配置的模型（通常是该版本已下线）。请在 Vercel 中将 `GROQ_MODEL` 更新为 https://console.groq.com/docs/models 上的现有模型并重新部署。',
     errRateLimit: '**已达使用上限**\n\n本周期的 Groq 配额已用尽。请稍候几分钟后重试，或在 https://console.groq.com 查看你的套餐。',

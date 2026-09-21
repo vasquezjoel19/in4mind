@@ -66,7 +66,40 @@ where tablename in ('user_notes','user_projects','quiz_attempts','guided_progres
 3. No desactivar RLS para “depurar” en producción.
 4. Si se añaden tablas de perfil nuevas, copiar el mismo patrón: PK `user_id`, RLS on, policies owner-only.
 
+## Chat global — identidad del autor (2026-09-21)
+
+Migración: `supabase/migrations/20260921_chat_author_identity.sql`
+
+Hallazgo: la policy de INSERT exigía `user_id = auth.uid()`, pero `author_name`
+y `author_level` los enviaba el navegador. Con una sesión normal se podía
+publicar firmando con el nombre de otra persona (o como si fuera soporte) y con
+cualquier nivel: la autoría real estaba protegida, la identidad mostrada no.
+
+Corrección:
+
+1. Trigger `chat_messages_author_trg` (BEFORE INSERT) fija `user_id`,
+   `author_name` y `author_level` leyendo `profiles` por `auth.uid()`.
+   Lo que mande el cliente en esas columnas se descarta.
+2. `profiles.level` (nuevo, 1–99) guarda el nivel de gamificación; el cliente
+   solo puede escribir su propia fila (`users_own_profile`).
+3. El trigger de identidad corre **antes** que `chat_messages_rate_limit_trg`
+   —PostgreSQL los dispara en orden alfabético— para que el límite de un
+   mensaje por segundo cuente siempre sobre el `user_id` real.
+
+Verificación en el Dashboard SQL:
+
+```sql
+-- Debe devolver los dos triggers, con 'author' antes que 'rate_limit'
+select tgname from pg_trigger
+ where tgrelid = 'public.chat_messages'::regclass and not tgisinternal
+ order by tgname;
+
+-- Insertar con otro nombre no debe tener efecto: el guardado es el del perfil
+insert into public.chat_messages (body, author_name, author_level)
+values ('prueba', 'Soporte IN4MIND', 99)
+returning author_name, author_level;
+```
+
 ## Fuera de alcance de este documento
 
 - CMS / panel admin de contenido (no implementado a propósito).
-- Chat global (política propia en `20260811_global_chat.sql`).

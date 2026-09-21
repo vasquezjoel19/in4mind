@@ -23,8 +23,7 @@ const AppShell = (() => {
   function clearSession() {
     SESSION_KEYS.forEach(k => sessionStorage.removeItem(k));
     if (typeof SessionStore !== 'undefined') {
-      const remembered = SessionStore.isRemembered();
-      SessionStore.clear({ keepEmail: true, keepPassword: remembered });
+      SessionStore.clear({ keepEmail: true });
     }
   }
 

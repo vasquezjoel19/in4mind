@@ -98,7 +98,7 @@ Recargue con **Ctrl + Shift + R** para evitar caché.
 
 | Endpoint | Qué comprueba |
 |----------|---------------|
-| `/api/health` | Que la variable **esté configurada** (no hace red). Devuelve `"groq": true`, o `"groqReason"` con el motivo: `missing`, `placeholder` o `malformed`. |
+| `/api/health` | Que la variable **esté configurada** (no hace red). Devuelve `"groq": true`, o `"groqReason"` con el motivo: `missing`, `placeholder` o `malformed`. También `"auth": true` si se pueden verificar las sesiones. |
 | `/api/groq/ping` | Que la clave **funcione de verdad**: hace una llamada mínima (1 token) a Groq. Añade `?fresh=1` para saltarse la caché de 60 s. |
 
 Respuesta esperada de `/api/groq/ping` cuando todo está bien:
@@ -116,6 +116,8 @@ Errores que distingue:
 | `GROQ_RATE_LIMITED` | Cuota agotada (429) |
 | `GROQ_MODEL_NOT_FOUND` | El modelo de `GROQ_MODEL` ya no existe |
 | `GROQ_TIMEOUT` / `GROQ_UNREACHABLE` | Groq no respondió en 8 s |
+| `AUTH_REQUIRED` (401) | La petición no trae una sesión válida de Supabase |
+| `AUTH_NOT_CONFIGURED` (503) | Faltan `SUPABASE_JWT_SECRET` y `SUPABASE_ANON_KEY` en el entorno |
 
 ### Comprobación desde la interfaz
 
@@ -135,6 +137,7 @@ Si la key es inválida, el asistente mostrará un mensaje de error profesional i
 |---------|---------|
 | `api/groq/chat.js` | **Proxy serverless: única pieza que usa `GROQ_API_KEY`** |
 | `api/_lib/groq-env.js` | Lee y valida `GROQ_API_KEY` (única fuente de verdad) |
+| `api/_lib/supabase-auth.js` | Verifica el JWT de Supabase que exige el proxy |
 | `api/health.js` | Informa al frontend si la clave está configurada |
 | `api/groq/ping.js` | Prueba de conexión real contra Groq (diagnóstico) |
 | `src/js/config/groq.config.js` | Modelo y parámetros (generado en build, sin secretos) |
@@ -179,15 +182,29 @@ Si no configura la key, el chat usa respuestas locales (`AIKnowledge.js`) con co
 
 ## Punto de integración en código
 
-El navegador nunca ve la credencial:
+El navegador nunca ve la credencial de Groq, y el proxy nunca atiende a quien
+no tiene sesión:
 
 ```
 ai.html / help.html
   → GroqService.chatStream()        (src/js/services/GroqService.js)
-    → POST /api/groq/chat           (sin Authorization)
-      → api/groq/chat.js            añade Bearer ${process.env.GROQ_API_KEY}
+    → POST /api/groq/chat           Authorization: Bearer <jwt de Supabase>
+      → api/_lib/supabase-auth.js   verifica el JWT (local HS256 o /auth/v1/user)
+      → api/groq/chat.js            sustituye por Bearer ${process.env.GROQ_API_KEY}
         → api.groq.com              respuesta SSE reenviada tal cual
 ```
+
+### Por qué el proxy exige sesión
+
+Sin ese requisito el endpoint era anónimo. La política de mismo origen impide
+llamarlo desde otra web, pero no desde `curl` ni desde un script: cualquiera
+podía usarlo como LLM gratuito a cargo de la cuota de Groq de la cuenta. El
+JWT lo emite Supabase Auth al iniciar sesión y `GroqService` lo adjunta solo;
+no hay nada que configurar en el cliente.
+
+Si falta la verificación en el entorno, el proxy **rechaza todo** con
+`AUTH_NOT_CONFIGURED` en vez de quedarse abierto: fallar cerrado es la única
+opción segura. Comprueba `/api/health` → `"auth": true` tras desplegar.
 
 `GroqService.init()` consulta `/api/health` una sola vez para decidir el modo:
 **proxy** si el backend tiene la clave, **directo** si solo hay una clave local de

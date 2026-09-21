@@ -384,7 +384,7 @@ const AuthController = (() => {
 
     if (result.ok) {
       if (typeof AuthService === 'undefined') {
-        if (typeof SessionStore !== 'undefined') SessionStore.persist(result.user, remember, passInput.value);
+        if (typeof SessionStore !== 'undefined') SessionStore.persist(result.user, remember);
         else sessionStorage.setItem('in4mind_user', JSON.stringify(result.user));
         if (typeof UserProfileService !== 'undefined') {
           UserProfileService.mergeGuestIntoUser(result.user.email);
@@ -596,8 +596,8 @@ const AuthController = (() => {
     // Solo auto-entrar con sesión real de Supabase Auth (OAuth / JWT vigente).
     // La sesión local recordada ya NO salta el formulario de login.
     if (typeof AuthService !== 'undefined' && !isResetLink) {
-      const oauth = await AuthService.restoreOAuthSession();
-      if (oauth.ok) {
+      const restored = await AuthService.restoreSession();
+      if (restored.ok) {
         void _redirectAfterAuth();
         return;
       }
@@ -636,7 +636,9 @@ const AuthController = (() => {
     $resetSuccess = document.getElementById('reset-success');
     $rememberBox  = document.getElementById('login-remember');
 
-    // "Recordar datos": restaurar correo, contraseña y preferencia guardados.
+    // "Recordar datos": solo el correo. La contraseña NUNCA se guarda ni se
+    // precarga; quien quiera no repetir login conserva la sesión de Supabase
+    // Auth, que se restaura arriba con AuthService.restoreSession().
     if (typeof SessionStore !== 'undefined') {
       const remembered = SessionStore.getRememberedEmail();
       if ($rememberBox) $rememberBox.checked = SessionStore.isRemembered() || Boolean(remembered);
@@ -645,15 +647,7 @@ const AuthController = (() => {
       if (loginEmail && remembered && !loginEmail.value) {
         loginEmail.value = remembered;
       }
-      if (loginPass && SessionStore.isRemembered()) {
-        const savedPwd = SessionStore.getRememberedPassword();
-        if (savedPwd && !loginPass.value) loginPass.value = savedPwd;
-      }
-      if (loginEmail?.value && loginPass?.value) {
-        loginPass.focus();
-      } else if (loginEmail?.value) {
-        loginPass?.focus();
-      }
+      if (loginEmail?.value) loginPass?.focus();
     }
 
     // Inicializar vista

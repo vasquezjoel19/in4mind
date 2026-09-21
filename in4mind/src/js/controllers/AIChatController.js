@@ -273,6 +273,9 @@ const AIChatController = (() => {
   function _errorMessage(err) {
     const code = err?.message || '';
 
+    if (code === 'AUTH_REQUIRED')         return _t('ai.errAuthRequired');
+    if (code === 'AUTH_NOT_CONFIGURED')   return _t('ai.errAuthUnavailable');
+    if (code === 'AUTH_UNAVAILABLE')      return _t('ai.errAuthUnavailable');
     if (code === 'GROQ_API_KEY_MISSING')  return _t('ai.errNoKey');
     if (code === 'GROQ_API_KEY_INVALID')  return _t('ai.errInvalidKey');
     if (code === 'GROQ_MODEL_NOT_FOUND')  return _t('ai.errModel');

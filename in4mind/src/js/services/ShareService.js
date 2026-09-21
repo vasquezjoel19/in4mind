@@ -219,10 +219,12 @@ const AuthGuard = (() => {
 
   async function requireAsync() {
     if (_hasSession()) return true;
-    if (typeof AuthService !== 'undefined' && AuthService.restoreOAuthSession) {
+    // Sesión persistida por Supabase Auth (email+contraseña, Google o enlace
+    // de recuperación): es lo que evita pedir credenciales en cada visita.
+    if (typeof AuthService !== 'undefined' && AuthService.restoreSession) {
       try {
-        const oauth = await AuthService.restoreOAuthSession();
-        if (oauth?.ok) return true;
+        const restored = await AuthService.restoreSession();
+        if (restored?.ok) return true;
       } catch { /* sin sesión cloud */ }
     }
     _redirectToLogin();

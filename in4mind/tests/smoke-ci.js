@@ -483,6 +483,47 @@ for (const [file, endpoint] of [
     drift.length === 0);
 }
 
+/* ── Aprendizaje adaptativo ────────────────────────────────────────────────
+ * Módulo opcional. Lo que se comprueba aquí son las promesas que lo hacen
+ * seguro de añadir: que venga apagado, que el core no dependa de él y que el
+ * texto del modelo no entre nunca como HTML.
+ */
+{
+  const svc = read('src/js/services/AdaptiveLearningService.js');
+  const quiz = read('src/js/components/MicroQuiz.js');
+
+  assert('adaptive: el motor existe', svc.length > 0);
+  assert('adaptive: viene desactivado', /_read\(FLAG_KEY, '0'\) === '1'/.test(svc));
+  assert('adaptive: el estado va por cuenta', /\$\{base\}:\$\{_account\(\)\}/.test(svc));
+  assert('adaptive: pide el diagnóstico en JSON', /gap_concept/.test(svc) && /root_cause/.test(svc));
+
+  /* El texto viene de un modelo por red: en innerHTML sería inyección directa
+   * en la página de la lección. */
+  // Se busca el uso (`.innerHTML`), no la palabra: el comentario de cabecera
+  // explica justo por qué no se usa.
+  assert('adaptive: la tarjeta no usa innerHTML', !/\.innerHTML/.test(quiz));
+  assert('adaptive: la tarjeta escribe con textContent', /textContent/.test(quiz));
+  assert('adaptive: no usa alert ni confirm nativos', !/\b(alert|confirm|prompt)\(/.test(quiz));
+
+  /* El acoplamiento va en un solo sentido: los controladores emiten un evento
+   * y no saben si alguien lo escucha. Si esto se invierte, quitar el módulo
+   * deja de ser seguro. */
+  for (const ctrl of ['src/js/controllers/TutorialController.js', 'src/js/controllers/AIChatController.js']) {
+    const code = read(ctrl);
+    assert(`adaptive: ${path.basename(ctrl)} solo emite la señal`,
+      /in4mind-learning-signal/.test(code) && !/AdaptiveLearningService/.test(code));
+  }
+
+  assert('adaptive: el motor viaja en el bundle del shell',
+    /AdaptiveLearningService\.js/.test(read('scripts/bundle-shell.js')));
+
+  for (const page of ['ai.html', 'tutorial.html']) {
+    const html = read(page);
+    assert(`adaptive: ${page} carga la tarjeta`, /components\/MicroQuiz\.js/.test(html));
+    assert(`adaptive: ${page} carga su hoja de estilos`, /css\/adaptive\.css/.test(html));
+  }
+}
+
 /* ── Confirmación de correo ─────────────────────────────────────────────────
  * Preparado para cuando se active "Confirm email" en Supabase. Mientras esté
  * desactivado este camino no se recorre, así que sin estas comprobaciones un
@@ -648,8 +689,7 @@ for (const [file, endpoint] of [
   /* El `(?<!:)` importa: sin él, el `//` de `https://` se toma por el inicio de
    * un comentario y se borra la URL entera, que es justo lo que se quiere
    * detectar. Una primera versión de esta línea daba un falso "correcto". */
-  const shareCode = share.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(?<!:)\/\/[^
-]*/g, '');
+  const shareCode = share.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(?<!:)\/\/[^\n]*/g, '');
   assert('no third-party qr service', !/qrserver\.com/.test(shareCode));
   assert('the qr library is vendored',
     fs.existsSync(path.join(root, 'src/js/vendor/qrcode.js')));

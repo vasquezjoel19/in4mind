@@ -1080,6 +1080,15 @@ const LOCALE_ES = {
     languageSwitch: 'Cambiar idioma a {lang}',
     languageHint: 'El idioma se aplica en toda la aplicación: menús, cursos, quizzes y ayuda.',
   },
+  adaptive: {
+    quizAria: 'Comprobación rápida',
+    quizEyebrow: 'Comprobación rápida',
+    quizProgress: 'Pregunta {n} de {total}',
+    quizRight: 'Correcto.',
+    quizWrong: 'No era esa. Buscando qué reforzar…',
+    quizGap: 'Repasemos {concept}.',
+    quizDone: '{n} de {total} correctas.',
+  },
   settingsModal: {
     title: 'Ajustes',
     close: 'Cerrar',
@@ -1132,6 +1141,8 @@ const LOCALE_ES = {
     weeklyGoals: 'Metas semanales',
     weeklyGoalsHint: 'Lecciones y quizzes por semana.',
     resetOnboard: 'Repetir tour de bienvenida',
+    adaptive: 'Aprendizaje adaptativo',
+    adaptiveHint: 'Comprobaciones breves durante el estudio y refuerzo de lo que falla. Desactivado por defecto.',
     onboardReset: 'Tour reiniciado. Ve al dashboard.',
   },
   cookies: {

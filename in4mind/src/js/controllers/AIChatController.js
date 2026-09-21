@@ -358,6 +358,17 @@ const AIChatController = (() => {
 
       if (!offTopic) {
         _history.push({ role: 'assistant', content: reply });
+
+        /* Misma señal que emite el tutorial al cerrar una lección. Va por
+           evento para no acoplar el chat al motor adaptativo, que es opcional
+           y viene apagado de serie. */
+        window.dispatchEvent(new CustomEvent('in4mind-learning-signal', {
+          detail: {
+            source: 'chat',
+            title: trimmed.slice(0, 120),
+            text: `${trimmed}\n\n${reply}`.slice(0, 900),
+          },
+        }));
       }
       if ($status) $status.textContent = _statusText();
     } catch (err) {

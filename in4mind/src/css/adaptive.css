@@ -1,0 +1,144 @@
+/**
+ * IN4MIND — Aprendizaje adaptativo: micro-quiz en línea.
+ *
+ * Todo cuelga de los tokens de `tokens.css`, así que el tema oscuro y los
+ * ajustes de contraste funcionan sin reglas aparte. La tarjeta se inserta
+ * dentro de contenido existente: por eso lleva margen propio y ancho máximo,
+ * para no descolocar la columna de lectura.
+ */
+
+.micro-quiz {
+  display: block;
+  max-width: 46rem;
+  margin: 1.5rem 0;
+  padding: 1rem 1.15rem 1.15rem;
+  border: 1px solid var(--clr-border, #d7e2f0);
+  border-left: 3px solid var(--clr-accent, #0d9488);
+  border-radius: 14px;
+  background: var(--clr-bg-card, #fff);
+  box-shadow: var(--shadow-elevated, 0 4px 16px rgba(26, 43, 72, 0.08));
+  /* Entra despacio: aparecer de golpe en mitad de una lectura distrae más que
+     el propio quiz. */
+  animation: micro-quiz-in 260ms ease-out both;
+}
+
+@keyframes micro-quiz-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .micro-quiz { animation: none; }
+}
+
+.micro-quiz__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+}
+
+.micro-quiz__eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--clr-accent, #0d9488);
+}
+
+.micro-quiz__close {
+  flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--clr-text-muted, #8b9bb0);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.micro-quiz__close:hover,
+.micro-quiz__close:focus-visible {
+  background: var(--clr-bg-badge, #e8f0fa);
+  color: var(--clr-text-primary, #1a2332);
+}
+
+.micro-quiz__progress {
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
+  color: var(--clr-text-muted, #8b9bb0);
+}
+
+.micro-quiz__question {
+  margin: 0 0 0.85rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  font-weight: 600;
+  color: var(--clr-text-primary, #1a2332);
+}
+
+.micro-quiz__options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.micro-quiz__option {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--clr-border, #d7e2f0);
+  border-radius: 10px;
+  background: var(--clr-bg-app, #f0f5fb);
+  color: var(--clr-text-primary, #1a2332);
+  font: inherit;
+  font-size: 0.92rem;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 140ms ease, background 140ms ease;
+}
+
+.micro-quiz__option:hover:not(:disabled),
+.micro-quiz__option:focus-visible:not(:disabled) {
+  border-color: var(--clr-brand-500, #4a76b2);
+  background: var(--clr-bg-badge, #e8f0fa);
+}
+
+.micro-quiz__option:disabled { cursor: default; }
+
+/* Verde y rojo se acompañan siempre de texto en `__feedback`: el color por sí
+   solo no comunica el resultado a quien no lo distingue. */
+.micro-quiz__option.is-right {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.12);
+  font-weight: 600;
+}
+
+.micro-quiz__option.is-wrong {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.micro-quiz__feedback {
+  margin: 0.7rem 0 0;
+  min-height: 1.2em;
+  font-size: 0.86rem;
+  color: var(--clr-text-secondary, #5c6b7f);
+}
+
+.micro-quiz.is-done .micro-quiz__question {
+  margin: 0;
+  font-weight: 500;
+  color: var(--clr-text-secondary, #5c6b7f);
+}
+
+@media (max-width: 640px) {
+  .micro-quiz {
+    margin: 1.15rem 0;
+    padding: 0.85rem 0.9rem 1rem;
+  }
+}

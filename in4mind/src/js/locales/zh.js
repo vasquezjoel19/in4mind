@@ -1080,6 +1080,15 @@ const LOCALE_ZH = {
     languageSwitch: '切换语言为 {lang}',
     languageHint: '语言将应用于整个应用：菜单、课程、测验和帮助。',
   },
+  adaptive: {
+    quizAria: '快速检查',
+    quizEyebrow: '快速检查',
+    quizProgress: '第 {n} 题，共 {total} 题',
+    quizRight: '正确。',
+    quizWrong: '不是这个。正在找出需要强化的内容…',
+    quizGap: '我们来复习 {concept}。',
+    quizDone: '答对 {n} 题，共 {total} 题。',
+  },
   settingsModal: {
     title: '设置',
     close: '关闭',
@@ -1132,6 +1141,8 @@ const LOCALE_ZH = {
     weeklyGoals: '每周目标',
     weeklyGoalsHint: '每周课时与测验数量。',
     resetOnboard: '重新开始欢迎导览',
+    adaptive: '自适应学习',
+    adaptiveHint: '学习过程中的简短检查，并针对答错的内容进行强化。默认关闭。',
     onboardReset: '导览已重置。请前往仪表盘。',
   },
   cookies: {

@@ -1,7 +1,7 @@
 // Subir la versión invalida el precaché tras cada despliegue: si no, los
 // usuarios que ya tienen el service worker instalado seguirían con el HTML
 // anterior y no recibirían los scripts nuevos.
-const CACHE_NAME = 'in4mind-568a43b50f00';
+const CACHE_NAME = 'in4mind-d1e657d11b4d';
 const CONTENT_CACHE = 'in4mind-content-v1';
 
 const PRECACHE = [

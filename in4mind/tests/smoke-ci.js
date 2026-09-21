@@ -97,6 +97,25 @@ assert('Push syncUsefulReminders', /syncUsefulReminders/.test(push));
 
 assert('bundle-shell script', fs.existsSync(path.join(root, 'scripts/bundle-shell.js')));
 
+/* Un archivo no puede ir en el bundle y cargarse además de forma diferida: al
+ * inyectarlo por segunda vez se redeclara su `const` de nivel superior y el
+ * navegador aborta ese script con "has already been declared". Pasaba con
+ * PushNotificationService y DataExportService, y ensuciaba la consola de todas
+ * las páginas del shell. */
+{
+  const bundler = read('scripts/bundle-shell.js');
+  const lazy = read('src/js/services/LazyScriptLoader.js');
+  const bundled = new Set(
+    [...bundler.matchAll(/'(src\/js\/[^']+\.js)'/g)].map(m => m[1])
+  );
+  const lazyLoaded = [...lazy.matchAll(/'(src\/js\/[^'?]+\.js)/g)].map(m => m[1]);
+  const duplicated = lazyLoaded.filter(f => bundled.has(f));
+  assert(
+    `lazy-loaded scripts are not already bundled${duplicated.length ? `: ${duplicated.join(', ')}` : ''}`,
+    duplicated.length === 0
+  );
+}
+
 /* Los bundles ya no se versionan: los genera `npm run build`, que `pretest`
  * ejecuta antes de esto. Si faltan aquí, es que el build no corrió o falló —
  * que es justo lo que interesa detectar, porque el sitio serviría código viejo
@@ -648,8 +667,7 @@ for (const [file, endpoint] of [
   /* El `(?<!:)` importa: sin él, el `//` de `https://` se toma por el inicio de
    * un comentario y se borra la URL entera, que es justo lo que se quiere
    * detectar. Una primera versión de esta línea daba un falso "correcto". */
-  const shareCode = share.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(?<!:)\/\/[^
-]*/g, '');
+  const shareCode = share.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(?<!:)\/\/[^\n]*/g, '');
   assert('no third-party qr service', !/qrserver\.com/.test(shareCode));
   assert('the qr library is vendored',
     fs.existsSync(path.join(root, 'src/js/vendor/qrcode.js')));

@@ -92,6 +92,7 @@ const SHELL_FILES = [
   'src/js/services/AccessibilityService.js',
   'src/js/services/AuthService.js',
   'src/js/services/DataExportService.js',
+  'src/js/services/AdaptiveLearningService.js',
   'src/js/controllers/AppFeatures.js',
   'src/js/services/GlobalChatService.js',
   'src/js/controllers/GlobalChatController.js',

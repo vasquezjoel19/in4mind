@@ -10,21 +10,23 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <script src="src/js/dist/boot.bundle.js?v=d1e657d11b4d"></script>
+  <script src="src/js/dist/boot.bundle.js?v=94ccd2081cdb"></script>
 
-  <link rel="stylesheet" href="src/css/tokens.css?v=d1e657d11b4d">
-  <link rel="stylesheet" href="src/css/base.css?v=d1e657d11b4d">
-  <link rel="stylesheet" href="src/css/dashboard.css?v=d1e657d11b4d">
-  <link rel="stylesheet" href="src/css/profile.css?v=d1e657d11b4d">
-  <link rel="stylesheet" href="src/css/i18n.css?v=d1e657d11b4d">
-  <link rel="stylesheet" href="src/css/responsive.css?v=d1e657d11b4d">
-  <link rel="stylesheet" href="src/css/theme.css?v=d1e657d11b4d">
-  <link rel="stylesheet" href="src/css/ui-dialog.css?v=d1e657d11b4d">
-  <link rel="stylesheet" href="src/css/ui-polish.css?v=d1e657d11b4d">
-  <link rel="stylesheet" href="src/css/accessibility.css?v=d1e657d11b4d">
-  <link rel="stylesheet" href="src/css/settings-modal.css?v=d1e657d11b4d">
-  <link rel="stylesheet" href="src/css/app-features.css?v=d1e657d11b4d">
-  <link rel="stylesheet" href="src/css/global-chat.css?v=d1e657d11b4d">
+  <link rel="stylesheet" href="src/css/tokens.css?v=94ccd2081cdb">
+  <link rel="stylesheet" href="src/css/adaptive.css?v=94ccd2081cdb">
+  <link rel="stylesheet" href="src/css/infy.css?v=94ccd2081cdb">
+  <link rel="stylesheet" href="src/css/base.css?v=94ccd2081cdb">
+  <link rel="stylesheet" href="src/css/dashboard.css?v=94ccd2081cdb">
+  <link rel="stylesheet" href="src/css/profile.css?v=94ccd2081cdb">
+  <link rel="stylesheet" href="src/css/i18n.css?v=94ccd2081cdb">
+  <link rel="stylesheet" href="src/css/responsive.css?v=94ccd2081cdb">
+  <link rel="stylesheet" href="src/css/theme.css?v=94ccd2081cdb">
+  <link rel="stylesheet" href="src/css/ui-dialog.css?v=94ccd2081cdb">
+  <link rel="stylesheet" href="src/css/ui-polish.css?v=94ccd2081cdb">
+  <link rel="stylesheet" href="src/css/accessibility.css?v=94ccd2081cdb">
+  <link rel="stylesheet" href="src/css/settings-modal.css?v=94ccd2081cdb">
+  <link rel="stylesheet" href="src/css/app-features.css?v=94ccd2081cdb">
+  <link rel="stylesheet" href="src/css/global-chat.css?v=94ccd2081cdb">
   <link rel="manifest" href="manifest.json">
 
   <link rel="icon" type="image/png" sizes="64x64" href="src/img/brand/favicon-64.png">
@@ -176,6 +178,21 @@
         <div class="prof-featured__grid" id="prof-featured-grid"></div>
       </section>
 
+      <!-- Mapa de dominio: se oculta solo si el aprendizaje adaptativo está
+           desactivado, que es como viene de serie. -->
+      <section class="prof-featured skillgraph" data-skill-graph-section hidden
+               aria-labelledby="skillgraph-title">
+        <div class="prof-featured__head">
+          <h2 class="prof-featured__title" id="skillgraph-title" data-i18n="adaptive.graphTitle">Mapa de dominio</h2>
+        </div>
+        <div class="skillgraph__host" data-skill-graph></div>
+        <p class="skillgraph__legend">
+          <span class="skillgraph__key skillgraph__key--mastered" data-i18n="adaptive.graphStateMastered">dominado</span>
+          <span class="skillgraph__key skillgraph__key--progress" data-i18n="adaptive.graphStateProgress">en progreso</span>
+          <span class="skillgraph__key skillgraph__key--gap" data-i18n="adaptive.graphStateGap">necesita refuerzo</span>
+        </p>
+      </section>
+
       <div class="prof-tabs" role="tablist" data-i18n-aria="profile.contentAria" aria-label="Contenido del perfil">
         <button type="button" class="prof-tab" data-tab="progress" role="tab" aria-selected="false" data-i18n="profile.tabProgress">En progreso</button>
         <button type="button" class="prof-tab prof-tab--active" data-tab="saved" role="tab" aria-selected="true" data-i18n="profile.tabSaved">Elementos guardados</button>
@@ -219,24 +236,29 @@
           integrity="sha384-JBR+x8blGwjDRO63aHCGiZMD4VNiTR4ZUGA+N6ZKLf3zNt1fK8IBpcgPaMrxqWBp"
           crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script defer src="src/js/config/supabase.config.js"></script>
-<script defer src="src/js/dist/app-shell.bundle.js?v=d1e657d11b4d"></script>
-<script defer src="src/js/services/QuizRandomizer.js?v=d1e657d11b4d"></script>
-<script defer src="src/js/data/LearningPathsData.js?v=d1e657d11b4d"></script>
-<script defer src="src/js/services/ContentLoader.js?v=d1e657d11b4d"></script>
+<script defer src="src/js/dist/app-shell.bundle.js?v=94ccd2081cdb"></script>
+<script defer src="src/js/services/QuizRandomizer.js?v=94ccd2081cdb"></script>
+<script defer src="src/js/data/LearningPathsData.js?v=94ccd2081cdb"></script>
+<script defer src="src/js/services/ContentLoader.js?v=94ccd2081cdb"></script>
 
-<script defer src="src/js/services/VideoProgressService.js?v=d1e657d11b4d"></script>
-<script defer src="src/js/vendor/qrcode.js?v=d1e657d11b4d"></script>
-<script defer src="src/js/services/CertificateShare.js?v=d1e657d11b4d"></script>
-<script defer src="src/js/services/CertVerificationService.js?v=d1e657d11b4d"></script>
-<script defer src="src/js/data/CareerPathsData.js?v=d1e657d11b4d"></script>
-<script defer src="src/js/services/EmployabilityService.js?v=d1e657d11b4d"></script>
-<script defer src="src/js/services/AIUserContext.js?v=d1e657d11b4d"></script>
-<script defer src="src/js/data/CourseCurriculum.js?v=d1e657d11b4d"></script>
-<script defer src="src/js/services/LessonNotesService.js?v=d1e657d11b4d"></script>
-<script defer src="src/js/services/NotesService.js?v=d1e657d11b4d"></script>
-<script defer src="src/js/services/ProjectsService.js?v=d1e657d11b4d"></script>
-<script defer src="src/js/services/CursorSpotlight.js?v=d1e657d11b4d"></script>
-<script defer src="src/js/controllers/ProfileController.js?v=d1e657d11b4d"></script>
+<script defer src="src/js/services/VideoProgressService.js?v=94ccd2081cdb"></script>
+<script defer src="src/js/vendor/qrcode.js?v=94ccd2081cdb"></script>
+<script defer src="src/js/services/CertificateShare.js?v=94ccd2081cdb"></script>
+<script defer src="src/js/services/CertVerificationService.js?v=94ccd2081cdb"></script>
+<script defer src="src/js/data/CareerPathsData.js?v=94ccd2081cdb"></script>
+<script defer src="src/js/services/EmployabilityService.js?v=94ccd2081cdb"></script>
+<script defer src="src/js/services/AIUserContext.js?v=94ccd2081cdb"></script>
+<script defer src="src/js/data/CourseCurriculum.js?v=94ccd2081cdb"></script>
+<script defer src="src/js/services/LessonNotesService.js?v=94ccd2081cdb"></script>
+<script defer src="src/js/services/NotesService.js?v=94ccd2081cdb"></script>
+<script defer src="src/js/services/ProjectsService.js?v=94ccd2081cdb"></script>
+<script defer src="src/js/services/CursorSpotlight.js?v=94ccd2081cdb"></script>
+<script defer src="src/js/config/groq.config.js"></script>
+<script defer src="src/js/services/GroqService.js?v=94ccd2081cdb"></script>
+<script defer src="src/js/components/InfyMascot.js?v=94ccd2081cdb"></script>
+<script defer src="src/js/components/ReinforcementNote.js?v=94ccd2081cdb"></script>
+<script defer src="src/js/components/SkillGraph3D.js?v=94ccd2081cdb"></script>
+<script defer src="src/js/controllers/ProfileController.js?v=94ccd2081cdb"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => ProfileController.init());
 </script>

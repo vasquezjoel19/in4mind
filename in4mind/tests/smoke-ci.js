@@ -502,6 +502,144 @@ for (const [file, endpoint] of [
     drift.length === 0);
 }
 
+/* ── Aprendizaje adaptativo ────────────────────────────────────────────────
+ * Módulo opcional. Lo que se comprueba aquí son las promesas que lo hacen
+ * seguro de añadir: que venga apagado, que el core no dependa de él y que el
+ * texto del modelo no entre nunca como HTML.
+ */
+{
+  const svc = read('src/js/services/AdaptiveLearningService.js');
+  const quiz = read('src/js/components/MicroQuiz.js');
+
+  assert('adaptive: el motor existe', svc.length > 0);
+  assert('adaptive: viene desactivado', /_read\(FLAG_KEY, '0'\) === '1'/.test(svc));
+  assert('adaptive: el estado va por cuenta', /\$\{base\}:\$\{_account\(\)\}/.test(svc));
+  assert('adaptive: pide el diagnóstico en JSON', /gap_concept/.test(svc) && /root_cause/.test(svc));
+
+  /* El texto viene de un modelo por red: en innerHTML sería inyección directa
+   * en la página de la lección. */
+  // Se busca el uso (`.innerHTML`), no la palabra: el comentario de cabecera
+  // explica justo por qué no se usa.
+  assert('adaptive: la tarjeta no usa innerHTML', !/\.innerHTML/.test(quiz));
+  assert('adaptive: la tarjeta escribe con textContent', /textContent/.test(quiz));
+  assert('adaptive: no usa alert ni confirm nativos', !/\b(alert|confirm|prompt)\(/.test(quiz));
+
+  /* El acoplamiento va en un solo sentido: los controladores emiten un evento
+   * y no saben si alguien lo escucha. Si esto se invierte, quitar el módulo
+   * deja de ser seguro. */
+  for (const ctrl of ['src/js/controllers/TutorialController.js', 'src/js/controllers/AIChatController.js']) {
+    const code = read(ctrl);
+    assert(`adaptive: ${path.basename(ctrl)} solo emite la señal`,
+      /in4mind-learning-signal/.test(code) && !/AdaptiveLearningService/.test(code));
+  }
+
+  const note = read('src/js/components/ReinforcementNote.js');
+  assert('adaptive: la nota de refuerzo existe', note.length > 0);
+  /* Modal = detener la lección para decidir. La nota se puede ignorar. */
+  assert('adaptive: el refuerzo no bloquea con un diálogo',
+    !/UiDialog|\b(alert|confirm|prompt)\(/.test(note));
+  assert('adaptive: el refuerzo usa details para plegarse', /createElement\('details'\)/.test(note));
+  assert('adaptive: el refuerzo no usa innerHTML', !/\.innerHTML/.test(note));
+  /* Pedir la lección al desplegar y no al detectar el hueco es lo que evita
+   * gastar una llamada por cada fallo que nadie llega a mirar. */
+  assert('adaptive: la lección se pide al desplegar', /addEventListener\('toggle'/.test(note));
+  assert('adaptive: la lección generada se guarda para no repetir la llamada',
+    /topic\.lesson\?\.text/.test(svc) && /entry\.lesson = \{ text/.test(svc));
+  /* Se comprueba el comportamiento, no el comentario: marcar como leído solo
+   * anota la fecha; el hueco lo cierra volver a acertar. */
+  const marcar = svc.slice(svc.indexOf('function markReinforced'), svc.indexOf('/* ── Señales'));
+  assert('adaptive: leer el refuerzo solo anota la fecha',
+    /entry\.gap\.readAt = Date\.now\(\)/.test(marcar) && !/entry\.gap = null/.test(marcar)
+    && !/STATUS\./.test(marcar));
+
+  const graph = read('src/js/components/SkillGraph3D.js');
+  assert('adaptive: el mapa existe', graph.length > 0);
+  /* Los tres colores son parte del encargo: si cambian, que sea a propósito. */
+  assert('adaptive: usa los colores acordados',
+    /'#10B981'/.test(graph) && /'#F59E0B'/.test(graph) && /'#EF4444'/.test(graph));
+  /* Three.js son 194 KB: entra por import() dinámico y solo si toca. */
+  assert('adaptive: Three.js se carga bajo demanda', /await import\('\.\.\/vendor\/three\.module\.js'\)/.test(graph));
+  assert('adaptive: hay respaldo 2D sin WebGL', /_render2D/.test(graph) && /puede3D/.test(graph));
+  /* Sin esto, un fallo de WebGL tumbaría la página de perfil entera. */
+  assert('adaptive: el fallo de WebGL cae al 2D, no explota',
+    /catch \(err\)[\s\S]{0,400}_render2D|_render2D[\s\S]{0,80}$/m.test(graph)
+    || /skillgraph_webgl/.test(graph));
+  assert('adaptive: el bucle se detiene fuera del viewport',
+    /IntersectionObserver/.test(graph) && /cancelAnimationFrame/.test(graph));
+  assert('adaptive: también se detiene con la pestaña oculta', /visibilitychange/.test(graph));
+  assert('adaptive: libera la GPU al desmontar',
+    /renderer\?\.dispose\(\)/.test(graph) && /geoNodo\?\.dispose\(\)/.test(graph));
+  assert('adaptive: el mapa no usa innerHTML', !/\.innerHTML/.test(graph));
+
+  const perfil = read('profile.html');
+  assert('adaptive: el perfil monta el mapa', /data-skill-graph\b/.test(perfil));
+  /* La sección nace oculta: sin el motor activo no debe dejar un hueco. */
+  assert('adaptive: la sección del mapa nace oculta', /data-skill-graph-section hidden/.test(perfil));
+  assert('adaptive: el perfil carga el mapa y el refuerzo',
+    /components\/SkillGraph3D\.js/.test(perfil) && /components\/ReinforcementNote\.js/.test(perfil));
+
+  assert('adaptive: el motor viaja en el bundle del shell',
+    /AdaptiveLearningService\.js/.test(read('scripts/bundle-shell.js')));
+
+  for (const page of ['ai.html', 'tutorial.html']) {
+    const html = read(page);
+    assert(`adaptive: ${page} carga la tarjeta`, /components\/MicroQuiz\.js/.test(html));
+    assert(`adaptive: ${page} carga la nota de refuerzo`, /components\/ReinforcementNote\.js/.test(html));
+    assert(`adaptive: ${page} carga su hoja de estilos`, /css\/adaptive\.css/.test(html));
+  }
+}
+
+/* ── Infy, la mascota del asistente ───────────────────────────────────────
+ * Los dibujos son assets nuevos: lo que se comprueba es que estén, que vayan
+ * en formato web y que el estado se comunique por evento, no por llamada
+ * directa desde el chat.
+ */
+{
+  const infy = read('src/js/components/InfyMascot.js');
+  assert('infy: el componente existe', infy.length > 0);
+
+  for (const gesto of ['infy-saludo.png', 'infy-pensando.png', 'infy-leyendo.png', 'infy-celebrando.png']) {
+    const ruta = path.join(root, 'src/img/infy', gesto);
+    assert(`infy: existe ${gesto}`, fs.existsSync(ruta));
+    /* PNG cuadrado con transparencia, ya cuantizado. Por encima de 60 KB
+     * dejaría de compensar para una imagen que se ve a 48 px. */
+    if (fs.existsSync(ruta)) {
+      assert(`infy: ${gesto} pesa poco`, fs.statSync(ruta).size < 60 * 1024);
+    }
+  }
+
+  /* Los cuatro estados del encargo tienen que estar mapeados. */
+  for (const estado of ['IDLE', 'THINKING', 'LEARNING', 'SUCCESS']) {
+    assert(`infy: el estado ${estado} tiene gesto`,
+      new RegExp(`${estado}:\\s*'infy-[a-z]+\\.png'`).test(infy));
+  }
+  assert('infy: expone setInfyState', /window\.setInfyState\s*=/.test(infy));
+  assert('infy: acepta el alias teaching del refuerzo', /TEACHING/.test(infy));
+
+  assert('infy: sin estilos en línea', !/\.style\.[a-z]/i.test(infy) && !/style\s*=/.test(infy));
+  assert('infy: el gesto va por clase y data-attr', /infy--\$\{variante\}/.test(infy) && /dataset\.gesto/.test(infy));
+  assert('infy: precarga los gestos', /_precargar/.test(infy));
+
+  const css = read('src/css/infy.css');
+  assert('infy: el avatar de cabecera mide 48 px', /\.infy-mascot-container\s*\{[^}]*width:\s*48px/.test(css));
+  assert('infy: el avatar es circular', /\.infy-mascot-container\s*\{[^}]*border-radius:\s*50%/.test(css));
+  assert('infy: el relevo de gesto se hace por clase', /\.is-swapping/.test(css));
+  assert('infy: flota al pasar el ratón', /infyFloat/.test(css) && /:hover .infy-avatar-img/.test(css));
+  assert('infy: respeta prefers-reduced-motion', /prefers-reduced-motion/.test(css));
+
+  /* El chat anuncia su estado; no conoce a la mascota. */
+  const chat = read('src/js/controllers/AIChatController.js');
+  assert('infy: el chat anuncia el estado por evento', /in4mind-ai-state/.test(chat));
+  assert('infy: el chat no depende de la mascota', !/InfyMascot/.test(chat));
+  assert('infy: el motor adaptativo también lo anuncia',
+    /in4mind-ai-state/.test(read('src/js/services/AdaptiveLearningService.js')));
+
+  const html = read('ai.html');
+  assert('infy: la cabecera del chat tiene su hueco', /data-infy-slot/.test(html));
+  assert('infy: ai.html carga el componente y sus estilos',
+    /components\/InfyMascot\.js/.test(html) && /css\/infy\.css/.test(html));
+}
+
 /* ── Confirmación de correo ─────────────────────────────────────────────────
  * Preparado para cuando se active "Confirm email" en Supabase. Mientras esté
  * desactivado este camino no se recorre, así que sin estas comprobaciones un
@@ -547,7 +685,6 @@ for (const [file, endpoint] of [
 {
   const neural = read('src/js/services/NeuralBackground.js');
   const tilt = read('src/js/services/CardTilt.js');
-  const orbJs = read('src/js/components/ChatOrb.js');
   const orbCss = read('src/css/orb.css');
 
   /* Three.js pesa 194 KB comprimidos, casi tres veces el arranque entero. */
@@ -595,16 +732,18 @@ for (const [file, endpoint] of [
   assert('tilt catches cards rendered later', /MutationObserver/.test(tilt));
   assert('tilt uses a 3d transform', /perspective\(900px\)[\s\S]{0,60}rotateX/.test(tilt));
 
-  assert('the orb has its four layers',
-    ['orb__halo', 'orb__core', 'orb__spec', 'orb__ring'].every(c => orbJs.includes(c)));
-  assert('the orb is decorative for screen readers', /aria-hidden/.test(orbJs));
-  assert('the orb reacts to the thinking state',
-    /ChatOrb\.setState\(show \? 'thinking' : 'idle'\)/.test(read('src/js/controllers/AIChatController.js')));
-  assert('the orb breathes', /@keyframes orb-breathe/.test(orbCss));
-  assert('thinking speeds the orb up',
-    /\.orb--thinking[\s\S]{0,180}animation-duration:\s*1\.\d+s/.test(orbCss));
-  assert('all 3d motion stops on reduced motion',
-    /@media \(prefers-reduced-motion: reduce\)[\s\S]*animation:\s*none\s*!important/.test(orbCss));
+  assert('tilt stops on reduced motion',
+    /@media \(prefers-reduced-motion: reduce\)\s*\{[^}]*\.has-tilt[\s\S]{0,120}transition:\s*none/.test(orbCss));
+
+  /* El orbe del chat lo sustituyó Infy. Se comprueba que no vuelva: dos
+   * indicadores del mismo estado uno al lado del otro es lo que había antes. */
+  assert('the chat orb is gone',
+    !fs.existsSync(path.join(root, 'src/js/components/ChatOrb.js'))
+    && !/ChatOrb/.test(read('src/js/controllers/AIChatController.js'))
+    && !/ChatOrb/.test(read('ai.html')));
+  assert('no orb rules are left behind', !/\.orb__|\.orb--|@keyframes orb-/.test(orbCss));
+  assert('infy is the only status indicator in the chat header',
+    /data-infy-slot/.test(read('ai.html')));
 }
 
 /* ── Presupuesto de composición ─────────────────────────────────────────────

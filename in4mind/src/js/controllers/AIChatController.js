@@ -164,10 +164,16 @@ const AIChatController = (() => {
     });
   }
 
+  /** @param {'thinking'|'success'|'error'} estado */
+  function _anunciarEstado(estado) {
+    window.dispatchEvent(new CustomEvent('in4mind-ai-state', { detail: { state: estado } }));
+  }
+
   function _showTyping(show) {
-    /* El orbe se actualiza aunque no exista la fila de "escribiendo": son dos
-       indicadores del mismo estado y deben ir juntos pase lo que pase. */
-    if (typeof ChatOrb !== 'undefined') ChatOrb.setState(show ? 'thinking' : 'idle');
+    /* El estado se anuncia por evento para quien quiera reflejarlo (hoy la
+       mascota). Va por evento y no por llamada directa para que el chat no
+       dependa de que ese componente exista. */
+    if (show) _anunciarEstado('thinking');
     if (!$typingRow) return;
     $typingRow.style.display = show ? 'flex' : 'none';
     if (show) _scrollToBottom();
@@ -356,12 +362,26 @@ const AIChatController = (() => {
         }
       }
 
+      _anunciarEstado('success');
+
       if (!offTopic) {
         _history.push({ role: 'assistant', content: reply });
+
+        /* Misma señal que emite el tutorial al cerrar una lección. Va por
+           evento para no acoplar el chat al motor adaptativo, que es opcional
+           y viene apagado de serie. */
+        window.dispatchEvent(new CustomEvent('in4mind-learning-signal', {
+          detail: {
+            source: 'chat',
+            title: trimmed.slice(0, 120),
+            text: `${trimmed}\n\n${reply}`.slice(0, 900),
+          },
+        }));
       }
       if ($status) $status.textContent = _statusText();
     } catch (err) {
       _showTyping(false);
+      _anunciarEstado('error');
       if (!offTopic) _history.pop();
       _appendTurn('ai', _errorMessage(err));
       if ($status) $status.textContent = _t('ai.error', 'Error en la solicitud');
@@ -399,17 +419,6 @@ const AIChatController = (() => {
     $sendBtn       = document.getElementById('btn-send');
     $status        = document.getElementById('chat-status');
 
-    /* Orbe del asistente. Se inserta en el bloque izquierdo de la barra, antes
-       del título, y queda como indicador visual permanente del estado. */
-    if (typeof ChatOrb !== 'undefined') {
-      const izquierda = document.querySelector('.ai-topbar__left');
-      if (izquierda) {
-        ChatOrb.mount(izquierda);
-        // El orbe va delante del botón de menú y del título.
-        const orbe = izquierda.querySelector('.orb');
-        if (orbe) izquierda.insertBefore(orbe, izquierda.firstChild);
-      }
-    }
     $configBanner  = document.getElementById('config-banner');
 
     AppShell.initPage('ai');

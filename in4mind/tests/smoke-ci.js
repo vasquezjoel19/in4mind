@@ -666,7 +666,6 @@ for (const [file, endpoint] of [
 {
   const neural = read('src/js/services/NeuralBackground.js');
   const tilt = read('src/js/services/CardTilt.js');
-  const orbJs = read('src/js/components/ChatOrb.js');
   const orbCss = read('src/css/orb.css');
 
   /* Three.js pesa 194 KB comprimidos, casi tres veces el arranque entero. */
@@ -714,16 +713,18 @@ for (const [file, endpoint] of [
   assert('tilt catches cards rendered later', /MutationObserver/.test(tilt));
   assert('tilt uses a 3d transform', /perspective\(900px\)[\s\S]{0,60}rotateX/.test(tilt));
 
-  assert('the orb has its four layers',
-    ['orb__halo', 'orb__core', 'orb__spec', 'orb__ring'].every(c => orbJs.includes(c)));
-  assert('the orb is decorative for screen readers', /aria-hidden/.test(orbJs));
-  assert('the orb reacts to the thinking state',
-    /ChatOrb\.setState\(show \? 'thinking' : 'idle'\)/.test(read('src/js/controllers/AIChatController.js')));
-  assert('the orb breathes', /@keyframes orb-breathe/.test(orbCss));
-  assert('thinking speeds the orb up',
-    /\.orb--thinking[\s\S]{0,180}animation-duration:\s*1\.\d+s/.test(orbCss));
-  assert('all 3d motion stops on reduced motion',
-    /@media \(prefers-reduced-motion: reduce\)[\s\S]*animation:\s*none\s*!important/.test(orbCss));
+  assert('tilt stops on reduced motion',
+    /@media \(prefers-reduced-motion: reduce\)\s*\{[^}]*\.has-tilt[\s\S]{0,120}transition:\s*none/.test(orbCss));
+
+  /* El orbe del chat lo sustituyó Infy. Se comprueba que no vuelva: dos
+   * indicadores del mismo estado uno al lado del otro es lo que había antes. */
+  assert('the chat orb is gone',
+    !fs.existsSync(path.join(root, 'src/js/components/ChatOrb.js'))
+    && !/ChatOrb/.test(read('src/js/controllers/AIChatController.js'))
+    && !/ChatOrb/.test(read('ai.html')));
+  assert('no orb rules are left behind', !/\.orb__|\.orb--|@keyframes orb-/.test(orbCss));
+  assert('infy is the only status indicator in the chat header',
+    /data-infy-slot/.test(read('ai.html')));
 }
 
 /* ── Presupuesto de composición ─────────────────────────────────────────────

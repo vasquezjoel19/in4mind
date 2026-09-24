@@ -170,10 +170,7 @@ const AIChatController = (() => {
   }
 
   function _showTyping(show) {
-    /* El orbe se actualiza aunque no exista la fila de "escribiendo": son dos
-       indicadores del mismo estado y deben ir juntos pase lo que pase. */
-    if (typeof ChatOrb !== 'undefined') ChatOrb.setState(show ? 'thinking' : 'idle');
-    /* Mismo estado, anunciado por evento para quien quiera reflejarlo (hoy la
+    /* El estado se anuncia por evento para quien quiera reflejarlo (hoy la
        mascota). Va por evento y no por llamada directa para que el chat no
        dependa de que ese componente exista. */
     if (show) _anunciarEstado('thinking');
@@ -422,17 +419,6 @@ const AIChatController = (() => {
     $sendBtn       = document.getElementById('btn-send');
     $status        = document.getElementById('chat-status');
 
-    /* Orbe del asistente. Se inserta en el bloque izquierdo de la barra, antes
-       del título, y queda como indicador visual permanente del estado. */
-    if (typeof ChatOrb !== 'undefined') {
-      const izquierda = document.querySelector('.ai-topbar__left');
-      if (izquierda) {
-        ChatOrb.mount(izquierda);
-        // El orbe va delante del botón de menú y del título.
-        const orbe = izquierda.querySelector('.orb');
-        if (orbe) izquierda.insertBefore(orbe, izquierda.firstChild);
-      }
-    }
     $configBanner  = document.getElementById('config-banner');
 
     AppShell.initPage('ai');

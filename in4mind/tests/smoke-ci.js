@@ -579,22 +579,33 @@ for (const [file, endpoint] of [
   const infy = read('src/js/components/InfyMascot.js');
   assert('infy: el componente existe', infy.length > 0);
 
-  for (const gesto of ['infy-feliz.webp', 'infy-pensando.webp', 'infy-motivado.webp', 'infy-enfocado.webp']) {
-    const ruta = path.join(root, 'src/img/mascot', gesto);
+  for (const gesto of ['infy-saludo.png', 'infy-pensando.png', 'infy-leyendo.png', 'infy-celebrando.png']) {
+    const ruta = path.join(root, 'src/img/infy', gesto);
     assert(`infy: existe ${gesto}`, fs.existsSync(ruta));
-    /* WebP con transparencia. Por encima de 60 KB dejaría de compensar para
-     * una imagen que en la cabecera se ve a 40 px. */
+    /* PNG cuadrado con transparencia, ya cuantizado. Por encima de 60 KB
+     * dejaría de compensar para una imagen que se ve a 48 px. */
     if (fs.existsSync(ruta)) {
       assert(`infy: ${gesto} pesa poco`, fs.statSync(ruta).size < 60 * 1024);
     }
   }
+
+  /* Los cuatro estados del encargo tienen que estar mapeados. */
+  for (const estado of ['IDLE', 'THINKING', 'LEARNING', 'SUCCESS']) {
+    assert(`infy: el estado ${estado} tiene gesto`,
+      new RegExp(`${estado}:\\s*'infy-[a-z]+\\.png'`).test(infy));
+  }
+  assert('infy: expone setInfyState', /window\.setInfyState\s*=/.test(infy));
+  assert('infy: acepta el alias teaching del refuerzo', /TEACHING/.test(infy));
 
   assert('infy: sin estilos en línea', !/\.style\.[a-z]/i.test(infy) && !/style\s*=/.test(infy));
   assert('infy: el gesto va por clase y data-attr', /infy--\$\{variante\}/.test(infy) && /dataset\.gesto/.test(infy));
   assert('infy: precarga los gestos', /_precargar/.test(infy));
 
   const css = read('src/css/infy.css');
-  assert('infy: la cabecera la limita a 40 px', /max-height:\s*40px/.test(css));
+  assert('infy: el avatar de cabecera mide 48 px', /\.infy-mascot-container\s*\{[^}]*width:\s*48px/.test(css));
+  assert('infy: el avatar es circular', /\.infy-mascot-container\s*\{[^}]*border-radius:\s*50%/.test(css));
+  assert('infy: el relevo de gesto se hace por clase', /\.is-swapping/.test(css));
+  assert('infy: flota al pasar el ratón', /infyFloat/.test(css) && /:hover .infy-avatar-img/.test(css));
   assert('infy: respeta prefers-reduced-motion', /prefers-reduced-motion/.test(css));
 
   /* El chat anuncia su estado; no conoce a la mascota. */

@@ -7,40 +7,70 @@
 
 .infy {
   display: block;
-  width: auto;
   object-fit: contain;
-  /* Los dibujos llegan recortados a su silueta, así que no hace falta fondo
-     ni máscara: basta con no deformarlos. */
+  /* Los dibujos llegan recortados a su silueta y en lienzo cuadrado, así que
+     basta con no deformarlos. */
   user-select: none;
   -webkit-user-drag: none;
 }
 
-/* Cabecera del chat: el tope de 40 px lo fija el encargo. */
-.infy--header {
-  height: 40px;
-  max-height: 40px;
+/* ── Avatar de la cabecera del chat ──────────────────────────────────────── */
+
+.infy-mascot-container {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.1);
+  border: 2px solid #10b981;
   flex: none;
-  margin-right: 0.15rem;
-  /* El cambio de gesto es un cambio de `src`: la transición suaviza el relevo
-     sin necesidad de duplicar nodos ni de animar fotogramas. */
-  transition: transform 220ms ease, opacity 220ms ease;
+  margin-right: 0.5rem;
 }
 
-.infy--header[data-gesto="thinking"] {
+.infy-avatar-img {
+  width: 100%;
+  height: 100%;
+  /* `contain` y no `cover`: el dibujo ya viene encuadrado de busto, y
+     recortarlo dentro del círculo le comería la cara. */
+  object-fit: contain;
+  transition: transform 0.3s ease, opacity 0.2s ease;
+}
+
+/* Relevo de gesto: el componente marca la imagen mientras cambia el `src`,
+   para que no se vea el salto entre un dibujo y otro. */
+.infy-avatar-img.is-swapping { opacity: 0; }
+
+.infy-avatar-img[data-gesto="THINKING"] {
   /* Ligero balanceo mientras piensa: mismo lenguaje que los tres puntos de
      "escribiendo", pero sin ocupar sitio nuevo. */
   animation: infy-pensar 1.8s ease-in-out infinite;
 }
 
-.infy--header[data-gesto="success"] { transform: translateY(-2px) scale(1.06); }
+.infy-avatar-img[data-gesto="SUCCESS"] { transform: scale(1.08); }
 
 @keyframes infy-pensar {
   0%, 100% { transform: translateY(0) rotate(0deg); }
   50%      { transform: translateY(-2px) rotate(-3deg); }
 }
 
-/* Dentro de la nota de refuerzo: acompaña al texto, no compite con él. */
+/* Animación sutil de respiración/flotación al pasar el ratón. */
+@keyframes infyFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+
+.infy-mascot-container:hover .infy-avatar-img {
+  animation: infyFloat 2s ease-in-out infinite;
+}
+
+/* ── Dentro de la nota de refuerzo ───────────────────────────────────────── */
+
+/* Acompaña al texto, no compite con él. */
 .infy--lesson {
+  width: 96px;
   height: 96px;
   flex: none;
   align-self: flex-start;
@@ -54,7 +84,7 @@
 
 /* En pantallas estrechas la mascota estorba a la lectura: se aparta. */
 @media (max-width: 560px) {
-  .infy--lesson { height: 64px; margin-right: 0.6rem; }
+  .infy--lesson { width: 64px; height: 64px; margin-right: 0.6rem; }
 }
 
 @media (max-width: 400px) {
@@ -62,10 +92,16 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .infy--header,
-  .infy--header[data-gesto="thinking"] {
+  .infy-avatar-img,
+  .infy-avatar-img[data-gesto="THINKING"],
+  .infy-avatar-img[data-gesto="SUCCESS"],
+  .infy-mascot-container:hover .infy-avatar-img {
     animation: none;
     transition: none;
     transform: none;
   }
+
+  /* Sin transición, ocultar la imagen durante el relevo dejaría un hueco
+     parpadeando: mejor que el cambio sea instantáneo. */
+  .infy-avatar-img.is-swapping { opacity: 1; }
 }

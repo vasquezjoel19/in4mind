@@ -673,6 +673,63 @@ for (const [file, endpoint] of [
       .every(f => /css\/infy\.css/.test(read(f))));
 }
 
+/* ── Límite de uso del proxy de IA ─────────────────────────────────────────
+ * Exigir sesión no impide registrarse y llamar en bucle. Lo que se fija aquí
+ * es el orden: el límite tiene que cortar ANTES de gastar la llamada a Groq.
+ */
+{
+  const rl = read('../api/_lib/rate-limit.js');
+  const chat = read('../api/groq/chat.js');
+  const salud = read('../api/health.js');
+
+  assert('rate limit: existe el módulo', rl.length > 0);
+  assert('rate limit: dos capas, ráfaga y cuota diaria',
+    /function checkBurst/.test(rl) && /async function checkDailyQuota/.test(rl));
+
+  /* El corte va antes de resolver la clave de Groq y, por tanto, antes de
+   * llamarle. Si alguien mueve el bloque más abajo, esto falla. */
+  const iLimite = chat.search(/checkBurst\(/);
+  const iGroq = chat.search(/fetch\(GROQ_URL/);
+  assert('rate limit: el corte va antes de llamar a Groq',
+    iLimite > 0 && iGroq > 0 && iLimite < iGroq);
+
+  assert('rate limit: responde 429 con Retry-After',
+    /status\(429\)/.test(chat) && /Retry-After/.test(chat));
+  assert('rate limit: distingue ráfaga de cuota diaria',
+    /scope: 'burst'/.test(chat) && /scope: 'daily'/.test(chat));
+
+  /* La cuota usa el JWT del propio usuario: si esto pidiera la service_role
+   * key, un fallo del endpoint expondría una credencial con permisos totales.
+   * Se mira el código sin comentarios: el del módulo explica precisamente que
+   * NO hace falta, y dispararía la comprobación al nombrarla. */
+  const rlCodigo = rl.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
+  assert('rate limit: la cuota no necesita la service_role key',
+    !/SERVICE_ROLE/i.test(rlCodigo));
+  assert('rate limit: la cuota va con el token del usuario',
+    /Authorization: `Bearer \$\{accessToken\}`/.test(rlCodigo));
+
+  /* Un fallo de Supabase no puede dejar sin asistente a quien sí tiene cuota:
+   * la capa de ráfaga sigue puesta y la sesión sigue siendo obligatoria. Todos
+   * los caminos de error devuelven `allowed: true` con el motivo. */
+  assert('rate limit: un fallo de la base no tira el asistente',
+    /'unreachable'/.test(rlCodigo)
+    && /rpc_http_/.test(rlCodigo)
+    && /rpc_missing/.test(rlCodigo));
+
+  const mig = read('../supabase/migrations/20260921_ai_usage_quota.sql');
+  assert('rate limit: la migración existe', mig.length > 0);
+  assert('rate limit: la tabla lleva RLS', /enable row level security/.test(mig));
+  /* Sin política de UPDATE ni de DELETE nadie puede rebajar su contador, que
+   * es lo que haría quien quisiera saltarse el límite. Verificado además
+   * contra un PostgreSQL 16 real. */
+  assert('rate limit: nadie puede rebajar su propio contador',
+    !/for\s+delete/i.test(mig) && !/for\s+update/i.test(mig)
+    && /revoke all on public\.ai_usage/.test(mig));
+
+  assert('rate limit: /api/health informa de si la cuota está activa',
+    /isQuotaConfigured/.test(salud) && /rateLimit/.test(salud));
+}
+
 /* ── Confirmación de correo ─────────────────────────────────────────────────
  * Preparado para cuando se active "Confirm email" en Supabase. Mientras esté
  * desactivado este camino no se recorre, así que sin estas comprobaciones un

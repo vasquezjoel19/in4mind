@@ -40,6 +40,11 @@ const MascotService = (() => {
     return fallback;
   }
 
+  /** ¿Es `clave` el nombre de un gesto de la mascota, y no un tipo de aviso? */
+  function GESTO_VALIDO(clave) {
+    return _hayMascota() && Boolean(InfyMascot.GESTOS[String(clave).toUpperCase()]);
+  }
+
   /** ¿Está la mascota cargada en esta página? Sin ella, todo esto se calla. */
   function _hayMascota() {
     return typeof InfyMascot !== 'undefined';
@@ -61,23 +66,56 @@ const MascotService = (() => {
   /* ── Avisos ────────────────────────────────────────────────────────────── */
 
   /**
+   * Tipo de aviso → gesto de Infy.
+   *
+   * Los nombres de tipo son los del encargo; el gesto sale de aquí para que
+   * quien avisa hable de lo que pasó ("success", "retry") y no de qué cara
+   * poner.
+   */
+  const TIPOS = {
+    success: 'SUCCESS',
+    achievement: 'SUCCESS',
+    streak: 'SUCCESS',
+    error: 'LEARNING',
+    retry: 'LEARNING',
+    info: 'LEARNING',
+    learning: 'LEARNING',
+    thinking: 'THINKING',
+  };
+
+  /**
    * Aviso flotante con Infy: un logro, una racha, un módulo completado.
    *
    * Para texto sin mascota ya está `AppShell.showToast`; esto es para cuando
    * el gesto es parte del mensaje.
    *
-   * @param {string} mensaje
-   * @param {string} gesto     por defecto celebra
-   * @param {number} duracion  en milisegundos
+   * Admite dos formas, porque el encargo pedía las dos:
+   *   showToast('¡Pleno!', 'success')
+   *   showToast({ message: '¡Pleno!', type: 'success', duration: 4000 })
+   *
+   * @param {string|{message:string, type?:string, duration?:number}} entrada
+   * @param {string} [tipo]      cuando la entrada es texto
+   * @param {number} [duracion]  cuando la entrada es texto
    */
-  function showToast(mensaje, gesto = 'SUCCESS', duracion = AVISO_MS) {
+  function showToast(entrada, tipo, duracion) {
+    const opciones = (entrada && typeof entrada === 'object')
+      ? entrada
+      : { message: entrada, type: tipo, duration: duracion };
+
+    const mensaje = opciones.message;
+    const clave = String(opciones.type || 'success').toLowerCase();
+    /* Se acepta también el nombre del gesto en crudo (`SUCCESS`), que es como
+       lo llamaba la primera versión de esta función. */
+    const gesto = TIPOS[clave] || (GESTO_VALIDO(clave) ? clave.toUpperCase() : 'SUCCESS');
+    const espera = opciones.duration ?? AVISO_MS;
+
     if (!_hayMascota() || !mensaje) return null;
 
     clearTimeout(_avisoTimer);
     _aviso?.remove();
 
     const caja = document.createElement('div');
-    caja.className = 'infy-toast';
+    caja.className = `infy-toast infy-toast--${clave}`;
     /* `status` y no `alert`: es un refuerzo positivo, no algo que deba
        interrumpir lo que se esté leyendo con un lector de pantalla. */
     caja.setAttribute('role', 'status');
@@ -101,12 +139,34 @@ const MascotService = (() => {
     // El siguiente fotograma, para que la transición de entrada se vea.
     requestAnimationFrame(() => caja.classList.add('is-visible'));
 
+    /* Celebrar de verdad: unas pocas piezas de confeti, creadas solo para el
+       tipo que las pide y retiradas con el aviso. Es CSS puro —sin librería
+       ni canvas— y se calla con `prefers-reduced-motion`. */
+    if (gesto === 'SUCCESS') _confeti(caja);
+
     _avisoTimer = setTimeout(() => {
       caja.classList.remove('is-visible');
       setTimeout(() => { if (caja === _aviso) { caja.remove(); _aviso = null; } }, 260);
-    }, duracion);
+    }, espera);
 
     return caja;
+  }
+
+  /** Confeti ligero sobre el aviso; nada que limpiar aparte del propio aviso. */
+  function _confeti(caja) {
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    const capa = document.createElement('span');
+    capa.className = 'infy-toast__confetti';
+    capa.setAttribute('aria-hidden', 'true');
+    for (let i = 0; i < 12; i += 1) {
+      const p = document.createElement('i');
+      /* La única propiedad en línea es la posición de cada pieza, que por
+         definición no puede vivir en la hoja: el resto lo pone el CSS. */
+      p.style.setProperty('--x', `${(i / 11) * 100}%`);
+      p.style.setProperty('--d', `${(i % 4) * 90}ms`);
+      capa.appendChild(p);
+    }
+    caja.appendChild(capa);
   }
 
   /* ── Tarjetas de estado vacío ──────────────────────────────────────────── */
@@ -182,7 +242,10 @@ const MascotService = (() => {
     let n = 0;
     for (const icono of raiz.querySelectorAll('.empty-state__icon, .empty-state-panel__icon')) {
       if (icono.dataset.infyDone === '1') continue;
-      const img = _img(icono.dataset.infyGesto || 'IDLE', 'card');
+      /* Variante propia, no la de la tarjeta: el hueco del estado vacío
+         mide 56 px y `.infy--card` son 112, que se salían por abajo y
+         caían encima del titular. */
+      const img = _img(icono.dataset.infyGesto || 'IDLE', 'empty');
       if (!img) continue;
       img.alt = '';
       img.setAttribute('aria-hidden', 'true');
@@ -207,28 +270,115 @@ const MascotService = (() => {
     let pendiente = 0;
     new MutationObserver(() => {
       clearTimeout(pendiente);
-      pendiente = setTimeout(() => decorateEmptyStates(raiz), 80);
+      pendiente = setTimeout(() => {
+        decorateEmptyStates(raiz);
+        decorateOnboarding(document);   // el tour se monta en <body>, no en main
+      }, 80);
     }).observe(raiz, { childList: true, subtree: true });
   }
 
   /* ── Saludo del panel ──────────────────────────────────────────────────── */
 
+  /** Nombre de pila: el saludo con el nombre completo suena a carta del banco. */
+  function _nombre() {
+    try {
+      const u = JSON.parse(sessionStorage.getItem('in4mind_user') || 'null');
+      const bruto = u?.name || u?.email?.split('@')[0] || '';
+      return String(bruto).trim().split(/\s+/)[0] || '';
+    } catch { return ''; }
+  }
+
+  /** Días seguidos estudiando, si la app lleva la cuenta. */
+  function _racha() {
+    if (typeof GamificationService === 'undefined') return 0;
+    try { return Number(GamificationService.getStreak()) || 0; } catch { return 0; }
+  }
+
   /**
-   * Pone a Infy junto al mensaje de bienvenida del panel.
+   * Qué dice Infy al abrir el panel.
+   *
+   * La racha manda sobre la hora: que alguien lleve días seguidos es más
+   * relevante que si son las diez o las seis, y celebrarlo es justo lo que
+   * sostiene el hábito. Si no hay racha, saluda según el momento del día.
+   *
+   * @returns {{ gesto: string, texto: string }}
+   */
+  function greetingFor(hora = new Date().getHours(), racha = _racha(), nombre = _nombre()) {
+    if (racha > 0) {
+      return {
+        gesto: 'SUCCESS',
+        texto: _t('infy.greetStreak', `¡Llevas ${racha} días seguidos estudiando! ¡Sigue así!`, { n: racha }),
+      };
+    }
+    const momento = (hora >= 5 && hora < 12) ? 'Morning' : 'Later';
+    const porDefecto = momento === 'Morning'
+      ? `¡Buenos días${nombre ? `, ${nombre}` : ''}! ¿Empezamos con un repaso hoy?`
+      : `¡Buenas tardes${nombre ? `, ${nombre}` : ''}! Continuemos donde lo dejaste.`;
+    /* Quien acaba de registrarse puede no tener nombre todavía. La frase
+       traducida lleva la coma pegada a `{name}`, así que sin una variante
+       propia saldría "¡Buenos días, !": hay una clave por cada caso. */
+    const clave = `infy.greet${momento}${nombre ? '' : 'Anon'}`;
+    return {
+      gesto: 'IDLE',
+      texto: _t(clave, porDefecto, { name: nombre }),
+    };
+  }
+
+  /**
+   * Pone a Infy junto al mensaje de bienvenida del panel, con su saludo.
    * Se monta dentro de `[data-infy-greeting]` si existe.
    */
   function mountGreeting(host) {
     const destino = host || document.querySelector('[data-infy-greeting]');
     if (!destino || !_hayMascota() || destino.querySelector('.infy--greeting')) return null;
 
+    const saludo = greetingFor();
+
     /* Ansiosa: el saludo está en el primer visible del panel, y cargarlo
        tarde deja un hueco que empuja el titular. */
-    const img = _img('IDLE', 'greeting', true);
+    const img = _img(saludo.gesto, 'greeting', true);
     if (!img) return null;
     img.alt = '';
     img.setAttribute('aria-hidden', 'true');
     destino.insertBefore(img, destino.firstChild);
+
+    /* El saludo va en su propia línea, debajo del subtítulo que ya estaba: no
+       se pisa el titular de bienvenida, que lo escribe el panel. */
+    const bloque = destino.querySelector('.welcome-section__text') || destino;
+    if (!bloque.querySelector('.infy-greeting__line')) {
+      const p = document.createElement('p');
+      p.className = 'infy-greeting__line';
+      p.textContent = saludo.texto;
+      bloque.appendChild(p);
+    }
+
     return img;
+  }
+
+  /**
+   * Infy en el tour de bienvenida.
+   *
+   * El tour ya existe en `AppFeatures` —pasos, Omitir/Siguiente y su marca en
+   * `localStorage`—, así que aquí solo se le pone cara. Montar un segundo
+   * tour habría dado dos superposiciones en el primer inicio de sesión.
+   *
+   * El hueco (`[data-infy-onboard]`) aparece cuando el tour se abre, no en el
+   * arranque, así que lo recoge el mismo observador que los estados vacíos.
+   */
+  function decorateOnboarding(raiz = document) {
+    if (!_hayMascota()) return 0;
+    let n = 0;
+    for (const hueco of raiz.querySelectorAll('[data-infy-onboard]')) {
+      if (hueco.dataset.infyDone === '1') continue;
+      const img = _img('IDLE', 'onboard');
+      if (!img) continue;
+      img.alt = '';
+      img.setAttribute('aria-hidden', 'true');
+      hueco.appendChild(img);
+      hueco.dataset.infyDone = '1';
+      n += 1;
+    }
+    return n;
   }
 
   /* ── Acceso rápido flotante ────────────────────────────────────────────── */
@@ -389,6 +539,28 @@ const MascotService = (() => {
     boton.setAttribute('aria-haspopup', 'dialog');
     boton.setAttribute('aria-expanded', 'false');
 
+    /* Globo de ayuda. Va en el propio botón y no como `title` del navegador
+       para poder darle forma y para que aparezca al instante. `aria-label` ya
+       nombra el botón, así que esto es decorativo y no se anuncia dos veces. */
+    const globo = document.createElement('span');
+    globo.className = 'infy-fab__tip';
+    globo.setAttribute('aria-hidden', 'true');
+    globo.textContent = _t('infy.fabTip', '¿Necesitas ayuda con este tema?');
+    boton.appendChild(globo);
+
+    /* Al pasar por encima, Infy pone cara de pensar: la mascota responde antes
+       de que se le pregunte nada. Se vuelve a la calma al salir. */
+    if (img) {
+      const gestoAl = (g) => {
+        img.src = InfyMascot.RUTA + InfyMascot.GESTOS[g];
+        img.dataset.gesto = g;
+      };
+      boton.addEventListener('mouseenter', () => gestoAl('THINKING'));
+      boton.addEventListener('focus', () => gestoAl('THINKING'));
+      boton.addEventListener('mouseleave', () => gestoAl('IDLE'));
+      boton.addEventListener('blur', () => gestoAl('IDLE'));
+    }
+
     /* La decisión se toma al pulsar, no al montar.
        `GroqService` llega en su propia etiqueta y no hay garantía de que ya
        esté definido cuando se construye el botón; mirándolo aquí, el orden
@@ -409,12 +581,13 @@ const MascotService = (() => {
     mountGreeting();
     mountFab();
     decorateEmptyStates();
+    decorateOnboarding();
     _vigilarEstadosVacios();
   }
 
   return {
     init, showToast, renderCard, mountGreeting, mountFab, toggleDrawer,
-    decorateEmptyStates,
+    decorateEmptyStates, decorateOnboarding, greetingFor,
   };
 
 })();

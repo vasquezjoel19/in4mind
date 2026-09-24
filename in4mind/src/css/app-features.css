@@ -308,6 +308,11 @@
 
 .onboard-overlay[hidden] { display: none !important; }
 
+/* El objetivo del paso, por encima del velo mientras se habla de él.
+   Solo sube la capa: lo que se destaca ya viene posicionado —el acceso
+   rápido es `fixed`— y forzar aquí un `position` rompería el suyo. */
+.onboard-spot { z-index: 1401; }
+
 .onboard-card {
   width: min(420px, 100%);
   background: var(--clr-bg-card);

@@ -515,6 +515,10 @@ const LOCALE_EN = {
     recommendBody: 'Personalized suggestions from visits, favorites, and quizzes.',
     aiTitle: 'AI assistant',
     aiBody: 'Ask about courses, quizzes, or the platform. AI knows your learning context.',
+    graphTitle: 'Your skill map',
+    graphBody: 'On your profile, a 3D graph links what you already know to what comes next.',
+    infyTitle: 'Infy, one click away',
+    infyBody: 'From any page, this button opens the assistant without losing what you were doing.',
   },
   signupOnboard: {
     title: 'Start your Job-Ready Path',

@@ -354,6 +354,12 @@ const AppFeatures = (() => {
     { sel: '#quick-actions-grid, .quick-actions-section', key: 'onboard.quick' },
     { sel: '#recommended-track, .recommended-section', key: 'onboard.recommend' },
     { sel: 'a[href="ai.html"], [data-nav="ai"]', key: 'onboard.ai' },
+    /* Los dos últimos completan el recorrido pedido: el grafo de habilidades
+       —que vive en el perfil, no aquí, así que se señala su enlace— y el
+       acceso rápido a Infy, que es fijo y por eso se levanta por encima del
+       velo mientras dura su paso. */
+    { sel: 'a[href="profile.html"], [data-nav="profile"]', key: 'onboard.graph' },
+    { sel: '.infy-fab', key: 'onboard.infy', destacar: true },
   ];
 
   function _startOnboarding() {
@@ -388,6 +394,10 @@ const AppFeatures = (() => {
 
     function _showOnboardStep(idx) {
       const s = ONBOARD_STEPS[idx];
+      /* El velo del tour cubre la página entera, así que señalar algo sin
+         sacarlo de debajo no enseña nada. Solo uno cada vez. */
+      document.querySelector('.onboard-spot')?.classList.remove('onboard-spot');
+      if (s.destacar) document.querySelector(s.sel)?.classList.add('onboard-spot');
       document.getElementById('onboard-step-label').textContent = _t('onboard.step', { n: idx + 1, total: ONBOARD_STEPS.length }, `Paso ${idx + 1} de ${ONBOARD_STEPS.length}`);
       document.getElementById('onboard-title').textContent = _t(`${s.key}Title`, null, '');
       document.getElementById('onboard-body').textContent = _t(`${s.key}Body`, null, '');
@@ -396,6 +406,7 @@ const AppFeatures = (() => {
 
     function _finishOnboarding() {
       localStorage.setItem(ONBOARD_KEY, '1');
+      document.querySelector('.onboard-spot')?.classList.remove('onboard-spot');
       overlay?.remove();
     }
 

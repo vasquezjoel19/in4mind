@@ -515,6 +515,10 @@ const LOCALE_ES = {
     recommendBody: 'Sugerencias personalizadas según tus visitas, favoritos y quizzes.',
     aiTitle: 'Asistente IA',
     aiBody: 'Pregunta sobre cursos, quizzes o la plataforma. La IA conoce tu contexto de aprendizaje.',
+    graphTitle: 'Tu mapa de habilidades',
+    graphBody: 'En tu perfil, un grafo en 3D enlaza lo que ya dominas con lo que viene después.',
+    infyTitle: 'Infy, a un clic',
+    infyBody: 'Desde cualquier página, este botón abre el asistente sin perder lo que estabas haciendo.',
   },
   signupOnboard: {
     title: 'Empieza tu Ruta Empleable',

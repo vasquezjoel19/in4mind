@@ -515,6 +515,10 @@ const LOCALE_ZH = {
     recommendBody: '根据访问、收藏和测验生成的个性化建议。',
     aiTitle: 'AI 助手',
     aiBody: '可询问课程、测验或平台问题，AI 了解你的学习上下文。',
+    graphTitle: '你的技能图谱',
+    graphBody: '在个人主页，3D 图谱把你已掌握的内容与接下来的学习连在一起。',
+    infyTitle: '随时可以找 Infy',
+    infyBody: '在任何页面，这个按钮都能打开助手，不会打断你正在做的事。',
   },
   signupOnboard: {
     title: '开始你的就业就绪路径',

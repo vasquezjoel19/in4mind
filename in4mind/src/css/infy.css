@@ -241,6 +241,11 @@ html[data-theme="dark"] .infy-toast {
 
 .infy-fab:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(16, 24, 40, 0.24); }
 
+/* Durante su paso del tour, el botón sube por encima del velo (z 1400).
+   La regla vive aquí, junto a la capa que corrige, y lleva las dos clases
+   porque `.onboard-spot` sola empata en especificidad y pierde por orden. */
+.infy-fab.onboard-spot { z-index: 1401; }
+
 .infy--fab { width: 44px; height: 44px; }
 
 /* ── Panel de chat del acceso rápido ─────────────────────────────────────── */

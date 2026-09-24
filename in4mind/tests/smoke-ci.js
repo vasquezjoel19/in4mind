@@ -742,6 +742,18 @@ for (const [file, endpoint] of [
   assert('infy: el tour recuerda que ya se vio',
     /in4mind_onboarding_done/.test(features));
 
+  /* Los dos pasos que pedía el encargo y que el tour no cubría: el grafo 3D
+   * —que vive en el perfil— y el propio acceso rápido a Infy. */
+  assert('infy: el tour pasa por el grafo de habilidades',
+    /key: 'onboard\.graph'/.test(features));
+  assert('infy: el tour presenta el acceso rápido',
+    /key: 'onboard\.infy', destacar: true/.test(features));
+  /* Señalar algo bajo el velo no enseña nada: el destacado lo saca encima. */
+  assert('infy: el paso destacado sube por encima del velo del tour',
+    /\.infy-fab\.onboard-spot\s*\{[^}]*z-index:\s*1401/.test(infyCss));
+  assert('infy: el destacado se retira al cerrar el tour',
+    /_finishOnboarding\(\) \{[\s\S]{0,200}?onboard-spot'\)\?\.classList\.remove/.test(features));
+
   /* El servicio no fija números de apilado a mano: los saca de los tokens.
    * Un 9999 pondría a Infy por encima de los diálogos y del propio tour. */
   /* El hueco del estado vacío mide 56 px; con la variante de tarjeta (112 px)

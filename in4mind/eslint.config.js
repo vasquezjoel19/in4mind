@@ -30,6 +30,9 @@ const PROYECTO = [
   'OnboardingService', 'AdaptiveQuizEngine', 'AppShell', 'AppFeatures',
   'ExtendedCourses', 'CourseCurriculum', 'GuidedProjectsData', 'CareerPathsData',
   'courseFactory', 'In4mindBulb',
+  // Motor adaptativo y mascota.
+  'AdaptiveLearningService', 'MicroQuiz', 'ReinforcementNote', 'SkillGraph3D',
+  'InfyMascot', 'MascotService', 'Infy',
   'ThemeController', 'SidebarController', 'OtherMenuController',
   'SettingsController', 'DashboardController', 'TutorialController',
   'QuizzesController', 'AuthController', 'OnboardingController',
@@ -37,6 +40,11 @@ const PROYECTO = [
   'GlobalChatController',
   // Generados en build o cargados por CDN.
   '_sbClient', 'SUPABASE_URL', 'SUPABASE_ANON_KEY', 'supabase', 'GROQ_CONFIG',
+  /* Los módulos de `src/js` son de doble uso: se cargan como script clásico
+     en el navegador y con `require` desde los tests, y por eso todos acaban
+     con la guarda `typeof module !== 'undefined'`. Sin declararlo aquí, esa
+     línea da un `no-undef` en cada archivo del proyecto. */
+  'module',
 ];
 
 const globalesProyecto = Object.fromEntries(PROYECTO.map((n) => [n, 'writable']));

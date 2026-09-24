@@ -85,6 +85,17 @@ const MicroQuiz = (() => {
     const head = document.createElement('div');
     head.className = 'micro-quiz__head';
 
+    /* Infy enmarca la comprobación como algo que propone él, no como un
+       examen que aparece solo. Decorativa: la etiqueta de al lado ya dice
+       qué es esto. */
+    if (typeof InfyMascot !== 'undefined') {
+      const infy = InfyMascot.crear('quiz', 'LEARNING');
+      infy.alt = '';
+      infy.setAttribute('aria-hidden', 'true');
+      infy.loading = 'lazy';
+      head.appendChild(infy);
+    }
+
     const eyebrow = document.createElement('span');
     eyebrow.className = 'micro-quiz__eyebrow';
     eyebrow.textContent = _t('adaptive.quizEyebrow', null, 'Comprobación rápida');
@@ -180,6 +191,15 @@ const MicroQuiz = (() => {
       opciones.textContent = '';
       aviso.textContent = '';
       card.classList.add('is-done');
+
+      /* Solo se celebra el pleno: felicitar por un 1 de 2 convierte el
+         refuerzo en ruido y le quita valor al aviso cuando de verdad toca. */
+      if (bien === total && typeof Infy !== 'undefined') {
+        Infy.showToast(
+          _t('adaptive.quizPerfect', { total }, `¡Pleno! ${total} de ${total}.`),
+          'SUCCESS',
+        );
+      }
     };
 
     if (punto.mode === 'after') punto.host.insertAdjacentElement('afterend', card);

@@ -105,3 +105,287 @@
      parpadeando: mejor que el cambio sea instantáneo. */
   .infy-avatar-img.is-swapping { opacity: 1; }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Infy por toda la plataforma
+   ═══════════════════════════════════════════════════════════════
+
+   Superficies que monta `MascotService`: aviso de logro, tarjeta de estado
+   vacío, saludo del panel, botón flotante y su panel de chat.
+*/
+
+/* ── Saludo del panel ────────────────────────────────────────────────────── */
+
+.infy--greeting {
+  width: 72px;
+  height: 72px;
+  flex: none;
+  margin-right: var(--sp-md, 16px);
+}
+
+@media (max-width: 640px) {
+  .infy--greeting { width: 52px; height: 52px; margin-right: var(--sp-sm, 8px); }
+}
+
+/* ── Aviso de logro ──────────────────────────────────────────────────────── */
+
+.infy-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--shell-pad-bottom, 0px) + var(--sp-lg, 24px));
+  z-index: var(--z-toast, 1200);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-sm, 8px);
+  max-width: min(92vw, 420px);
+  padding: 10px 18px 10px 12px;
+  border-radius: var(--rad-pill, 999px);
+  background: var(--clr-surface, #fff);
+  border: 1px solid var(--clr-border, #e4e9f2);
+  box-shadow: 0 12px 32px rgba(16, 24, 40, 0.18);
+  /* Entra desde abajo; el desplazamiento vive en la transición para que
+     `prefers-reduced-motion` pueda quitarlo sin tocar el posicionamiento. */
+  transform: translate(-50%, 16px);
+  opacity: 0;
+  transition: transform 240ms var(--ease, ease), opacity 240ms var(--ease, ease);
+  pointer-events: none;
+}
+
+.infy-toast.is-visible { transform: translate(-50%, 0); opacity: 1; }
+
+.infy--toast { width: 40px; height: 40px; flex: none; }
+
+.infy-toast__text {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--clr-text, #1b2b4b);
+}
+
+html[data-theme="dark"] .infy-toast {
+  background: var(--clr-surface, #1b2436);
+  border-color: var(--clr-border, #2b3752);
+}
+
+/* ── Tarjeta de estado vacío ─────────────────────────────────────────────── */
+
+.infy-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--sp-sm, 8px);
+  padding: var(--sp-xl, 32px) var(--sp-lg, 24px);
+}
+
+.infy--card { width: 112px; height: 112px; }
+
+.infy-card__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--clr-text, #1b2b4b);
+}
+
+.infy-card__text {
+  margin: 0;
+  max-width: 42ch;
+  font-size: 0.9rem;
+  color: var(--clr-text-soft, #5a6b8c);
+}
+
+.infy-card__action {
+  margin-top: var(--sp-sm, 8px);
+  padding: 9px 18px;
+  border: none;
+  border-radius: var(--rad-pill, 999px);
+  background: var(--clr-brand-600, #2f6fd0);
+  color: #fff;
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* ── Botón flotante ──────────────────────────────────────────────────────── */
+
+.infy-fab {
+  position: fixed;
+  right: var(--sp-lg, 24px);
+  /* Apilado encima de la burbuja del chat comunitario, que ya ocupaba esta
+     esquina: 24px de margen + su alto aproximado + separación. */
+  bottom: calc(var(--shell-pad-bottom, 0px) + var(--sp-lg, 24px) + 62px);
+  z-index: var(--z-fab, 940);
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 2px solid #10b981;
+  border-radius: 50%;
+  background: var(--clr-surface, #fff);
+  box-shadow: 0 8px 24px rgba(16, 24, 40, 0.18);
+  cursor: pointer;
+  transition: transform 200ms var(--ease, ease), box-shadow 200ms var(--ease, ease);
+}
+
+.infy-fab:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(16, 24, 40, 0.24); }
+
+.infy--fab { width: 44px; height: 44px; }
+
+/* ── Panel de chat del acceso rápido ─────────────────────────────────────── */
+
+.infy-drawer {
+  position: fixed;
+  right: var(--sp-lg, 24px);
+  bottom: calc(var(--shell-pad-bottom, 0px) + var(--sp-lg, 24px) + 126px);
+  z-index: var(--z-drawer, 960);
+  display: none;
+  flex-direction: column;
+  width: min(92vw, 360px);
+  max-height: min(70vh, 520px);
+  border-radius: var(--rad-lg, 16px);
+  background: var(--clr-surface, #fff);
+  border: 1px solid var(--clr-border, #e4e9f2);
+  box-shadow: 0 18px 48px rgba(16, 24, 40, 0.22);
+  overflow: hidden;
+}
+
+.infy-drawer.is-open { display: flex; }
+
+.infy-drawer__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-sm, 8px);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--clr-border, #e4e9f2);
+}
+
+.infy--drawer { width: 32px; height: 32px; flex: none; }
+
+.infy-drawer__title {
+  margin: 0;
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--clr-text, #1b2b4b);
+}
+
+.infy-drawer__expand {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--clr-brand-600, #2f6fd0);
+  text-decoration: none;
+}
+
+.infy-drawer__close {
+  border: none;
+  background: none;
+  font-size: 1.3rem;
+  line-height: 1;
+  color: var(--clr-text-soft, #5a6b8c);
+  cursor: pointer;
+}
+
+.infy-drawer__thread {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--sp-md, 16px) 12px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-sm, 8px);
+}
+
+.infy-drawer__msg {
+  margin: 0;
+  max-width: 85%;
+  padding: 8px 12px;
+  border-radius: var(--rad-md, 12px);
+  font-size: 0.86rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.infy-drawer__msg--user {
+  align-self: flex-end;
+  background: var(--clr-brand-600, #2f6fd0);
+  color: #fff;
+}
+
+.infy-drawer__msg--bot {
+  align-self: flex-start;
+  background: var(--clr-bg-soft, #f2f6fc);
+  color: var(--clr-text, #1b2b4b);
+}
+
+html[data-theme="dark"] .infy-drawer__msg--bot { background: #26314a; }
+
+.infy-drawer__composer {
+  display: flex;
+  gap: var(--sp-sm, 8px);
+  padding: 10px 12px;
+  border-top: 1px solid var(--clr-border, #e4e9f2);
+}
+
+.infy-drawer__input {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 12px;
+  border: 1px solid var(--clr-border, #e4e9f2);
+  border-radius: var(--rad-pill, 999px);
+  background: var(--clr-bg-app, #fff);
+  color: var(--clr-text, #1b2b4b);
+  font-size: 0.86rem;
+}
+
+.infy-drawer__send {
+  padding: 9px 16px;
+  border: none;
+  border-radius: var(--rad-pill, 999px);
+  background: var(--clr-brand-600, #2f6fd0);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+html[data-theme="dark"] .infy-drawer,
+html[data-theme="dark"] .infy-fab {
+  background: var(--clr-surface, #1b2436);
+  border-color: var(--clr-border, #2b3752);
+}
+
+/* En pantallas estrechas el panel ocupa el ancho disponible y sube por
+   encima de la barra inferior. */
+@media (max-width: 480px) {
+  .infy-drawer { right: 4vw; left: 4vw; width: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .infy-toast,
+  .infy-fab,
+  .infy-fab:hover {
+    transition: none;
+    transform: translate(-50%, 0);
+  }
+  .infy-fab, .infy-fab:hover { transform: none; }
+}
+
+/* El saludo se pone en fila con el titular; el texto se agrupa aparte para
+   que Infy no se cuele entre el título y su subtítulo. */
+.welcome-section__content[data-infy-greeting] {
+  display: flex;
+  align-items: center;
+}
+
+.welcome-section__text { min-width: 0; }
+
+/* Infy dentro de la cabecera del micro-quiz. */
+.infy--quiz {
+  width: 34px;
+  height: 34px;
+  flex: none;
+  margin-right: var(--sp-xs, 4px);
+}

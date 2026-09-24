@@ -8,7 +8,8 @@
 const {
   resolveGroqKey, resolveGroqModel, resolveGroqMaxTokens, KNOWN_MODELS,
 } = require('../_lib/groq-env.js');
-const { guard } = require('../_lib/request-auth.js');
+const { guard, verifySession, bearerToken } = require('../_lib/request-auth.js');
+const { checkBurst, checkDailyQuota } = require('../_lib/rate-limit.js');
 
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
@@ -141,6 +142,36 @@ module.exports = async function handler(req, res) {
   if (denied) {
     res.setHeader('Cache-Control', 'no-store');
     return res.status(denied.status).json(denied.body);
+  }
+
+  /* Límite de uso, antes de gastar nada.
+     Exigir sesión no impide registrarse y llamar en bucle: sin esto, una
+     cuenta cualquiera puede agotar la cuota de Groq de la plataforma.
+
+     `verifySession` vuelve a mirar el token, pero `guard` acaba de validarlo
+     y los positivos quedan en caché un minuto, así que no hay segunda ida y
+     vuelta a Supabase. */
+  const sesion = await verifySession(req);
+  if (sesion.ok) {
+    const rafaga = checkBurst(sesion.userId);
+    if (!rafaga.allowed) {
+      res.setHeader('Cache-Control', 'no-store');
+      res.setHeader('Retry-After', String(rafaga.retryAfter));
+      return res.status(429).json({
+        error: 'RATE_LIMITED', scope: 'burst',
+        limit: rafaga.limit, retryAfter: rafaga.retryAfter,
+      });
+    }
+
+    const cuota = await checkDailyQuota(bearerToken(req));
+    if (!cuota.allowed) {
+      res.setHeader('Cache-Control', 'no-store');
+      res.setHeader('Retry-After', String(cuota.retryAfter));
+      return res.status(429).json({
+        error: 'RATE_LIMITED', scope: 'daily',
+        limit: cuota.limit, used: cuota.used, retryAfter: cuota.retryAfter,
+      });
+    }
   }
 
   // Mismo criterio que /api/health y /api/groq/ping: evita que un placeholder

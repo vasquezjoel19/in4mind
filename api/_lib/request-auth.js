@@ -184,4 +184,9 @@ async function guard(req) {
   return null;
 }
 
-module.exports = { guard, checkOrigin, verifySession, SUPABASE_URL };
+module.exports = {
+  guard, checkOrigin, verifySession, SUPABASE_URL, SUPABASE_ANON_KEY,
+  /* El límite de uso necesita el mismo token para la cuota; se expone aquí
+     en vez de volver a parsear la cabecera en el endpoint. */
+  bearerToken: _bearer,
+};

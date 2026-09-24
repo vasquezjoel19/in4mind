@@ -671,6 +671,89 @@ for (const [file, endpoint] of [
   assert('infy: todas las páginas del shell tienen sus estilos',
     ['dashboard.html', 'quizzes.html', 'notes.html', 'projects.html']
       .every(f => /css\/infy\.css/.test(read(f))));
+
+  /* Infy como guía: saludo adaptativo, avisos con tipo, globo y tour.
+   * La lógica del saludo la cubre mascot.test.js; aquí se vigila lo que un
+   * test unitario no ve: que el cableado siga en su sitio. */
+
+  assert('infy: el tipo del aviso decide el gesto, no quien avisa',
+    /const TIPOS = \{/.test(mascota)
+    && /error:\s*'LEARNING'/.test(mascota)
+    && /retry:\s*'LEARNING'/.test(mascota)
+    && /achievement:\s*'SUCCESS'/.test(mascota)
+    && /thinking:\s*'THINKING'/.test(mascota));
+  assert('infy: showToast admite texto suelto y objeto',
+    /function showToast\(entrada, tipo, duracion\)/.test(mascota)
+    && /typeof entrada === 'object'/.test(mascota));
+  assert('infy: el tipo llega al CSS como clase',
+    /infy-toast--\$\{clave\}/.test(mascota));
+  assert('infy: solo se celebra lo que se celebra',
+    /if \(gesto === 'SUCCESS'\) _confeti\(caja\)/.test(mascota));
+  /* Sin librería ni canvas: son 12 <i> que anima la hoja de estilos. Se mira
+   * el código sin comentarios, porque justo ahí pone "ni canvas". */
+  const mascotaCodigo = mascota
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/(?<!:)\/\/[^\n]*/g, '');
+  assert('infy: el confeti es CSS, no una librería',
+    /function _confeti/.test(mascotaCodigo)
+    && !/canvas/i.test(mascotaCodigo)
+    && /createElement\('i'\)/.test(mascotaCodigo));
+  assert('infy: el confeti se calla con prefers-reduced-motion',
+    /_confeti\(caja\) \{\s*\n\s*if \(window\.matchMedia\?\.\('\(prefers-reduced-motion: reduce\)'\)\.matches\) return;/
+      .test(mascota));
+  /* El texto del aviso puede venir del modelo: por textContent, nunca HTML. */
+  assert('infy: el aviso no inyecta HTML',
+    /texto\.textContent = mensaje/.test(mascota));
+
+  assert('infy: el saludo mira la hora y la racha',
+    /function greetingFor\(hora = new Date\(\)\.getHours\(\), racha = _racha\(\), nombre = _nombre\(\)\)/
+      .test(mascota));
+  /* La frase traducida lleva la coma pegada a {name}: sin variante propia,
+   * quien no tiene nombre todavía leería "¡Buenos días, !". */
+  assert('infy: el saludo sin nombre usa su propia frase',
+    /infy\.greet\$\{momento\}\$\{nombre \? '' : 'Anon'\}/.test(mascota));
+  assert('infy: la frase sin nombre existe en español',
+    /greetMorningAnon:/.test(read('src/js/locales/es.js'))
+    && !/greetMorningAnon: '[^']*\{name\}/.test(read('src/js/locales/es.js')));
+
+  assert('infy: la racha sale de la gamificación de verdad',
+    /GamificationService/.test(mascota));
+
+  assert('infy: el botón flotante lleva su globo',
+    /infy-fab__tip/.test(mascota) && /infy-fab__tip/.test(infyCss));
+  assert('infy: el globo no se anuncia dos veces al lector',
+    /globo\.setAttribute\('aria-hidden', 'true'\)/.test(mascota));
+  assert('infy: Infy pone cara de pensar al pasar el ratón',
+    /mouseenter', \(\) => gestoAl\('THINKING'\)/.test(mascota)
+    && /mouseleave', \(\) => gestoAl\('IDLE'\)/.test(mascota));
+  /* Quien navega con teclado no pasa el ratón: foco y ratón hacen lo mismo. */
+  assert('infy: el globo también aparece con el foco',
+    /'focus', \(\) => gestoAl\('THINKING'\)/.test(mascota)
+    && /:focus-visible \.infy-fab__tip|infy-fab:focus-visible/.test(infyCss));
+
+  /* Regresión: el tour ya existía en AppFeatures. Montar un segundo daría dos
+   * superposiciones encima del panel el primer día de cada usuario. */
+  const features = read('src/js/controllers/AppFeatures.js');
+  assert('infy: el tour de bienvenida sigue siendo uno solo',
+    /_startOnboarding/.test(features)
+    && !/_startOnboarding|ONBOARD_STEPS|createOnboarding/.test(mascota));
+  assert('infy: Infy se limita a ponerle cara al tour que ya había',
+    /data-infy-onboard/.test(features) && /data-infy-onboard/.test(mascota));
+  assert('infy: el tour recuerda que ya se vio',
+    /in4mind_onboarding_done/.test(features));
+
+  /* El servicio no fija números de apilado a mano: los saca de los tokens.
+   * Un 9999 pondría a Infy por encima de los diálogos y del propio tour. */
+  /* El hueco del estado vacío mide 56 px; con la variante de tarjeta (112 px)
+   * la mascota se salía por abajo y caía encima del titular. */
+  assert('infy: el estado vacío no usa la medida de la tarjeta',
+    /_img\(icono\.dataset\.infyGesto \|\| 'IDLE', 'empty'\)/.test(mascota));
+  assert('infy: la mascota del estado vacío se adapta a su hueco',
+    /\.infy--empty\s*\{[^}]*width:\s*100%[^}]*height:\s*100%/.test(infyCss));
+
+  assert('infy: respeta el orden de apilado de la casa',
+    !/z-index:\s*9999/.test(infyCss)
+    && /var\(--z-/.test(infyCss));
 }
 
 /* ── Confirmación de correo ─────────────────────────────────────────────────

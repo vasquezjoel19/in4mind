@@ -1082,6 +1082,13 @@ const LOCALE_EN = {
     languageHint: 'Language applies across the entire app: menus, courses, quizzes, and help.',
   },
   infy: {
+    greetMorning: 'Good morning, {name}! Shall we start with a review today?',
+    greetLater: 'Good afternoon, {name}! Let\'s pick up where you left off.',
+    greetMorningAnon: 'Good morning! Shall we start with a review today?',
+    greetLaterAnon: 'Good afternoon! Let\'s pick up where you left off.',
+    greetStreak: '{n} days in a row! Keep it up.',
+    fabTip: 'Need help with this topic?',
+    retry: 'Don\'t worry — mistakes are how you learn. Review this concept.',
     openChat: 'Open the assistant',
     openFull: 'Open full view',
   },

@@ -368,6 +368,7 @@ const AppFeatures = (() => {
       overlay.className = 'onboard-overlay';
       overlay.innerHTML = `
         <div class="onboard-card" role="dialog" aria-modal="true">
+          <span class="onboard-card__mascot" data-infy-onboard></span>
           <p class="onboard-card__step" id="onboard-step-label"></p>
           <h2 class="onboard-card__title" id="onboard-title"></h2>
           <p class="onboard-card__body" id="onboard-body"></p>

@@ -180,6 +180,15 @@ html[data-theme="dark"] .infy-toast {
 
 .infy--card { width: 112px; height: 112px; }
 
+/* Estados vacíos: el hueco lo decide la página (56 px en el panel, más
+   en otras), así que la mascota se adapta a él en vez de imponer medida. */
+.infy--empty {
+  width: 100%;
+  height: 100%;
+  max-width: 112px;
+  max-height: 112px;
+}
+
 .infy-card__title {
   margin: 0;
   font-family: var(--font-display);
@@ -388,4 +397,114 @@ html[data-theme="dark"] .infy-fab {
   height: 34px;
   flex: none;
   margin-right: var(--sp-xs, 4px);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Saludo adaptativo, tipos de aviso y globo del acceso rápido
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Lo que dice Infy al abrir el panel: va bajo el subtítulo, sin pisar el
+   titular de bienvenida que escribe el propio panel. */
+.infy-greeting__line {
+  margin: var(--sp-xs, 4px) 0 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--clr-brand-700, #24559f);
+}
+
+html[data-theme="dark"] .infy-greeting__line { color: var(--clr-brand-300, #9dc0f0); }
+
+/* ── Tipos de aviso ──────────────────────────────────────────────────────── */
+/* El color del borde es lo único que cambia: el gesto de Infy ya dice el
+   resto, y repetirlo con fondos de color convertiría el aviso en un semáforo. */
+
+.infy-toast--success,
+.infy-toast--achievement,
+.infy-toast--streak { border-color: #10b981; }
+
+.infy-toast--error,
+.infy-toast--retry { border-color: #f59e0b; }
+
+.infy-toast--info,
+.infy-toast--learning { border-color: var(--clr-brand-400, #7da6dd); }
+
+.infy-toast--thinking { border-color: var(--clr-border, #e4e9f2); }
+
+/* ── Confeti ─────────────────────────────────────────────────────────────── */
+/* Doce piezas, CSS puro: ni librería ni canvas. Se crean con el aviso y se
+   van con él, así que no hay nada que limpiar aparte. */
+
+.infy-toast__confetti {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.infy-toast__confetti i {
+  position: absolute;
+  top: 0;
+  left: var(--x, 50%);
+  width: 6px;
+  height: 10px;
+  border-radius: 1px;
+  background: #10b981;
+  opacity: 0;
+  animation: infy-confetti 1100ms var(--d, 0ms) ease-out forwards;
+}
+
+.infy-toast__confetti i:nth-child(3n)   { background: #f59e0b; }
+.infy-toast__confetti i:nth-child(3n+1) { background: var(--clr-brand-500, #4d86d6); }
+
+@keyframes infy-confetti {
+  0%   { opacity: 1; transform: translateY(0) rotate(0deg); }
+  100% { opacity: 0; transform: translateY(-46px) rotate(220deg); }
+}
+
+/* ── Globo de ayuda del acceso rápido ────────────────────────────────────── */
+
+.infy-fab__tip {
+  position: absolute;
+  right: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%) translateX(6px);
+  white-space: nowrap;
+  padding: 7px 12px;
+  border-radius: var(--rad-pill, 999px);
+  background: var(--clr-text, #1b2b4b);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms var(--ease, ease), transform 180ms var(--ease, ease);
+}
+
+.infy-fab:hover .infy-fab__tip,
+.infy-fab:focus-visible .infy-fab__tip {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+/* Flotación en reposo: leve, y solo mientras no se interactúa con el botón. */
+@keyframes infy-flotar {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+
+.infy-fab { animation: infy-flotar 3.2s ease-in-out infinite; }
+.infy-fab:hover,
+.infy-fab:focus-visible { animation: none; transform: translateY(-3px) scale(1.06); }
+
+/* ── Infy en el tour de bienvenida ───────────────────────────────────────── */
+
+.onboard-card__mascot { display: block; }
+.infy--onboard { width: 84px; height: 84px; margin: 0 auto var(--sp-sm, 8px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .infy-fab,
+  .infy-fab:hover,
+  .infy-fab:focus-visible { animation: none; transform: none; }
+  .infy-toast__confetti { display: none; }
+  .infy-fab__tip { transition: none; }
 }

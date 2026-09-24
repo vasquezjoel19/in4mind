@@ -1082,6 +1082,13 @@ const LOCALE_ZH = {
     languageHint: '语言将应用于整个应用：菜单、课程、测验和帮助。',
   },
   infy: {
+    greetMorning: '早上好，{name}！今天先来复习一下吧？',
+    greetLater: '下午好，{name}！我们接着上次的继续。',
+    greetMorningAnon: '早上好！今天先来复习一下吧？',
+    greetLaterAnon: '下午好！我们接着上次的继续。',
+    greetStreak: '已经连续学习 {n} 天了！继续保持。',
+    fabTip: '这个主题需要帮助吗？',
+    retry: '别担心，错误是学习的一部分。复习一下这个概念。',
     openChat: '打开助手',
     openFull: '打开完整视图',
   },

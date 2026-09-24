@@ -1082,6 +1082,13 @@ const LOCALE_ES = {
     languageHint: 'El idioma se aplica en toda la aplicación: menús, cursos, quizzes y ayuda.',
   },
   infy: {
+    greetMorning: '¡Buenos días, {name}! ¿Empezamos con un repaso hoy?',
+    greetLater: '¡Buenas tardes, {name}! Continuemos donde lo dejaste.',
+    greetMorningAnon: '¡Buenos días! ¿Empezamos con un repaso hoy?',
+    greetLaterAnon: '¡Buenas tardes! Continuemos donde lo dejaste.',
+    greetStreak: '¡Llevas {n} días seguidos estudiando! ¡Sigue así!',
+    fabTip: '¿Necesitas ayuda con este tema?',
+    retry: 'No te preocupes, de los errores se aprende. Repasa este concepto.',
     openChat: 'Abrir el asistente',
     openFull: 'Abrir completo',
   },

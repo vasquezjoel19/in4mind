@@ -100,6 +100,8 @@ const SHELL_FILES = [
   'src/js/controllers/SidebarController.js',
   'src/js/controllers/OtherMenuController.js',
   'src/js/controllers/SettingsController.js',
+  'src/js/components/InfyMascot.js',
+  'src/js/services/MascotService.js',
 ];
 
 /** Landing: shared libs without AppShell/Auth/sidebar auto-boot weight. */

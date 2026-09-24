@@ -1081,6 +1081,10 @@ const LOCALE_ES = {
     languageSwitch: 'Cambiar idioma a {lang}',
     languageHint: 'El idioma se aplica en toda la aplicación: menús, cursos, quizzes y ayuda.',
   },
+  infy: {
+    openChat: 'Abrir el asistente',
+    openFull: 'Abrir completo',
+  },
   adaptive: {
     quizAria: 'Comprobación rápida',
     quizEyebrow: 'Comprobación rápida',
@@ -1089,6 +1093,7 @@ const LOCALE_ES = {
     quizWrong: 'No era esa. Buscando qué reforzar…',
     quizGap: 'Repasemos {concept}.',
     quizDone: '{n} de {total} correctas.',
+    quizPerfect: '¡Pleno! {total} de {total}.',
     reinforceTag: 'Refuerzo',
     graphTitle: 'Mapa de dominio',
     graphAria: 'Mapa de dominio',

@@ -1081,6 +1081,10 @@ const LOCALE_ZH = {
     languageSwitch: '切换语言为 {lang}',
     languageHint: '语言将应用于整个应用：菜单、课程、测验和帮助。',
   },
+  infy: {
+    openChat: '打开助手',
+    openFull: '打开完整视图',
+  },
   adaptive: {
     quizAria: '快速检查',
     quizEyebrow: '快速检查',
@@ -1089,6 +1093,7 @@ const LOCALE_ZH = {
     quizWrong: '不是这个。正在找出需要强化的内容…',
     quizGap: '我们来复习 {concept}。',
     quizDone: '答对 {n} 题，共 {total} 题。',
+    quizPerfect: '满分！{total} 题全对。',
     reinforceTag: '强化',
     graphTitle: '掌握地图',
     graphAria: '掌握地图',

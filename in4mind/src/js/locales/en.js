@@ -1081,6 +1081,10 @@ const LOCALE_EN = {
     languageSwitch: 'Switch language to {lang}',
     languageHint: 'Language applies across the entire app: menus, courses, quizzes, and help.',
   },
+  infy: {
+    openChat: 'Open the assistant',
+    openFull: 'Open full view',
+  },
   adaptive: {
     quizAria: 'Quick check',
     quizEyebrow: 'Quick check',
@@ -1089,6 +1093,7 @@ const LOCALE_EN = {
     quizWrong: 'Not that one. Looking for what to reinforce…',
     quizGap: 'Let us revisit {concept}.',
     quizDone: '{n} of {total} correct.',
+    quizPerfect: 'Perfect! {total} of {total}.',
     reinforceTag: 'Reinforce',
     graphTitle: 'Mastery map',
     graphAria: 'Mastery map',

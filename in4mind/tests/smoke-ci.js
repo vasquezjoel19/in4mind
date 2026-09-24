@@ -636,8 +636,41 @@ for (const [file, endpoint] of [
 
   const html = read('ai.html');
   assert('infy: la cabecera del chat tiene su hueco', /data-infy-slot/.test(html));
-  assert('infy: ai.html carga el componente y sus estilos',
-    /components\/InfyMascot\.js/.test(html) && /css\/infy\.css/.test(html));
+
+  /* La mascota pasó a viajar en el bundle del shell para llegar a todas las
+   * páginas. Se comprueba que esté ahí y que ninguna página la vuelva a
+   * cargar por su cuenta: eso redeclararía su `const` y el navegador
+   * abortaría el script. */
+  const bundle = read('scripts/bundle-shell.js');
+  assert('infy: la mascota viaja en el bundle del shell',
+    /components\/InfyMascot\.js/.test(bundle) && /services\/MascotService\.js/.test(bundle));
+  assert('infy: ninguna página la carga además por separado',
+    !fs.readdirSync(root).filter(f => f.endsWith('.html'))
+      .some(f => /<script[^>]+components\/InfyMascot\.js/.test(read(f))));
+  assert('infy: ai.html carga sus estilos', /css\/infy\.css/.test(html));
+
+  /* Infy por toda la plataforma. */
+  const mascota = read('src/js/services/MascotService.js');
+  assert('infy: el servicio expone la API del encargo',
+    /function showToast/.test(mascota) && /function renderCard/.test(mascota)
+    && /window\.Infy\s*=/.test(mascota));
+  assert('infy: no duplica las rutas de los dibujos',
+    !/infy-[a-z]+\.png/.test(mascota));
+  assert('infy: las imágenes de fuera de la cabecera no bloquean el pintado',
+    /loading = 'lazy'/.test(mascota));
+  assert('infy: el panel del acceso rápido no existe hasta que se abre',
+    /if \(!_drawer\) _drawer = _crearDrawer\(\)/.test(mascota));
+  assert('infy: el acceso rápido usa el servicio de Groq, no otro chat',
+    /GroqService\.chatStream/.test(mascota) && !/GlobalChatService/.test(mascota));
+  assert('infy: el panel anuncia su estado por evento',
+    /in4mind-ai-state/.test(mascota));
+
+  const infyCss = read('src/css/infy.css');
+  assert('infy: el botón flotante no tapa la burbuja del chat comunitario',
+    /\.infy-fab\s*\{[^}]*bottom:[^;]*62px/.test(infyCss));
+  assert('infy: todas las páginas del shell tienen sus estilos',
+    ['dashboard.html', 'quizzes.html', 'notes.html', 'projects.html']
+      .every(f => /css\/infy\.css/.test(read(f))));
 }
 
 /* ── Confirmación de correo ─────────────────────────────────────────────────

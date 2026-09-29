@@ -554,6 +554,21 @@ const TutorialController = (() => {
     if (typeof GamificationService !== 'undefined') {
       GamificationService.recordActivity('lesson', { courseId: _currentCourse.id, lessonId: lesson.id });
     }
+
+    /* Señal para el motor adaptativo (opcional y desactivado por defecto).
+       Se emite como evento en vez de llamar al servicio para que este
+       controlador no dependa de que exista: si el módulo no está cargado, o
+       está apagado, no la escucha nadie y aquí no cambia nada. */
+    window.dispatchEvent(new CustomEvent('in4mind-learning-signal', {
+      detail: {
+        source: 'lesson',
+        courseId: _currentCourse.id,
+        lessonId: lesson.id,
+        title: lesson.title,
+        courseTitle: _currentCourse.title,
+        text: [lesson.description, ...(lesson.steps || [])].filter(Boolean).join(' ').slice(0, 900),
+      },
+    }));
   }
 
   function _showLessonCheck(onSuccess) {

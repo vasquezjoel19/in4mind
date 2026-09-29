@@ -13,6 +13,19 @@ global.localStorage = {
   removeItem(k) { delete _store[k]; },
 };
 
+// Los servicios avisan de sus cambios con eventos de ventana; en Node basta
+// con un doble que los acepte y los descarte.
+global.window = {
+  dispatchEvent() { return true; },
+  addEventListener() {},
+  removeEventListener() {},
+};
+if (typeof global.CustomEvent === 'undefined') {
+  global.CustomEvent = class CustomEvent {
+    constructor(type, init) { this.type = type; this.detail = init?.detail; }
+  };
+}
+
 // Minimal I18n stub
 global.I18n = {
   t(key, params) {
@@ -38,7 +51,12 @@ global.DataService = {
 
 global.CourseCurriculum = {
   getLessons(courseId) {
-    if (courseId === 'html') return [{ id: 'h1', title: 'Etiquetas', description: 'tags', steps: [] }];
+    // GlobalSearchService compara contra el texto de la lección (título,
+    // descripción, sección y pasos), no contra el curso: el fixture tiene que
+    // mencionar el término para que la comprobación signifique algo.
+    if (courseId === 'html') {
+      return [{ id: 'h1', title: 'Etiquetas HTML', description: 'tags', steps: [] }];
+    }
     return [];
   },
   getAllQuizzes() {
@@ -52,9 +70,11 @@ global.HelpData = {
   },
 };
 
-require('../src/js/data/LearningPathsData.js');
-require('../src/js/services/GamificationService.js');
-require('../src/js/services/GlobalSearchService.js');
+// Cada módulo es un IIFE con `const X = ...` dentro: en Node ese nombre no
+// llega al objeto global, así que hay que tomarlo de module.exports.
+const LearningPathsData = require('../src/js/data/LearningPathsData.js');
+const GamificationService = require('../src/js/services/GamificationService.js');
+const GlobalSearchService = require('../src/js/services/GlobalSearchService.js');
 
 function testLearningPaths() {
   const paths = LearningPathsData.getPaths();

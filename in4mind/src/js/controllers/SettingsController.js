@@ -148,6 +148,7 @@ const SettingsController = (() => {
     const notif = _getNotifPrefs();
     const emailOn = notif.email !== false;
     const pushOn = notif.push !== false;
+    const adaptiveOn = _adaptiveEnabled();
 
     wrap.innerHTML = `
       <section class="settings-panel ${_panel === 'general' ? 'is-active' : ''}" data-panel="general">
@@ -177,6 +178,16 @@ const SettingsController = (() => {
             <label><span data-i18n="analytics.weeklyQuizzes">Quizzes</span>
               <input type="number" id="settings-goal-quizzes" min="1" max="20" value="1"></label>
           </div>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row__text">
+            <p class="settings-row__label" data-i18n="settingsModal.adaptive">Aprendizaje adaptativo</p>
+            <p class="settings-row__hint" data-i18n="settingsModal.adaptiveHint">Comprobaciones breves durante el estudio y refuerzo de lo que falla. Desactivado por defecto.</p>
+          </div>
+          <label class="settings-toggle">
+            <input type="checkbox" id="settings-adaptive" ${adaptiveOn ? 'checked' : ''}>
+            <span class="settings-toggle__track"></span>
+          </label>
         </div>
         <button type="button" class="settings-btn" id="settings-reset-onboard" data-i18n="settingsModal.resetOnboard">Repetir tour de bienvenida</button>
       </section>
@@ -392,7 +403,17 @@ const SettingsController = (() => {
     }
   }
 
+  /* El módulo adaptativo es opcional: si no está cargado en esta página, el
+     interruptor se dibuja apagado y no hace nada al cambiarlo. */
+  function _adaptiveEnabled() {
+    return typeof AdaptiveLearningService !== 'undefined' && AdaptiveLearningService.isEnabled();
+  }
+
   function _bindPanelEvents() {
+    document.getElementById('settings-adaptive')?.addEventListener('change', e => {
+      if (typeof AdaptiveLearningService === 'undefined') return;
+      AdaptiveLearningService.setEnabled(e.target.checked);
+    });
     document.getElementById('settings-notif-email')?.addEventListener('change', e => {
       const prefs = _getNotifPrefs();
       prefs.email = e.target.checked;

@@ -10,6 +10,16 @@
 // ── Simulación mínima de entorno browser ──
 // El IIFE de DataService guarda en module.exports al final.
 // Necesitamos que 'module' exista globalmente antes de requerir.
+
+// El almacén demo de usuarios persiste en localStorage; sin este doble,
+// registrar un usuario revienta con ReferenceError en Node.
+const _store = {};
+global.localStorage = {
+  getItem(k) { return _store[k] ?? null; },
+  setItem(k, v) { _store[k] = String(v); },
+  removeItem(k) { delete _store[k]; },
+};
+
 const DataService = require('../src/js/services/DataService.js');
 
 // ── Micro test runner ──
@@ -109,9 +119,12 @@ test('Devuelve ítems recientes con estructura correcta', () => {
 console.log('\n🔐 DataService.login');
 
 async function runAsyncTests() {
-  // Login válido
+  // Login válido — hace falta registrar antes: el login demo dejó de aceptar
+  // credenciales arbitrarias (era un bypass de autenticación) y ahora exige
+  // que la cuenta exista en este dispositivo.
   await (async () => {
     try {
+      await DataService.register('Usuario Test', 'user@test.com', 'password123');
       const result = await DataService.login('user@test.com', 'password123');
       assert(result.ok === true, 'Login con credenciales válidas debe ser ok=true');
       assert(result.user,        'Debe devolver objeto user');

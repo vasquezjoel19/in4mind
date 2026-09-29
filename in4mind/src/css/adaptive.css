@@ -1,0 +1,363 @@
+/**
+ * IN4MIND — Aprendizaje adaptativo: micro-quiz en línea.
+ *
+ * Todo cuelga de los tokens de `tokens.css`, así que el tema oscuro y los
+ * ajustes de contraste funcionan sin reglas aparte. La tarjeta se inserta
+ * dentro de contenido existente: por eso lleva margen propio y ancho máximo,
+ * para no descolocar la columna de lectura.
+ */
+
+.micro-quiz {
+  display: block;
+  max-width: 46rem;
+  margin: 1.5rem 0;
+  padding: 1rem 1.15rem 1.15rem;
+  border: 1px solid var(--clr-border, #d7e2f0);
+  border-left: 3px solid var(--clr-accent, #0d9488);
+  border-radius: 14px;
+  background: var(--clr-bg-card, #fff);
+  box-shadow: var(--shadow-elevated, 0 4px 16px rgba(26, 43, 72, 0.08));
+  /* Entra despacio: aparecer de golpe en mitad de una lectura distrae más que
+     el propio quiz. */
+  animation: micro-quiz-in 260ms ease-out both;
+}
+
+@keyframes micro-quiz-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .micro-quiz { animation: none; }
+}
+
+.micro-quiz__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+}
+
+.micro-quiz__eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--clr-accent, #0d9488);
+}
+
+.micro-quiz__close {
+  flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--clr-text-muted, #8b9bb0);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.micro-quiz__close:hover,
+.micro-quiz__close:focus-visible {
+  background: var(--clr-bg-badge, #e8f0fa);
+  color: var(--clr-text-primary, #1a2332);
+}
+
+.micro-quiz__progress {
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
+  color: var(--clr-text-muted, #8b9bb0);
+}
+
+.micro-quiz__question {
+  margin: 0 0 0.85rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  font-weight: 600;
+  color: var(--clr-text-primary, #1a2332);
+}
+
+.micro-quiz__options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.micro-quiz__option {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--clr-border, #d7e2f0);
+  border-radius: 10px;
+  background: var(--clr-bg-app, #f0f5fb);
+  color: var(--clr-text-primary, #1a2332);
+  font: inherit;
+  font-size: 0.92rem;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 140ms ease, background 140ms ease;
+}
+
+.micro-quiz__option:hover:not(:disabled),
+.micro-quiz__option:focus-visible:not(:disabled) {
+  border-color: var(--clr-brand-500, #4a76b2);
+  background: var(--clr-bg-badge, #e8f0fa);
+}
+
+.micro-quiz__option:disabled { cursor: default; }
+
+/* Verde y rojo se acompañan siempre de texto en `__feedback`: el color por sí
+   solo no comunica el resultado a quien no lo distingue. */
+.micro-quiz__option.is-right {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.12);
+  font-weight: 600;
+}
+
+.micro-quiz__option.is-wrong {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.micro-quiz__feedback {
+  margin: 0.7rem 0 0;
+  min-height: 1.2em;
+  font-size: 0.86rem;
+  color: var(--clr-text-secondary, #5c6b7f);
+}
+
+.micro-quiz.is-done .micro-quiz__question {
+  margin: 0;
+  font-weight: 500;
+  color: var(--clr-text-secondary, #5c6b7f);
+}
+
+@media (max-width: 640px) {
+  .micro-quiz {
+    margin: 1.15rem 0;
+    padding: 0.85rem 0.9rem 1rem;
+  }
+}
+
+/* ── Nota de refuerzo ──────────────────────────────────────────────────────
+ * Aparece plegada bajo la comprobación fallada. El color de acento la separa
+ * del contenido de la lección sin gritar: es una oferta, no una alarma.
+ */
+
+.reinforce {
+  max-width: 46rem;
+  margin: -0.5rem 0 1.5rem;
+}
+
+.reinforce__details {
+  border: 1px solid var(--clr-border, #d7e2f0);
+  border-left: 3px solid #f59e0b;
+  border-radius: 12px;
+  background: var(--clr-bg-card, #fff);
+  overflow: hidden;
+}
+
+.reinforce__summary {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.9rem;
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.92rem;
+  color: var(--clr-text-primary, #1a2332);
+}
+
+/* El triángulo por defecto se sustituye por el chevron de `::after`. */
+.reinforce__summary::-webkit-details-marker { display: none; }
+.reinforce__summary::marker { content: ''; }
+
+.reinforce__summary::after {
+  content: '';
+  margin-left: auto;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 2px solid var(--clr-text-muted, #8b9bb0);
+  border-bottom: 2px solid var(--clr-text-muted, #8b9bb0);
+  transform: rotate(45deg);
+  transition: transform 180ms ease;
+}
+
+.reinforce__details[open] .reinforce__summary::after { transform: rotate(-135deg); }
+
+.reinforce__summary:hover,
+.reinforce__summary:focus-visible { background: var(--clr-bg-badge, #e8f0fa); }
+
+.reinforce__tag {
+  flex: none;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.16);
+  color: #b45309;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.reinforce__title { font-weight: 600; }
+
+.reinforce__body {
+  padding: 0 0.9rem 0.9rem;
+  animation: reinforce-open 200ms ease-out both;
+}
+
+@keyframes reinforce-open {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reinforce__body { animation: none; }
+  .reinforce__summary::after { transition: none; }
+}
+
+.reinforce__cause {
+  margin: 0 0 0.6rem;
+  padding-left: 0.7rem;
+  border-left: 2px solid var(--clr-border, #d7e2f0);
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--clr-text-secondary, #5c6b7f);
+}
+
+.reinforce__lesson p {
+  margin: 0 0 0.7rem;
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: var(--clr-text-primary, #1a2332);
+}
+
+.reinforce__lesson p:last-child { margin-bottom: 0; }
+
+.reinforce__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.8rem;
+}
+
+.reinforce__btn {
+  padding: 0.45rem 1rem;
+  border: 1px solid var(--clr-border, #d7e2f0);
+  border-radius: 8px;
+  background: var(--clr-bg-app, #f0f5fb);
+  color: var(--clr-text-primary, #1a2332);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.reinforce__btn:hover,
+.reinforce__btn:focus-visible {
+  border-color: var(--clr-brand-500, #4a76b2);
+  background: var(--clr-bg-badge, #e8f0fa);
+}
+
+/* ── Mapa de dominio ───────────────────────────────────────────────────────
+ * Dos modos con la misma pinta: lienzo WebGL o constelación plana en CSS. El
+ * contenedor manda la altura en los dos, así que cambiar de modo no descoloca
+ * la página.
+ */
+
+.skillgraph__host {
+  position: relative;
+  width: 100%;
+  height: clamp(220px, 38vw, 360px);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(var(--clr-brand-rgb, 74, 118, 178), 0.10), transparent 68%),
+    var(--clr-bg-app, #f0f5fb);
+  overflow: hidden;
+}
+
+.skillgraph__canvas,
+.skillgraph__flat {
+  position: absolute;
+  inset: 0;
+}
+
+.skillgraph__canvas canvas { display: block; width: 100%; height: 100%; }
+
+/* Modo plano: los puntos se colocan en porcentaje, así que acompañan al
+   contenedor sin recalcular nada al cambiar de tamaño. */
+.skillgraph__dot {
+  position: absolute;
+  width: 0.9rem;
+  height: 0.9rem;
+  padding: 0;
+  transform: translate(-50%, -50%);
+  border: 0;
+  border-radius: 50%;
+  background: var(--dot, #4a76b2);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  transition: transform 140ms ease;
+}
+
+.skillgraph__dot--curso {
+  width: 1.3rem;
+  height: 1.3rem;
+  opacity: 0.85;
+}
+
+.skillgraph__dot:hover,
+.skillgraph__dot:focus-visible { transform: translate(-50%, -50%) scale(1.25); }
+
+@media (prefers-reduced-motion: reduce) {
+  .skillgraph__dot { transition: none; }
+}
+
+.skillgraph__panel {
+  margin-top: 0.9rem;
+  min-height: 1.5rem;
+}
+
+.skillgraph__panel-title {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--clr-text-primary, #1a2332);
+}
+
+.skillgraph__panel-text {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--clr-text-secondary, #5c6b7f);
+}
+
+.skillgraph__empty,
+.skillgraph__legend {
+  margin: 0.9rem 0 0;
+  font-size: 0.82rem;
+  color: var(--clr-text-secondary, #5c6b7f);
+}
+
+.skillgraph__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+}
+
+/* El punto de color acompaña al texto; el texto es el que informa. */
+.skillgraph__key::before {
+  content: '';
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+  margin-right: 0.35rem;
+  border-radius: 50%;
+  vertical-align: baseline;
+}
+
+.skillgraph__key--mastered::before { background: #10B981; }
+.skillgraph__key--progress::before { background: #F59E0B; }
+.skillgraph__key--gap::before      { background: #EF4444; }

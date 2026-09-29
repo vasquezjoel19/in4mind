@@ -42,12 +42,12 @@ const CodeSandbox = (() => {
     'closetag.min.js', 'closebrackets.min.js',
   ];
 
-  /* Retratos de Infy. Si el fichero no existe la imagen simplemente no se
-     pinta y queda el texto, que es lo que de verdad importa. */
+  /* Retratos de Infy, los mismos que usa el resto de la plataforma. Si alguno
+     faltara, la imagen no se pinta y queda el texto, que es lo que importa. */
   const INFY = {
-    pensando: 'src/img/brand/infy-pensando.png',
-    leyendo: 'src/img/brand/infy-leyendo.png',
-    celebrando: 'src/img/brand/infy-celebrando.png',
+    pensando: 'src/img/infy/infy-pensando.png',
+    leyendo: 'src/img/infy/infy-leyendo.png',
+    celebrando: 'src/img/infy/infy-celebrando.png',
   };
 
   const LIMITE_MS = 6000;        // corte por bucle infinito

@@ -668,6 +668,8 @@ const LOCALE_ZH = {
     sectionLevel: '级别',
     sectionReqs: '要求',
     sectionSteps: '分步课程',
+    sectionPractice: '在这里练习',
+    practiceHint: '修改代码后点击“运行”。如果出错，Infy 会告诉你原因。',
     videoComplementary: '补充视频',
     videoOptional: '可选',
     videoHint: '您可以观看此视频以巩固本课，或仅继续阅读文字内容。',

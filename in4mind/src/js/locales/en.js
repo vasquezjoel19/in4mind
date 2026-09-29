@@ -668,6 +668,8 @@ const LOCALE_EN = {
     sectionLevel: 'Level',
     sectionReqs: 'Requirements',
     sectionSteps: 'Step-by-step course',
+    sectionPractice: 'Practice here',
+    practiceHint: 'Edit the code and hit Run. If something breaks, Infy explains why.',
     videoComplementary: 'Supplementary video',
     videoOptional: 'Optional',
     videoHint: 'You can watch this video to reinforce the lesson or continue with the written content only.',

@@ -926,6 +926,29 @@ for (const [file, endpoint] of [
   assert('the sandbox stacks on small screens', /@media \(max-width: 900px\)[\s\S]*grid-template-columns: 1fr/.test(sbxCss));
   assert('sandbox motion respects the preference', /prefers-reduced-motion/.test(sbxCss));
 
+  /* Durante un tiempo el sandbox estuvo entero pero muerto: nada emitía
+   * `[data-sandbox]`, así que ninguna lección lo mostraba nunca. */
+  const tutor = readCode('src/js/controllers/TutorialController.js');
+  const ejemplos = readCode('src/js/data/LessonExamples.js');
+  assert('a lesson actually renders the sandbox',
+    /data-sandbox="\$\{sandbox\.lenguaje\}/.test(tutor) && /LessonExamples\.sandboxSeed/.test(tutor));
+  assert('the lesson mounts it after rendering', /CodeSandbox\.init\(\)/.test(tutor));
+
+  /* Volver al curso o al listado sólo hace `display:none`: sin cerrarlo, el
+   * worker de Python sigue vivo con todo Pyodide dentro. */
+  assert('leaving a lesson tears the sandbox down',
+    /function _showList\(\)\s*\{\s*_cerrarSandboxes\(\)/.test(tutor)
+    && /_cerrarSandboxes\(\);\s*\n\s*const data = TutorialData|if \(!course\) return;\s*\n\s*_cerrarSandboxes\(\)/.test(tutor));
+
+  /* Un botón «Ejecutar» que no ejecuta enseña peor que no tener botón. */
+  assert('sql and github get no sandbox',
+    /EJECUTABLES = \{[^}]*\}/.test(ejemplos)
+    && !/EJECUTABLES = \{[^}]*\b(sql|github)\b/.test(ejemplos));
+
+  /* Abrir una lección de JS sobre un HTML vacío parece un sandbox roto. */
+  assert('the sandbox opens on the lesson tab',
+    /activo: 'js'/.test(ejemplos) && /opciones\.activo/.test(sbx));
+
   for (const clave of ['run', 'reset', 'askInfy', 'sinErrores', 'timeout']) {
     for (const idioma of ['es', 'en', 'zh']) {
       assert(`${idioma}: sandbox.${clave}`,

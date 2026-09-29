@@ -561,6 +561,15 @@ const CodeSandbox = (() => {
       });
     });
 
+    /* Arranca en la pestaña que trae el código de la lección. Sin esto, una
+       lección de JavaScript abre sobre un HTML vacío y parece un sandbox roto,
+       con el ejemplo escondido en una pestaña que nadie va a pulsar.
+       Se simula el clic en vez de repetir la lógica: así el panel, el
+       `aria-selected` y el refresco de CodeMirror quedan en un solo sitio. */
+    if (opciones.activo && opciones.activo !== est.activo && est.vistas[opciones.activo]) {
+      raiz.querySelector(`[data-lang="${opciones.activo}"]`)?.click();
+    }
+
     // Acciones
     raiz.querySelector('[data-run]').addEventListener('click', () => {
       est.terminado = false;
@@ -615,7 +624,7 @@ const CodeSandbox = (() => {
     document.querySelectorAll('[data-sandbox]').forEach((el) => {
       let inicial = {};
       try { inicial = JSON.parse(el.dataset.sandboxInicial || '{}'); } catch { /* sin plantilla */ }
-      mount(el, { lenguaje: el.dataset.sandbox, inicial });
+      mount(el, { lenguaje: el.dataset.sandbox, inicial, activo: el.dataset.sandboxActiva });
     });
   }
 

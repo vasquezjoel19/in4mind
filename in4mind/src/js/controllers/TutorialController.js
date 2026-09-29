@@ -910,6 +910,7 @@ const TutorialController = (() => {
   }
 
   function _showList() {
+    _cerrarSandboxes();
     $lessonView.style.display = 'none';
     $detailView.style.display = 'none';
     $listView.style.display = 'block';
@@ -967,6 +968,7 @@ const TutorialController = (() => {
   function _showDetail(courseId, openFirstLesson = false) {
     const course = DataService.getCourses().find(c => c.id === courseId);
     if (!course) return;
+    _cerrarSandboxes();
     _currentCourse = course;
     const data = TutorialData.getCourseData(courseId) || {};
     _currentLessons = data.lessons || [];
@@ -1176,6 +1178,28 @@ const TutorialController = (() => {
     }
   }
 
+  /**
+   * Cierra los sandboxes vivos de la lección.
+   *
+   * Hace falta en los tres caminos por los que se abandona una lección: pasar
+   * a la siguiente, volver al curso y volver al listado. Los dos últimos sólo
+   * ocultan la vista con `display:none`, así que sin esto el worker de Python
+   * sigue corriendo con todo Pyodide en memoria y el iframe sigue montado.
+   */
+  function _cerrarSandboxes() {
+    if (typeof CodeSandbox === 'undefined') return;
+    document.querySelectorAll('[data-sandbox]').forEach(el => CodeSandbox.destroy(el));
+  }
+
+  /** Escapa un valor para meterlo entre comillas dobles en un atributo. */
+  function _attr(valor) {
+    return String(valor)
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
   function _renderLessonArticle(lesson, idx, total) {
     const course = _currentCourse;
     const pct = Math.round(((idx + 1) / total) * 100);
@@ -1217,6 +1241,16 @@ const TutorialController = (() => {
 
     const $article = document.getElementById('lesson-article');
     if (!$article) return;
+
+    /* El sandbox de la lección anterior no muere solo al reemplazar el HTML:
+       el worker de Python sobrevive al DOM con todo Pyodide cargado dentro, y
+       su listener de `message` se queda colgado del window. Hay que cerrarlo
+       explícitamente antes de pisar el artículo. */
+    _cerrarSandboxes();
+
+    const sandbox = typeof LessonExamples !== 'undefined' && LessonExamples.sandboxSeed
+      ? LessonExamples.sandboxSeed(lesson, course.id)
+      : null;
 
     $article.innerHTML = `
       <header class="lesson-w3__header">
@@ -1281,6 +1315,14 @@ const TutorialController = (() => {
         <div class="lesson-w3__example-body">${exampleHtml}</div>
       </div>
 
+      ${sandbox ? `
+      <section class="lesson-w3__block" id="lesson-sec-sandbox">
+        <h2 class="lesson-w3__block-title">${_t('tutorial.sectionPractice', null, 'Practica aquí')}</h2>
+        <p class="lesson-w3__text lesson-w3__text--muted">${_t('tutorial.practiceHint', null, 'Edita el código y pulsa Ejecutar. Si algo falla, Infy te explica por qué.')}</p>
+        <div data-sandbox="${sandbox.lenguaje}" data-sandbox-activa="${sandbox.activo}"
+             data-sandbox-inicial="${_attr(JSON.stringify(sandbox.inicial))}"></div>
+      </section>` : ''}
+
       <section class="lesson-w3__block" id="lesson-sec-resources">
         <h2 class="lesson-w3__block-title"><span class="lesson-w3__block-num">5</span> ${_t('tutorial.additionalResources', null, 'Recursos adicionales')}</h2>
         <ul class="lesson-w3__resources">
@@ -1332,6 +1374,10 @@ const TutorialController = (() => {
           <button type="button" class="lesson-rating-btn" data-rating="0" aria-label="${_t('tutorial.thumbsDown', null, 'No útil')}">👎</button>
         </div>
       </section>`;
+
+    /* El auto-arranque de CodeSandbox sólo corre en DOMContentLoaded, y este
+       artículo se pinta mucho después y otra vez por cada lección. */
+    if (sandbox && typeof CodeSandbox !== 'undefined') CodeSandbox.init();
 
     document.getElementById('lesson-try-btn')?.addEventListener('click', () => {
       document.getElementById('lesson-sec-steps')?.scrollIntoView({ behavior: 'smooth', block: 'start' });

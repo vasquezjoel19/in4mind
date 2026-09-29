@@ -1182,6 +1182,15 @@ const LOCALE_EN = {
     cargandoPython: 'Getting Python ready… (the first time takes a few seconds)',
     pythonFallo: 'Python could not start in this browser.',
   },
+  tour: {
+    titulo: 'First steps',
+    paso1: 'Here you can see your active courses.',
+    paso2: 'This section shows your 3D skill graph.',
+    paso3: 'And if you have any question, click on me to open the AI chat!',
+    saltar: 'Skip tour',
+    siguiente: 'Next',
+    entendido: 'Got it',
+  },
   cookies: {
     bannerTitle: 'Cookies',
     bannerText: 'We use cookies and local storage to remember your preferences and improve your experience.',

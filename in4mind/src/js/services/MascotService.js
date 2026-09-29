@@ -405,16 +405,188 @@ const MascotService = (() => {
     return boton;
   }
 
+
+  /* ── Tour de primeros pasos ────────────────────────────────────────────── */
+
+  /**
+   * Guía de tres pasos la primera vez que alguien entra al panel.
+   *
+   * No usa `alert()` ni cambia de página: se oscurece todo menos el elemento
+   * del paso y se explica al lado. Si el elemento de un paso no está en esta
+   * pantalla —el grafo de habilidades vive en el perfil, no en el panel— el
+   * paso se cuenta igual pero sin foco, en lugar de señalar al vacío.
+   *
+   * La marca de "ya visto" es por usuario y local: es una ayuda de interfaz,
+   * no un dato que merezca un viaje a la base de datos ni bloquear el panel.
+   */
+  const TOUR_KEY = 'in4mind_tour_visto';
+
+  function _clavePorUsuario() {
+    let quien = '';
+    try {
+      if (typeof UserProfileService !== 'undefined') {
+        quien = UserProfileService.getCurrentUser()?.email || '';
+      }
+    } catch { /* sin perfil: clave global */ }
+    return quien ? `${TOUR_KEY}:${quien.toLowerCase()}` : TOUR_KEY;
+  }
+
+  function tourVisto() {
+    try { return localStorage.getItem(_clavePorUsuario()) === '1'; }
+    catch { return true; }   // sin almacenamiento, no se insiste
+  }
+
+  function marcarTourVisto() {
+    try { localStorage.setItem(_clavePorUsuario(), '1'); } catch { /* ignore */ }
+  }
+
+  function _pasos() {
+    return [
+      {
+        objetivo: '#recent-track, #learning-paths-grid, .resume-grid',
+        texto: _t('tour.paso1', 'Aquí puedes ver tus cursos activos.'),
+      },
+      {
+        objetivo: '[data-skill-graph], [data-skill-graph-section]',
+        texto: _t('tour.paso2', 'En esta sección puedes ver tu grafo de habilidades 3D.'),
+      },
+      {
+        objetivo: '.infy-fab',
+        texto: _t('tour.paso3', 'Y si tienes cualquier duda, ¡haz clic sobre mí para abrir el chat de IA!'),
+      },
+    ];
+  }
+
+  function startTour({ forzar = false } = {}) {
+    if (!forzar && tourVisto()) return;
+    if (document.querySelector('.infy-tour')) return;   // ya hay uno abierto
+
+    const pasos = _pasos();
+    let indice = 0;
+
+    const capa = document.createElement('div');
+    capa.className = 'infy-tour';
+    capa.setAttribute('role', 'dialog');
+    capa.setAttribute('aria-modal', 'true');
+    capa.setAttribute('aria-label', _t('tour.titulo', 'Primeros pasos'));
+
+    const foco = document.createElement('div');
+    foco.className = 'infy-tour__foco';
+    foco.hidden = true;
+
+    const globo = document.createElement('div');
+    globo.className = 'infy-tour__globo';
+
+    const avatar = _img('IDLE', 'md', true);
+    if (avatar) {
+      avatar.className = 'infy-tour__avatar';
+      globo.appendChild(avatar);
+    }
+
+    const texto = document.createElement('p');
+    texto.className = 'infy-tour__texto';
+    globo.appendChild(texto);
+
+    const pie = document.createElement('div');
+    pie.className = 'infy-tour__pie';
+
+    const cuenta = document.createElement('span');
+    cuenta.className = 'infy-tour__cuenta';
+
+    const saltar = document.createElement('button');
+    saltar.type = 'button';
+    saltar.className = 'infy-tour__btn infy-tour__btn--ghost';
+    saltar.textContent = _t('tour.saltar', 'Saltar tour');
+
+    const siguiente = document.createElement('button');
+    siguiente.type = 'button';
+    siguiente.className = 'infy-tour__btn infy-tour__btn--primary';
+
+    pie.append(cuenta, saltar, siguiente);
+    globo.appendChild(pie);
+    capa.append(foco, globo);
+    document.body.appendChild(capa);
+
+    function cerrar() {
+      marcarTourVisto();
+      window.removeEventListener('keydown', alTeclado);
+      window.removeEventListener('resize', pintar);
+      capa.remove();
+    }
+
+    function alTeclado(ev) {
+      if (ev.key === 'Escape') cerrar();
+      else if (ev.key === 'Enter' && document.activeElement === capa) avanzar();
+    }
+
+    function avanzar() {
+      indice += 1;
+      if (indice >= pasos.length) { cerrar(); return; }
+      pintar();
+    }
+
+    function pintar() {
+      const paso = pasos[indice];
+      texto.textContent = paso.texto;
+      cuenta.textContent = `${indice + 1}/${pasos.length}`;
+      siguiente.textContent = indice === pasos.length - 1
+        ? _t('tour.entendido', 'Entendido')
+        : _t('tour.siguiente', 'Siguiente');
+
+      const el = document.querySelector(paso.objetivo);
+      if (!el) {
+        // Sin objetivo en esta pantalla: el globo se centra y no hay foco.
+        foco.hidden = true;
+        globo.classList.add('infy-tour__globo--centrado');
+        globo.style.removeProperty('top');
+        globo.style.removeProperty('left');
+        return;
+      }
+
+      el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      const r = el.getBoundingClientRect();
+      const margen = 8;
+      foco.hidden = false;
+      foco.style.top = `${r.top - margen}px`;
+      foco.style.left = `${r.left - margen}px`;
+      foco.style.width = `${r.width + margen * 2}px`;
+      foco.style.height = `${r.height + margen * 2}px`;
+
+      globo.classList.remove('infy-tour__globo--centrado');
+      // Debajo del elemento, salvo que no quepa; entonces encima.
+      const alto = globo.offsetHeight || 150;
+      const cabeDebajo = r.bottom + alto + 24 < window.innerHeight;
+      globo.style.top = cabeDebajo ? `${r.bottom + 16}px` : `${Math.max(12, r.top - alto - 16)}px`;
+      globo.style.left = `${Math.max(12, Math.min(r.left, window.innerWidth - (globo.offsetWidth || 300) - 12))}px`;
+    }
+
+    saltar.addEventListener('click', cerrar);
+    siguiente.addEventListener('click', avanzar);
+    window.addEventListener('keydown', alTeclado);
+    window.addEventListener('resize', pintar);
+
+    capa.tabIndex = -1;
+    capa.focus();
+    pintar();
+  }
+
   function init() {
     mountGreeting();
     mountFab();
     decorateEmptyStates();
     _vigilarEstadosVacios();
+
+    /* El tour se lanza tras el primer pintado: antes, los elementos que
+       señala todavía no existen —el panel los rellena por JavaScript— y el
+       foco se colocaría sobre huecos vacíos. */
+    if (document.querySelector('#recent-track, #learning-paths-grid')) {
+      setTimeout(() => startTour(), 1200);
+    }
   }
 
   return {
     init, showToast, renderCard, mountGreeting, mountFab, toggleDrawer,
-    decorateEmptyStates,
+    decorateEmptyStates, startTour, tourVisto, marcarTourVisto,
   };
 
 })();

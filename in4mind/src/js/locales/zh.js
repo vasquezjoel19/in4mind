@@ -1182,6 +1182,15 @@ const LOCALE_ZH = {
     cargandoPython: '正在准备 Python…（第一次需要几秒钟）',
     pythonFallo: '此浏览器无法启动 Python。',
   },
+  tour: {
+    titulo: '新手引导',
+    paso1: '这里可以看到你正在学习的课程。',
+    paso2: '这一区块展示你的 3D 技能图谱。',
+    paso3: '有任何疑问，点我打开 AI 聊天！',
+    saltar: '跳过引导',
+    siguiente: '下一步',
+    entendido: '知道了',
+  },
   cookies: {
     bannerTitle: 'Cookie',
     bannerText: '我们使用 Cookie 和本地存储来记住偏好并改善体验。',

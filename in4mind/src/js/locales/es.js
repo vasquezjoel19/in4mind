@@ -1182,6 +1182,15 @@ const LOCALE_ES = {
     cargandoPython: 'Preparando Python… (la primera vez tarda unos segundos)',
     pythonFallo: 'No se pudo iniciar Python en este navegador.',
   },
+  tour: {
+    titulo: 'Primeros pasos',
+    paso1: 'Aquí puedes ver tus cursos activos.',
+    paso2: 'En esta sección puedes ver tu grafo de habilidades 3D.',
+    paso3: 'Y si tienes cualquier duda, ¡haz clic sobre mí para abrir el chat de IA!',
+    saltar: 'Saltar tour',
+    siguiente: 'Siguiente',
+    entendido: 'Entendido',
+  },
   cookies: {
     bannerTitle: 'Cookies',
     bannerText: 'Usamos cookies y almacenamiento local para recordar preferencias y mejorar tu experiencia.',

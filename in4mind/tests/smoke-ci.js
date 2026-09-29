@@ -980,6 +980,39 @@ for (const [file, endpoint] of [
   }
 }
 
+/* ── Tour de primeros pasos ─────────────────────────────────────────────── */
+{
+  const mascota = read('src/js/services/MascotService.js');
+  const infyCss = read('src/css/infy.css');
+
+  assert('tour: existe y se puede lanzar', /function startTour/.test(mascota));
+  assert('tour: recuerda que ya se vio', /tourVisto/.test(mascota) && /localStorage/.test(mascota));
+  /* La marca va por usuario: en un equipo compartido, el segundo no debería
+   * perderse el tour porque el primero ya lo vio. */
+  assert('tour: la marca es por usuario', /_clavePorUsuario/.test(mascota));
+  assert('tour: tiene los tres pasos', /tour\.paso1[\s\S]{0,400}tour\.paso2[\s\S]{0,400}tour\.paso3/.test(mascota));
+  assert('tour: se puede saltar', /tour\.saltar/.test(mascota));
+  /* Nada de alert() ni de cambiar de página, que era el encargo. */
+  assert('tour: no usa alert', !/\balert\(/.test(readCode('src/js/services/MascotService.js')));
+  /* El grafo vive en el perfil, no en el panel: el paso debe tolerar que su
+   * objetivo no esté en la pantalla en lugar de señalar al vacío. */
+  assert('tour: tolera un objetivo ausente', /if \(!el\) \{[\s\S]{0,200}foco\.hidden = true/.test(mascota));
+  /* El panel se rellena por JavaScript; lanzarlo antes pondría el foco sobre
+   * huecos vacíos. */
+  assert('tour: espera al primer pintado', /setTimeout\(\(\) => startTour\(\)/.test(mascota));
+
+  assert('tour: tiene estilos', /\.infy-tour__globo/.test(infyCss) && /\.infy-tour__foco/.test(infyCss));
+  assert('tour: respeta el movimiento reducido',
+    /@media \(prefers-reduced-motion: reduce\)[\s\S]{0,260}\.infy-tour/.test(infyCss));
+
+  for (const clave of ['paso1', 'paso2', 'paso3', 'saltar', 'entendido']) {
+    for (const idioma of ['es', 'en', 'zh']) {
+      assert(`${idioma}: tour.${clave}`,
+        new RegExp(`^\s*${clave}:`, 'm').test(read(`src/js/locales/${idioma}.js`)));
+    }
+  }
+}
+
 /* ── Limpieza del repositorio ───────────────────────────────────────────── */
 {
   /* Iconos de terceros: cada carga informaba a flaticon de qué miraba cada

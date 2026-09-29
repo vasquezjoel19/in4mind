@@ -389,3 +389,119 @@ html[data-theme="dark"] .infy-fab {
   flex: none;
   margin-right: var(--sp-xs, 4px);
 }
+
+/* ══════════════════════════════════════════
+   Tour de primeros pasos
+   ══════════════════════════════════════════
+
+   Oscurece la pantalla salvo el elemento del paso. El recorte se hace con una
+   sombra enorme en lugar de cuatro paneles alrededor: así el agujero sigue al
+   elemento sin recalcular geometría en cada lado.
+*/
+
+.infy-tour {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;   /* por encima del FAB, que es lo último que señala */
+}
+
+.infy-tour__foco {
+  position: fixed;
+  border-radius: 12px;
+  /* La sombra desbordada es la que oscurece todo lo demás. */
+  box-shadow: 0 0 0 9999px rgba(8, 15, 30, 0.72);
+  transition: all 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+
+/* Sin objetivo en esta pantalla: se oscurece entero y el globo va centrado. */
+.infy-tour__foco[hidden] { display: none; }
+.infy-tour:has(.infy-tour__foco[hidden]) { background: rgba(8, 15, 30, 0.72); }
+
+.infy-tour__globo {
+  position: fixed;
+  max-width: min(330px, calc(100vw - 24px));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--clr-bg-app, #fff);
+  box-shadow: 0 18px 48px rgba(8, 15, 30, 0.32);
+  animation: infy-tour-in 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.infy-tour__globo--centrado {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+@keyframes infy-tour-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.infy-tour__globo--centrado { animation-name: infy-tour-in-centrado; }
+@keyframes infy-tour-in-centrado {
+  from { opacity: 0; transform: translate(-50%, calc(-50% + 8px)); }
+  to   { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+.infy-tour__avatar { width: 48px; height: auto; flex: 0 0 auto; }
+
+.infy-tour__texto {
+  flex: 1 1 180px;
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--clr-text-primary, #0f172a);
+}
+
+.infy-tour__pie {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.infy-tour__cuenta {
+  margin-right: auto;
+  font-size: 0.76rem;
+  color: var(--clr-text-muted, #64748b);
+  font-variant-numeric: tabular-nums;
+}
+
+.infy-tour__btn {
+  padding: 9px 16px;
+  min-height: 40px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  font: 600 0.82rem/1 var(--font-body, system-ui);
+  cursor: pointer;
+}
+
+.infy-tour__btn--ghost {
+  background: transparent;
+  border-color: var(--clr-border, #e2e8f0);
+  color: var(--clr-text-secondary, #475569);
+}
+
+.infy-tour__btn--primary {
+  background: var(--clr-brand-600, #3d6499);
+  color: #fff;
+}
+
+.infy-tour__btn--primary:hover { background: var(--clr-brand-700, #2d4a73); }
+.infy-tour__btn:focus-visible { outline: 2px solid var(--clr-brand-600, #3d6499); outline-offset: 2px; }
+
+html[data-theme="dark"] .infy-tour__globo {
+  background: var(--clr-bg-card, #1a2c44);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .infy-tour__foco { transition: none; }
+  .infy-tour__globo { animation: none; }
+}

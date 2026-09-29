@@ -56,6 +56,23 @@ function read(rel) {
   return fs.readFileSync(path.join(root, rel), 'utf8');
 }
 
+/**
+ * El fichero sin comentarios.
+ *
+ * Varias comprobaciones buscan lo que NO debe aparecer (`Math.random`,
+ * `allow-same-origin`, un CDN retirado…), y el comentario que explica por qué
+ * se evitó esa cosa la nombra necesariamente. Sin esto, la propia explicación
+ * hace saltar la aserción.
+ *
+ * El `(?<!:)` evita que el `//` de `https://` se tome por un comentario y se
+ * lleve por delante el resto de la línea — justo lo que se quiere detectar.
+ */
+function readCode(rel) {
+  return read(rel)
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/(?<!:)\/\/[^\n]*/g, '');
+}
+
 for (const rel of required) {
   const full = path.join(root, rel);
   assert(`exists:${rel}`, fs.existsSync(full));
@@ -471,7 +488,13 @@ for (const [file, endpoint] of [
   const csp = hdr['Content-Security-Policy'];
   const inlinePat = /<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g;
   let drift = [];
+  /* `sandbox-runner.html` queda fuera a propósito: tiene su propia regla en
+   * vercel.json con 'unsafe-inline', porque ahí ejecutar código arbitrario es
+   * justamente el objetivo. Incluir su script en los hashes del sitio no haría
+   * nada útil y obligaría a regenerarlos cada vez que se toque el ejecutor. */
+  const CON_CSP_PROPIA = ['sandbox-runner.html'];
   for (const f of fs.readdirSync(root).filter(x => x.endsWith('.html'))) {
+    if (CON_CSP_PROPIA.includes(f)) continue;
     const html = read(f);
     let m;
     while ((m = inlinePat.exec(html)) !== null) {
@@ -643,14 +666,8 @@ for (const [file, endpoint] of [
 {
   const share = read('src/js/services/CertificateShare.js');
   assert('the qr is generated locally', /_qrDataUrl\(/.test(share));
-  /* Sin comentarios: el propio texto que explica este cambio nombra el
-   * servicio que se retiró, y haría saltar la comprobación. */
-  /* El `(?<!:)` importa: sin él, el `//` de `https://` se toma por el inicio de
-   * un comentario y se borra la URL entera, que es justo lo que se quiere
-   * detectar. Una primera versión de esta línea daba un falso "correcto". */
-  const shareCode = share.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(?<!:)\/\/[^
-]*/g, '');
-  assert('no third-party qr service', !/qrserver\.com/.test(shareCode));
+  assert('no third-party qr service',
+    !/qrserver\.com/.test(readCode('src/js/services/CertificateShare.js')));
   assert('the qr library is vendored',
     fs.existsSync(path.join(root, 'src/js/vendor/qrcode.js')));
   /* La librería tiene que cargarse antes que quien la usa. */
@@ -664,6 +681,94 @@ for (const [file, endpoint] of [
   /* La URL que codifica el QR no debe cambiar nunca: hay certificados ya
    * impresos apuntando a ella. */
   assert('the verify deep-link is unchanged', /verify\.html\?id=/.test(share));
+}
+
+/* ── Sandbox de código ──────────────────────────────────────────────────────
+ * Lo que se ejecuta aquí es código que escribe cualquiera. Las comprobaciones
+ * se centran en el aislamiento: que ese código no pueda alcanzar la sesión.
+ */
+{
+  const sbx = read('src/js/components/CodeSandbox.js');
+  const runner = read('sandbox-runner.html');
+  const worker = read('src/js/workers/python-worker.js');
+  const sbxCss = read('src/css/sandbox.css');
+
+  /* Sin `allow-same-origin` el iframe recibe un origen opaco: no puede leer
+   * cookies, localStorage ni el token de Supabase. Añadirlo tiraría abajo todo
+   * el aislamiento de un plumazo. */
+  assert('the runner iframe is sandboxed', /setAttribute\('sandbox', 'allow-scripts'\)/.test(sbx));
+  assert('the sandbox never allows same-origin',
+    !/allow-same-origin/.test(readCode('src/js/components/CodeSandbox.js')));
+
+  /* Un `srcdoc` hereda la CSP del padre, que lista hashes exactos: el código
+   * del alumno no coincidiría con ninguno y quedaría bloqueado siempre. */
+  assert('the runner is a separate document', /sandbox-runner\.html/.test(sbx));
+  const vercel2 = JSON.parse(fs.readFileSync(path.join(repoRoot, 'vercel.json'), 'utf8'));
+  const reglaRunner = vercel2.headers.find(h => h.source === '/sandbox-runner.html');
+  assert('the runner has its own CSP', Boolean(reglaRunner));
+  assert('the runner CSP cannot reach the network',
+    /connect-src 'none'/.test(reglaRunner.headers.find(h => h.key === 'Content-Security-Policy').value));
+  assert('the main CSP allows the sandbox frame',
+    /frame-src 'self'/.test(vercel2.headers[0].headers
+      .find(h => h.key === 'Content-Security-Policy').value));
+
+  assert('console output is piped to the parent', /postMessage/.test(runner) && /consola/.test(runner));
+  assert('runtime errors are intercepted', /window\.onerror/.test(runner));
+  assert('unhandled rejections are intercepted', /unhandledrejection/.test(runner));
+  /* Un bucle con console.log dentro inundaría la pestaña del alumno. */
+  assert('console output is capped', /TOPE_MENSAJES/.test(runner));
+  /* Reutilizar el iframe deja vivos temporizadores y listeners del intento
+   * anterior; al tercer "Ejecutar" con un setInterval suelto, se arrastra. */
+  assert('each run gets a fresh iframe', /_nuevoIframe/.test(sbx));
+  assert('runaway code is cut off', /LIMITE_MS/.test(sbx));
+  assert('the sandbox can be torn down', /function destroy/.test(sbx) && /worker\?\.terminate/.test(sbx));
+
+  /* En el hilo principal un `while True` congelaría la pestaña entera. */
+  assert('python runs in a worker', /new Worker/.test(sbx));
+  assert('pyodide loads lazily', /loadPyodide/.test(worker) && !/loadPyodide/.test(sbx));
+
+  assert('infy asks the guarded proxy', /'\/api\/groq\/chat'/.test(sbx));
+  assert('infy sends the session token', /Authorization: `Bearer \$\{token\}`/.test(sbx));
+  /* Si Infy diera la solución, el alumno copia y pega y no aprende nada. */
+  assert('infy withholds the full solution', /NO des la solución completa/.test(sbx));
+
+  assert('the sandbox stacks on small screens', /@media \(max-width: 900px\)[\s\S]*grid-template-columns: 1fr/.test(sbxCss));
+  assert('sandbox motion respects the preference', /prefers-reduced-motion/.test(sbxCss));
+
+  for (const clave of ['run', 'reset', 'askInfy', 'sinErrores', 'timeout']) {
+    for (const idioma of ['es', 'en', 'zh']) {
+      assert(`${idioma}: sandbox.${clave}`,
+        new RegExp(`^\s*${clave}:`, 'm').test(read(`src/js/locales/${idioma}.js`)));
+    }
+  }
+}
+
+/* ── Certificados verificables ─────────────────────────────────────────────── */
+{
+  const cert = read('src/js/services/CertificateService.js');
+  const mig = fs.readFileSync(
+    path.join(repoRoot, 'supabase/migrations/20260928_certificates_verifiable.sql'), 'utf8');
+
+  /* `Math.random()` daría identificadores adivinables, y un certificado
+   * adivinable no acredita nada. */
+  assert('the certificate hash is a v4 uuid', /randomUUID|getRandomValues/.test(cert));
+  assert('no weak randomness in certificates',
+    !/Math\.random/.test(readCode('src/js/services/CertificateService.js')));
+  /* Hay QR impresos apuntando a esta URL: no puede cambiar. */
+  assert('the verify url is unchanged', /verify\.html\?id=/.test(cert));
+  /* "No se pudo comprobar" no es lo mismo que "no válido": decir lo segundo
+   * ante una caída de red acusaría a alguien de falsificar. */
+  assert('verification distinguishes unreachable from invalid',
+    /NO_VERIFICABLE/.test(cert) && /NO_ENCONTRADO/.test(cert));
+
+  assert('the certificate owner is set server-side', /new\.user_id := auth\.uid\(\)/.test(mig));
+  assert('the hash is generated by the database', /gen_random_uuid\(\)/.test(mig));
+  assert('certificate hashes are unique', /unique index[\s\S]{0,120}hash/.test(mig));
+  /* Verificar tiene que funcionar para alguien sin cuenta. */
+  assert('verification is public', /to anon, authenticated/.test(mig));
+  /* Antes cualquiera podía fabricarse un certificado con la clave anónima. */
+  assert('only the owner can write their certificate',
+    /with check \(user_id = \(select auth\.uid\(\)\)\)/.test(mig));
 }
 
 /* ── Limpieza del repositorio ───────────────────────────────────────────── */

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>IN4MIND — Ejecutor aislado</title>
+<!--
+  Página que ejecuta el código del alumno, cargada SIEMPRE dentro de un
+  <iframe sandbox="allow-scripts"> desde CodeSandbox.js.
+
+  Por qué existe como fichero aparte y no como `srcdoc`:
+  un iframe con `srcdoc` hereda la Content-Security-Policy del documento padre,
+  y la de IN4MIND lista los hashes exactos de cada script inline. El código que
+  escriba un alumno nunca coincidiría con ninguno, así que se bloquearía siempre.
+  Con un fichero propio, `vercel.json` le asigna su CSP —permisiva a propósito,
+  porque aquí ejecutar código arbitrario es justamente el objetivo.
+
+  Lo que hace que esto sea seguro no es la CSP, es el atributo `sandbox` del
+  iframe: sin `allow-same-origin`, el documento recibe un origen opaco. No puede
+  leer cookies, ni localStorage, ni el token de Supabase, ni tocar el DOM del
+  padre. Solo puede hablar por `postMessage`.
+-->
+<style>
+  html, body { margin: 0; padding: 0; min-height: 100%; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; padding: 12px; }
+</style>
+</head>
+<body>
+<script>
+(function () {
+  'use strict';
+
+  var padre = null;        // se fija con el primer mensaje recibido
+  var enviados = 0;
+  var corriendo = false;   // evita ejecutar el mismo envío dos veces
+  var TOPE_MENSAJES = 500; // un bucle con console.log dentro inundaría al padre
+
+  /** Convierte cualquier valor a algo legible en la terminal. */
+  function comoTexto(v) {
+    if (typeof v === 'string') return v;
+    if (v instanceof Error) return v.name + ': ' + v.message;
+    if (typeof v === 'undefined') return 'undefined';
+    if (v === null) return 'null';
+    if (typeof v === 'function') return v.toString().slice(0, 120);
+    try {
+      // `getCircularReplacer` evita que una referencia circular reviente aquí
+      // y se lleve por delante la ejecución del alumno.
+      var vistos = new WeakSet();
+      return JSON.stringify(v, function (k, val) {
+        if (typeof val === 'object' && val !== null) {
+          if (vistos.has(val)) return '[circular]';
+          vistos.add(val);
+        }
+        return val;
+      }, 2);
+    } catch (e) {
+      return String(v);
+    }
+  }
+
+  function enviar(tipo, datos) {
+    if (!padre) return;
+    /* El incremento va aparte de la comparación a propósito: con
+       `enviados++ > TOPE` dentro del if, la variable ya valía uno más al
+       comprobar la igualdad de abajo y el aviso no se enviaba nunca. */
+    enviados += 1;
+    if (enviados > TOPE_MENSAJES) {
+      if (enviados === TOPE_MENSAJES + 1) {
+        padre.postMessage({ in4mind: true, tipo: 'consola', nivel: 'warn',
+          texto: '… salida recortada: demasiadas líneas (posible bucle infinito).' }, '*');
+      }
+      return;
+    }
+    var msg = { in4mind: true, tipo: tipo };
+    for (var k in datos) msg[k] = datos[k];
+    // '*' es obligado: este documento tiene origen opaco y no conoce el del padre.
+    padre.postMessage(msg, '*');
+  }
+
+  /* ── Consola ─────────────────────────────────────────────────────────────
+   * Se sustituyen los métodos para reenviar al padre, pero se conserva el
+   * original: sin eso, depurar el propio ejecutor sería imposible. */
+  ['log', 'info', 'warn', 'error', 'debug'].forEach(function (nivel) {
+    var original = console[nivel] ? console[nivel].bind(console) : function () {};
+    console[nivel] = function () {
+      var partes = Array.prototype.map.call(arguments, comoTexto);
+      enviar('consola', { nivel: nivel === 'debug' ? 'log' : nivel, texto: partes.join(' ') });
+      original.apply(null, arguments);
+    };
+  });
+
+  /* ── Errores ─────────────────────────────────────────────────────────────
+   * `window.onerror` atrapa lo síncrono; `unhandledrejection`, las promesas
+   * que fallan sin `catch`, que es un despiste habitual al aprender. */
+  window.onerror = function (mensaje, fuente, linea, columna, error) {
+    enviar('error', {
+      mensaje: String(mensaje),
+      linea: linea || null,
+      columna: columna || null,
+      pila: error && error.stack ? String(error.stack).slice(0, 1200) : '',
+    });
+    return true;   // ya se ha informado; no hace falta el error por defecto
+  };
+
+  window.addEventListener('unhandledrejection', function (ev) {
+    var r = ev.reason;
+    enviar('error', {
+      mensaje: 'Promesa rechazada sin capturar: ' + comoTexto(r),
+      pila: r && r.stack ? String(r.stack).slice(0, 1200) : '',
+    });
+  });
+
+  /* ── Ejecución ─────────────────────────────────────────────────────────── */
+
+  function ejecutar(codigo) {
+    enviados = 0;
+    try {
+      /* `new Function` en vez de `eval`: el código del alumno corre en su
+         propio ámbito y no puede redefinir las variables de este ejecutor
+         (`padre`, `enviar`…) por accidente. */
+      var fn = new Function(codigo.js || '');
+      fn();
+      enviar('fin', { ok: true });
+      corriendo = false;
+    } catch (e) {
+      enviar('error', {
+        mensaje: e && e.message ? e.message : String(e),
+        pila: e && e.stack ? String(e.stack).slice(0, 1200) : '',
+      });
+      enviar('fin', { ok: false });
+      corriendo = false;
+    }
+  }
+
+  function pintar(codigo) {
+    // El HTML y el CSS se aplican antes de correr el JS, para que el script
+    // encuentre el DOM que espera.
+    document.body.innerHTML = codigo.html || '';
+    var estilo = document.getElementById('in4mind-css');
+    if (!estilo) {
+      estilo = document.createElement('style');
+      estilo.id = 'in4mind-css';
+      document.head.appendChild(estilo);
+    }
+    estilo.textContent = codigo.css || '';
+  }
+
+  window.addEventListener('message', function (ev) {
+    var d = ev.data;
+    if (!d || d.in4mind !== true) return;
+    padre = ev.source;
+
+    if (d.tipo === 'ejecutar') {
+      /* El padre puede mandar el código dos veces (saludo y `load`); ejecutar
+         dos veces duplicaría la salida y confundiría al alumno. */
+      if (corriendo) return;
+      corriendo = true;
+      pintar(d.codigo || {});
+      // El JS se lanza en el siguiente tick para que el navegador haya
+      // aplicado el DOM y los estilos recién escritos.
+      setTimeout(function () { ejecutar(d.codigo || {}); }, 0);
+    }
+  });
+
+  // Avisa al padre de que ya está listo para recibir código.
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ in4mind: true, tipo: 'listo' }, '*');
+  }
+})();
+</script>
+</body>
+</html>

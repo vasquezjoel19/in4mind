@@ -21,7 +21,15 @@ const CertVerificationService = (() => {
     return code;
   }
 
-  function register(cert, userName) {
+  /**
+   * @param {object} cert
+   * @param {string} userName
+   * @param {{soloLocal?: boolean}} [opciones]  `soloLocal` evita la escritura
+   *        en la nube cuando quien llama ya se encarga de ella —hoy,
+   *        `CertificateService.issue()`, que además guarda el hash y el dueño—.
+   *        Sin esto se escribía dos veces la misma fila, una de ellas sin hash.
+   */
+  function register(cert, userName, opciones) {
     const code = cert.verifyCode || cert.id || generateCode(cert);
     const reg = _readRegistry();
     reg[code] = {
@@ -37,7 +45,7 @@ const CertVerificationService = (() => {
     };
     _writeRegistry(reg);
 
-    if (typeof _sbClient !== 'undefined') {
+    if (typeof _sbClient !== 'undefined' && !(opciones && opciones.soloLocal)) {
       _sbClient.from('cert_verifications').upsert({
         code,
         course_title: cert.title || cert.refId,

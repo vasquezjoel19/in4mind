@@ -81,7 +81,10 @@ const CertificateService = (() => {
        responda. */
     let code = '';
     if (typeof CertVerificationService !== 'undefined') {
-      code = CertVerificationService.register(curso, nombreAlumno);
+      /* `soloLocal`: la escritura en la nube la hace esta función más abajo,
+         con el hash y el dueño incluidos. Sin la opción se escribía dos veces
+         la misma fila y la primera iba sin hash. */
+      code = CertVerificationService.register(curso, nombreAlumno, { soloLocal: true });
     } else {
       code = curso.verifyCode || `IN4MIND-${curso.refId}-${Date.now().toString(36).toUpperCase()}`;
     }

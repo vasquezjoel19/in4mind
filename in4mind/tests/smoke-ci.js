@@ -769,6 +769,24 @@ for (const [file, endpoint] of [
   /* Antes cualquiera podía fabricarse un certificado con la clave anónima. */
   assert('only the owner can write their certificate',
     /with check \(user_id = \(select auth\.uid\(\)\)\)/.test(mig));
+
+  /* La emisión tiene que llegar a ocurrir: el servicio estuvo cargado en las
+   * páginas pero sin que nadie lo llamara, así que el hash no se guardaba. */
+  const share2 = read('src/js/services/CertificateShare.js');
+  assert('issuing a certificate reaches the service', /CertificateService\.issue\(/.test(share2));
+
+  /* `register()` ya escribía en la nube por su cuenta: sin `soloLocal` se
+   * guardaban dos filas por certificado y la primera iba sin hash. */
+  assert('the certificate is written once',
+    /soloLocal: true/.test(read('src/js/services/CertificateService.js'))
+    && /opciones && opciones\.soloLocal/.test(read('src/js/services/CertVerificationService.js')));
+
+  /* Y estar cargado allí donde se emiten. */
+  for (const page of fs.readdirSync(root).filter(f => f.endsWith('.html'))) {
+    const html = read(page);
+    if (!html.includes('CertificateShare.js')) continue;
+    assert(`${page} loads CertificateService`, html.includes('CertificateService.js'));
+  }
 }
 
 /* ── Limpieza del repositorio ───────────────────────────────────────────── */

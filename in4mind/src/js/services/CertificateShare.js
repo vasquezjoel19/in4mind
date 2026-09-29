@@ -59,6 +59,19 @@ const CertificateShare = (() => {
     } else if (!code) {
       code = cert.id || `IN4MIND-${cert.refId || 'CERT'}-${Date.now().toString(36).toUpperCase()}`;
     }
+
+    /* Además del registro de siempre, se emite por `CertificateService` para
+       que queden en la nube el hash criptográfico y el dueño del certificado,
+       que es lo que permite verificarlo ante un tercero.
+       Va sin esperar a propósito: esta función es síncrona porque devuelve el
+       HTML de la tarjeta, y el certificado tiene que poder enseñarse aunque la
+       red no responda. Se reutiliza el mismo `code`, así que la escritura es
+       la misma fila, no una nueva. */
+    if (typeof CertificateService !== 'undefined') {
+      Promise.resolve()
+        .then(() => CertificateService.issue({ ...cert, verifyCode: code }, name))
+        .catch(() => { /* el certificado local ya existe; se reintenta al reabrirlo */ });
+    }
     const verifyUrl = typeof CertVerificationService !== 'undefined'
       ? CertVerificationService.verifyUrl(code)
       : `verify.html?id=${encodeURIComponent(code)}`;

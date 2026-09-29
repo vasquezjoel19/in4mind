@@ -463,6 +463,8 @@ const MascotService = (() => {
 
     const pasos = _pasos();
     let indice = 0;
+    let objetivo = null;
+    let rafSeguir = 0;
 
     const capa = document.createElement('div');
     capa.className = 'infy-tour';
@@ -509,8 +511,10 @@ const MascotService = (() => {
 
     function cerrar() {
       marcarTourVisto();
+      cancelarSeguimiento();
       window.removeEventListener('keydown', alTeclado);
-      window.removeEventListener('resize', pintar);
+      window.removeEventListener('resize', recolocar);
+      window.removeEventListener('scroll', recolocar);
       capa.remove();
     }
 
@@ -534,8 +538,10 @@ const MascotService = (() => {
         : _t('tour.siguiente', 'Siguiente');
 
       const el = document.querySelector(paso.objetivo);
+      objetivo = el || null;
       if (!el) {
         // Sin objetivo en esta pantalla: el globo se centra y no hay foco.
+        cancelarSeguimiento();
         foco.hidden = true;
         globo.classList.add('infy-tour__globo--centrado');
         globo.style.removeProperty('top');
@@ -544,7 +550,19 @@ const MascotService = (() => {
       }
 
       el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-      const r = el.getBoundingClientRect();
+      /* `scrollIntoView` suave es asíncrono: medir justo aquí devuelve la
+         posición de ANTES del scroll, y el foco se queda anclado a ella
+         —fuera de pantalla si el objetivo estaba bajo la línea de flotación—.
+         Se coloca ya (por si no había nada que scrollear) y luego se sigue al
+         objetivo hasta que la animación lo deja quieto. */
+      recolocar();
+      seguir();
+    }
+
+    /** Coloca foco y globo sobre el objetivo, sin tocar el scroll. */
+    function recolocar() {
+      if (!objetivo || !objetivo.isConnected) return;
+      const r = objetivo.getBoundingClientRect();
       const margen = 8;
       foco.hidden = false;
       foco.style.top = `${r.top - margen}px`;
@@ -560,10 +578,36 @@ const MascotService = (() => {
       globo.style.left = `${Math.max(12, Math.min(r.left, window.innerWidth - (globo.offsetWidth || 300) - 12))}px`;
     }
 
+    /* Se para cuando el objetivo lleva tres fotogramas quieto, y como mucho
+       tras 1,2 s: el usuario puede cortar el scroll, y hay navegadores que
+       ignoran `smooth` y saltan de golpe. */
+    function seguir() {
+      cancelarSeguimiento();
+      const limite = performance.now() + 1200;
+      let anterior = null;
+      let quietos = 0;
+      const tic = () => {
+        if (!objetivo || !objetivo.isConnected) { rafSeguir = 0; return; }
+        const y = objetivo.getBoundingClientRect().top;
+        quietos = (anterior !== null && Math.abs(y - anterior) < 0.5) ? quietos + 1 : 0;
+        anterior = y;
+        recolocar();
+        rafSeguir = (quietos >= 3 || performance.now() > limite) ? 0 : requestAnimationFrame(tic);
+      };
+      rafSeguir = requestAnimationFrame(tic);
+    }
+
+    function cancelarSeguimiento() {
+      if (rafSeguir) { cancelAnimationFrame(rafSeguir); rafSeguir = 0; }
+    }
+
     saltar.addEventListener('click', cerrar);
     siguiente.addEventListener('click', avanzar);
     window.addEventListener('keydown', alTeclado);
-    window.addEventListener('resize', pintar);
+    // Recolocan, no re-scrollean: perseguir al usuario mientras mueve la
+    // página sería pelearse con él.
+    window.addEventListener('resize', recolocar);
+    window.addEventListener('scroll', recolocar, { passive: true });
 
     capa.tabIndex = -1;
     capa.focus();

@@ -1001,6 +1001,19 @@ for (const [file, endpoint] of [
    * huecos vacíos. */
   assert('tour: espera al primer pintado', /setTimeout\(\(\) => startTour\(\)/.test(mascota));
 
+  /* El foco es `position: fixed` y `scrollIntoView` suave es ASÍNCRONO: medir
+   * el rect en la línea siguiente devuelve la posición de antes del scroll, y
+   * el foco se queda clavado ahí —fuera de pantalla para cualquier objetivo
+   * bajo la línea de flotación—. Tiene que recolocarse cuando el scroll para. */
+  assert('tour: recoloca el foco cuando el scroll termina',
+    /scrollIntoView\([^)]*\);[\s\S]{0,600}recolocar\(\);\s*seguir\(\);/.test(mascota));
+  assert('tour: sigue al objetivo mientras la página se mueve',
+    /window\.addEventListener\('scroll', recolocar/.test(mascota));
+  /* El seguimiento va por requestAnimationFrame: si no se cancela al cerrar,
+   * el bucle sigue vivo sobre una capa ya quitada del DOM. */
+  assert('tour: corta el seguimiento al cerrar',
+    /function cerrar\(\)[\s\S]{0,200}cancelarSeguimiento\(\)/.test(mascota));
+
   assert('tour: tiene estilos', /\.infy-tour__globo/.test(infyCss) && /\.infy-tour__foco/.test(infyCss));
   assert('tour: respeta el movimiento reducido',
     /@media \(prefers-reduced-motion: reduce\)[\s\S]{0,260}\.infy-tour/.test(infyCss));

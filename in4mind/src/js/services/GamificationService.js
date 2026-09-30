@@ -20,7 +20,7 @@ const GamificationService = (() => {
      puntúe tiene que declararse. `microquiz` vale 50 por petición expresa;
      queda por encima del quiz completo del curso (25) y a la altura de un
      certificado, que es mucho para una comprobación de dos preguntas. */
-  const XP_MAP = { lesson: 15, quiz: 25, microquiz: 50, cert: 50, exam: 80 };
+  const XP_MAP = { lesson: 15, quiz: 25, microquiz: 50, speed: 30, cert: 50, exam: 80 };
 
   function _t(k, p, fb = '') {
     if (typeof I18n !== 'undefined') {

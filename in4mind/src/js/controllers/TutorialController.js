@@ -927,6 +927,7 @@ const TutorialController = (() => {
 
   function _showList() {
     _cerrarSandboxes();
+    if (typeof StudyTimeService !== 'undefined') StudyTimeService.stop();
     $lessonView.style.display = 'none';
     $detailView.style.display = 'none';
     $listView.style.display = 'block';
@@ -985,6 +986,7 @@ const TutorialController = (() => {
     const course = DataService.getCourses().find(c => c.id === courseId);
     if (!course) return;
     _cerrarSandboxes();
+    if (typeof StudyTimeService !== 'undefined') StudyTimeService.stop();
     _currentCourse = course;
     const data = TutorialData.getCourseData(courseId) || {};
     _currentLessons = data.lessons || [];
@@ -1203,6 +1205,13 @@ const TutorialController = (() => {
    * sigue corriendo con todo Pyodide en memoria y el iframe sigue montado.
    */
   function _cerrarSandboxes() {
+    _cerrarCheckpoint();
+    /* El cronómetro NO se para aquí: esta función también corre al pasar de
+       una lección a otra, y pararlo ahí lo apagaría justo después de que
+       `_showLesson` lo encendiera. Se para al salir de la vista. */
+    /* La voz no muere con el DOM: seguiría leyendo la lección anterior encima
+       de la nueva pantalla. */
+    if (typeof LessonReader !== 'undefined') LessonReader.parar();
     if (typeof CodeSandbox === 'undefined') return;
     document.querySelectorAll('[data-sandbox]').forEach(el => CodeSandbox.destroy(el));
   }
@@ -1393,12 +1402,159 @@ const TutorialController = (() => {
     }
   }
 
+  /* ── Lectura en voz alta ─────────────────────────────────────────────── */
+
+  function _pintarBotonLectura(leyendo) {
+    const btn = document.getElementById('lesson-listen');
+    if (!btn) return;
+    const txt = btn.querySelector('.lw-head__listen-txt');
+    if (txt) {
+      txt.textContent = leyendo
+        ? _t('tutorial.listenStop', null, 'Detener')
+        : _t('tutorial.listen', null, 'Escuchar con Infy');
+    }
+    btn.classList.toggle('is-leyendo', leyendo);
+    btn.setAttribute('aria-pressed', String(leyendo));
+  }
+
+  function _alternarLectura() {
+    if (typeof LessonReader === 'undefined') return;
+    const lesson = _currentLessons[_currentLessonIdx];
+
+    if (LessonReader.leyendo()) { LessonReader.parar(); return; }
+
+    /* Se lee lo que hay en la pestaña de contenido, saltando código y
+       controles: leer en voz alta un bloque de código es ruido. */
+    const panel = document.getElementById('lwpanel-contenido');
+    const texto = [lesson?.title, LessonReader.textoDe(panel)].filter(Boolean).join('. ');
+    void LessonReader.alternar(texto).then((empezo) => {
+      if (!empezo) {
+        _pintarInfyLeccion(lesson, 'IDLE',
+          _t('tutorial.listenFail', null, 'Tu navegador no puede leer esta lección en voz alta.'));
+      }
+    });
+  }
+
   /** Cambia el gesto de Infy en la tarjeta lateral. */
   function _infyGesto(estado) {
     const img = document.getElementById('lesson-infy-img');
     if (!img || typeof InfyMascot === 'undefined') return;
     const archivo = InfyMascot.GESTOS?.[estado];
     if (archivo) img.src = `${InfyMascot.RUTA}${archivo}`;
+  }
+
+  /* ── Mapa de calor y velocidad ───────────────────────────────────────── */
+
+  /** Minutos que el temario dice que cuesta el módulo entero. */
+  function _metaMinutos() {
+    return _currentLessons.reduce((total, l) => {
+      const m = /(\d+)/.exec(l.duration || '');
+      return total + (m ? Number(m[1]) : 10);
+    }, 0);
+  }
+
+  function _pintarMapaCalor() {
+    const caja = document.getElementById('lesson-heat');
+    const grid = document.getElementById('lesson-heat-grid');
+    if (!caja || !grid || typeof StudyTimeService === 'undefined') return;
+
+    const dias = StudyTimeService.getDaily(14);
+    grid.textContent = '';
+
+    /* La intensidad se reparte en cuatro escalones sobre 30 minutos: por
+       encima de eso todos los días se verían iguales y el mapa dejaría de
+       distinguir una tarde larga de un rato corto. */
+    for (const d of dias) {
+      const min = Math.round(d.segundos / 60);
+      const nivel = min === 0 ? 0 : Math.min(4, Math.ceil(min / 8));
+      const celda = document.createElement('span');
+      celda.className = 'lw-heat__dia';
+      celda.dataset.nivel = String(nivel);
+      celda.title = _t('tutorial.heatDay', { dia: d.dia, min },
+        `${d.dia}: ${min} min`);
+      grid.appendChild(celda);
+    }
+
+    const racha = StudyTimeService.getStreak();
+    const chip = document.getElementById('lesson-heat-streak');
+    if (chip) {
+      chip.textContent = racha > 0
+        ? _t('tutorial.heatStreak', { n: racha }, `🔥 ${racha} días`)
+        : '';
+    }
+
+    const meta = document.getElementById('lesson-heat-meta');
+    if (meta && _currentCourse) {
+      const min = Math.round(StudyTimeService.getSeconds(_currentCourse.id) / 60);
+      meta.textContent = _t('tutorial.heatTotal', { min, meta: _metaMinutos() },
+        `${min} min en este módulo · meta ${_metaMinutos()} min`);
+    }
+    caja.hidden = false;
+  }
+
+  /**
+   * Premia terminar el módulo por debajo de la duración estimada.
+   *
+   * Se comprueba una sola vez por curso: sin la marca, cada repaso de la
+   * última lección volvería a soltar el bonus.
+   */
+  function _bonusVelocidad() {
+    if (!_currentCourse || typeof StudyTimeService === 'undefined') return;
+    const todas = _currentLessons.length
+      && _currentLessons.every(l => _isLessonComplete(l.id));
+    if (!todas) return;
+
+    const clave = `in4mind_bonus_vel:${_currentCourse.id}`;
+    try { if (localStorage.getItem(clave)) return; } catch { return; }
+
+    const minutos = StudyTimeService.getSeconds(_currentCourse.id) / 60;
+    const meta = _metaMinutos();
+    if (!meta || minutos >= meta) return;
+
+    try { localStorage.setItem(clave, '1'); } catch { /* vale por esta sesión */ }
+
+    if (typeof GamificationService !== 'undefined' && GamificationService.recordActivity) {
+      try { GamificationService.recordActivity('speed', { courseId: _currentCourse.id }); }
+      catch { /* el aviso vale aunque falle la contabilidad */ }
+    }
+    if (typeof Infy !== 'undefined' && Infy.showToast) {
+      Infy.showToast(
+        _t('tutorial.speedBonus', { min: Math.round(minutos), meta },
+          `¡Bonus de velocidad! Terminaste en ${Math.round(minutos)} min (meta ${meta}).`),
+        'SUCCESS');
+    }
+  }
+
+  /* ── Checkpoint de código ────────────────────────────────────────────── */
+
+  /**
+   * Coloca el checkpoint tras los pasos y esconde lo que viene después.
+   *
+   * Va después de «Pasos» y no antes: lo que hace falta para resolverlo está
+   * explicado ahí arriba, así que nada de lo que se oculta es necesario para
+   * superarlo.
+   */
+  function _montarCheckpoint(lesson) {
+    if (typeof CodeCheckpoint === 'undefined' || typeof LessonCheckpoints === 'undefined') return;
+    const def = LessonCheckpoints.get(lesson?.id);
+    const pasos = document.getElementById('lesson-sec-steps');
+    if (!def || !pasos) return;
+
+    const posteriores = [];
+    for (let el = pasos.nextElementSibling; el; el = el.nextElementSibling) {
+      posteriores.push(el);
+    }
+
+    const caja = document.createElement('section');
+    caja.id = 'lesson-sec-checkpoint';
+    pasos.insertAdjacentElement('afterend', caja);
+    CodeCheckpoint.mount(caja, def, posteriores);
+  }
+
+  function _cerrarCheckpoint() {
+    if (typeof CodeCheckpoint === 'undefined') return;
+    const caja = document.getElementById('lesson-sec-checkpoint');
+    if (caja) CodeCheckpoint.destroy(caja);
   }
 
   /** Consejo de Infy para la lección activa. */
@@ -1722,7 +1878,10 @@ const TutorialController = (() => {
       // El índice repinta candados y progreso con el nuevo estado.
       _renderLessonSidebar(_currentLessonIdx);
       _pintarProgresoModulo();
+      _pintarMapaCalor();
       _brillarDesbloqueada(_currentLessonIdx + 1);
+      // Si ésta era la última que faltaba, puede haber bonus por velocidad.
+      _bonusVelocidad();
       return;
     }
 
@@ -1817,6 +1976,19 @@ const TutorialController = (() => {
         <div class="lesson-w3__progress" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100">
           <div class="lesson-w3__progress-fill" style="width:${pct}%"></div>
         </div>`;
+
+      /* El botón sólo aparece si el navegador sabe hablar: uno que no suena
+         es peor que no tenerlo. */
+      if (typeof LessonReader !== 'undefined' && LessonReader.soportado()) {
+        const oir = document.createElement('button');
+        oir.type = 'button';
+        oir.id = 'lesson-listen';
+        oir.className = 'lw-head__listen';
+        oir.innerHTML = `<span aria-hidden="true">🔊</span><span class="lw-head__listen-txt"></span>`;
+        oir.addEventListener('click', _alternarLectura);
+        $head.querySelector('.lw-head__badges')?.appendChild(oir);
+        _pintarBotonLectura(false);
+      }
     }
 
     $article.innerHTML = `
@@ -1935,6 +2107,11 @@ const TutorialController = (() => {
        se engancha más abajo por `getElementById` sigue encontrándose. */
     _ligarPestanas();
     _repartirPestanas();
+    /* El checkpoint se monta DESPUÉS de repartir: mide qué bloques quedan tras
+       los pasos para esconderlos, y si se montara antes se llevaría por
+       delante el ejemplo y las notas, que acaban en otras pestañas y se
+       quedarían ocultos allí. */
+    _montarCheckpoint(lesson);
     _activarPestana('contenido');
 
     /* El auto-arranque de CodeSandbox sólo corre en DOMContentLoaded, y este
@@ -1942,6 +2119,7 @@ const TutorialController = (() => {
     if (sandbox && typeof CodeSandbox !== 'undefined') CodeSandbox.init();
 
     _pintarProgresoModulo();
+    _pintarMapaCalor();
     _pintarInfyLeccion(lesson);
     _montarMicroQuiz(lesson, idx);
 
@@ -1985,6 +2163,11 @@ const TutorialController = (() => {
       if (_currentCourse?.id) sessionStorage.setItem('in4mind_open_course', _currentCourse.id);
       sessionStorage.setItem('in4mind_open_lesson', lesson?.title || lesson?.id || String(idx + 1));
     } catch { /* ignore */ }
+
+    // El cronómetro sólo corre con la lección abierta y la pestaña visible.
+    if (typeof StudyTimeService !== 'undefined' && _currentCourse) {
+      StudyTimeService.start(_currentCourse.id);
+    }
 
     _renderLessonSidebar(idx);
     _renderLessonArticle(lesson, idx, total);
@@ -2139,6 +2322,22 @@ const TutorialController = (() => {
         }
       }
     });
+
+    /* Infy pone cara de estar leyendo mientras suena la voz, y vuelve a su
+       consejo al acabar: el avatar dice de un vistazo si sigue hablando. */
+    if (typeof LessonReader !== 'undefined' && LessonReader.onCambio) {
+      LessonReader.onCambio((estado) => {
+        const leyendo = estado === 'leyendo';
+        _pintarBotonLectura(leyendo);
+        const lesson = _currentLessons[_currentLessonIdx];
+        if (leyendo) {
+          _pintarInfyLeccion(lesson, 'LEARNING',
+            _t('tutorial.listening', null, 'Te estoy leyendo la lección…'));
+        } else if (lesson) {
+          _pintarInfyLeccion(lesson);
+        }
+      });
+    }
 
     window.addEventListener('in4mind-microquiz-wrong', (ev) => {
       try { _alFallarPregunta(ev.detail || {}); }

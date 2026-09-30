@@ -1061,6 +1061,58 @@ for (const [file, endpoint] of [
     /* Sin movimiento siguen viéndose: son información, no adorno. */
     assert('reduced motion: xp and glow stay visible',
       /prefers-reduced-motion[\s\S]{0,600}\.lw-xp \{ animation: none/.test(lwCss));
+
+    /* ── Checkpoints de código ─────────────────────────────────────────── */
+    const chk = readCode('src/js/components/CodeCheckpoint.js');
+    const chkData = read('src/js/data/LessonCheckpoints.js');
+    const rd = readCode('src/js/services/LessonReader.js');
+    const st = readCode('src/js/services/StudyTimeService.js');
+
+    /* El código del alumno corre en origen opaco, igual que en el sandbox. */
+    assert('checkpoint: runs isolated',
+      /allow-scripts/.test(chk) && !/allow-same-origin/.test(chk));
+    assert('checkpoint: a fresh iframe per attempt', /function _nuevoIframe/.test(chk));
+    /* Sin esto cada intento deja un iframe y un listener de `message` colgados. */
+    assert('checkpoint: iframe, listener and timer are released',
+      /function _limpiar[\s\S]{0,300}removeEventListener\('message'[\s\S]{0,200}\$iframe/.test(chk));
+    assert('checkpoint: a runaway attempt is cut off', /LIMITE_MS/.test(chk));
+    assert('checkpoint: the hint is not the answer',
+      /NO escribas el código corregido/.test(chk));
+    /* Montarlo antes de repartir escondería el ejemplo y las notas, que se van
+     * a otras pestañas y se quedarían ocultos allí. */
+    assert('checkpoint: it mounts after the tabs are filled',
+      /_repartirPestanas\(\);[\s\S]{0,400}_montarCheckpoint/.test(tut));
+    /* Un checkpoint sin salida esperada no se puede corregir. */
+    assert('checkpoint: every entry is complete',
+      (chkData.match(/esperado:/g) || []).length === (chkData.match(/enunciado:/g) || []).length
+      && (chkData.match(/pista:/g) || []).length === (chkData.match(/enunciado:/g) || []).length);
+
+    /* ── Lectura en voz alta ───────────────────────────────────────────── */
+    /* Chrome corta las locuciones largas a los ~15 s; por eso se trocea. */
+    assert('reader: long text is chunked', /MAX_TROZO/.test(rd) && /function trocear/.test(rd));
+    assert('reader: it waits for the voice list', /voiceschanged/.test(rd));
+    /* La voz sobrevive al DOM: sin esto seguiría leyendo sobre otra pantalla. */
+    assert('reader: it stops when the page goes away', /pagehide', parar/.test(rd));
+    assert('reader: it stops when the lesson changes', /LessonReader\.parar\(\)/.test(tut));
+    assert('reader: code and controls are not read aloud',
+      /querySelectorAll\('pre, code, button/.test(rd));
+
+    /* ── Tiempo de estudio ─────────────────────────────────────────────── */
+    /* Dejar la pestaña abierta no es estudiar. */
+    assert('study time: it pauses when the tab is hidden', /visibilitychange/.test(st));
+    assert('study time: sleeping gaps are discarded', /MAX_TRAMO_S/.test(st));
+    /* `_cerrarSandboxes` también corre al pasar de lección: parar ahí el reloj
+     * lo apagaría justo después de encenderlo. */
+    assert('study time: the clock survives a lesson change',
+      !/function _cerrarSandboxes[\s\S]{0,400}StudyTimeService\.stop/.test(tut));
+
+    assert('heatmap: fourteen days with levels',
+      /getDaily\(14\)/.test(tut) && /dataset\.nivel/.test(tut)
+      && (lwCss.match(/data-nivel="[1-4]"/g) || []).length === 4);
+    /* Sin la marca, repasar la última lección soltaría el bonus cada vez. */
+    assert('speed bonus: awarded once per course', /in4mind_bonus_vel:/.test(tut));
+    assert('speed bonus: the target comes from the real durations',
+      /function _metaMinutos[\s\S]{0,200}l\.duration/.test(tut));
   }
 
   /* Durante un tiempo el sandbox estuvo entero pero muerto: nada emitía

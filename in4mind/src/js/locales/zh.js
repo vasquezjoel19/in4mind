@@ -1182,6 +1182,7 @@ const LOCALE_ZH = {
     sinError: '学生在求助；没有运行时错误。',
     timeout: '运行时间过长已停止。是不是有死循环？',
     cargandoPython: '正在准备 Python…（第一次需要几秒钟）',
+    pythonLento: 'Python 下载时间过长。请检查网络连接后重试。',
     pythonFallo: '此浏览器无法启动 Python。',
   },
   tour: {

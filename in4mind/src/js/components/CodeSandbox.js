@@ -51,6 +51,10 @@ const CodeSandbox = (() => {
   };
 
   const LIMITE_MS = 6000;        // corte por bucle infinito
+  /* Descargar Pyodide son ~10 MB desde el CDN. En una conexión de móvil lenta
+     pasa del minuto sin que nada vaya mal, así que su espera se mide aparte y
+     con mucho más margen que la ejecución. */
+  const ARRANQUE_MS = 120000;
   const MAX_LINEAS_CONSOLA = 300;
 
   let _cm = null;                // módulos de CodeMirror ya cargados
@@ -320,6 +324,34 @@ const CodeSandbox = (() => {
    * entera —ni siquiera se podría pulsar "Reiniciar"—. En un worker, la página
    * sigue respondiendo y basta con terminarlo.
    */
+  function _crearWorker(est) {
+    est.worker = new Worker('src/js/workers/python-worker.js');
+    est.worker.addEventListener('message', (ev) => _mensajeWorker(est, ev.data));
+    est.worker.addEventListener('error', () => {
+      _escribirConsola(est, 'error', _t('sandbox.pythonFallo', null,
+        'No se pudo iniciar Python en este navegador.'));
+    });
+  }
+
+  /**
+   * Empieza a bajar Pyodide en cuanto el alumno toca el editor.
+   *
+   * Tocar el editor es la señal de que va a ejecutar algo, así que los 10 MB
+   * viajan mientras escribe en lugar de cuando ya está mirando la terminal en
+   * blanco. Si no llega a pulsar «Ejecutar» no se ha perdido nada; si pulsa,
+   * la descarga ya va por delante.
+   *
+   * No se hace al montar el sandbox: eso descargaría 10 MB a todo el que
+   * simplemente pasa por una lección de Python.
+   */
+  function _precalentarPython(est) {
+    if (est.lenguaje !== 'python' || est.worker) return;
+    // `saveData` es el usuario pidiendo explícitamente que no gastemos sus datos.
+    if (navigator.connection && navigator.connection.saveData) return;
+    _crearWorker(est);
+    est.worker.postMessage({ tipo: 'precalentar' });
+  }
+
   function _ejecutarPython(est) {
     _limpiarConsola(est);
     _cerrarCajon(est);
@@ -328,28 +360,47 @@ const CodeSandbox = (() => {
     if (!est.worker) {
       _escribirConsola(est, 'log', _t('sandbox.cargandoPython', null,
         'Preparando Python… (la primera vez tarda unos segundos)'));
-      est.worker = new Worker('src/js/workers/python-worker.js');
-      est.worker.addEventListener('message', (ev) => _mensajeWorker(est, ev.data));
-      est.worker.addEventListener('error', () => {
-        _escribirConsola(est, 'error', _t('sandbox.pythonFallo', null,
-          'No se pudo iniciar Python en este navegador.'));
-      });
+      _crearWorker(est);
     }
 
+    /* Dos relojes, porque miden cosas distintas. Descargar Pyodide son ~10 MB
+       y en una conexión lenta puede pasar del minuto; el código de una lección
+       tiene que acabar en segundos. Con un solo reloj —como estaba— una
+       descarga lenta se acusaba de «bucle sin fin» y además mataba el worker
+       a media descarga, así que el siguiente intento volvía a empezar. */
+    est.ejecutando = true;
     clearTimeout(est.temporizador);
     est.temporizador = setTimeout(() => {
-      // Terminar el worker es la única forma de parar un bucle infinito.
       est.worker?.terminate();
       est.worker = null;
-      _escribirConsola(est, 'error', _t('sandbox.timeout', null,
-        'La ejecución tardó demasiado y se detuvo. ¿Hay un bucle sin fin?'));
-    }, LIMITE_MS * 4);   // Pyodide necesita más margen la primera vez
+      est.ejecutando = false;
+      _escribirConsola(est, 'error', _t('sandbox.pythonLento', null,
+        'Python está tardando demasiado en descargarse. Revisa tu conexión e inténtalo otra vez.'));
+    }, ARRANQUE_MS);
 
     est.worker.postMessage({ tipo: 'ejecutar', codigo: est.codigo().python || '' });
   }
 
   function _mensajeWorker(est, d) {
     if (!d) return;
+    if (d.tipo === 'listo') {
+      /* El precalentado también avisa cuando termina, y entonces no hay nada
+         que cronometrar: arrancar aquí el reloj de ejecución mataría el worker
+         a los segundos sin que el alumno hubiera pulsado nada. */
+      if (!est.ejecutando) return;
+      /* Pyodide ya está en memoria: se cambia el reloj de descarga por el de
+         ejecución, que es el que de verdad caza un bucle infinito. */
+      clearTimeout(est.temporizador);
+      est.temporizador = setTimeout(() => {
+        // Terminar el worker es la única forma de parar un bucle infinito.
+        est.worker?.terminate();
+        est.worker = null;
+        est.ejecutando = false;
+        _escribirConsola(est, 'error', _t('sandbox.timeout', null,
+          'La ejecución tardó demasiado y se detuvo. ¿Hay un bucle sin fin?'));
+      }, LIMITE_MS * 2);
+      return;
+    }
     if (d.tipo === 'salida') {
       _escribirConsola(est, d.nivel || 'log', d.texto);
     } else if (d.tipo === 'error') {
@@ -357,8 +408,10 @@ const CodeSandbox = (() => {
       _escribirConsola(est, 'error', d.mensaje);
       _pedirDiagnostico(est, { mensaje: d.mensaje, pila: d.traza || '' });
       clearTimeout(est.temporizador);
+      est.ejecutando = false;
     } else if (d.tipo === 'fin') {
       clearTimeout(est.temporizador);
+      est.ejecutando = false;
       _alTerminar(est);
     }
   }
@@ -480,6 +533,7 @@ const CodeSandbox = (() => {
       huboError: false,
       terminado: false,
       diagnosticando: false,
+      ejecutando: false,   // hay código del alumno en marcha (no precalentado)
     };
 
     est.codigo = () => {
@@ -568,6 +622,12 @@ const CodeSandbox = (() => {
        `aria-selected` y el refresco de CodeMirror quedan en un solo sitio. */
     if (opciones.activo && opciones.activo !== est.activo && est.vistas[opciones.activo]) {
       raiz.querySelector(`[data-lang="${opciones.activo}"]`)?.click();
+    }
+
+    /* `focusin` burbujea, así que cubre tanto el textarea interno de
+       CodeMirror como el de respaldo, sin conocer a ninguno de los dos. */
+    if (lenguaje === 'python') {
+      $ed.addEventListener('focusin', () => _precalentarPython(est), { once: true });
     }
 
     // Acciones

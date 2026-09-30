@@ -1182,6 +1182,7 @@ const LOCALE_ES = {
     sinError: 'El alumno pide ayuda; no hay error de ejecución.',
     timeout: 'La ejecución tardó demasiado y se detuvo. ¿Hay un bucle sin fin?',
     cargandoPython: 'Preparando Python… (la primera vez tarda unos segundos)',
+    pythonLento: 'Python está tardando demasiado en descargarse. Revisa tu conexión e inténtalo otra vez.',
     pythonFallo: 'No se pudo iniciar Python en este navegador.',
   },
   tour: {

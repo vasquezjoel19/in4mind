@@ -66,11 +66,37 @@ function limpiarTraza(texto) {
 
 self.addEventListener('message', async (ev) => {
   const datos = ev.data || {};
+
+  /* Descargar Pyodide sin ejecutar nada. El padre lo pide en cuanto el alumno
+     toca el editor, para que los 10 MB viajen mientras lee la lección y no
+     cuando ya está esperando el resultado. */
+  if (datos.tipo === 'precalentar') {
+    try { await iniciar(); enviar({ tipo: 'listo' }); }
+    catch { /* si falla, `ejecutar` lo reintenta y allí sí se avisa */ }
+    return;
+  }
+
   if (datos.tipo !== 'ejecutar') return;
 
+  /* La descarga se vigila aparte de la ejecución: el padre mide cada una con
+     su propio reloj y no puede confundir una conexión lenta con un bucle. */
+  let py;
   try {
-    const py = await iniciar();
+    py = await iniciar();
+  } catch (err) {
+    enviar({
+      tipo: 'error',
+      mensaje: 'No se pudo descargar Python en este navegador. Revisa tu conexión.',
+      traza: (err && err.message) ? String(err.message) : String(err),
+    });
+    enviar({ tipo: 'fin', ok: false });
+    return;
+  }
 
+  // A partir de aquí el reloj del padre mide sólo el código del alumno.
+  enviar({ tipo: 'listo' });
+
+  try {
     /* `runPythonAsync` permite `await` en el código del alumno y, sobre todo,
        cede el control entre sentencias: sin eso, ni la salida por `print`
        llegaría hasta el final de la ejecución. */

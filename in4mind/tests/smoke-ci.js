@@ -918,6 +918,38 @@ for (const [file, endpoint] of [
   assert('python runs in a worker', /new Worker/.test(sbx));
   assert('pyodide loads lazily', /loadPyodide/.test(worker) && !/loadPyodide/.test(sbx));
 
+  /* Estas miden distancia entre instrucciones, así que van sobre el código sin
+   * comentarios: si no, cada comentario que se añada arriba las rompe. */
+  const sbxCode = readCode('src/js/components/CodeSandbox.js');
+  const workerCode = readCode('src/js/workers/python-worker.js');
+
+  /* Un solo reloj cronometraba la descarga de Pyodide (~10 MB) junto con el
+   * código del alumno: en una conexión lenta mataba el worker a media descarga
+   * y culpaba a un «bucle sin fin» que no existía. Son dos esperas distintas y
+   * necesitan dos relojes distintos. */
+  assert('the download gets its own clock',
+    /const ARRANQUE_MS = \d+/.test(sbxCode) && /\}, ARRANQUE_MS\)/.test(sbxCode));
+  assert('a slow download is not blamed on a loop',
+    /sandbox\.pythonLento[\s\S]{0,140}\}, ARRANQUE_MS\)/.test(sbxCode));
+  assert('the worker says when pyodide is ready',
+    /enviar\(\{ tipo: 'listo' \}\);[\s\S]{0,300}runPythonAsync/.test(workerCode));
+  assert('the run clock starts only once python is loaded',
+    /d\.tipo === 'listo'[\s\S]{0,200}setTimeout\(/.test(sbxCode));
+
+  /* El precalentado avisa por el mismo canal: sin este guardia arrancaría el
+   * reloj de ejecución sin que nadie haya pulsado «Ejecutar», y mataría el
+   * worker a los segundos. */
+  assert('warming up does not start the run clock',
+    /d\.tipo === 'listo'[\s\S]{0,120}if \(!est\.ejecutando\) return;/.test(sbxCode));
+
+  /* Los 10 MB viajan mientras el alumno escribe, no cuando ya está mirando la
+   * terminal en blanco; pero sólo si tocó el editor, y nunca contra su
+   * petición explícita de ahorrar datos. */
+  assert('python warms up on first touch',
+    /function _precalentarPython/.test(sbxCode) && /focusin', \(\) => _precalentarPython/.test(sbxCode));
+  assert('warm-up honours save-data',
+    /_precalentarPython[\s\S]{0,400}saveData\) return;/.test(sbxCode));
+
   assert('infy asks the guarded proxy', /'\/api\/groq\/chat'/.test(sbx));
   assert('infy sends the session token', /Authorization: `Bearer \$\{token\}`/.test(sbx));
   /* Si Infy diera la solución, el alumno copia y pega y no aprende nada. */

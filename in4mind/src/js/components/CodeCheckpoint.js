@@ -20,6 +20,9 @@ const CodeCheckpoint = (() => {
 
   const RUNNER = 'sandbox-runner.html';
   const LIMITE_MS = 5000;
+  /* Pyodide son ~10 MB la primera vez; hasta que el worker avisa de que está
+     listo, el reloj mide una descarga y no un bucle infinito. */
+  const ARRANQUE_PY_MS = 120000;
   const _estados = new Map();   // nodo raíz -> estado
 
   function _t(clave, params, respaldo) {
@@ -70,6 +73,59 @@ const CodeCheckpoint = (() => {
    * iframe— porque ninguno de los dos llega siempre primero; `enviado` evita
    * que se ejecute dos veces.
    */
+  /**
+   * Reparte el código del alumno y la comprobación en las ranuras del
+   * ejecutor.
+   *
+   * En HTML y CSS el alumno no escribe la línea que imprime el resultado: eso
+   * lo pone `comprobacion`, un JS oculto que mira el DOM o el estilo ya
+   * aplicado. Si tuviera que escribir el `console.log`, el ejercicio dejaría
+   * de ser sobre HTML o CSS.
+   */
+  function _ranuras(def, codigo) {
+    if (def.lenguaje === 'html') return { html: codigo, css: def.css || '', js: def.comprobacion || '' };
+    if (def.lenguaje === 'css') return { html: def.html || '', css: codigo, js: def.comprobacion || '' };
+    return { js: codigo };
+  }
+
+  /** Ejecuta Python en un worker propio, creado sólo al pulsar Comprobar. */
+  function _ejecutarPython(estado, codigo) {
+    return new Promise((resolve) => {
+      const salida = [];
+      let cerrado = false;
+
+      const terminar = (motivo) => {
+        if (cerrado) return;
+        cerrado = true;
+        clearTimeout(estado.temporizador);
+        resolve({ salida, motivo });
+      };
+
+      if (!estado.worker) {
+        estado.worker = new Worker('src/js/workers/python-worker.js');
+        estado.worker.addEventListener('error', () => terminar('worker'));
+      }
+
+      estado.worker.onmessage = (ev) => {
+        const d = ev.data || {};
+        if (d.tipo === 'listo') {
+          /* Pyodide ya está en memoria: a partir de aquí el reloj mide el
+             código del alumno y no la descarga, que la primera vez puede
+             pasar del minuto. */
+          clearTimeout(estado.temporizador);
+          estado.temporizador = setTimeout(() => terminar('timeout'), LIMITE_MS);
+          return;
+        }
+        if (d.tipo === 'salida') { salida.push(String(d.texto ?? '')); return; }
+        if (d.tipo === 'error') { terminar(d.mensaje || 'error'); return; }
+        if (d.tipo === 'fin') terminar(null);
+      };
+
+      estado.temporizador = setTimeout(() => terminar('timeout'), ARRANQUE_PY_MS);
+      estado.worker.postMessage({ tipo: 'ejecutar', codigo });
+    });
+  }
+
   function _ejecutar(estado, codigo) {
     return new Promise((resolve) => {
       const marco = _nuevoIframe(estado);
@@ -90,7 +146,7 @@ const CodeCheckpoint = (() => {
         if (enviado || !marco.contentWindow) return;
         enviado = true;
         marco.contentWindow.postMessage(
-          { in4mind: true, tipo: 'ejecutar', codigo: { js: codigo } }, '*');
+          { in4mind: true, tipo: 'ejecutar', codigo: _ranuras(estado.def, codigo) }, '*');
       };
 
       estado.alMensaje = (ev) => {
@@ -157,13 +213,33 @@ const CodeCheckpoint = (() => {
     estado.$boton.disabled = true;
 
     const codigo = estado.$editor.value;
+    const def = estado.def;
     _infy(estado, 'LEARNING', _t('tutorial.checkpointProbando', null, 'Probando tu código…'));
 
-    const { salida, motivo } = await _ejecutar(estado, codigo);
-    _limpiar(estado);
+    let acierto = false;
+    let obtenido = '';
+    let motivo = null;
 
-    const obtenido = salida.map(s => s.trim()).filter(Boolean).pop() || '';
-    const acierto = !motivo && obtenido === String(estado.def.esperado).trim();
+    if (def.lenguaje === 'texto') {
+      /* SQL, git y fórmulas no tienen motor en el navegador. Se comprueba la
+         sintaxis contra un patrón, que es una revisión honesta de lo escrito
+         —no una ejecución—, y así se dice en el propio aviso. */
+      obtenido = codigo.trim();
+      try { acierto = new RegExp(def.patron, 'i').test(obtenido); }
+      catch { motivo = 'patron'; }
+    } else if (def.lenguaje === 'python') {
+      const r = await _ejecutarPython(estado, codigo);
+      motivo = r.motivo;
+      obtenido = r.salida.map(s => s.trim()).filter(Boolean).pop() || '';
+      acierto = !motivo && obtenido === String(def.esperado).trim();
+    } else {
+      const r = await _ejecutar(estado, codigo);
+      motivo = r.motivo;
+      obtenido = r.salida.map(s => s.trim()).filter(Boolean).pop() || '';
+      acierto = !motivo && obtenido === String(def.esperado).trim();
+    }
+
+    _limpiar(estado);
 
     estado.corriendo = false;
     estado.$boton.disabled = false;
@@ -192,7 +268,7 @@ const CodeCheckpoint = (() => {
         <span class="lw-check__eyebrow">${_t('tutorial.checkpointTitulo', null, 'Compruébalo tú')}</span>
         <p class="lw-check__enunciado"></p>
       </div>
-      <label class="lw-check__label" for="lw-check-ed">${_t('tutorial.checkpointEditor', null, 'Tu código')}</label>
+      <label class="lw-check__label" for="lw-check-ed">${def.etiqueta || _t('tutorial.checkpointEditor', null, 'Tu código')}</label>
       <textarea class="lw-check__editor" id="lw-check-ed" spellcheck="false" rows="6"></textarea>
       <div class="lw-check__pie">
         <button type="button" class="btn--primary lw-check__btn"></button>
@@ -210,6 +286,7 @@ const CodeCheckpoint = (() => {
       $infyImg: raiz.querySelector('.lw-check__infy'),
       $infyTexto: raiz.querySelector('.lw-check__texto'),
       $iframe: null,
+      worker: null,
       alMensaje: null,
       temporizador: 0,
       corriendo: false,
@@ -233,6 +310,10 @@ const CodeCheckpoint = (() => {
     const estado = _estados.get(raiz);
     if (!estado) return;
     _limpiar(estado);
+    /* El worker de Python sobrevive al DOM con todo Pyodide dentro: se
+       conserva entre intentos, pero al soltar el checkpoint hay que matarlo. */
+    estado.worker?.terminate();
+    estado.worker = null;
     _estados.delete(raiz);
   }
 

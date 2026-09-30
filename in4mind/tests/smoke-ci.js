@@ -1082,10 +1082,44 @@ for (const [file, endpoint] of [
      * a otras pestañas y se quedarían ocultos allí. */
     assert('checkpoint: it mounts after the tabs are filled',
       /_repartirPestanas\(\);[\s\S]{0,400}_montarCheckpoint/.test(tut));
-    /* Un checkpoint sin salida esperada no se puede corregir. */
-    assert('checkpoint: every entry is complete',
-      (chkData.match(/esperado:/g) || []).length === (chkData.match(/enunciado:/g) || []).length
-      && (chkData.match(/pista:/g) || []).length === (chkData.match(/enunciado:/g) || []).length);
+    /* Un checkpoint sin forma de corregirlo no sirve: los ejecutables llevan
+     * salida esperada y los de patrón llevan patrón. */
+    assert('checkpoint: every entry can be corrected',
+      (chkData.match(/pista:/g) || []).length === (chkData.match(/enunciado:/g) || []).length
+      && (chkData.match(/esperado:/g) || []).length + 0 >= (chkData.match(/lenguaje: 'texto'/g) || []).length);
+
+    /* Cobertura: cinco por cada curso con código, y ninguno donde no hay nada
+     * que teclear —un editor en una lección de PowerPoint sería teatro—. */
+    {
+      const ids = [...chkData.matchAll(/'([a-z]+-l\d)':\s*\{/g)].map(m => m[1]);
+      const porCurso = {};
+      for (const id of ids) {
+        const curso = id.replace(/-l\d$/, '');
+        porCurso[curso] = (porCurso[curso] || 0) + 1;
+      }
+      assert('checkpoint: five per code course',
+        ['html', 'css', 'python', 'javascript', 'sql', 'github', 'excel']
+          .every(c => porCurso[c] === 5));
+      assert('checkpoint: none where there is no code',
+        ['canvas', 'figma', 'powerpoint', 'cybersecurity'].every(c => !porCurso[c]));
+    }
+
+    /* Cada modo necesita su pieza: sin `comprobacion`, un ejercicio de HTML o
+     * CSS no tendría forma de imprimir el valor que se compara. */
+    assert('checkpoint: html and css carry their assertion',
+      (chkData.match(/lenguaje: '(?:html|css)'/g) || []).length
+      === (chkData.match(/comprobacion:/g) || []).length);
+    assert('checkpoint: the component knows all four modes',
+      ["'texto'", "'python'", "'html'", "'css'"].every(m => chk.includes(m)));
+    /* `;?,?` aceptaba también la ausencia de separador, o sea fórmulas rotas. */
+    assert('checkpoint: spreadsheet patterns demand a separator',
+      !chkData.includes(';?,?'));
+    /* Pyodide sobrevive al DOM: hay que matarlo al soltar el checkpoint. */
+    assert('checkpoint: the python worker is terminated',
+      /function destroy[\s\S]{0,300}worker\?\.terminate/.test(chk));
+    /* La descarga del intérprete no es un bucle infinito. */
+    assert('checkpoint: python gets its own start-up budget',
+      chk.includes('ARRANQUE_PY_MS'));
 
     /* ── Lectura en voz alta ───────────────────────────────────────────── */
     /* Chrome corta las locuciones largas a los ~15 s; por eso se trocea. */

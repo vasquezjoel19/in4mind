@@ -1122,6 +1122,36 @@ for (const [file, endpoint] of [
     assert('checkpoint: python gets its own start-up budget',
       chk.includes('ARRANQUE_PY_MS'));
 
+    /* ── Flashcards ────────────────────────────────────────────────────── */
+    const fs2 = readCode('src/js/services/FlashcardService.js');
+
+    assert('cards: a fourth tab with its role', (html.match(/role="tab"/g) || []).length === 4);
+    /* Abrirlas a mitad de módulo enseñaría respuestas de lecciones sin ver. */
+    assert('cards: locked until the module is done',
+      /nombre === 'flashcards' && !_moduloCompleto\(\)/.test(tut));
+    assert('cards: Infy explains the lock', /cardsLocked[\s\S]{0,220}'LEARNING'/.test(tut));
+
+    /* Generarlas con IA metería errores justo en el material de estudio. */
+    assert('cards: built from the curriculum, not generated',
+      /CourseCurriculum\.getQuizDef/.test(fs2) && !/Groq/.test(fs2));
+    assert('cards: no card without an answer', /if \(!q\?\.q \|\| !q\?\.exp\) return;/.test(fs2));
+
+    /* El calendario tiene que separar lo sabido y juntar lo fallado. */
+    assert('cards: a miss comes back tomorrow',
+      /t\.intervalo = 1;\s*\n\s*t\.facilidad = Math\.max/.test(fs2));
+    assert('cards: hits push the next review further out',
+      /t\.intervalo\) \* t\.facilidad/.test(fs2));
+    /* Sin tope, una racha dispararía el intervalo a años. */
+    assert('cards: ease is bounded',
+      fs2.includes('FACILIDAD_MIN') && fs2.includes('FACILIDAD_MAX'));
+    assert('cards: an unseen card is always due', /proxima <= ahora/.test(fs2));
+    /* Avisar de una baraja que nunca se abrió sería inventar deberes. */
+    assert('cards: only decks already started are chased',
+      /t\.proxima && t\.proxima <= ahora/.test(fs2));
+    /* Una sola plantilla decía «Tienes 1 tarjetas» y «Vuelve en 1 días». */
+    assert('cards: singular has its own strings',
+      /cardsDueOne/.test(tut) && /cardsNextOne/.test(tut));
+
     /* ── Lectura en voz alta ───────────────────────────────────────────── */
     /* Chrome corta las locuciones largas a los ~15 s; por eso se trocea. */
     assert('reader: long text is chunked', /MAX_TROZO/.test(rd) && /function trocear/.test(rd));

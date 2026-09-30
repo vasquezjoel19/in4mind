@@ -10,27 +10,27 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <script src="src/js/dist/boot.bundle.js?v=bcb72dda2b56"></script>
+  <script src="src/js/dist/boot.bundle.js?v=9848ebd2411d"></script>
 
-  <link rel="stylesheet" href="src/css/tokens.css?v=bcb72dda2b56">
-  <link rel="stylesheet" href="src/css/adaptive.css?v=bcb72dda2b56">
-  <link rel="stylesheet" href="src/css/infy.css?v=bcb72dda2b56">
-  <link rel="stylesheet" href="src/css/sandbox.css?v=bcb72dda2b56">
-  <link rel="stylesheet" href="src/css/base.css?v=bcb72dda2b56">
-  <link rel="stylesheet" href="src/css/dashboard.css?v=bcb72dda2b56">
-  <link rel="stylesheet" href="src/css/responsive.css?v=bcb72dda2b56">
-  <link rel="stylesheet" href="src/css/tutorial.css?v=bcb72dda2b56">
-  <link rel="stylesheet" href="src/css/lesson-workspace.css?v=bcb72dda2b56">
-  <link rel="stylesheet" href="src/css/theme.css?v=bcb72dda2b56">
-  <link rel="stylesheet" href="src/css/ui-dialog.css?v=bcb72dda2b56">
-  <link rel="stylesheet" href="src/css/ui-polish.css?v=bcb72dda2b56">
-  <link rel="stylesheet" href="src/css/accessibility.css?v=bcb72dda2b56">
-  <link rel="stylesheet" href="src/css/i18n.css?v=bcb72dda2b56">
-  <link rel="stylesheet" href="src/css/settings-modal.css?v=bcb72dda2b56">
-  <link rel="stylesheet" href="src/css/app-features.css?v=bcb72dda2b56">
-  <link rel="stylesheet" href="src/css/employable.css?v=bcb72dda2b56">
-  <link rel="stylesheet" href="src/css/global-chat.css?v=bcb72dda2b56">
-  <link rel="stylesheet" href="src/css/orb.css?v=bcb72dda2b56">
+  <link rel="stylesheet" href="src/css/tokens.css?v=9848ebd2411d">
+  <link rel="stylesheet" href="src/css/adaptive.css?v=9848ebd2411d">
+  <link rel="stylesheet" href="src/css/infy.css?v=9848ebd2411d">
+  <link rel="stylesheet" href="src/css/sandbox.css?v=9848ebd2411d">
+  <link rel="stylesheet" href="src/css/base.css?v=9848ebd2411d">
+  <link rel="stylesheet" href="src/css/dashboard.css?v=9848ebd2411d">
+  <link rel="stylesheet" href="src/css/responsive.css?v=9848ebd2411d">
+  <link rel="stylesheet" href="src/css/tutorial.css?v=9848ebd2411d">
+  <link rel="stylesheet" href="src/css/lesson-workspace.css?v=9848ebd2411d">
+  <link rel="stylesheet" href="src/css/theme.css?v=9848ebd2411d">
+  <link rel="stylesheet" href="src/css/ui-dialog.css?v=9848ebd2411d">
+  <link rel="stylesheet" href="src/css/ui-polish.css?v=9848ebd2411d">
+  <link rel="stylesheet" href="src/css/accessibility.css?v=9848ebd2411d">
+  <link rel="stylesheet" href="src/css/i18n.css?v=9848ebd2411d">
+  <link rel="stylesheet" href="src/css/settings-modal.css?v=9848ebd2411d">
+  <link rel="stylesheet" href="src/css/app-features.css?v=9848ebd2411d">
+  <link rel="stylesheet" href="src/css/employable.css?v=9848ebd2411d">
+  <link rel="stylesheet" href="src/css/global-chat.css?v=9848ebd2411d">
+  <link rel="stylesheet" href="src/css/orb.css?v=9848ebd2411d">
   <link rel="manifest" href="manifest.json">
 
   <link rel="icon" type="image/png" sizes="64x64" href="src/img/brand/favicon-64.png">
@@ -643,6 +643,12 @@
                 <span aria-hidden="true">🎯</span><span data-i18n="tutorial.tabQuiz">Micro-Quiz</span>
                 <span class="lw-tabs__dot" id="lwtab-quiz-dot" hidden aria-hidden="true"></span>
               </button>
+              <!-- Se abre al completar el módulo; hasta entonces lleva candado. -->
+              <button type="button" role="tab" class="lw-tabs__tab is-bloqueada" data-lwtab="flashcards" tabindex="-1"
+                      id="lwtab-flashcards" aria-controls="lwpanel-flashcards" aria-selected="false">
+                <span aria-hidden="true">🗂️</span><span data-i18n="tutorial.tabCards">Flashcards</span>
+                <span class="lw-tabs__lock" id="lwtab-cards-lock" aria-hidden="true">🔒</span>
+              </button>
             </div>
 
             <section role="tabpanel" class="lw-panel is-active" id="lwpanel-contenido" aria-labelledby="lwtab-contenido">
@@ -655,6 +661,10 @@
 
             <section role="tabpanel" class="lw-panel" id="lwpanel-quiz" aria-labelledby="lwtab-quiz" hidden>
               <div id="lesson-microquiz" data-adaptive-slot></div>
+            </section>
+
+            <section role="tabpanel" class="lw-panel" id="lwpanel-flashcards" aria-labelledby="lwtab-flashcards" hidden>
+              <div id="lesson-flashcards"></div>
             </section>
 
             <footer class="lesson-w3__footer">
@@ -718,40 +728,41 @@
           integrity="sha384-JBR+x8blGwjDRO63aHCGiZMD4VNiTR4ZUGA+N6ZKLf3zNt1fK8IBpcgPaMrxqWBp"
           crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script defer src="src/js/config/supabase.config.js"></script>
-<script defer src="src/js/dist/app-shell.bundle.js?v=bcb72dda2b56"></script>
-<script defer src="src/js/data/CourseCurriculum.js?v=bcb72dda2b56"></script>
-<script defer src="src/js/services/QuizRandomizer.js?v=bcb72dda2b56"></script>
-<script defer src="src/js/data/LearningPathsData.js?v=bcb72dda2b56"></script>
-<script defer src="src/js/services/ContentLoader.js?v=bcb72dda2b56"></script>
+<script defer src="src/js/dist/app-shell.bundle.js?v=9848ebd2411d"></script>
+<script defer src="src/js/data/CourseCurriculum.js?v=9848ebd2411d"></script>
+<script defer src="src/js/services/QuizRandomizer.js?v=9848ebd2411d"></script>
+<script defer src="src/js/data/LearningPathsData.js?v=9848ebd2411d"></script>
+<script defer src="src/js/services/ContentLoader.js?v=9848ebd2411d"></script>
 
-<script defer src="src/js/services/VideoProgressService.js?v=bcb72dda2b56"></script>
-<script defer src="src/js/vendor/qrcode.js?v=bcb72dda2b56"></script>
-<script defer src="src/js/services/CertificateShare.js?v=bcb72dda2b56"></script>
-<script defer src="src/js/services/AIUserContext.js?v=bcb72dda2b56"></script>
-<script defer src="src/js/services/CertVerificationService.js?v=bcb72dda2b56"></script>
-<script defer src="src/js/data/CareerPathsData.js?v=bcb72dda2b56"></script>
-<script defer src="src/js/services/EmployabilityService.js?v=bcb72dda2b56"></script>
-<script defer src="src/js/services/EmployabilityStarters.js?v=bcb72dda2b56"></script>
-<script defer src="src/js/services/ProjectReviewService.js?v=bcb72dda2b56"></script>
-<script defer src="src/js/controllers/EmployabilityController.js?v=bcb72dda2b56"></script>
+<script defer src="src/js/services/VideoProgressService.js?v=9848ebd2411d"></script>
+<script defer src="src/js/vendor/qrcode.js?v=9848ebd2411d"></script>
+<script defer src="src/js/services/CertificateShare.js?v=9848ebd2411d"></script>
+<script defer src="src/js/services/AIUserContext.js?v=9848ebd2411d"></script>
+<script defer src="src/js/services/CertVerificationService.js?v=9848ebd2411d"></script>
+<script defer src="src/js/data/CareerPathsData.js?v=9848ebd2411d"></script>
+<script defer src="src/js/services/EmployabilityService.js?v=9848ebd2411d"></script>
+<script defer src="src/js/services/EmployabilityStarters.js?v=9848ebd2411d"></script>
+<script defer src="src/js/services/ProjectReviewService.js?v=9848ebd2411d"></script>
+<script defer src="src/js/controllers/EmployabilityController.js?v=9848ebd2411d"></script>
 <script defer src="src/js/config/groq.config.js"></script>
-<script defer src="src/js/services/GroqService.js?v=bcb72dda2b56"></script>
-<script defer src="src/js/services/OfflineCourseService.js?v=bcb72dda2b56"></script>
-<script defer src="src/js/services/CursorSpotlight.js?v=bcb72dda2b56"></script>
-<script defer src="src/js/data/TutorialData.js?v=bcb72dda2b56"></script>
-<script defer src="src/js/data/LessonCheckData.js?v=bcb72dda2b56"></script>
-<script defer src="src/js/data/LessonExamples.js?v=bcb72dda2b56"></script>
-<script defer src="src/js/data/LessonCheckpoints.js?v=bcb72dda2b56"></script>
-<script defer src="src/js/services/LessonNotesService.js?v=bcb72dda2b56"></script>
-<script defer src="src/js/services/LessonReader.js?v=bcb72dda2b56"></script>
-<script defer src="src/js/services/StudyTimeService.js?v=bcb72dda2b56"></script>
-<script defer src="src/js/components/CodeCheckpoint.js?v=bcb72dda2b56"></script>
-<script defer src="src/js/components/MicroQuiz.js?v=bcb72dda2b56"></script>
-<script defer src="src/js/components/ReinforcementNote.js?v=bcb72dda2b56"></script>
-<script defer src="src/js/components/CodeSandbox.js?v=bcb72dda2b56"></script>
-<script defer src="src/js/services/CertificateService.js?v=bcb72dda2b56"></script>
-<script defer src="src/js/controllers/TutorialController.js?v=bcb72dda2b56"></script>
-<script defer src="src/js/services/CardTilt.js?v=bcb72dda2b56"></script>
+<script defer src="src/js/services/GroqService.js?v=9848ebd2411d"></script>
+<script defer src="src/js/services/OfflineCourseService.js?v=9848ebd2411d"></script>
+<script defer src="src/js/services/CursorSpotlight.js?v=9848ebd2411d"></script>
+<script defer src="src/js/data/TutorialData.js?v=9848ebd2411d"></script>
+<script defer src="src/js/data/LessonCheckData.js?v=9848ebd2411d"></script>
+<script defer src="src/js/data/LessonExamples.js?v=9848ebd2411d"></script>
+<script defer src="src/js/data/LessonCheckpoints.js?v=9848ebd2411d"></script>
+<script defer src="src/js/services/LessonNotesService.js?v=9848ebd2411d"></script>
+<script defer src="src/js/services/LessonReader.js?v=9848ebd2411d"></script>
+<script defer src="src/js/services/StudyTimeService.js?v=9848ebd2411d"></script>
+<script defer src="src/js/services/FlashcardService.js?v=9848ebd2411d"></script>
+<script defer src="src/js/components/CodeCheckpoint.js?v=9848ebd2411d"></script>
+<script defer src="src/js/components/MicroQuiz.js?v=9848ebd2411d"></script>
+<script defer src="src/js/components/ReinforcementNote.js?v=9848ebd2411d"></script>
+<script defer src="src/js/components/CodeSandbox.js?v=9848ebd2411d"></script>
+<script defer src="src/js/services/CertificateService.js?v=9848ebd2411d"></script>
+<script defer src="src/js/controllers/TutorialController.js?v=9848ebd2411d"></script>
+<script defer src="src/js/services/CardTilt.js?v=9848ebd2411d"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   try {

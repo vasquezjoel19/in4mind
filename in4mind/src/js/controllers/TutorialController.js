@@ -1223,7 +1223,7 @@ const TutorialController = (() => {
    * listeners, así que todo lo que el controlador enganchó sigue funcionando.
    */
 
-  const LWTABS = ['contenido', 'practica', 'quiz'];
+  const LWTABS = ['contenido', 'practica', 'quiz', 'flashcards'];
   // Sólo para la insignia si la gamificación no estuviera disponible; la cifra
   // real la pone `XP_MAP` en GamificationService, y es la que se muestra.
   const XP_MICRO = 25;
@@ -1259,8 +1259,25 @@ const TutorialController = (() => {
     }
   }
 
+  /** ¿Están todas las lecciones del módulo completadas? */
+  function _moduloCompleto() {
+    return Boolean(_currentLessons.length
+      && _currentLessons.every(l => _isLessonComplete(l.id)));
+  }
+
   function _activarPestana(nombre) {
     if (!LWTABS.includes(nombre)) return;
+
+    /* Las flashcards repasan el módulo entero: abrirlas a mitad de camino
+       enseñaría respuestas de lecciones que todavía no se han visto. */
+    if (nombre === 'flashcards' && !_moduloCompleto()) {
+      const msg = _t('tutorial.cardsLocked', null,
+        'Termina el módulo para desbloquear las flashcards.');
+      if (typeof Infy === 'undefined' || !Infy.showToast || !Infy.showToast(msg, 'LEARNING')) {
+        if (typeof AppShell !== 'undefined') AppShell.showToast(msg);
+      }
+      return;
+    }
     for (const t of LWTABS) {
       const boton = document.querySelector(`[data-lwtab="${t}"]`);
       const panel = document.getElementById(`lwpanel-${t}`);
@@ -1281,6 +1298,9 @@ const TutorialController = (() => {
     if (nombre === 'practica' && typeof CodeSandbox !== 'undefined' && CodeSandbox.refresh) {
       document.querySelectorAll('#lesson-practica [data-sandbox]').forEach(el => CodeSandbox.refresh(el));
     }
+
+    // La baraja se arma al abrirla: antes no hay nada que mostrar.
+    if (nombre === 'flashcards') _montarFlashcards();
   }
 
   function _ligarPestanas() {
@@ -1523,6 +1543,162 @@ const TutorialController = (() => {
           `¡Bonus de velocidad! Terminaste en ${Math.round(minutos)} min (meta ${meta}).`),
         'SUCCESS');
     }
+  }
+
+  /* ── Flashcards ──────────────────────────────────────────────────────── */
+
+  /** Pone el candado de la pestaña según el estado del módulo. */
+  function _pintarCandadoFlashcards() {
+    const tab = document.querySelector('[data-lwtab="flashcards"]');
+    const lock = document.getElementById('lwtab-cards-lock');
+    if (!tab) return;
+    const abierta = _moduloCompleto();
+    tab.classList.toggle('is-bloqueada', !abierta);
+    tab.setAttribute('aria-disabled', abierta ? 'false' : 'true');
+    if (lock) lock.hidden = abierta;
+  }
+
+  function _montarFlashcards() {
+    const host = document.getElementById('lesson-flashcards');
+    if (!host || !_currentCourse || typeof FlashcardService === 'undefined') return;
+
+    const todas = FlashcardService.baraja(_currentCourse.id, _currentLessons);
+    const cola = FlashcardService.pendientes(_currentCourse.id, todas);
+    host.textContent = '';
+
+    if (!todas.length) {
+      const p = document.createElement('p');
+      p.className = 'lesson-w3__text lesson-w3__text--muted';
+      p.textContent = _t('tutorial.cardsEmpty', null, 'Este módulo todavía no tiene tarjetas de repaso.');
+      host.appendChild(p);
+      return;
+    }
+
+    if (!cola.length) {
+      /* Nada vencido: se dice cuándo toca en vez de dejar la pestaña vacía,
+         que parecería rota. Repasar antes de tiempo no consolida nada. */
+      const p = document.createElement('p');
+      p.className = 'lw-cards__aldia';
+      p.textContent = _t('tutorial.cardsDone', null,
+        'Estás al día. Vuelve cuando toque el siguiente repaso.');
+      host.appendChild(p);
+      _pintarPrecision(host);
+      return;
+    }
+
+    let i = 0;
+    const tarjeta = document.createElement('div');
+    tarjeta.className = 'lw-card';
+    tarjeta.innerHTML = `
+      <div class="lw-card__cuenta"></div>
+      <button type="button" class="lw-card__cara" aria-live="polite">
+        <span class="lw-card__modulo"></span>
+        <span class="lw-card__texto"></span>
+        <span class="lw-card__pista"></span>
+      </button>
+      <div class="lw-card__acciones" hidden>
+        <button type="button" class="lw-card__btn lw-card__btn--no"></button>
+        <button type="button" class="lw-card__btn lw-card__btn--si"></button>
+      </div>`;
+    host.appendChild(tarjeta);
+
+    const $cara = tarjeta.querySelector('.lw-card__cara');
+    const $modulo = tarjeta.querySelector('.lw-card__modulo');
+    const $texto = tarjeta.querySelector('.lw-card__texto');
+    const $pista = tarjeta.querySelector('.lw-card__pista');
+    const $acciones = tarjeta.querySelector('.lw-card__acciones');
+    const $cuenta = tarjeta.querySelector('.lw-card__cuenta');
+    const $no = tarjeta.querySelector('.lw-card__btn--no');
+    const $si = tarjeta.querySelector('.lw-card__btn--si');
+
+    $no.textContent = _t('tutorial.cardsNo', null, 'No la sabía');
+    $si.textContent = _t('tutorial.cardsYes', null, 'La sabía');
+
+    let volteada = false;
+
+    const pintar = () => {
+      if (i >= cola.length) {
+        host.textContent = '';
+        const fin = document.createElement('p');
+        fin.className = 'lw-cards__aldia';
+        fin.textContent = _t('tutorial.cardsFinished', null, '¡Repaso terminado!');
+        host.appendChild(fin);
+        _pintarPrecision(host);
+        if (typeof Infy !== 'undefined' && Infy.showToast) {
+          Infy.showToast(_t('tutorial.cardsFinished', null, '¡Repaso terminado!'), 'SUCCESS');
+        }
+        return;
+      }
+      volteada = false;
+      const c = cola[i];
+      tarjeta.classList.remove('is-volteada');
+      $cuenta.textContent = _t('tutorial.cardsProgress', { n: i + 1, total: cola.length },
+        `${i + 1} de ${cola.length}`);
+      $modulo.textContent = c.modulo || '';
+      $texto.textContent = c.frente;
+      $pista.textContent = _t('tutorial.cardsFlip', null, 'Toca para ver la respuesta');
+      $acciones.hidden = true;
+    };
+
+    const voltear = () => {
+      if (volteada) return;
+      volteada = true;
+      tarjeta.classList.add('is-volteada');
+      $texto.textContent = cola[i].dorso;
+      $pista.textContent = '';
+      $acciones.hidden = false;
+    };
+
+    const responder = (acierto) => {
+      if (!volteada) return;
+      const r = FlashcardService.responder(_currentCourse.id, cola[i].id, acierto);
+      /* Se dice cuándo vuelve: ver que un acierto la aleja y un fallo la trae
+         de vuelta mañana es lo que hace entendible el sistema. */
+      const dias = r.intervalo;
+      if (typeof AppShell !== 'undefined') {
+        /* Clave distinta para el singular: con una sola plantilla salía
+           «Vuelve en 1 días», y el respaldo del código no puede arreglarlo
+           porque la traducción siempre gana. */
+        const aviso = dias === 1
+          ? _t('tutorial.cardsNextOne', null, 'Vuelve mañana.')
+          : _t('tutorial.cardsNext', { n: dias }, `Vuelve en ${dias} días.`);
+        AppShell.showToast(aviso, 1800);
+      }
+      i += 1;
+      pintar();
+    };
+
+    $cara.addEventListener('click', voltear);
+    $no.addEventListener('click', () => responder(false));
+    $si.addEventListener('click', () => responder(true));
+    pintar();
+  }
+
+  function _pintarPrecision(host) {
+    if (typeof FlashcardService === 'undefined' || !_currentCourse) return;
+    const pct = FlashcardService.precision(_currentCourse.id);
+    if (pct === null) return;
+    const p = document.createElement('p');
+    p.className = 'lw-cards__precision';
+    p.textContent = _t('tutorial.cardsAccuracy', { pct }, `Recuerdo: ${pct}% de aciertos`);
+    host.appendChild(p);
+  }
+
+  /**
+   * Avisa de los repasos vencidos.
+   *
+   * Sólo reclama barajas que el alumno ya abrió alguna vez: avisar de un
+   * repaso que nunca empezó sería inventarle deberes.
+   */
+  function _avisarRepasos() {
+    if (typeof FlashcardService === 'undefined' || typeof Infy === 'undefined') return;
+    const pendientes = FlashcardService.vencidos();
+    if (!pendientes.length) return;
+    const total = pendientes.reduce((n, p) => n + p.n, 0);
+    const aviso = total === 1
+      ? _t('tutorial.cardsDueOne', null, 'Tienes 1 tarjeta lista para repasar.')
+      : _t('tutorial.cardsDue', { n: total }, `Tienes ${total} tarjetas listas para repasar.`);
+    Infy.showToast(aviso, 'LEARNING');
   }
 
   /* ── Checkpoint de código ────────────────────────────────────────────── */
@@ -1880,7 +2056,9 @@ const TutorialController = (() => {
       _pintarProgresoModulo();
       _pintarMapaCalor();
       _brillarDesbloqueada(_currentLessonIdx + 1);
-      // Si ésta era la última que faltaba, puede haber bonus por velocidad.
+      /* Ésta puede haber sido la última que faltaba: se recomprueba el candado
+         de las flashcards y se mira si hay bonus por velocidad. */
+      _pintarCandadoFlashcards();
       _bonusVelocidad();
       return;
     }
@@ -2120,6 +2298,7 @@ const TutorialController = (() => {
 
     _pintarProgresoModulo();
     _pintarMapaCalor();
+    _pintarCandadoFlashcards();
     _pintarInfyLeccion(lesson);
     _montarMicroQuiz(lesson, idx);
 
@@ -2311,6 +2490,10 @@ const TutorialController = (() => {
 
     _renderFilters();
     _renderGrid();
+
+    /* El aviso de repaso llega cuando la página ya está quieta: soltarlo
+       durante el arranque compite con todo lo demás que aparece. */
+    setTimeout(_avisarRepasos, 2500);
 
     /* El micro-quiz vive en su propio componente y avisa por evento; aquí se
        decide qué significa ese resultado para la lección. */

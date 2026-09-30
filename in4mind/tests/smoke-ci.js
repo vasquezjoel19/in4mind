@@ -969,6 +969,55 @@ for (const [file, endpoint] of [
   assert('the sandbox stacks on small screens', /@media \(max-width: 900px\)[\s\S]*grid-template-columns: 1fr/.test(sbxCss));
   assert('sandbox motion respects the preference', /prefers-reduced-motion/.test(sbxCss));
 
+  /* ── Espacio de trabajo de la lección ───────────────────────────────── */
+  {
+    const html = read('tutorial.html');
+    const tut = readCode('src/js/controllers/TutorialController.js');
+    const lwCss = read('src/css/lesson-workspace.css');
+    const tutCss = read('src/css/tutorial.css');
+
+    assert('workspace: three tabs with proper roles',
+      (html.match(/role="tab"/g) || []).length === 3 && /role="tablist"/.test(html));
+    assert('workspace: panels are linked to their tabs',
+      (html.match(/role="tabpanel"/g) || []).length === 3
+      && (html.match(/aria-labelledby="lwtab-/g) || []).length === 3);
+    /* Flechas y Home/End: es lo que un lector de pantalla espera de un tablist. */
+    assert('workspace: arrows move between tabs', /ArrowRight/.test(tut));
+
+    /* El título tiene que sobrevivir al cambio de pestaña, así que se pinta
+     * fuera del artículo. */
+    assert('workspace: the header lives outside the article',
+      /id="lesson-head"/.test(html) && /\$head\.innerHTML/.test(tut));
+
+    /* `aria-disabled` y no `disabled`: un botón inerte no puede explicar por
+     * qué no avanza, y el alumno se queda mirándolo sin saber qué hacer. */
+    assert('workspace: the gate keeps the button clickable',
+      /function _gateSiguiente[\s\S]{0,400}setAttribute\('aria-disabled'/.test(tut)
+      && !/function _gateSiguiente[\s\S]{0,400}next\.disabled =/.test(tut));
+    /* Sin preguntas no hay nada que superar: bloquear ahí dejaría al alumno
+     * encerrado en la lección sin salida posible. */
+    assert('workspace: a lesson with no micro-quiz is never gated',
+      /_microOk = !preguntas\.length/.test(tut));
+
+    assert('workspace: practice gets the example and the sandbox',
+      /lesson-sec-example', 'lesson-sec-sandbox/.test(tut));
+    assert('workspace: notes move into the drawer',
+      /lesson-notes-host/.test(tut) && /id="lesson-notes-drawer"/.test(html));
+
+    assert('workspace: confetti respects reduced motion',
+      /prefers-reduced-motion[\s\S]{0,400}\.lw-confeti/.test(lwCss));
+    /* El diseño respeta el interruptor de tema en vez de imponer oscuro. */
+    assert('workspace: both themes are defined',
+      /html\[data-theme="dark"\] \.lesson-w3/.test(tutCss));
+    /* Los acentos salen de los tokens de marca; si alguien pega un hex suelto
+     * la lección deja de parecerse al resto de IN4MIND. */
+    assert('workspace: accents come from brand tokens',
+      /--lw-accent: var\(--clr-accent/.test(tutCss)
+      && !/#10b981/i.test(lwCss) && !/#06B6D4/i.test(lwCss));
+    assert('workspace: the split is 4/8',
+      /grid-template-columns: minmax\(280px, 33%\)/.test(tutCss));
+  }
+
   /* Durante un tiempo el sandbox estuvo entero pero muerto: nada emitía
    * `[data-sandbox]`, así que ninguna lección lo mostraba nunca. */
   const tutor = readCode('src/js/controllers/TutorialController.js');

@@ -200,6 +200,13 @@ const MicroQuiz = (() => {
           'SUCCESS',
         );
       }
+
+      /* Quien haya montado la comprobación puede necesitar el resultado —la
+         lección lo usa para desbloquear «Siguiente»—. Va por evento y no por
+         callback para no acoplar este componente a ninguna pantalla. */
+      window.dispatchEvent(new CustomEvent('in4mind-microquiz-done', {
+        detail: { bien, total, pleno: bien === total, context: detail.context },
+      }));
     };
 
     if (punto.mode === 'after') punto.host.insertAdjacentElement('afterend', card);

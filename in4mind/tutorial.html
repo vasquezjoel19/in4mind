@@ -10,26 +10,27 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <script src="src/js/dist/boot.bundle.js?v=88fdc7996d17"></script>
+  <script src="src/js/dist/boot.bundle.js?v=a3ddbf08b2e3"></script>
 
-  <link rel="stylesheet" href="src/css/tokens.css?v=88fdc7996d17">
-  <link rel="stylesheet" href="src/css/adaptive.css?v=88fdc7996d17">
-  <link rel="stylesheet" href="src/css/infy.css?v=88fdc7996d17">
-  <link rel="stylesheet" href="src/css/sandbox.css?v=88fdc7996d17">
-  <link rel="stylesheet" href="src/css/base.css?v=88fdc7996d17">
-  <link rel="stylesheet" href="src/css/dashboard.css?v=88fdc7996d17">
-  <link rel="stylesheet" href="src/css/responsive.css?v=88fdc7996d17">
-  <link rel="stylesheet" href="src/css/tutorial.css?v=88fdc7996d17">
-  <link rel="stylesheet" href="src/css/theme.css?v=88fdc7996d17">
-  <link rel="stylesheet" href="src/css/ui-dialog.css?v=88fdc7996d17">
-  <link rel="stylesheet" href="src/css/ui-polish.css?v=88fdc7996d17">
-  <link rel="stylesheet" href="src/css/accessibility.css?v=88fdc7996d17">
-  <link rel="stylesheet" href="src/css/i18n.css?v=88fdc7996d17">
-  <link rel="stylesheet" href="src/css/settings-modal.css?v=88fdc7996d17">
-  <link rel="stylesheet" href="src/css/app-features.css?v=88fdc7996d17">
-  <link rel="stylesheet" href="src/css/employable.css?v=88fdc7996d17">
-  <link rel="stylesheet" href="src/css/global-chat.css?v=88fdc7996d17">
-  <link rel="stylesheet" href="src/css/orb.css?v=88fdc7996d17">
+  <link rel="stylesheet" href="src/css/tokens.css?v=a3ddbf08b2e3">
+  <link rel="stylesheet" href="src/css/adaptive.css?v=a3ddbf08b2e3">
+  <link rel="stylesheet" href="src/css/infy.css?v=a3ddbf08b2e3">
+  <link rel="stylesheet" href="src/css/sandbox.css?v=a3ddbf08b2e3">
+  <link rel="stylesheet" href="src/css/base.css?v=a3ddbf08b2e3">
+  <link rel="stylesheet" href="src/css/dashboard.css?v=a3ddbf08b2e3">
+  <link rel="stylesheet" href="src/css/responsive.css?v=a3ddbf08b2e3">
+  <link rel="stylesheet" href="src/css/tutorial.css?v=a3ddbf08b2e3">
+  <link rel="stylesheet" href="src/css/lesson-workspace.css?v=a3ddbf08b2e3">
+  <link rel="stylesheet" href="src/css/theme.css?v=a3ddbf08b2e3">
+  <link rel="stylesheet" href="src/css/ui-dialog.css?v=a3ddbf08b2e3">
+  <link rel="stylesheet" href="src/css/ui-polish.css?v=a3ddbf08b2e3">
+  <link rel="stylesheet" href="src/css/accessibility.css?v=a3ddbf08b2e3">
+  <link rel="stylesheet" href="src/css/i18n.css?v=a3ddbf08b2e3">
+  <link rel="stylesheet" href="src/css/settings-modal.css?v=a3ddbf08b2e3">
+  <link rel="stylesheet" href="src/css/app-features.css?v=a3ddbf08b2e3">
+  <link rel="stylesheet" href="src/css/employable.css?v=a3ddbf08b2e3">
+  <link rel="stylesheet" href="src/css/global-chat.css?v=a3ddbf08b2e3">
+  <link rel="stylesheet" href="src/css/orb.css?v=a3ddbf08b2e3">
   <link rel="manifest" href="manifest.json">
 
   <link rel="icon" type="image/png" sizes="64x64" href="src/img/brand/favicon-64.png">
@@ -566,8 +567,31 @@
                 <span class="lesson-w3__sidebar-course" id="lesson-sidebar-course" data-i18n="tutorial.course">Curso</span>
               </div>
             </div>
+            <!-- Progreso del módulo: lecciones completadas sobre el total. -->
+            <div class="lw-progress">
+              <div class="lw-progress__top">
+                <span data-i18n="tutorial.moduleProgress">Progreso del módulo</span>
+                <span class="lw-progress__pct" id="lesson-progress-pct">0%</span>
+              </div>
+              <div class="lw-progress__track" id="lesson-progress-bar" role="progressbar"
+                   aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
+                   aria-label="Progreso del módulo" data-i18n-aria="tutorial.moduleProgress">
+                <div class="lw-progress__fill" id="lesson-progress-fill"></div>
+              </div>
+              <p class="lw-progress__meta" id="lesson-progress-meta"></p>
+            </div>
+
             <nav id="lesson-sidebar-list" class="lesson-w3__nav"></nav>
             <a class="lesson-w3__sidebar-quiz" id="lesson-sidebar-quiz" href="quizzes.html" data-i18n="tutorial.goQuiz">Ir al quiz del curso</a>
+
+            <!-- Infy acompaña la lección activa con un consejo contextual. -->
+            <aside class="lw-infy" id="lesson-infy-card" aria-live="polite">
+              <img class="lw-infy__img" id="lesson-infy-img" src="" alt="" width="44" height="44" loading="lazy">
+              <div class="lw-infy__body">
+                <span class="lw-infy__title" data-i18n="tutorial.infyTipTitle">Consejo de Infy</span>
+                <p class="lw-infy__text" id="lesson-infy-text"></p>
+              </div>
+            </aside>
           </aside>
 
           <!-- Fondo del índice en móvil: oscurece la lección y cierra al tocar
@@ -588,7 +612,39 @@
             </div>
 
             <nav class="lesson-w3__breadcrumb" id="lesson-breadcrumb" aria-label="Ruta de navegación"></nav>
-            <article class="lesson-w3__article" id="lesson-article"></article>
+
+            <!-- Cabecera de la lección: la pinta el controlador aparte del
+                 cuerpo, para que título, tiempo y nivel queden fuera de las
+                 pestañas y sigan visibles al cambiar de una a otra. -->
+            <header class="lw-head" id="lesson-head"></header>
+
+            <div class="lw-tabs" role="tablist" aria-label="Secciones de la lección" data-i18n-aria="tutorial.lessonSections">
+              <button type="button" role="tab" class="lw-tabs__tab is-active" data-lwtab="contenido"
+                      id="lwtab-contenido" aria-controls="lwpanel-contenido" aria-selected="true">
+                <span aria-hidden="true">📘</span><span data-i18n="tutorial.tabContent">Contenido</span>
+              </button>
+              <button type="button" role="tab" class="lw-tabs__tab" data-lwtab="practica" tabindex="-1"
+                      id="lwtab-practica" aria-controls="lwpanel-practica" aria-selected="false">
+                <span aria-hidden="true">⚡</span><span data-i18n="tutorial.tabPractice">Práctica</span>
+              </button>
+              <button type="button" role="tab" class="lw-tabs__tab" data-lwtab="quiz" tabindex="-1"
+                      id="lwtab-quiz" aria-controls="lwpanel-quiz" aria-selected="false">
+                <span aria-hidden="true">🎯</span><span data-i18n="tutorial.tabQuiz">Micro-Quiz</span>
+                <span class="lw-tabs__dot" id="lwtab-quiz-dot" hidden aria-hidden="true"></span>
+              </button>
+            </div>
+
+            <section role="tabpanel" class="lw-panel is-active" id="lwpanel-contenido" aria-labelledby="lwtab-contenido">
+              <article class="lesson-w3__article" id="lesson-article"></article>
+            </section>
+
+            <section role="tabpanel" class="lw-panel" id="lwpanel-practica" aria-labelledby="lwtab-practica" hidden>
+              <div id="lesson-practica"></div>
+            </section>
+
+            <section role="tabpanel" class="lw-panel" id="lwpanel-quiz" aria-labelledby="lwtab-quiz" hidden>
+              <div id="lesson-microquiz" data-adaptive-slot></div>
+            </section>
 
             <footer class="lesson-w3__footer">
               <button type="button" class="btn--back" id="lesson-prev" data-i18n="tutorial.prev">? Anterior</button>
@@ -597,6 +653,24 @@
             </footer>
           </div>
         </div>
+
+        <!-- Notas: pestaña flotante. El bloque `#lesson-notes-section` que
+             pinta el controlador se traslada aquí dentro, así que sigue
+             siendo el mismo nodo y conserva sus listeners. -->
+        <button type="button" class="lw-notes__tab" id="lesson-notes-toggle"
+                aria-expanded="false" aria-controls="lesson-notes-drawer">
+          <span aria-hidden="true">✎</span>
+          <span data-i18n="tutorial.myNotes">Mis notas</span>
+        </button>
+        <aside class="lw-notes" id="lesson-notes-drawer" aria-label="Mis notas"
+               data-i18n-aria="tutorial.myNotes" hidden>
+          <div class="lw-notes__head">
+            <span data-i18n="tutorial.myNotes">Mis notas</span>
+            <button type="button" class="lw-notes__close" id="lesson-notes-close"
+                    aria-label="Cerrar" data-i18n-aria="common.close">×</button>
+          </div>
+          <div class="lw-notes__body" id="lesson-notes-host"></div>
+        </aside>
 
       </div>
       <!-- /tutorial-lesson-view -->
@@ -626,36 +700,36 @@
           integrity="sha384-JBR+x8blGwjDRO63aHCGiZMD4VNiTR4ZUGA+N6ZKLf3zNt1fK8IBpcgPaMrxqWBp"
           crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script defer src="src/js/config/supabase.config.js"></script>
-<script defer src="src/js/dist/app-shell.bundle.js?v=88fdc7996d17"></script>
-<script defer src="src/js/data/CourseCurriculum.js?v=88fdc7996d17"></script>
-<script defer src="src/js/services/QuizRandomizer.js?v=88fdc7996d17"></script>
-<script defer src="src/js/data/LearningPathsData.js?v=88fdc7996d17"></script>
-<script defer src="src/js/services/ContentLoader.js?v=88fdc7996d17"></script>
+<script defer src="src/js/dist/app-shell.bundle.js?v=a3ddbf08b2e3"></script>
+<script defer src="src/js/data/CourseCurriculum.js?v=a3ddbf08b2e3"></script>
+<script defer src="src/js/services/QuizRandomizer.js?v=a3ddbf08b2e3"></script>
+<script defer src="src/js/data/LearningPathsData.js?v=a3ddbf08b2e3"></script>
+<script defer src="src/js/services/ContentLoader.js?v=a3ddbf08b2e3"></script>
 
-<script defer src="src/js/services/VideoProgressService.js?v=88fdc7996d17"></script>
-<script defer src="src/js/vendor/qrcode.js?v=88fdc7996d17"></script>
-<script defer src="src/js/services/CertificateShare.js?v=88fdc7996d17"></script>
-<script defer src="src/js/services/AIUserContext.js?v=88fdc7996d17"></script>
-<script defer src="src/js/services/CertVerificationService.js?v=88fdc7996d17"></script>
-<script defer src="src/js/data/CareerPathsData.js?v=88fdc7996d17"></script>
-<script defer src="src/js/services/EmployabilityService.js?v=88fdc7996d17"></script>
-<script defer src="src/js/services/EmployabilityStarters.js?v=88fdc7996d17"></script>
-<script defer src="src/js/services/ProjectReviewService.js?v=88fdc7996d17"></script>
-<script defer src="src/js/controllers/EmployabilityController.js?v=88fdc7996d17"></script>
+<script defer src="src/js/services/VideoProgressService.js?v=a3ddbf08b2e3"></script>
+<script defer src="src/js/vendor/qrcode.js?v=a3ddbf08b2e3"></script>
+<script defer src="src/js/services/CertificateShare.js?v=a3ddbf08b2e3"></script>
+<script defer src="src/js/services/AIUserContext.js?v=a3ddbf08b2e3"></script>
+<script defer src="src/js/services/CertVerificationService.js?v=a3ddbf08b2e3"></script>
+<script defer src="src/js/data/CareerPathsData.js?v=a3ddbf08b2e3"></script>
+<script defer src="src/js/services/EmployabilityService.js?v=a3ddbf08b2e3"></script>
+<script defer src="src/js/services/EmployabilityStarters.js?v=a3ddbf08b2e3"></script>
+<script defer src="src/js/services/ProjectReviewService.js?v=a3ddbf08b2e3"></script>
+<script defer src="src/js/controllers/EmployabilityController.js?v=a3ddbf08b2e3"></script>
 <script defer src="src/js/config/groq.config.js"></script>
-<script defer src="src/js/services/GroqService.js?v=88fdc7996d17"></script>
-<script defer src="src/js/services/OfflineCourseService.js?v=88fdc7996d17"></script>
-<script defer src="src/js/services/CursorSpotlight.js?v=88fdc7996d17"></script>
-<script defer src="src/js/data/TutorialData.js?v=88fdc7996d17"></script>
-<script defer src="src/js/data/LessonCheckData.js?v=88fdc7996d17"></script>
-<script defer src="src/js/data/LessonExamples.js?v=88fdc7996d17"></script>
-<script defer src="src/js/services/LessonNotesService.js?v=88fdc7996d17"></script>
-<script defer src="src/js/components/MicroQuiz.js?v=88fdc7996d17"></script>
-<script defer src="src/js/components/ReinforcementNote.js?v=88fdc7996d17"></script>
-<script defer src="src/js/components/CodeSandbox.js?v=88fdc7996d17"></script>
-<script defer src="src/js/services/CertificateService.js?v=88fdc7996d17"></script>
-<script defer src="src/js/controllers/TutorialController.js?v=88fdc7996d17"></script>
-<script defer src="src/js/services/CardTilt.js?v=88fdc7996d17"></script>
+<script defer src="src/js/services/GroqService.js?v=a3ddbf08b2e3"></script>
+<script defer src="src/js/services/OfflineCourseService.js?v=a3ddbf08b2e3"></script>
+<script defer src="src/js/services/CursorSpotlight.js?v=a3ddbf08b2e3"></script>
+<script defer src="src/js/data/TutorialData.js?v=a3ddbf08b2e3"></script>
+<script defer src="src/js/data/LessonCheckData.js?v=a3ddbf08b2e3"></script>
+<script defer src="src/js/data/LessonExamples.js?v=a3ddbf08b2e3"></script>
+<script defer src="src/js/services/LessonNotesService.js?v=a3ddbf08b2e3"></script>
+<script defer src="src/js/components/MicroQuiz.js?v=a3ddbf08b2e3"></script>
+<script defer src="src/js/components/ReinforcementNote.js?v=a3ddbf08b2e3"></script>
+<script defer src="src/js/components/CodeSandbox.js?v=a3ddbf08b2e3"></script>
+<script defer src="src/js/services/CertificateService.js?v=a3ddbf08b2e3"></script>
+<script defer src="src/js/controllers/TutorialController.js?v=a3ddbf08b2e3"></script>
+<script defer src="src/js/services/CardTilt.js?v=a3ddbf08b2e3"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   try {

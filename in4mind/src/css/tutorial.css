@@ -1229,11 +1229,34 @@ svg.tut-star,
 /* ══════════════════════════════════════════
    LECCIÓN ESTILO W3SCHOOLS (IN4MIND)
 ══════════════════════════════════════════ */
+/* Espacio de trabajo 4/8: el índice ocupa un tercio y la lección dos, con un
+   mínimo para que la columna izquierda no se estrangule en pantallas medias. */
 .lesson-w3 {
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr);
+  grid-template-columns: minmax(280px, 33%) minmax(0, 1fr);
   gap: var(--sp-xl);
   align-items: start;
+
+  /* Paleta del espacio de trabajo. Se declara aquí y se redefine para el tema
+     oscuro, así el mismo diseño sirve en los dos sin duplicar reglas. Los
+     acentos salen de los tokens de marca, no de valores sueltos. */
+  --lw-surface: rgba(255, 255, 255, .72);
+  --lw-surface-2: rgba(255, 255, 255, .55);
+  --lw-border: rgba(15, 23, 42, .10);
+  --lw-text: var(--clr-ink, #0f172a);
+  --lw-muted: #64748b;
+  --lw-accent: var(--clr-accent, #2EC4B6);
+  --lw-accent-2: var(--clr-brand-500, #5DA9E9);
+  --lw-glow: rgba(46, 196, 182, .28);
+}
+
+html[data-theme="dark"] .lesson-w3 {
+  --lw-surface: rgba(30, 41, 59, .70);
+  --lw-surface-2: rgba(15, 23, 42, .60);
+  --lw-border: rgba(148, 163, 184, .18);
+  --lw-text: #e2e8f0;
+  --lw-muted: #94a3b8;
+  --lw-glow: rgba(46, 196, 182, .38);
 }
 
 .lesson-w3__sidebar {

@@ -1,0 +1,368 @@
+/**
+ * IN4MIND — Espacio de trabajo de la lección.
+ *
+ * Tarjetas translúcidas con desenfoque y bordes con brillo de marca. El
+ * desenfoque no lleva NINGUNA animación infinita detrás: recomponer un fondo
+ * borroso en cada fotograma es lo más caro que puede hacer esta página. Lo
+ * único que late son puntos de 7-8 px, que no arrastran capa borrosa alguna.
+ *
+ * Los colores salen de los tokens de marca (`--clr-accent`, `--clr-brand-500`)
+ * y se redefinen para el tema oscuro en `tutorial.css`, junto al grid.
+ */
+
+/* ── Superficie común ───────────────────────────────────────────────────── */
+.lw-progress,
+.lw-infy,
+.lw-head,
+.lw-panel,
+.lw-notes {
+  background: var(--lw-surface);
+  border: 1px solid var(--lw-border);
+  border-radius: 14px;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: var(--lw-text);
+}
+
+/* ── Progreso del módulo ────────────────────────────────────────────────── */
+.lw-progress { padding: 14px 16px; margin-bottom: 14px; }
+
+.lw-progress__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--lw-muted);
+}
+
+.lw-progress__pct {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--lw-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.lw-progress__track {
+  margin-top: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--lw-surface-2);
+  border: 1px solid var(--lw-border);
+  overflow: hidden;
+}
+
+.lw-progress__fill {
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--lw-accent), var(--lw-accent-2));
+  transition: width .45s cubic-bezier(.22, 1, .36, 1);
+}
+
+.lw-progress__meta {
+  margin: 8px 0 0;
+  font-size: .76rem;
+  color: var(--lw-muted);
+}
+
+/* `theme.css` fuerza en oscuro `span:not([class*="badge"]) { color: inherit }`
+   con especificidad (0,2,2), que gana a una sola clase. Estos tres spans SÍ
+   llevan color de acento a propósito, así que se reafirman con el peso justo
+   para superarla; los badges ya quedan fuera por su propio nombre de clase. */
+.lesson-w3 .lw-progress__pct,
+html[data-theme="dark"] .lesson-w3 .lw-progress__pct,
+.lesson-w3 .lw-infy__title,
+html[data-theme="dark"] .lesson-w3 .lw-infy__title,
+.lesson-w3 .lesson-w3__nav-check,
+html[data-theme="dark"] .lesson-w3 .lesson-w3__nav-check {
+  color: var(--lw-accent);
+}
+
+/* ── Índice: estados del paso ───────────────────────────────────────────── */
+.lesson-w3__nav-item--done .lesson-w3__nav-num {
+  background: color-mix(in srgb, var(--lw-accent) 22%, transparent);
+  color: var(--lw-accent);
+}
+
+.lesson-w3__nav-check { color: var(--lw-accent); font-weight: 800; }
+
+/* Activa: borde de marca y un punto que late. Late el punto, nunca la tarjeta. */
+.lesson-w3__nav-item--active {
+  border-color: var(--lw-accent-2);
+  box-shadow: 0 0 0 1px var(--lw-accent-2), 0 0 14px var(--lw-glow);
+}
+
+.lesson-w3__nav-item--active::after {
+  content: '';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  margin-top: -4px;
+  border-radius: 50%;
+  background: var(--lw-accent-2);
+  animation: lw-latido 1.8s ease-in-out infinite;
+}
+
+@keyframes lw-latido {
+  0%, 100% { opacity: 1;   transform: scale(1); }
+  50%      { opacity: .45; transform: scale(.72); }
+}
+
+.lesson-w3__nav-item--locked { opacity: .55; }
+.lesson-w3__nav-item--locked .lesson-w3__nav-lock { opacity: .7; }
+
+/* ── Tarjeta de Infy ────────────────────────────────────────────────────── */
+.lw-infy {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  margin-top: 14px;
+  border-color: color-mix(in srgb, var(--lw-accent) 34%, var(--lw-border));
+}
+
+.lw-infy__img { flex: 0 0 auto; width: 44px; height: 44px; object-fit: contain; }
+.lw-infy__body { min-width: 0; }
+
+.lw-infy__title {
+  display: block;
+  font-size: .72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--lw-accent);
+}
+
+.lw-infy__text {
+  margin: 3px 0 0;
+  font-size: .84rem;
+  line-height: 1.45;
+  color: var(--lw-text);
+}
+
+/* ── Cabecera de la lección ─────────────────────────────────────────────── */
+.lw-head { padding: 18px 20px; margin-bottom: 14px; }
+.lw-head:empty { display: none; }
+
+.lw-head__badges { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 12px; }
+
+.lw-head__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: .76rem;
+  font-weight: 700;
+  background: var(--lw-surface-2);
+  border: 1px solid var(--lw-border);
+  color: var(--lw-muted);
+}
+
+.lw-head__badge--level {
+  color: var(--level-color, var(--lw-accent));
+  border-color: color-mix(in srgb, var(--level-color, var(--lw-accent)) 45%, transparent);
+  background: color-mix(in srgb, var(--level-color, var(--lw-accent)) 14%, transparent);
+}
+
+/* ── Pestañas ───────────────────────────────────────────────────────────── */
+.lw-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding: 5px;
+  border-radius: 12px;
+  background: var(--lw-surface-2);
+  border: 1px solid var(--lw-border);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.lw-tabs::-webkit-scrollbar { display: none; }
+
+.lw-tabs__tab {
+  position: relative;
+  flex: 1 1 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  white-space: nowrap;
+  padding: 9px 14px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--lw-muted);
+  font: inherit;
+  font-size: .87rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .18s ease, color .18s ease;
+}
+
+.lw-tabs__tab:hover { color: var(--lw-text); }
+
+.lw-tabs__tab.is-active {
+  background: var(--lw-surface);
+  color: var(--lw-text);
+  box-shadow: 0 0 0 1px var(--lw-border), 0 0 12px var(--lw-glow);
+}
+
+/* Aviso de que aún queda el micro-quiz por superar. */
+.lw-tabs__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--lw-accent-2);
+  animation: lw-latido 1.8s ease-in-out infinite;
+}
+
+/* ── Paneles ────────────────────────────────────────────────────────────── */
+.lw-panel { padding: 20px; }
+.lw-panel[hidden] { display: none; }
+
+/* Bloque que Infy pide releer tras fallar el micro-quiz. */
+.is-repaso {
+  border-radius: 12px;
+  animation: lw-repaso 2.4s ease-out 1;
+}
+
+@keyframes lw-repaso {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  15%, 70% { box-shadow: 0 0 0 2px var(--lw-accent-2), 0 0 18px var(--lw-glow); }
+}
+
+/* ── Micro-quiz ─────────────────────────────────────────────────────────── */
+.lw-quiz__done {
+  margin: 0 0 12px;
+  font-size: .86rem;
+  font-weight: 700;
+  color: var(--lw-accent);
+}
+
+.lw-quiz__start { min-width: 200px; }
+
+/* «Siguiente» cerrado hasta superar el micro-quiz. */
+#lesson-next.is-gated { opacity: .5; cursor: not-allowed; filter: saturate(.4); }
+
+/* ── Notas: cajón flotante ──────────────────────────────────────────────── */
+.lw-notes__tab {
+  position: fixed;
+  right: 0;
+  bottom: 22%;
+  z-index: var(--z-drawer, 960);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 14px;
+  border: 1px solid var(--lw-border, rgba(15, 23, 42, .1));
+  border-right: 0;
+  border-radius: 12px 0 0 12px;
+  background: var(--clr-accent, #2EC4B6);
+  color: #05221f;
+  font: inherit;
+  font-size: .82rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: -4px 0 18px rgba(15, 23, 42, .18);
+}
+
+.lw-notes {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--z-drawer, 960);
+  width: min(420px, 88vw);
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px 0 0 16px;
+  box-shadow: -10px 0 40px rgba(15, 23, 42, .28);
+  transform: translateX(100%);
+  transition: transform var(--dur-med, .25s) var(--ease, ease);
+}
+
+.lw-notes.is-open { transform: translateX(0); }
+
+.lw-notes__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--lw-border);
+  font-weight: 800;
+}
+
+.lw-notes__close {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.lw-notes__body {
+  padding: 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.lw-notes__body .lesson-w3__notes { width: 100%; }
+
+/* ── Confeti ────────────────────────────────────────────────────────────── */
+.lw-confeti {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: var(--z-toast, 980);
+  overflow: hidden;
+}
+
+.lw-confeti i {
+  position: absolute;
+  top: -12px;
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--clr-accent, #2EC4B6);
+  animation: lw-caer 2.2s cubic-bezier(.3, .7, .5, 1) forwards;
+}
+
+.lw-confeti i:nth-child(3n)   { background: var(--clr-brand-500, #5DA9E9); }
+.lw-confeti i:nth-child(3n+1) { background: var(--clr-accent-lt, #5eead4); }
+
+@keyframes lw-caer {
+  to {
+    transform: translate(var(--desvio, 0), 105vh) rotate(var(--giro, 180deg));
+    opacity: 0;
+  }
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────────── */
+/* Por encima de 700 px el índice mantiene su columna; por debajo lo gobiernan
+   las reglas del cajón móvil que ya viven en `tutorial.css`. */
+@media (max-width: 900px) and (min-width: 701px) {
+  .lw-infy { max-width: 520px; }
+}
+
+@media (max-width: 700px) {
+  .lw-panel { padding: 14px; }
+  .lw-head { padding: 14px 16px; }
+  .lw-tabs__tab { padding: 9px 10px; font-size: .8rem; }
+  .lw-notes__tab { bottom: 14%; padding: 9px 11px; font-size: .76rem; }
+}
+
+/* Sin movimiento: nada late, nada cae, nada se desliza. */
+@media (prefers-reduced-motion: reduce) {
+  .lesson-w3__nav-item--active::after,
+  .lw-tabs__dot { animation: none; }
+  .lw-progress__fill,
+  .lw-notes { transition: none; }
+  .is-repaso { animation: none; box-shadow: 0 0 0 2px var(--lw-accent-2); }
+  .lw-confeti { display: none; }
+}

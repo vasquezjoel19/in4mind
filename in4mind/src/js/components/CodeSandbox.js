@@ -697,6 +697,20 @@ const CodeSandbox = (() => {
     _instancias.delete(raiz);
   }
 
+  /**
+   * Recalcula el alto del editor visible.
+   *
+   * CodeMirror mide al crearse: si el sandbox nació dentro de una pestaña
+   * oculta se queda a cero y aparece como una franja vacía. Quien lo muestre
+   * tiene que avisar, porque no hay forma de detectarlo desde aquí.
+   */
+  function refresh(raiz) {
+    const est = _instancias.get(raiz);
+    if (!est) return;
+    const vista = est.vistas[est.activo];
+    if (vista && vista.refresh) vista.refresh();
+  }
+
   /** Monta todos los `[data-sandbox]` que haya en la página. */
   function init() {
     document.querySelectorAll('[data-sandbox]').forEach((el) => {
@@ -706,7 +720,7 @@ const CodeSandbox = (() => {
     });
   }
 
-  return { init, mount, destroy };
+  return { init, mount, destroy, refresh };
 
 })();
 

@@ -1191,6 +1191,327 @@ const TutorialController = (() => {
     document.querySelectorAll('[data-sandbox]').forEach(el => CodeSandbox.destroy(el));
   }
 
+  /* ── Espacio de trabajo de la lección ─────────────────────────────────────
+   * La lección se reparte en tres pestañas. El artículo se sigue pintando de
+   * una pieza —es la única fuente de verdad del contenido— y luego se mueven
+   * los bloques ya construidos a su panel. Mover un nodo conserva sus
+   * listeners, así que todo lo que el controlador enganchó sigue funcionando.
+   */
+
+  const LWTABS = ['contenido', 'practica', 'quiz'];
+  let _lwLigado = false;
+  let _microOk = false;      // el micro-quiz de esta lección ya se superó
+
+  function _repartirPestanas() {
+    const practica = document.getElementById('lesson-practica');
+    const notas = document.getElementById('lesson-notes-host');
+
+    if (practica) {
+      practica.textContent = '';
+      // El ejemplo y el sandbox son «hacer», no «leer».
+      for (const id of ['lesson-sec-example', 'lesson-sec-sandbox']) {
+        const el = document.getElementById(id);
+        if (el) practica.appendChild(el);
+      }
+      if (!practica.children.length) {
+        const vacio = document.createElement('p');
+        vacio.className = 'lesson-w3__text lesson-w3__text--muted';
+        vacio.textContent = _t('tutorial.practiceEmpty', null,
+          'Esta lección no tiene ejercicio práctico. Repasa el contenido y pasa al micro-quiz.');
+        practica.appendChild(vacio);
+      }
+    }
+
+    // Las notas viven en el cajón flotante, no en mitad del texto.
+    const secNotas = document.getElementById('lesson-notes-section');
+    if (notas && secNotas) {
+      notas.textContent = '';
+      notas.appendChild(secNotas);
+    }
+  }
+
+  function _activarPestana(nombre) {
+    if (!LWTABS.includes(nombre)) return;
+    for (const t of LWTABS) {
+      const boton = document.querySelector(`[data-lwtab="${t}"]`);
+      const panel = document.getElementById(`lwpanel-${t}`);
+      const activo = t === nombre;
+      if (boton) {
+        boton.classList.toggle('is-active', activo);
+        boton.setAttribute('aria-selected', String(activo));
+        boton.tabIndex = activo ? 0 : -1;
+      }
+      if (panel) {
+        panel.classList.toggle('is-active', activo);
+        panel.hidden = !activo;
+      }
+    }
+
+    /* CodeMirror mide su alto al crearse: si nació en un panel oculto se queda
+       en cero y aparece como una franja vacía hasta que alguien lo toca. */
+    if (nombre === 'practica' && typeof CodeSandbox !== 'undefined' && CodeSandbox.refresh) {
+      document.querySelectorAll('#lesson-practica [data-sandbox]').forEach(el => CodeSandbox.refresh(el));
+    }
+  }
+
+  function _ligarPestanas() {
+    if (_lwLigado) return;
+    const tabs = [...document.querySelectorAll('[data-lwtab]')];
+    if (!tabs.length) return;
+    _lwLigado = true;
+
+    tabs.forEach((boton) => {
+      boton.addEventListener('click', () => _activarPestana(boton.dataset.lwtab));
+      // Flechas entre pestañas: es lo que un lector de pantalla espera de un tablist.
+      boton.addEventListener('keydown', (ev) => {
+        const i = LWTABS.indexOf(boton.dataset.lwtab);
+        let destino = null;
+        if (ev.key === 'ArrowRight') destino = LWTABS[(i + 1) % LWTABS.length];
+        else if (ev.key === 'ArrowLeft') destino = LWTABS[(i - 1 + LWTABS.length) % LWTABS.length];
+        else if (ev.key === 'Home') destino = LWTABS[0];
+        else if (ev.key === 'End') destino = LWTABS[LWTABS.length - 1];
+        if (!destino) return;
+        ev.preventDefault();
+        _activarPestana(destino);
+        document.querySelector(`[data-lwtab="${destino}"]`)?.focus();
+      });
+    });
+
+    // Cajón de notas
+    const abrir = document.getElementById('lesson-notes-toggle');
+    const cajon = document.getElementById('lesson-notes-drawer');
+    const cerrar = document.getElementById('lesson-notes-close');
+    const alternar = (abierto) => {
+      if (!cajon) return;
+      cajon.hidden = !abierto;
+      cajon.classList.toggle('is-open', abierto);
+      abrir?.setAttribute('aria-expanded', String(abierto));
+      if (abierto) cajon.querySelector('textarea')?.focus();
+    };
+    abrir?.addEventListener('click', () => alternar(cajon?.hidden !== false));
+    cerrar?.addEventListener('click', () => { alternar(false); abrir?.focus(); });
+    window.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape' && cajon && !cajon.hidden) { alternar(false); abrir?.focus(); }
+    });
+  }
+
+  /** Progreso del módulo: lecciones ya completadas sobre el total. */
+  function _pintarProgresoModulo() {
+    const total = _currentLessons.length;
+    if (!total || !_currentCourse) return;
+
+    // Misma fuente que usa el índice lateral, para que no se contradigan.
+    const progreso = typeof UserProfileService !== 'undefined'
+      ? (UserProfileService.getLessonProgressSync(_currentCourse.id) || {})
+      : {};
+    const hechas = _currentLessons.filter(l => progreso[l.id]).length;
+    const pct = Math.round((hechas / total) * 100);
+
+    const fill = document.getElementById('lesson-progress-fill');
+    const barra = document.getElementById('lesson-progress-bar');
+    const texto = document.getElementById('lesson-progress-pct');
+    const meta = document.getElementById('lesson-progress-meta');
+    if (fill) fill.style.width = `${pct}%`;
+    if (barra) barra.setAttribute('aria-valuenow', String(pct));
+    if (texto) texto.textContent = `${pct}%`;
+    if (meta) {
+      meta.textContent = _t('tutorial.progressMeta', { n: hechas, total },
+        `${hechas} de ${total} lecciones completadas`);
+    }
+  }
+
+  /** Cambia el gesto de Infy en la tarjeta lateral. */
+  function _infyGesto(estado) {
+    const img = document.getElementById('lesson-infy-img');
+    if (!img || typeof InfyMascot === 'undefined') return;
+    const archivo = InfyMascot.GESTOS?.[estado];
+    if (archivo) img.src = `${InfyMascot.RUTA}${archivo}`;
+  }
+
+  /** Consejo de Infy para la lección activa. */
+  function _pintarInfyLeccion(lesson, estado = 'LEARNING', texto = null) {
+    const txt = document.getElementById('lesson-infy-text');
+    if (!txt) return;
+
+    txt.textContent = texto || lesson?.tip
+      || _t('tutorial.infyTipDefault', null,
+        'Lee el contenido, prueba el ejercicio y remátalo con el micro-quiz.');
+    _infyGesto(estado);
+  }
+
+  /**
+   * Convierte las preguntas del temario al formato del micro-quiz.
+   *
+   * El temario guarda tres tipos; aquí sólo sirven los de respuesta única.
+   * `match` se descarta: no se puede responder con dos botones.
+   */
+  function _preguntasMicro(courseId, idx) {
+    let seccion = null;
+    try {
+      seccion = typeof CourseCurriculum !== 'undefined'
+        ? CourseCurriculum.getQuizDef(courseId)?.sections?.[idx]
+        : null;
+    } catch { return []; }
+
+    const brutas = Array.isArray(seccion?.questions) ? seccion.questions : [];
+    const salida = [];
+    for (const q of brutas) {
+      if (salida.length === 2) break;
+      if (q.type === 'choice' && Array.isArray(q.opts)) {
+        salida.push({ question: q.q, options: q.opts.slice(), answer: q.ans, exp: q.exp || '' });
+      } else if (q.type === 'truefalse') {
+        salida.push({
+          question: q.q,
+          // Ya traducidas para el quiz del curso: no hace falta duplicarlas.
+          options: [_t('quizzes.true', null, 'Verdadero'), _t('quizzes.false', null, 'Falso')],
+          answer: q.ans ? 0 : 1,
+          exp: q.exp || '',
+        });
+      }
+    }
+    return salida;
+  }
+
+  function _claveMicro(courseId, lessonId) {
+    return `in4mind_micro_ok:${courseId}:${lessonId}`;
+  }
+
+  function _microSuperado(courseId, lessonId) {
+    try { return localStorage.getItem(_claveMicro(courseId, lessonId)) === '1'; }
+    catch { return false; }
+  }
+
+  /**
+   * Abre o cierra el paso a la siguiente lección.
+   *
+   * Sólo se cierra cuando hay micro-quiz que superar: si la lección no tiene
+   * preguntas, bloquear «Siguiente» dejaría al alumno encerrado sin salida.
+   */
+  function _gateSiguiente(bloquear) {
+    const next = document.getElementById('lesson-next');
+    if (!next) return;
+
+    /* `aria-disabled` y no `disabled`, igual que hace el bloqueo por lección:
+       el botón sigue recibiendo el clic y puede explicar por qué no avanza.
+       Un botón inerte dejaría al alumno delante de algo apagado y mudo. */
+    next.setAttribute('aria-disabled', bloquear ? 'true' : 'false');
+    next.classList.toggle('is-gated', bloquear);
+    if (bloquear) {
+      next.title = _t('tutorial.gateHint', null, 'Supera el micro-quiz para continuar.');
+    } else {
+      next.removeAttribute('title');
+    }
+    const punto = document.getElementById('lwtab-quiz-dot');
+    if (punto) punto.hidden = !bloquear;
+  }
+
+  /** ¿Puede esta lección dejar pasar a la siguiente? */
+  function _microBloquea() {
+    return !_microOk;
+  }
+
+  function _montarMicroQuiz(lesson, idx) {
+    const host = document.getElementById('lesson-microquiz');
+    if (!host || !_currentCourse) return;
+    host.textContent = '';
+
+    const preguntas = _preguntasMicro(_currentCourse.id, idx);
+    _microOk = !preguntas.length || _microSuperado(_currentCourse.id, lesson.id);
+    _gateSiguiente(!_microOk);
+
+    if (!preguntas.length) {
+      const p = document.createElement('p');
+      p.className = 'lesson-w3__text lesson-w3__text--muted';
+      p.textContent = _t('tutorial.quizEmpty', null,
+        'Esta lección no tiene micro-quiz. Puedes pasar a la siguiente.');
+      host.appendChild(p);
+      return;
+    }
+
+    if (_microOk) {
+      const p = document.createElement('p');
+      p.className = 'lw-quiz__done';
+      p.textContent = _t('tutorial.quizAlready', null, 'Ya superaste este micro-quiz. ¡Buen trabajo!');
+      host.appendChild(p);
+    }
+
+    const lanzar = document.createElement('button');
+    lanzar.type = 'button';
+    lanzar.className = 'btn--primary lw-quiz__start';
+    lanzar.textContent = _microOk
+      ? _t('tutorial.quizRetry', null, 'Repetir micro-quiz')
+      : _t('tutorial.quizStart', null, 'Empezar micro-quiz');
+    lanzar.addEventListener('click', () => {
+      if (typeof MicroQuiz === 'undefined') return;
+      MicroQuiz.render({
+        context: { courseId: _currentCourse.id, lessonId: lesson.id, lessonIdx: idx },
+        questions: preguntas,
+      });
+    });
+    host.appendChild(lanzar);
+  }
+
+  /**
+   * Confeti de celebración.
+   *
+   * Se hace con nodos y CSS en vez de traer una librería: son 30 elementos que
+   * viven dos segundos y medio. Con movimiento reducido no se dibuja nada —un
+   * estallido de partículas es justo lo que esa preferencia pide evitar—.
+   */
+  function _confeti() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const capa = document.createElement('div');
+    capa.className = 'lw-confeti';
+    capa.setAttribute('aria-hidden', 'true');
+    for (let i = 0; i < 30; i += 1) {
+      const p = document.createElement('i');
+      p.style.left = `${Math.random() * 100}%`;
+      p.style.animationDelay = `${Math.random() * 0.4}s`;
+      p.style.setProperty('--giro', `${Math.random() * 720 - 360}deg`);
+      p.style.setProperty('--desvio', `${Math.random() * 120 - 60}px`);
+      capa.appendChild(p);
+    }
+    document.body.appendChild(capa);
+    setTimeout(() => capa.remove(), 2600);
+  }
+
+  /** Lleva la atención al contenido que conviene releer. */
+  function _resaltarContenido() {
+    _activarPestana('contenido');
+    const objetivo = document.getElementById('lesson-sec-steps')
+      || document.getElementById('lesson-sec-desc');
+    if (!objetivo) return;
+    objetivo.classList.add('is-repaso');
+    objetivo.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    setTimeout(() => objetivo.classList.remove('is-repaso'), 2600);
+  }
+
+  function _alTerminarMicroQuiz(detalle) {
+    const lesson = _currentLessons[_currentLessonIdx];
+    if (!lesson || !_currentCourse) return;
+
+    if (detalle.pleno) {
+      _microOk = true;
+      try { localStorage.setItem(_claveMicro(_currentCourse.id, lesson.id), '1'); }
+      catch { /* sin almacenamiento: el desbloqueo vale para esta sesión */ }
+      _gateSiguiente(false);
+      _confeti();
+      _pintarInfyLeccion(lesson, 'SUCCESS',
+        _t('tutorial.infyTipPerfect', null, '¡Pleno! La siguiente lección ya está abierta.'));
+      // El índice repinta candados y progreso con el nuevo estado.
+      _renderLessonSidebar(_currentLessonIdx);
+      _pintarProgresoModulo();
+      return;
+    }
+
+    /* Fallo: Infy explica y señala qué releer, en vez de dejar al alumno
+       delante de un botón apagado sin saber qué hacer. */
+    _pintarInfyLeccion(lesson, 'THINKING',
+      _t('tutorial.infyTipRetry', { n: detalle.bien, total: detalle.total },
+        `${detalle.bien} de ${detalle.total}. Repasa los pasos y vuelve a intentarlo.`));
+    _resaltarContenido();
+  }
+
   /** Escapa un valor para meterlo entre comillas dobles en un atributo. */
   function _attr(valor) {
     return String(valor)
@@ -1252,20 +1573,31 @@ const TutorialController = (() => {
       ? LessonExamples.sandboxSeed(lesson, course.id)
       : null;
 
-    $article.innerHTML = `
-      <header class="lesson-w3__header">
+    /* La cabecera va fuera del artículo: así título, duración y nivel siguen
+       a la vista al cambiar de pestaña, en lugar de desaparecer con el
+       contenido. */
+    const $head = document.getElementById('lesson-head');
+    if ($head) {
+      $head.innerHTML = `
         <span class="lesson-w3__module">${lesson.quizModule || lesson.section || _t('tutorial.moduleN', { n: idx + 1 }, `Módulo ${idx + 1}`)}</span>
         <h1 class="lesson-w3__title">${lesson.title}</h1>
-        <div class="lesson-w3__meta">
-          <span class="lesson-w3__duration">${lesson.duration || '10 min'}</span>
-          <span class="lesson-w3__meta-sep">·</span>
-          <span>${_t('tutorial.lessonOf', { n: idx + 1, total }, `Lección ${idx + 1} de ${total}`)}</span>
+        <div class="lw-head__badges">
+          <span class="lw-head__badge lw-head__badge--time">
+            <span aria-hidden="true">⏱</span> ${lesson.duration || '10 min'}
+          </span>
+          <span class="lw-head__badge lw-head__badge--level" style="--level-color:${levelColor}">
+            ${lesson.level || _defaultLevel()}
+          </span>
+          <span class="lw-head__badge lw-head__badge--pos">
+            ${_t('tutorial.lessonOf', { n: idx + 1, total }, `Lección ${idx + 1} de ${total}`)}
+          </span>
         </div>
         <div class="lesson-w3__progress" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100">
           <div class="lesson-w3__progress-fill" style="width:${pct}%"></div>
-        </div>
-      </header>
+        </div>`;
+    }
 
+    $article.innerHTML = `
       ${videoUrl ? `
       <section class="lesson-w3__video-block" id="lesson-sec-video" aria-labelledby="lesson-video-title">
         <div class="lesson-w3__video-head">
@@ -1375,9 +1707,21 @@ const TutorialController = (() => {
         </div>
       </section>`;
 
+    /* Orden importante: primero se reparten los bloques en sus pestañas y
+       luego se monta el sandbox, para que CodeMirror mida sobre su sitio
+       definitivo. Mover un nodo conserva sus listeners, así que todo lo que
+       se engancha más abajo por `getElementById` sigue encontrándose. */
+    _ligarPestanas();
+    _repartirPestanas();
+    _activarPestana('contenido');
+
     /* El auto-arranque de CodeSandbox sólo corre en DOMContentLoaded, y este
        artículo se pinta mucho después y otra vez por cada lección. */
     if (sandbox && typeof CodeSandbox !== 'undefined') CodeSandbox.init();
+
+    _pintarProgresoModulo();
+    _pintarInfyLeccion(lesson);
+    _montarMicroQuiz(lesson, idx);
 
     document.getElementById('lesson-try-btn')?.addEventListener('click', () => {
       document.getElementById('lesson-sec-steps')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1434,6 +1778,10 @@ const TutorialController = (() => {
       nextBtn.disabled = false;
       nextBtn.setAttribute('aria-disabled', nextLocked ? 'true' : 'false');
       nextBtn.classList.toggle('is-locked', nextLocked);
+      /* El micro-quiz se monta dentro de `_renderLessonArticle`, que corre
+         antes que esto: sin volver a aplicarlo aquí, el `disabled = false` de
+         arriba borraría el candado recién puesto. */
+      _gateSiguiente(_microBloquea());
       const baseLabel = isLast
         ? _t('tutorial.finishCourse', null, 'Finalizar curso')
         : _t('tutorial.next', null, 'Siguiente →');
@@ -1559,6 +1907,17 @@ const TutorialController = (() => {
     _renderFilters();
     _renderGrid();
 
+    /* El micro-quiz vive en su propio componente y avisa por evento; aquí se
+       decide qué significa ese resultado para la lección. */
+    window.addEventListener('in4mind-microquiz-done', (ev) => {
+      try { _alTerminarMicroQuiz(ev.detail || {}); }
+      catch (err) {
+        if (typeof ErrorReporter !== 'undefined') {
+          ErrorReporter.capture('microquiz_done', { message: err?.message || String(err) });
+        }
+      }
+    });
+
     document.getElementById('tut-btn-back')?.addEventListener('click', _showList);
     document.getElementById('lesson-btn-back')?.addEventListener('click', () => {
       if (_currentCourse) _showDetail(_currentCourse.id);
@@ -1593,6 +1952,18 @@ const TutorialController = (() => {
 
     document.getElementById('lesson-prev')?.addEventListener('click', () => _requestShowLesson(_currentLessonIdx - 1));
     document.getElementById('lesson-next')?.addEventListener('click', () => {
+      /* Antes que nada: si el micro-quiz de ESTA lección sigue sin superarse,
+         no se avanza. Se dice por qué y se abre la pestaña donde resolverlo,
+         en lugar de dejar al alumno pulsando un botón que no reacciona. */
+      if (_microBloquea()) {
+        if (typeof AppShell !== 'undefined') {
+          AppShell.showToast(_t('tutorial.gateHint', null, 'Supera el micro-quiz para continuar.'));
+        }
+        _activarPestana('quiz');
+        document.getElementById('lwtab-quiz')?.focus();
+        return;
+      }
+
       const isLast = _currentLessonIdx >= _currentLessons.length - 1;
       const nextIdx = _currentLessonIdx + 1;
       // Si la siguiente está bloqueada, avisar; el check de esta lección sigue para poder desbloquearla.

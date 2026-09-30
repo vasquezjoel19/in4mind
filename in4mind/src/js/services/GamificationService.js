@@ -17,10 +17,8 @@ const GamificationService = (() => {
   ];
 
   /* Un tipo que no esté aquí cae en el 10 por defecto, así que todo lo que
-     puntúe tiene que declararse. `microquiz` vale 50 por petición expresa;
-     queda por encima del quiz completo del curso (25) y a la altura de un
-     certificado, que es mucho para una comprobación de dos preguntas. */
-  const XP_MAP = { lesson: 15, quiz: 25, microquiz: 50, speed: 30, cert: 50, exam: 80 };
+     puntúe tiene que declararse. */
+  const XP_MAP = { lesson: 15, quiz: 25, microquiz: 25, speed: 30, cert: 50, exam: 80 };
 
   function _t(k, p, fb = '') {
     if (typeof I18n !== 'undefined') {

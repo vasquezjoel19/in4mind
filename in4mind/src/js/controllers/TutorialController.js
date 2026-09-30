@@ -1225,8 +1225,8 @@ const TutorialController = (() => {
 
   const LWTABS = ['contenido', 'practica', 'quiz'];
   // Sólo para la insignia si la gamificación no estuviera disponible; la cifra
-  // real la pone `XP_MAP` en GamificationService.
-  const XP_MICRO = 50;
+  // real la pone `XP_MAP` en GamificationService, y es la que se muestra.
+  const XP_MICRO = 25;
   const CONFETI_CDN = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js';
   let _lwLigado = false;
   let _microOk = false;      // el micro-quiz de esta lección ya se superó

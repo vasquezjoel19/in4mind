@@ -1051,8 +1051,9 @@ for (const [file, endpoint] of [
       /previo \? `\$\{previo\}/.test(tut));
 
     /* ── XP y celebración ──────────────────────────────────────────────── */
-    /* Un tipo que no esté en XP_MAP cae en 10 y la insignia mentiría. */
-    assert('xp: microquiz is declared in the map', /microquiz: 50/.test(gam));
+    /* Un tipo que no esté en XP_MAP cae en el 10 por defecto, y la insignia
+     * anunciaría un premio distinto del que se apuntó. */
+    assert('xp: microquiz is declared in the map', /microquiz: 25/.test(gam));
     assert('xp: it goes through recordActivity', /recordActivity\('microquiz'/.test(tut));
     assert('confetti: canvas-confetti loads lazily',
       /canvas-confetti@/.test(tut) && /function _cargarConfeti/.test(tut));

@@ -467,13 +467,29 @@ const TutorialController = (() => {
     if (!Number.isInteger(idx) || idx < 0 || idx >= _currentLessons.length) return false;
     if (idx === 0) return true;
     const prev = _currentLessons[idx - 1];
-    return Boolean(prev && _isLessonComplete(prev.id));
+    if (!prev) return false;
+
+    /* Dos condiciones, no una: terminar de leer la lección anterior y además
+       superar su micro-quiz. La segunda sólo se exige si esa lección llegó a
+       tener preguntas; si no las tiene, no hay nada que superar y pedirlo
+       dejaría el curso cortado para siempre en ese punto. */
+    if (!_isLessonComplete(prev.id)) return false;
+    if (!_currentCourse) return true;
+    const tienePreguntas = _preguntasMicro(_currentCourse.id, idx - 1).length > 0;
+    return !tienePreguntas || _microSuperado(_currentCourse.id, prev.id);
   }
 
   function _toastLessonLocked() {
-    if (typeof AppShell !== 'undefined') {
-      AppShell.showToast(_t('tutorial.lessonLocked', null, 'Completa la lección anterior para desbloquear esta.'));
+    const msg = _t('tutorial.lessonLockedQuiz', null,
+      'Completa el quiz de la lección anterior para desbloquear esta unidad.');
+
+    /* Lo dice Infy, con el gesto de estar leyendo: un candado que sólo se
+       queja es una pared; explicado por la mascota es una indicación. Si Infy
+       no está en esta página, el aviso normal sigue sirviendo. */
+    if (typeof Infy !== 'undefined' && Infy.showToast) {
+      if (Infy.showToast(msg, 'LEARNING')) return;
     }
+    if (typeof AppShell !== 'undefined') AppShell.showToast(msg);
   }
 
   /** Navega a una lección si canAccess; si no, toast y no cambia de vista. */
@@ -1199,6 +1215,10 @@ const TutorialController = (() => {
    */
 
   const LWTABS = ['contenido', 'practica', 'quiz'];
+  // Sólo para la insignia si la gamificación no estuviera disponible; la cifra
+  // real la pone `XP_MAP` en GamificationService.
+  const XP_MICRO = 50;
+  const CONFETI_CDN = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js';
   let _lwLigado = false;
   let _microOk = false;      // el micro-quiz de esta lección ya se superó
 
@@ -1289,10 +1309,63 @@ const TutorialController = (() => {
       if (abierto) cajon.querySelector('textarea')?.focus();
     };
     abrir?.addEventListener('click', () => alternar(cajon?.hidden !== false));
+    document.getElementById('lesson-notes-ai')?.addEventListener('click', _resumirNotas);
     cerrar?.addEventListener('click', () => { alternar(false); abrir?.focus(); });
     window.addEventListener('keydown', (ev) => {
       if (ev.key === 'Escape' && cajon && !cajon.hidden) { alternar(false); abrir?.focus(); }
     });
+  }
+
+  /**
+   * Resume la lección en Markdown y lo añade a las notas del alumno.
+   *
+   * Se AÑADE, nunca se reemplaza: lo que escribió a mano es suyo y perderlo
+   * por pulsar un botón sería imperdonable. El resumen se pide sobre el texto
+   * real de la lección (descripción y pasos), no sobre su título, para que no
+   * se lo invente.
+   */
+  async function _resumirNotas() {
+    const boton = document.getElementById('lesson-notes-ai');
+    const aviso = document.getElementById('lesson-notes-ai-msg');
+    const campo = document.getElementById('lesson-notes-input');
+    const lesson = _currentLessons[_currentLessonIdx];
+    if (!boton || !campo || !lesson) return;
+
+    if (typeof GroqService === 'undefined' || !GroqService.chat) {
+      if (aviso) aviso.textContent = _t('tutorial.notesNoAi', null, 'Infy no está disponible ahora mismo.');
+      return;
+    }
+
+    boton.disabled = true;
+    if (aviso) aviso.textContent = _t('tutorial.notesWorking', null, 'Infy está resumiendo…');
+
+    const pasos = Array.isArray(lesson.steps) ? lesson.steps : [];
+    const prompt = [
+      'Resume esta lección como apuntes en Markdown, en español.',
+      'Usa un encabezado de nivel 2 con el título, 3-5 viñetas con las ideas',
+      'clave y una última línea que empiece por "**Recuerda:**".',
+      'Máximo 120 palabras. No inventes nada que no esté abajo.',
+      '',
+      `Título: ${lesson.title || ''}`,
+      `Descripción: ${lesson.description || lesson.summary || ''}`,
+      pasos.length ? `Pasos:\n${pasos.map((s, i) => `${i + 1}. ${s}`).join('\n')}` : '',
+    ].filter(Boolean).join('\n');
+
+    try {
+      const resumen = await GroqService.chat([{ role: 'user', content: prompt }]);
+      if (!resumen) throw new Error('vacio');
+
+      const previo = campo.value.trim();
+      campo.value = previo ? `${previo}\n\n${resumen}` : resumen;
+      // `input` para que LessonNotesService lo guarde como si lo hubiera escrito.
+      campo.dispatchEvent(new Event('input', { bubbles: true }));
+      campo.scrollTop = campo.scrollHeight;
+      if (aviso) aviso.textContent = _t('tutorial.notesAdded', null, 'Resumen añadido a tus notas.');
+    } catch {
+      if (aviso) aviso.textContent = _t('tutorial.notesFailed', null, 'No se pudo resumir. Inténtalo otra vez.');
+    } finally {
+      boton.disabled = false;
+    }
   }
 
   /** Progreso del módulo: lecciones ya completadas sobre el total. */
@@ -1372,13 +1445,28 @@ const TutorialController = (() => {
     return salida;
   }
 
+  /* Nota mínima para dar por superado un micro-quiz. Con dos preguntas, 80 %
+     equivale a acertar las dos; se guarda el porcentaje y no un booleano para
+     que la regla siga siendo la misma si algún módulo trae más preguntas. */
+  const MICRO_APROBADO = 80;
+
   function _claveMicro(courseId, lessonId) {
     return `in4mind_micro_ok:${courseId}:${lessonId}`;
   }
 
+  /** Nota guardada del micro-quiz, en porcentaje. */
+  function _microNota(courseId, lessonId) {
+    try {
+      const v = localStorage.getItem(_claveMicro(courseId, lessonId));
+      if (v === null) return null;
+      // '1' es el formato viejo, de cuando sólo se guardaba «superado».
+      return v === '1' ? 100 : Number(v);
+    } catch { return null; }
+  }
+
   function _microSuperado(courseId, lessonId) {
-    try { return localStorage.getItem(_claveMicro(courseId, lessonId)) === '1'; }
-    catch { return false; }
+    const nota = _microNota(courseId, lessonId);
+    return nota !== null && nota >= MICRO_APROBADO;
   }
 
   /**
@@ -1458,8 +1546,45 @@ const TutorialController = (() => {
    * viven dos segundos y medio. Con movimiento reducido no se dibuja nada —un
    * estallido de partículas es justo lo que esa preferencia pide evitar—.
    */
+  /**
+   * Carga `canvas-confetti` la primera vez que hace falta.
+   *
+   * No se trae en el arranque: son bytes que sólo sirven en el instante de
+   * celebrar, y la mayoría de visitas a una lección no llegan a ese instante.
+   * jsDelivr ya está permitido en `script-src`, así que no hace falta tocar la
+   * CSP.
+   */
+  let _confetiCargando = null;
+  function _cargarConfeti() {
+    if (window.confetti) return Promise.resolve(window.confetti);
+    if (_confetiCargando) return _confetiCargando;
+    _confetiCargando = new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = CONFETI_CDN;
+      s.async = true;
+      s.onload = () => resolve(window.confetti);
+      s.onerror = reject;
+      document.head.appendChild(s);
+    }).catch(() => null);
+    return _confetiCargando;
+  }
+
   function _confeti() {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    /* Se pide la librería y, si llega, se usa. Si el CDN falla se cae al
+       confeti de CSS, que no depende de la red: la celebración no puede
+       quedarse en nada por un recurso externo. */
+    void _cargarConfeti().then((confetti) => {
+      if (typeof confetti !== 'function') { _confetiCss(); return; }
+      const opciones = { spread: 70, startVelocity: 38, ticks: 140, zIndex: 980,
+        colors: ['#2EC4B6', '#5DA9E9', '#5eead4'] };
+      confetti({ ...opciones, particleCount: 70, origin: { x: .3, y: .7 } });
+      confetti({ ...opciones, particleCount: 70, origin: { x: .7, y: .7 } });
+    });
+  }
+
+  function _confetiCss() {
     const capa = document.createElement('div');
     capa.className = 'lw-confeti';
     capa.setAttribute('aria-hidden', 'true');
@@ -1475,6 +1600,43 @@ const TutorialController = (() => {
     setTimeout(() => capa.remove(), 2600);
   }
 
+  /**
+   * Suma el XP del micro-quiz y lo enseña saliendo de la tarjeta de Infy.
+   *
+   * El XP va por `GamificationService.recordActivity`, que es quien lleva la
+   * cuenta, la racha y las insignias: escribir el número por libre dejaría el
+   * resto de la gamificación sin enterarse.
+   */
+  function _premioXp() {
+    let ganado = XP_MICRO;
+    if (typeof GamificationService !== 'undefined' && GamificationService.recordActivity) {
+      try {
+        const antes = GamificationService.getXp ? GamificationService.getXp() : null;
+        GamificationService.recordActivity('microquiz', { course: _currentCourse?.id });
+        if (antes !== null && GamificationService.getXp) {
+          // Lo que se muestra es lo que de verdad se sumó, no una cifra fija.
+          ganado = GamificationService.getXp() - antes;
+        }
+      } catch { /* la celebración no puede caerse por esto */ }
+    }
+    if (ganado <= 0) return;
+
+    const insignia = document.createElement('div');
+    insignia.className = 'lw-xp';
+    insignia.setAttribute('aria-hidden', 'true');
+    insignia.textContent = `+${ganado} XP`;
+    (document.querySelector('.lw-infy') || document.body).appendChild(insignia);
+    setTimeout(() => insignia.remove(), 2200);
+  }
+
+  /** Marca con un brillo la lección que se acaba de abrir. */
+  function _brillarDesbloqueada(idx) {
+    const item = document.querySelector(`#lesson-sidebar-list [data-lesson-idx="${idx}"]`);
+    if (!item) return;
+    item.classList.add('is-recien-abierta');
+    setTimeout(() => item.classList.remove('is-recien-abierta'), 2400);
+  }
+
   /** Lleva la atención al contenido que conviene releer. */
   function _resaltarContenido() {
     _activarPestana('contenido');
@@ -1486,21 +1648,81 @@ const TutorialController = (() => {
     setTimeout(() => objetivo.classList.remove('is-repaso'), 2600);
   }
 
+  /**
+   * Explica un fallo concreto del micro-quiz.
+   *
+   * Se le manda la pregunta y la opción que eligió, y se le pide que razone
+   * por qué ESA no era, sin decir cuál sí. Si el alumno recibe la respuesta
+   * hecha, copia y no aprende; el objetivo es que vuelva al texto sabiendo
+   * qué mirar.
+   */
+  async function _diagnosticarFallo(detalle) {
+    const txt = document.getElementById('lesson-infy-text');
+    if (!txt || typeof GroqService === 'undefined' || !GroqService.chat) return;
+
+    const q = detalle.question || {};
+    const lesson = _currentLessons[_currentLessonIdx];
+
+    _pintarInfyLeccion(lesson, 'THINKING',
+      _t('tutorial.infyThinking', null, 'Déjame ver por qué no era esa…'));
+
+    const prompt = [
+      'Eres Infy, el tutor de IN4MIND. Un estudiante falló esta pregunta.',
+      'Explica en español, en menos de 60 palabras y con tono alentador, por qué',
+      'la opción que eligió NO es correcta y qué concepto debería repasar.',
+      'NO digas cuál es la respuesta correcta: tiene que volver a intentarlo.',
+      '',
+      `Lección: ${lesson?.title || ''}`,
+      `Pregunta: ${q.question || ''}`,
+      `Eligió: ${detalle.chosenText || ''}`,
+    ].join('\n');
+
+    try {
+      const respuesta = await GroqService.chat([{ role: 'user', content: prompt }]);
+      if (respuesta) _pintarInfyLeccion(lesson, 'THINKING', respuesta);
+    } catch {
+      /* Sin IA disponible queda la explicación del temario, que para esto
+         sirve igual: el alumno no se queda sin nada. */
+      if (q.exp) _pintarInfyLeccion(lesson, 'THINKING', q.exp);
+    }
+  }
+
+  function _alFallarPregunta(detalle) {
+    _resaltarContenido();
+    void _diagnosticarFallo(detalle);
+  }
+
   function _alTerminarMicroQuiz(detalle) {
     const lesson = _currentLessons[_currentLessonIdx];
     if (!lesson || !_currentCourse) return;
 
-    if (detalle.pleno) {
+    const total = detalle.total || 0;
+    const pct = total ? Math.round((detalle.bien / total) * 100) : 0;
+    const aprobado = pct >= MICRO_APROBADO;
+
+    if (aprobado) {
       _microOk = true;
-      try { localStorage.setItem(_claveMicro(_currentCourse.id, lesson.id), '1'); }
+      // Se guarda la nota, no un «sí»: la regla de aprobado puede cambiar.
+      try { localStorage.setItem(_claveMicro(_currentCourse.id, lesson.id), String(pct)); }
       catch { /* sin almacenamiento: el desbloqueo vale para esta sesión */ }
+
+      /* Superar el micro-quiz da la lección por vista. Sin esto el candado de
+         la siguiente seguiría echado —`canAccess` pide las dos cosas— y el
+         brillo de desbloqueo estaría celebrando algo que no ha pasado.
+         Se comprueba antes de llamar porque `_completeLessonProgress` suma XP
+         de lección, y no debe contarse dos veces si ya estaba completada. */
+      if (!_isLessonComplete(lesson.id)) _completeLessonProgress(pct);
+
       _gateSiguiente(false);
       _confeti();
+      _premioXp();
       _pintarInfyLeccion(lesson, 'SUCCESS',
         _t('tutorial.infyTipPerfect', null, '¡Pleno! La siguiente lección ya está abierta.'));
+
       // El índice repinta candados y progreso con el nuevo estado.
       _renderLessonSidebar(_currentLessonIdx);
       _pintarProgresoModulo();
+      _brillarDesbloqueada(_currentLessonIdx + 1);
       return;
     }
 
@@ -1914,6 +2136,15 @@ const TutorialController = (() => {
       catch (err) {
         if (typeof ErrorReporter !== 'undefined') {
           ErrorReporter.capture('microquiz_done', { message: err?.message || String(err) });
+        }
+      }
+    });
+
+    window.addEventListener('in4mind-microquiz-wrong', (ev) => {
+      try { _alFallarPregunta(ev.detail || {}); }
+      catch (err) {
+        if (typeof ErrorReporter !== 'undefined') {
+          ErrorReporter.capture('microquiz_wrong', { message: err?.message || String(err) });
         }
       }
     });

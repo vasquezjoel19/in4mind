@@ -152,6 +152,20 @@ const MicroQuiz = (() => {
           }
           if (acierto) aciertos += 1;
 
+          /* Un fallo concreto es la mejor ocasión para explicar algo, y quien
+             sepa hacerlo no es este componente. Se avisa con la pregunta y la
+             opción elegida; quien escuche decidirá qué hacer con ello. */
+          if (!acierto) {
+            window.dispatchEvent(new CustomEvent('in4mind-microquiz-wrong', {
+              detail: {
+                question: q,
+                chosenIndex: i,
+                chosenText: q.options?.[i] ?? '',
+                context: detail.context,
+              },
+            }));
+          }
+
           aviso.textContent = acierto
             ? _t('adaptive.quizRight', null, 'Correcto.')
             : _t('adaptive.quizWrong', null, 'No era esa. Buscando qué reforzar…');

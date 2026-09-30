@@ -1016,6 +1016,51 @@ for (const [file, endpoint] of [
       && !/#10b981/i.test(lwCss) && !/#06B6D4/i.test(lwCss));
     assert('workspace: the split is 4/8',
       /grid-template-columns: minmax\(280px, 33%\)/.test(tutCss));
+
+    /* ── Progresión bloqueada ──────────────────────────────────────────── */
+    const mq = readCode('src/js/components/MicroQuiz.js');
+    const gam = readCode('src/js/services/GamificationService.js');
+
+    /* Se guarda el porcentaje y no un «sí»: la nota de corte puede cambiar y
+     * un booleano ya no sabría recalcularse. */
+    assert('gate: the score is stored, not a flag',
+      /MICRO_APROBADO = 80/.test(tut) && /String\(pct\)/.test(tut));
+    assert('gate: canAccess requires the micro-quiz',
+      /function canAccess[\s\S]{0,700}_microSuperado/.test(tut));
+    /* Un módulo sin preguntas utilizables no puede cerrar el curso a cal y
+     * canto en esa lección: no habría forma de salir. */
+    assert('gate: a lesson with no questions never seals the course',
+      /tienePreguntas[\s\S]{0,80}_microSuperado/.test(tut));
+    assert('gate: Infy explains the lock', /lessonLockedQuiz[\s\S]{0,200}'LEARNING'/.test(tut));
+    /* Aprobar da la lección por vista; si no, el candado siguiente seguiría
+     * echado y el brillo celebraría un desbloqueo que no ocurrió. */
+    assert('gate: passing marks the lesson complete once',
+      /!_isLessonComplete\(lesson\.id\)\) _completeLessonProgress/.test(tut));
+
+    /* ── Diagnóstico del fallo ─────────────────────────────────────────── */
+    assert('ai: every wrong answer is announced',
+      /in4mind-microquiz-wrong/.test(mq) && /in4mind-microquiz-wrong/.test(tut));
+    assert('ai: the prompt carries the chosen option', /chosenText/.test(tut));
+    /* Si Infy da la respuesta, el alumno copia y no aprende nada. */
+    assert('ai: the answer is withheld', /NO digas cuál es la respuesta correcta/.test(tut));
+
+    /* ── Notas ─────────────────────────────────────────────────────────── */
+    assert('notes: the summary is markdown', /Markdown/.test(tut));
+    /* Lo que el alumno escribió a mano es suyo: se añade debajo, no se pisa. */
+    assert('notes: hand-written text is never overwritten',
+      /previo \? `\$\{previo\}/.test(tut));
+
+    /* ── XP y celebración ──────────────────────────────────────────────── */
+    /* Un tipo que no esté en XP_MAP cae en 10 y la insignia mentiría. */
+    assert('xp: microquiz is declared in the map', /microquiz: 50/.test(gam));
+    assert('xp: it goes through recordActivity', /recordActivity\('microquiz'/.test(tut));
+    assert('confetti: canvas-confetti loads lazily',
+      /canvas-confetti@/.test(tut) && /function _cargarConfeti/.test(tut));
+    /* La celebración no puede quedarse en nada porque falle un CDN. */
+    assert('confetti: there is a fallback', /_confetiCss\(\); return;/.test(tut));
+    /* Sin movimiento siguen viéndose: son información, no adorno. */
+    assert('reduced motion: xp and glow stay visible',
+      /prefers-reduced-motion[\s\S]{0,600}\.lw-xp \{ animation: none/.test(lwCss));
   }
 
   /* Durante un tiempo el sandbox estuvo entero pero muerto: nada emitía

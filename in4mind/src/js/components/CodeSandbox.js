@@ -378,12 +378,27 @@ const CodeSandbox = (() => {
         'Python está tardando demasiado en descargarse. Revisa tu conexión e inténtalo otra vez.'));
     }, ARRANQUE_MS);
 
+    /* Medio minuto de terminal muda se lee como «se colgó». Si a los cuatro
+       segundos Pyodide sigue sin estar, se dice qué se está esperando y que
+       sólo pasa una vez: esperar informado no es lo mismo que esperar a
+       ciegas. */
+    clearTimeout(est.avisoDescarga);
+    if (!est.pyodideListo) {
+      est.avisoDescarga = setTimeout(() => {
+        if (est.pyodideListo) return;
+        _escribirConsola(est, 'log', _t('sandbox.descargandoPython', null,
+          'Descargando Python (unos 10 MB). Sólo ocurre la primera vez: después arranca al instante.'));
+      }, 4000);
+    }
+
     est.worker.postMessage({ tipo: 'ejecutar', codigo: est.codigo().python || '' });
   }
 
   function _mensajeWorker(est, d) {
     if (!d) return;
     if (d.tipo === 'listo') {
+      est.pyodideListo = true;
+      clearTimeout(est.avisoDescarga);
       /* El precalentado también avisa cuando termina, y entonces no hay nada
          que cronometrar: arrancar aquí el reloj de ejecución mataría el worker
          a los segundos sin que el alumno hubiera pulsado nada. */
@@ -534,6 +549,8 @@ const CodeSandbox = (() => {
       terminado: false,
       diagnosticando: false,
       ejecutando: false,   // hay código del alumno en marcha (no precalentado)
+      pyodideListo: false,
+      avisoDescarga: 0,
     };
 
     est.codigo = () => {
@@ -668,6 +685,7 @@ const CodeSandbox = (() => {
     const est = _instancias.get(raiz);
     if (!est) return;
     clearTimeout(est.temporizador);
+    clearTimeout(est.avisoDescarga);
     window.removeEventListener('message', est.alMensaje);
     est.$iframe?.remove();
     est.worker?.terminate();

@@ -497,6 +497,17 @@ for (const [file, endpoint] of [
     !/script-src[^;]*'unsafe-inline'/.test(hdr['Content-Security-Policy']));
   assert('CSP allows the supabase websocket',
     /wss:\/\/\*\.supabase\.co/.test(hdr['Content-Security-Policy']));
+  /* Sin este token Chrome bloquea `WebAssembly.instantiate` y Pyodide no
+   * arranca jamás: el sandbox de Python se queda en «Preparando Python…» para
+   * siempre. No se ve en local —`http.server` no manda CSP— sino sólo en
+   * producción, así que tiene que vigilarlo el CI.
+   * Es el token estrecho: permite compilar WASM pero NO `eval()` de JavaScript. */
+  assert('CSP lets pyodide compile WebAssembly',
+    /script-src[^;]*'wasm-unsafe-eval'/.test(hdr['Content-Security-Policy']));
+  /* Y que no se cuele el ancho por el camino: en `'wasm-unsafe-eval'` la
+   * comilla no precede a `unsafe`, así que este patrón no lo confunde. */
+  assert('CSP still forbids javascript eval',
+    !/script-src[^;]*'unsafe-eval'/.test(hdr['Content-Security-Policy']));
   assert('clickjacking blocked', hdr['X-Frame-Options'] === 'DENY'
     && /frame-ancestors 'none'/.test(hdr['Content-Security-Policy']));
   assert('nosniff present', hdr['X-Content-Type-Options'] === 'nosniff');

@@ -1182,6 +1182,7 @@ const LOCALE_EN = {
     sinError: 'The student is asking for help; there is no runtime error.',
     timeout: 'It took too long and was stopped. Is there an endless loop?',
     cargandoPython: 'Getting Python ready… (the first time takes a few seconds)',
+    descargandoPython: 'Downloading Python (about 10 MB). This happens only once: after that it starts instantly.',
     pythonLento: 'Python is taking too long to download. Check your connection and try again.',
     pythonFallo: 'Python could not start in this browser.',
   },

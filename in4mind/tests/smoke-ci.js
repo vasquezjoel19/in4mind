@@ -1247,6 +1247,38 @@ for (const [file, endpoint] of [
     assert('hover: the scale stays subtle', /scale\(1\.015\)/.test(pol));
     assert('hover: the keyboard sees what the mouse sees', pol.includes('focus-visible'));
 
+    /* ── Archivo de actividad (IndexedDB) ──────────────────────────────── */
+    const ar = readCode('src/js/services/ActivityArchive.js');
+    const bs = read('scripts/bundle-shell.js');
+
+    /* `recordActivity` le pasa cada actividad al archivo: si cargara después,
+     * el histórico se iría vaciando sin que nadie lo notase. */
+    assert('archive: it is bundled before gamification',
+      bs.indexOf('ActivityArchive.js') < bs.indexOf('services/GamificationService.js'));
+    /* En navegación privada `open` llega a lanzar en vez de emitir onerror. */
+    assert('archive: it survives without indexedDB',
+      /function disponible/.test(ar) && ar.includes('catch { resolve(null); return; }'));
+    /* Dos cuentas en el mismo equipo no comparten historial. */
+    assert('archive: entries are scoped per account',
+      ar.includes('cuenta: _cuenta()') && ar.includes('cursor.value?.cuenta === cuenta'));
+    /* Anotar el pasado no puede retrasar lo que el alumno acaba de hacer. */
+    assert('archive: writing never blocks', /void ActivityArchive\.append/.test(gam));
+    /* Sin esto, quien ya usaba la plataforma vería su mapa empezar de cero. */
+    assert('archive: the old log is imported once',
+      ar.includes('MARCA_IMPORTE') && ar.includes('importarLegado'));
+
+    assert('archive: the heatmap reads both sources',
+      hs.includes('ActivityArchive.since') && hs.includes('getActivityLog'));
+    /* Ahora cada actividad llega por dos caminos: sin clave se contaría dos
+     * veces, y antes sólo las de lección llevaban una. */
+    assert('archive: every entry carries a dedupe key', /a:\$\{e\.type/.test(hs));
+
+    /* localStorage sigue recortado: deja de ser donde crece nada, y sus
+     * lecturas síncronas siguen sirviendo el primer pintado. */
+    assert('archive: localStorage stays capped', gam.includes('log.slice(-90)'));
+    assert('archive: the synchronous summary stays synchronous',
+      !gam.includes('async function getSummary'));
+
     /* ── Lectura en voz alta ───────────────────────────────────────────── */
     /* Chrome corta las locuciones largas a los ~15 s; por eso se trocea. */
     assert('reader: long text is chunked', /MAX_TROZO/.test(rd) && /function trocear/.test(rd));

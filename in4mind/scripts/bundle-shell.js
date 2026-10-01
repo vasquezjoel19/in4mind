@@ -85,6 +85,9 @@ const SHELL_FILES = [
   'src/js/services/DataService.js',
   'src/js/services/UserProfileService.js',
   'src/js/services/QuizProgressService.js',
+  /* Antes que la gamificación: `recordActivity` le pasa cada actividad al
+     archivo, y si no estuviera cargado el histórico empezaría a vaciarse. */
+  'src/js/services/ActivityArchive.js',
   'src/js/services/GamificationService.js',
   'src/js/services/GlobalSearchService.js',
   'src/js/services/NotificationService.js',

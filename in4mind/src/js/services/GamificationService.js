@@ -86,8 +86,16 @@ const GamificationService = (() => {
 
   function recordActivity(type, meta = {}) {
     const log = _readActivity();
-    log.push({ type, at: Date.now(), ...meta });
+    const entrada = { type, at: Date.now(), ...meta };
+    log.push(entrada);
     _writeActivity(log);
+
+    /* El log de arriba se recorta a 90 entradas para no engordar localStorage;
+       el archivo guarda la historia completa. Va sin esperar: anotar el pasado
+       no puede retrasar lo que el alumno acaba de hacer. */
+    if (typeof ActivityArchive !== 'undefined') {
+      void ActivityArchive.append(entrada).catch(() => {});
+    }
 
     const data = _read();
     const today = _dayKey();

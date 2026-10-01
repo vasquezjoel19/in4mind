@@ -85,19 +85,40 @@ const ActivityHeatmapService = (() => {
     return filas;
   }
 
-  /** Actividades del registro local. */
-  function _desdeLocal(desde) {
-    if (typeof GamificationService === 'undefined' || !GamificationService.getActivityLog) return [];
+  /**
+   * Actividades del dispositivo.
+   *
+   * Primero el archivo de IndexedDB, que guarda la historia entera; el log de
+   * localStorage sólo conserva las últimas 90 entradas —entradas, no días—, y
+   * con él solo el mapa mostraba medio año con los datos de tres semanas.
+   * Se leen los dos y se juntan: el archivo puede estar recién creado y el log
+   * tener algo que aún no llegó allí.
+   */
+  async function _desdeLocal(desde) {
+    let archivo = [];
+    if (typeof ActivityArchive !== 'undefined' && ActivityArchive.disponible()) {
+      try {
+        await ActivityArchive.importarLegado();
+        archivo = await ActivityArchive.since(desde);
+      } catch { archivo = []; }
+    }
+
     let log = [];
-    try { log = GamificationService.getActivityLog() || []; } catch { return []; }
-    return log
+    if (typeof GamificationService !== 'undefined' && GamificationService.getActivityLog) {
+      try { log = GamificationService.getActivityLog() || []; } catch { log = []; }
+    }
+
+    return [...archivo, ...log]
       .filter(e => e && e.at >= desde)
       .map(e => ({
         at: e.at,
         tipo: e.type || 'otro',
         titulo: e.title || e.lessonId || e.courseId || '',
-        // Misma clave que Supabase para que una lección no se cuente dos veces.
-        clave: e.lessonId ? `l:${e.lessonId}` : null,
+        /* Toda entrada lleva clave, no sólo las de lección: ahora llegan por
+           dos caminos —archivo y log— y sin clave se contarían dos veces.
+           Para las de lección se usa la misma que Supabase, y para el resto
+           el tipo y el instante, que no se repiten. */
+        clave: e.lessonId ? `l:${e.lessonId}` : `a:${e.type || 'otro'}:${e.at}`,
       }));
   }
 
@@ -112,7 +133,7 @@ const ActivityHeatmapService = (() => {
 
     const [nube, local] = await Promise.all([
       _desdeSupabase(desde).catch(() => []),
-      Promise.resolve(_desdeLocal(desde)),
+      _desdeLocal(desde).catch(() => []),
     ]);
 
     // La nube primero: su título es el guardado, no el que haya en el caché.

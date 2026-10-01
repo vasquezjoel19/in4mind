@@ -329,10 +329,49 @@ const SkillGraph3D = (() => {
 
     const estado = { modo: '3d', host, renderer, scene, camera, grupo, mallas, geoNodo, materiales, raf: 0, visible: false };
 
-    const dibujar = () => {
+    /* ── Ritmo adaptativo ───────────────────────────────────────────────────
+     * Apagar el gráfico en equipos lentos es un hacha; esto es un bisturí. Se
+     * mide cuánto cuesta dibujar de verdad y, si el equipo no llega a 60 fps,
+     * se baja a 30 y si hace falta a 20. Un giro a 30 fps se ve bien; una
+     * página que pelea por fotogramas que no alcanza se nota en todo lo demás,
+     * incluido el scroll.
+     *
+     * La decisión se toma con la mediana de las últimas muestras y no con la
+     * última: un fotograma suelto malo —una pestaña que vuelve, un GC— no
+     * debería degradar la animación para siempre.
+     */
+    const RITMOS = [60, 30, 20];
+    let ritmo = 0;                  // índice en RITMOS
+    let ultimoPintado = 0;
+    let muestras = [];
+
+    const ajustarRitmo = (coste) => {
+      muestras.push(coste);
+      if (muestras.length < 20) return;
+      const orden = [...muestras].sort((a, b) => a - b);
+      const mediana = orden[Math.floor(orden.length / 2)];
+      muestras = [];
+
+      // 10 ms de dibujo ya no caben en un fotograma de 16,7 ms con el resto.
+      if (mediana > 10 && ritmo < RITMOS.length - 1) ritmo += 1;
+      // Con holgura de sobra se recupera el ritmo anterior.
+      else if (mediana < 4 && ritmo > 0) ritmo -= 1;
+    };
+
+    const dibujar = (ahora) => {
       estado.raf = requestAnimationFrame(dibujar);
-      grupo.rotation.y += CONFIG.giro;
+
+      const intervalo = 1000 / RITMOS[ritmo];
+      if (ahora - ultimoPintado < intervalo - 1) return;   // aún no toca
+      /* El giro avanza con el tiempo transcurrido y no por fotograma: si no,
+         bajar a 30 fps dejaría el gráfico girando a la mitad de velocidad. */
+      const delta = ultimoPintado ? Math.min(ahora - ultimoPintado, 100) : 16.7;
+      ultimoPintado = ahora;
+
+      const t0 = performance.now();
+      grupo.rotation.y += CONFIG.giro * (delta / 16.7);
       renderer.render(scene, camera);
+      ajustarRitmo(performance.now() - t0);
     };
 
     const arrancar = () => {

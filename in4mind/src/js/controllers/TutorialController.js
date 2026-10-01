@@ -1545,6 +1545,71 @@ const TutorialController = (() => {
     }
   }
 
+  /* ── Profundizar ─────────────────────────────────────────────────────────
+   * Un botón bajo la descripción que le pide a Infy otra explicación: una
+   * analogía o un ejemplo de código, según el curso. No reemplaza el texto,
+   * lo añade debajo: quien ya entendió la versión original no debería perderla
+   * por pulsar un botón, y comparar las dos es parte de entender.
+   */
+
+  function _montarProfundizar(lesson) {
+    const bloque = document.getElementById('lesson-sec-desc');
+    if (!bloque || typeof GroqService === 'undefined' || !GroqService.chat) return;
+    if (bloque.querySelector('.lw-deep')) return;
+
+    const caja = document.createElement('div');
+    caja.className = 'lw-deep';
+    caja.innerHTML = `
+      <button type="button" class="lw-deep__btn">
+        <span aria-hidden="true">💡</span>
+        <span class="lw-deep__txt"></span>
+      </button>
+      <div class="lw-deep__salida" role="region" aria-live="polite" hidden></div>`;
+    bloque.appendChild(caja);
+
+    const boton = caja.querySelector('.lw-deep__btn');
+    const texto = caja.querySelector('.lw-deep__txt');
+    const salida = caja.querySelector('.lw-deep__salida');
+    texto.textContent = _t('tutorial.deepDive', null, 'Explícamelo de otra forma');
+
+    boton.addEventListener('click', async () => {
+      boton.disabled = true;
+      salida.hidden = false;
+      salida.textContent = _t('tutorial.deepWorking', null, 'Infy está buscando otra manera de contarlo…');
+      _infyGesto('THINKING');
+
+      /* Qué se pide depende del curso: en uno de código, un ejemplo mínimo
+         enseña más que una metáfora; en uno de herramienta, al revés. */
+      const esCodigo = typeof LessonExamples !== 'undefined'
+        && LessonExamples.isCodeCourse?.(_currentCourse?.id);
+      const prompt = [
+        'Eres Infy, tutor de IN4MIND. Explica este concepto de OTRA manera,',
+        'en español y en menos de 90 palabras, para alguien que no lo pilló a la primera.',
+        esCodigo
+          ? 'Usa un ejemplo de código mínimo y comentado.'
+          : 'Usa una analogía cotidiana, sin tecnicismos nuevos.',
+        'No repitas el texto de abajo: dilo distinto.',
+        '',
+        `Lección: ${lesson?.title || ''}`,
+        `Texto original: ${lesson?.description || lesson?.summary || ''}`,
+      ].join('\n');
+
+      try {
+        const respuesta = await GroqService.chat([{ role: 'user', content: prompt }]);
+        if (!respuesta) throw new Error('vacio');
+        salida.textContent = respuesta;
+        _infyGesto('SUCCESS');
+        texto.textContent = _t('tutorial.deepAgain', null, 'Otra explicación más');
+      } catch {
+        salida.textContent = _t('tutorial.deepFailed', null,
+          'Infy no está disponible ahora mismo. Inténtalo más tarde.');
+        _infyGesto('IDLE');
+      } finally {
+        boton.disabled = false;
+      }
+    });
+  }
+
   /* ── Flashcards ──────────────────────────────────────────────────────── */
 
   /** Pone el candado de la pestaña según el estado del módulo. */
@@ -2290,6 +2355,12 @@ const TutorialController = (() => {
        delante el ejemplo y las notas, que acaban en otras pestañas y se
        quedarían ocultos allí. */
     _montarCheckpoint(lesson);
+    _montarProfundizar(lesson);
+    /* El glosario va al final del pintado: parte nodos de texto en tres, y
+       hacerlo antes dejaría al checkpoint midiendo un árbol que ya cambió. */
+    if (typeof LessonGlossary !== 'undefined') {
+      LessonGlossary.aplicar(document.getElementById('lesson-article'));
+    }
     _activarPestana('contenido');
 
     /* El auto-arranque de CodeSandbox sólo corre en DOMContentLoaded, y este

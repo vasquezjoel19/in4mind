@@ -1201,6 +1201,52 @@ for (const [file, endpoint] of [
     assert('heatmap: reachable without a mouse',
       hm.includes("'focus'") && hm.includes("'blur'"));
 
+    /* ── Pulido: 3D, glosario, profundizar ─────────────────────────────── */
+    const sg = readCode('src/js/components/SkillGraph3D.js');
+    const gl = readCode('src/js/components/LessonGlossary.js');
+    const gt = read('src/js/data/GlossaryTerms.js');
+    const pol = read('src/css/ui-polish.css');
+
+    /* Apagar el gráfico en un equipo lento es un hacha; bajar el ritmo es un
+     * bisturí. Y la decisión va por mediana: un fotograma malo suelto no debe
+     * degradar la animación para siempre. */
+    assert('3d: the frame rate steps down', /RITMOS = \[60, 30, 20\]/.test(sg));
+    assert('3d: it decides on the median, not one frame', /mediana/.test(sg));
+    /* Sin escalar por delta, bajar a 30 fps giraría a mitad de velocidad. */
+    assert('3d: the spin keeps its speed at any rate', /delta \/ 16\.7/.test(sg));
+    assert('3d: the pauses it already had survive',
+      sg.includes('IntersectionObserver') && sg.includes('document.hidden'));
+
+    /* Reescribir el innerHTML del bloque destruiría los listeners ya puestos. */
+    assert('glossary: it walks text nodes, never innerHTML',
+      gl.includes('createTreeWalker') && !gl.includes('innerHTML'));
+    /* La clave va sin tilde y el texto con ella: sin normalizar al buscar,
+     * «función» no encontraba nunca su entrada. */
+    assert('glossary: accented words still match',
+      /_norm\(nodo\.nodeValue\)/.test(gl) && gl.includes('ACENTOS'));
+    /* Dentro de `pre` o `code` una palabra es sintaxis, no vocabulario. */
+    assert('glossary: code and links are left alone',
+      /'PRE', 'CODE'/.test(gl) && gl.includes("'A'"));
+    /* Subrayar «función» catorce veces deja de señalar nada. */
+    assert('glossary: one mark per term', gl.includes('MAX_MARCAS'));
+    assert('glossary: reachable by keyboard', gl.includes("'focus'"));
+    assert('glossary: it actually has terms',
+      (gt.match(/^ {4}'[^']+': '/gm) || []).length >= 40);
+
+    /* Quien ya entendió la versión original no debe perderla por pulsar. */
+    assert('deep dive: it appends, never replaces',
+      /bloque\.appendChild\(caja\)/.test(tut));
+    assert('deep dive: code or analogy depending on the course',
+      /esCodigo[\s\S]{0,200}analog/.test(tut));
+
+    /* Animar un desenfoque obliga a recomponer todo lo que hay detrás en cada
+     * fotograma; el pulso va en la sombra, que es barato. */
+    assert('skeleton: the pulse is a shadow, not a filter',
+      pol.includes('in4SkelGlow') && /in4SkelGlow[\s\S]{0,200}box-shadow/.test(pol));
+    /* Por encima de esto la rejilla se mueve al pasar el ratón y marea. */
+    assert('hover: the scale stays subtle', /scale\(1\.015\)/.test(pol));
+    assert('hover: the keyboard sees what the mouse sees', pol.includes('focus-visible'));
+
     /* ── Lectura en voz alta ───────────────────────────────────────────── */
     /* Chrome corta las locuciones largas a los ~15 s; por eso se trocea. */
     assert('reader: long text is chunked', /MAX_TROZO/.test(rd) && /function trocear/.test(rd));

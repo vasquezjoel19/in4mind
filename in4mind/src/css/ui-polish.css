@@ -431,3 +431,146 @@ html[data-theme="dark"] .quiz-card__desc,
 html[data-theme="dark"] .course-card__desc {
   color: var(--clr-text-secondary);
 }
+
+/* ── Skeletons con cristal y pulso de marca ─────────────────────────────────
+   Se mantiene el barrido que ya había y se le suma un borde translúcido con
+   desenfoque y un latido del acento. El pulso va en `box-shadow` y no en
+   `filter` ni en `backdrop-filter` animado: animar un desenfoque obliga al
+   navegador a recomponer todo lo que hay detrás en cada fotograma, que es
+   justo lo caro. */
+
+.skel,
+.skel-block,
+.skel-card {
+  position: relative;
+  border: 1px solid rgba(148, 163, 184, .16);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  animation:
+    in4SkelShine 1.15s ease-in-out infinite,
+    in4SkelGlow 2.2s ease-in-out infinite;
+}
+
+html[data-theme="dark"] .skel,
+html[data-theme="dark"] .skel-block,
+html[data-theme="dark"] .skel-card {
+  border-color: rgba(148, 163, 184, .22);
+}
+
+@keyframes in4SkelGlow {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  50%      { box-shadow: 0 0 14px color-mix(in srgb, var(--clr-accent, #2EC4B6) 28%, transparent); }
+}
+
+/* ── Micro-interacciones ────────────────────────────────────────────────────
+   Un realce pequeño y un borde con brillo del acento. La escala se queda en
+   1.015: por encima de eso, una rejilla de tarjetas se mueve al pasar el ratón
+   y marea más de lo que guía. */
+
+.tut-lesson-card,
+.tut-card,
+.lw-card__cara,
+.resume-card,
+.quick-action {
+  transition:
+    transform .18s cubic-bezier(.22, 1, .36, 1),
+    box-shadow .18s ease,
+    border-color .18s ease;
+}
+
+.tut-lesson-card:hover,
+.tut-card:hover,
+.resume-card:hover,
+.quick-action:hover {
+  transform: translateY(-2px) scale(1.015);
+  border-color: color-mix(in srgb, var(--clr-accent, #2EC4B6) 45%, transparent);
+  box-shadow:
+    0 6px 20px rgba(15, 23, 42, .14),
+    0 0 16px color-mix(in srgb, var(--clr-accent, #2EC4B6) 22%, transparent);
+}
+
+/* El teclado tiene que ver lo mismo que el ratón. */
+.tut-lesson-card:focus-visible,
+.tut-card:focus-visible,
+.resume-card:focus-visible,
+.quick-action:focus-visible {
+  outline: 2px solid var(--clr-accent, #2EC4B6);
+  outline-offset: 2px;
+}
+
+/* Una tarjeta bloqueada no promete nada al pasar por encima. */
+.tut-lesson-card.is-locked:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* ── Término del glosario ───────────────────────────────────────────────── */
+.in4-term {
+  border-bottom: 1px dashed color-mix(in srgb, var(--clr-accent, #2EC4B6) 70%, transparent);
+  cursor: help;
+}
+
+.in4-term:focus-visible {
+  outline: 2px solid var(--clr-accent, #2EC4B6);
+  outline-offset: 2px;
+}
+
+.in4-term__tip {
+  position: fixed;
+  z-index: var(--z-toast, 980);
+  display: flex;
+  gap: 9px;
+  max-width: 280px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, .28);
+  background: rgba(15, 23, 42, .95);
+  color: #e2e8f0;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, .34);
+  font-size: .78rem;
+  line-height: 1.45;
+  pointer-events: none;
+}
+
+.in4-term__infy { flex: 0 0 auto; width: 30px; height: 30px; object-fit: contain; }
+.in4-term__def { display: block; margin-top: 2px; opacity: .85; }
+
+/* ── Profundizar ────────────────────────────────────────────────────────── */
+.lw-deep { margin-top: 12px; }
+
+.lw-deep__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  border: 1px dashed color-mix(in srgb, var(--clr-accent, #2EC4B6) 55%, transparent);
+  background: transparent;
+  color: var(--clr-accent, #2EC4B6);
+  font: inherit;
+  font-size: .8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.lw-deep__btn:hover { background: color-mix(in srgb, var(--clr-accent, #2EC4B6) 12%, transparent); }
+.lw-deep__btn[disabled] { opacity: .6; cursor: progress; }
+
+.lw-deep__salida {
+  margin-top: 10px;
+  padding: 11px 13px;
+  border-radius: 11px;
+  border-left: 3px solid var(--clr-accent, #2EC4B6);
+  background: color-mix(in srgb, var(--clr-accent, #2EC4B6) 8%, transparent);
+  font-size: .88rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skel, .skel-block, .skel-card { animation: none; }
+  .tut-lesson-card, .tut-card, .lw-card__cara,
+  .resume-card, .quick-action { transition: none; }
+  .tut-lesson-card:hover, .tut-card:hover,
+  .resume-card:hover, .quick-action:hover { transform: none; }
+}

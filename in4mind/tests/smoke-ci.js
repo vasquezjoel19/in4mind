@@ -1318,6 +1318,32 @@ for (const [file, endpoint] of [
     assert('prefetch: it stops when the lesson is left',
       /LessonPrefetch\.olvidar\(\)/.test(tut));
 
+    /* ── Una sola lectura de la actividad ──────────────────────────────── */
+    const dash = readCode('src/js/controllers/DashboardController.js');
+
+    /* `XP_MAP` se ajusta con el tiempo. Recalcular el pasado con la tabla de
+     * hoy reescribía la historia: bajar `microquiz` de 50 a 25 restaba XP a
+     * días ya cerrados y el mapa contradecía al contador. */
+    assert('xp: the award is stored with the activity',
+      /xp: XP_MAP\[type\] \|\| 10/.test(gam));
+    assert('xp: the map honours what was awarded',
+      /function _xp\(tipo, guardado\)/.test(hs));
+    /* La tarjeta ya muestra el XP acumulado; el mapa cubre seis meses y
+     * deduplica, así que nunca iban a cuadrar. Dos totales distintos en la
+     * misma pantalla hacen dudar de los dos. */
+    assert('xp: the map chip shows no competing total',
+      !/XP/.test((hm.match(/chip\.textContent = [\s\S]{0,200}/) || [''])[0]));
+
+    /* La misma lección vista por la nube y por el registro local es una; la
+     * misma lección repasada otro día es actividad de ese otro día. */
+    assert('heatmap: the dedupe key is scoped by day',
+      /l:\$\{f\.lesson_id\}:\$\{_dia/.test(hs) && /l:\$\{e\.lessonId\}:\$\{_dia/.test(hs));
+
+    /* Seis barras semanales junto a un mapa de veintiséis semanas era enseñar
+     * lo mismo dos veces. */
+    assert('dashboard: the weekly bars are gone',
+      !dash.includes('analytics-chart__bar-wrap') && !dash.includes('getActivityByWeek(6)'));
+
     /* ── Lectura en voz alta ───────────────────────────────────────────── */
     /* Chrome corta las locuciones largas a los ~15 s; por eso se trocea. */
     assert('reader: long text is chunked', /MAX_TROZO/.test(rd) && /function trocear/.test(rd));

@@ -1269,13 +1269,13 @@ const LOCALE_ZH = {
     hintClose: '关闭',
   },
   heatmap: {
-    title: '你的每日活动',
+    title: '最近 6 个月',
     aria: '活动热图',
     less: '少',
     more: '多',
     day: '{fecha}：{n} 项活动，{xp} XP',
     summary: '{n} 项活动 · {xp} XP',
-    total: '{n} 项活动 · {xp} XP',
+    total: '{dias} 天内 {n} 项活动',
   },
   cookies: {
     bannerTitle: 'Cookie',

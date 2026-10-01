@@ -1269,13 +1269,13 @@ const LOCALE_EN = {
     hintClose: 'close',
   },
   heatmap: {
-    title: 'Your day-by-day activity',
+    title: 'Last 6 months',
     aria: 'Activity map',
     less: 'less',
     more: 'more',
     day: '{fecha}: {n} activities, {xp} XP',
     summary: '{n} activities · {xp} XP',
-    total: '{n} activities · {xp} XP',
+    total: '{n} activities across {dias} days',
   },
   cookies: {
     bannerTitle: 'Cookies',

@@ -1223,8 +1223,6 @@ const DashboardController = (() => {
   function _renderAnalytics() {
     if (!$analyticsPanel || typeof GamificationService === 'undefined') return;
     const g = GamificationService.getSummary();
-    const weeks = GamificationService.getActivityByWeek(6);
-    const max = Math.max(...weeks.map(w => w.count), 1);
     const atRisk = GamificationService.isStreakAtRisk?.();
     const dueTopics = typeof SpacedRepetitionService !== 'undefined'
       ? SpacedRepetitionService.getDueTopics(4)
@@ -1263,13 +1261,10 @@ const DashboardController = (() => {
           </div>
         </div>
         ${g.badges?.length ? `<div class="analytics-badges">${g.badges.map(b => `<span class="analytics-badge" title="${b.id}">${b.icon}</span>`).join('')}</div>` : ''}
-        <div class="analytics-chart" role="img" aria-label="${_t('analytics.chartAria', null, 'Actividad semanal')}">
-          ${weeks.map(w => `
-            <div class="analytics-chart__bar-wrap">
-              <div class="analytics-chart__bar" style="--bar-h:${Math.max(8, (w.count / max) * 100)}%"></div>
-              <span class="analytics-chart__label">${w.label}</span>
-            </div>`).join('')}
-        </div>
+        <!-- Aquí había seis barras de actividad semanal. El mapa diario que
+             viene justo debajo cubre veintiséis semanas con más detalle, así
+             que mantener las dos era enseñar lo mismo dos veces y con cifras
+             que no siempre coincidían. -->
         ${dueTopics.length ? `
           <div class="srs-due-panel">
             <h3 class="srs-due-panel__title">${_t('srs.dueTitle', null, 'Repaso espaciado')}</h3>

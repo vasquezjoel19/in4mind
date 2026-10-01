@@ -86,7 +86,11 @@ const GamificationService = (() => {
 
   function recordActivity(type, meta = {}) {
     const log = _readActivity();
-    const entrada = { type, at: Date.now(), ...meta };
+    /* El XP se guarda CON la actividad, no se deduce después de la tabla.
+       `XP_MAP` se ajusta con el tiempo —`microquiz` pasó de 50 a 25—, y quien
+       recalculase el pasado con los valores de hoy reescribiría la historia:
+       el mapa de actividad acabaría contradiciendo al contador. */
+    const entrada = { type, at: Date.now(), xp: XP_MAP[type] || 10, ...meta };
     log.push(entrada);
     _writeActivity(log);
 

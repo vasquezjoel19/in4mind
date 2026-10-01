@@ -153,11 +153,15 @@ const ActivityHeatmap = (() => {
     }
 
     const total = activos.reduce((n, d) => n + d.total, 0);
-    const xp = activos.reduce((n, d) => n + d.xp, 0);
     const chip = document.getElementById('heat-total');
     if (chip) {
-      chip.textContent = _t('heatmap.total', { n: total, xp },
-        `${total} actividades · ${xp} XP`);
+      /* Aquí NO va un total de XP. La tarjeta de arriba ya muestra el XP
+         acumulado de siempre, y este mapa cubre sólo seis meses y sin contar
+         dos veces lo mismo: las dos cifras nunca iban a coincidir, y verlas
+         juntas y distintas hacía dudar de ambas. El XP por día sigue en el
+         globo, que es donde significa algo. */
+      chip.textContent = _t('heatmap.total', { n: total, dias: activos.length },
+        `${total} actividades en ${activos.length} días`);
     }
     caja.hidden = false;
   }

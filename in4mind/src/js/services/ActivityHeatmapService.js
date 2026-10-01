@@ -27,22 +27,31 @@ const ActivityHeatmapService = (() => {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
-  /** XP de un tipo de actividad, preguntándoselo a quien lleva la cuenta. */
-  function _xp(tipo) {
+  /**
+   * XP de una actividad.
+   *
+   * Manda el valor que se guardó al otorgarla. Recalcularlo con la tabla de
+   * hoy haría que cambiar el baremo reescribiese el pasado: bajar `microquiz`
+   * de 50 a 25 restaba XP a días ya cerrados, y el mapa acababa diciendo una
+   * cifra distinta de la del contador. El respaldo es sólo para las entradas
+   * anteriores a que esto se guardara.
+   */
+  function _xp(tipo, guardado) {
+    if (typeof guardado === 'number' && guardado >= 0) return guardado;
     if (typeof GamificationService !== 'undefined' && GamificationService.xpFor) {
       return GamificationService.xpFor(tipo);
     }
     return 10;
   }
 
-  function _anota(mapa, dia, tipo, titulo, clave) {
+  function _anota(mapa, dia, tipo, titulo, clave, xpGuardado) {
     if (!dia) return;
     const d = mapa[dia] || (mapa[dia] = { dia, total: 0, xp: 0, tareas: [], claves: new Set() });
     // La misma lección contada por Supabase y por el registro local es una.
     if (clave && d.claves.has(clave)) return;
     if (clave) d.claves.add(clave);
     d.total += 1;
-    d.xp += _xp(tipo);
+    d.xp += _xp(tipo, xpGuardado);
     if (d.tareas.length < 6) d.tareas.push({ tipo, titulo: titulo || '' });
   }
 
@@ -67,7 +76,11 @@ const ActivityHeatmapService = (() => {
         .eq('user_id', userId)
         .gte('completed_at', desdeIso);
       for (const f of data || []) {
-        filas.push({ at: f.completed_at, tipo: 'lesson', titulo: f.title, clave: `l:${f.lesson_id}` });
+        /* La clave lleva el día: la misma lección contada por la nube y por el
+           registro local es una, pero repasarla otro día es actividad de ese
+           otro día y no debe desaparecer del mapa. */
+        filas.push({ at: f.completed_at, tipo: 'lesson', titulo: f.title,
+          clave: `l:${f.lesson_id}:${_dia(new Date(f.completed_at).getTime())}` });
       }
     } catch { /* sin lecciones en la nube: queda lo local */ }
 
@@ -116,12 +129,15 @@ const ActivityHeatmapService = (() => {
       .map(e => ({
         at: e.at,
         tipo: e.type || 'otro',
+        xp: e.xp,            // el que se otorgó entonces, si lo lleva
         titulo: e.title || e.lessonId || e.courseId || '',
         /* Toda entrada lleva clave, no sólo las de lección: ahora llegan por
            dos caminos —archivo y log— y sin clave se contarían dos veces.
            Para las de lección se usa la misma que Supabase, y para el resto
            el tipo y el instante, que no se repiten. */
-        clave: e.lessonId ? `l:${e.lessonId}` : `a:${e.type || 'otro'}:${e.at}`,
+        clave: e.lessonId
+          ? `l:${e.lessonId}:${_dia(e.at)}`
+          : `a:${e.type || 'otro'}:${e.at}`,
       }));
   }
 
@@ -141,7 +157,7 @@ const ActivityHeatmapService = (() => {
 
     // La nube primero: su título es el guardado, no el que haya en el caché.
     for (const f of [...nube, ...local]) {
-      _anota(mapa, _dia(new Date(f.at).getTime()), f.tipo, f.titulo, f.clave);
+      _anota(mapa, _dia(new Date(f.at).getTime()), f.tipo, f.titulo, f.clave, f.xp);
     }
 
     const salida = [];

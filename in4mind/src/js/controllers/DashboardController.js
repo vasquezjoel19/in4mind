@@ -1342,6 +1342,11 @@ const DashboardController = (() => {
     _renderEmployable(quizProgress, certifications);
     _renderLearningPaths(quizProgress, certifications);
     _renderAnalytics();
+    /* El mapa consulta Supabase, así que se pinta por su cuenta y no retrasa
+       al resto del panel; si falla, el panel queda igual y sin su rejilla. */
+    if (typeof ActivityHeatmap !== 'undefined') {
+      void ActivityHeatmap.render().catch(() => {});
+    }
     _renderRecommendations(recommendations);
 
     return resumeItemsPromise.then((resumeItems) => {

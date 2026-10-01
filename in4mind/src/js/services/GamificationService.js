@@ -162,6 +162,22 @@ const GamificationService = (() => {
     return _read().xp || 0;
   }
 
+  /**
+   * XP que otorga un tipo de actividad.
+   *
+   * Lo pregunta el mapa de calor para repartir el XP por día. Se expone en
+   * lugar de copiar la tabla fuera: dos copias del baremo se despegarían a la
+   * primera que alguien ajuste una.
+   */
+  function xpFor(tipo) {
+    return XP_MAP[tipo] || 10;
+  }
+
+  /** Registro de actividad en crudo, para quien necesite las fechas. */
+  function getActivityLog() {
+    return _readActivity();
+  }
+
   function getLevel() {
     const xp = getXp();
     return Math.floor(xp / 100) + 1;
@@ -240,6 +256,8 @@ const GamificationService = (() => {
     setWeeklyGoals,
     getBadges,
     getXp,
+    xpFor,
+    getActivityLog,
     getLevel,
     BADGES,
   };

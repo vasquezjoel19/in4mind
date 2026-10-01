@@ -18,6 +18,72 @@ const GlobalSearchService = (() => {
     return _norm(text).includes(_norm(q));
   }
 
+  /**
+   * Acciones de la paleta: ir a un sitio o lanzar algo, sin buscar nada.
+   *
+   * Se devuelven aunque la consulta esté vacía —una paleta que no enseña nada
+   * hasta escribir dos letras obliga a saber de antemano qué hay dentro— y se
+   * filtran por texto en cuanto se escribe.
+   */
+  function _commandResults(q) {
+    const base = [
+      {
+        clave: 'sandbox',
+        title: _t('palette.sandbox', null, 'Practicar en el sandbox de código'),
+        subtitle: _t('palette.sandboxSub', null, 'Editor aislado con ejecución en vivo'),
+        route: 'tutorial.html?course=javascript',
+      },
+      {
+        clave: 'certificados',
+        title: _t('palette.certs', null, 'Mis certificados'),
+        subtitle: _t('palette.certsSub', null, 'Los que ya has obtenido'),
+        route: 'profile.html',
+      },
+      {
+        clave: 'verificar',
+        title: _t('palette.verify', null, 'Verificar un certificado'),
+        subtitle: _t('palette.verifySub', null, 'Comprobar la autenticidad de un código'),
+        route: 'verify.html',
+      },
+      {
+        clave: 'panel dashboard inicio',
+        title: _t('nav.dashboard', null, 'Panel'),
+        subtitle: _t('palette.goTo', null, 'Ir a'),
+        route: 'dashboard.html',
+      },
+      {
+        clave: 'notas',
+        title: _t('nav.notes', null, 'Notas'),
+        subtitle: _t('palette.goTo', null, 'Ir a'),
+        route: 'notes.html',
+      },
+      {
+        clave: 'quizzes examenes',
+        title: _t('nav.quizzes', null, 'Quizzes'),
+        subtitle: _t('palette.goTo', null, 'Ir a'),
+        route: 'quizzes.html',
+      },
+    ];
+
+    const texto = (q || '').trim();
+    const out = base
+      .filter(c => !texto || _match(`${c.title} ${c.subtitle} ${c.clave}`, texto))
+      .map(c => ({ type: 'command', id: `cmd-${c.clave}`, title: c.title, subtitle: c.subtitle, route: c.route }));
+
+    /* Preguntar a Infy encabeza la lista en cuanto hay algo escrito: si lo que
+       buscas no está en la plataforma, preguntarlo es la salida natural. */
+    if (texto.length >= 2) {
+      out.unshift({
+        type: 'command',
+        id: 'cmd-infy',
+        title: _t('palette.askInfy', { q: texto }, `Preguntar a Infy: «${texto}»`),
+        subtitle: _t('palette.askInfySub', null, 'Abre el chat con la pregunta escrita'),
+        route: `ai.html?q=${encodeURIComponent(texto)}`,
+      });
+    }
+    return out;
+  }
+
   function _lessonResults(q) {
     const out = [];
     if (typeof CourseCurriculum === 'undefined') return out;
@@ -142,11 +208,18 @@ const GlobalSearchService = (() => {
 
   function search(query, limitPerGroup = 5) {
     const q = (query || '').trim();
+    /* Los comandos sí salen con la consulta vacía: son el menú de la paleta.
+       El resto sigue pidiendo dos letras, que es lo que evita volcar el
+       catálogo entero al abrir. */
     if (!q || q.length < 2) {
-      return { courses: [], lessons: [], quizzes: [], help: [], notes: [], projects: [], guided: [] };
+      return {
+        commands: _commandResults(q),
+        courses: [], lessons: [], quizzes: [], help: [], notes: [], projects: [], guided: [],
+      };
     }
 
     return {
+      commands: _commandResults(q),
       courses:  _courseResults(q).slice(0, limitPerGroup),
       lessons:  _lessonResults(q).slice(0, limitPerGroup),
       quizzes:  _quizResults(q).slice(0, limitPerGroup),
@@ -159,6 +232,7 @@ const GlobalSearchService = (() => {
 
   function flatten(results) {
     return [
+      ...(results.commands || []),
       ...results.courses,
       ...results.lessons,
       ...results.quizzes,
@@ -171,6 +245,7 @@ const GlobalSearchService = (() => {
 
   function groupLabel(type) {
     const map = {
+      command: _t('palette.groupActions', null, 'Acciones'),
       course:  _t('search.groupCourses', null, 'Cursos'),
       lesson:  _t('search.groupLessons', null, 'Lecciones'),
       quiz:    _t('search.groupQuizzes', null, 'Quizzes'),

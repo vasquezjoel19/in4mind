@@ -440,6 +440,16 @@ const AIChatController = (() => {
         const params = new URLSearchParams(window.location.search);
         const courseId = params.get('course');
         if (courseId) sessionStorage.setItem('in4mind_open_course', courseId);
+
+        /* Pregunta traída desde la paleta de comandos. Se escribe y se enfoca,
+           pero NO se envía: mandarla sola gastaría una llamada a la IA que
+           nadie ha confirmado, y la última palabra sobre qué se pregunta tiene
+           que ser de quien pregunta. */
+        const pregunta = (params.get('q') || '').trim();
+        if (pregunta && $input) {
+          $input.value = pregunta.slice(0, 2000);
+          _autoResizeInput();
+        }
       } catch { /* ignore */ }
 
       document.getElementById('btn-new-chat')?.addEventListener('click', _newChat);

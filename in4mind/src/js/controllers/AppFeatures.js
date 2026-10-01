@@ -219,10 +219,16 @@ const AppFeatures = (() => {
         <div class="global-search-modal__input-wrap">
           <input type="search" id="global-search-input" class="global-search-modal__input"
                  placeholder="${_t('search.placeholder', null, 'Buscar cursos, lecciones, quizzes…')}"
-                 autocomplete="off" />
+                 autocomplete="off" role="combobox" aria-expanded="true"
+                 aria-controls="global-search-results" aria-autocomplete="list" />
           <kbd class="global-search-modal__kbd">Esc</kbd>
         </div>
-        <div class="global-search-modal__results" id="global-search-results"></div>
+        <div class="global-search-modal__results" id="global-search-results" role="listbox"></div>
+        <div class="global-search-modal__pie">
+          <span><kbd>↑</kbd><kbd>↓</kbd> ${_t('palette.hintMove', null, 'moverse')}</span>
+          <span><kbd>↵</kbd> ${_t('palette.hintOpen', null, 'abrir')}</span>
+          <span><kbd>Esc</kbd> ${_t('palette.hintClose', null, 'cerrar')}</span>
+        </div>
       </div>`;
     document.body.appendChild(modal);
     modal.querySelector('[data-close-search]')?.addEventListener('click', _closeSearch);
@@ -233,7 +239,10 @@ const AppFeatures = (() => {
       timer = setTimeout(() => _renderSearchResults(input.value), 120);
     });
     input?.addEventListener('keydown', e => {
-      if (e.key === 'Escape') _closeSearch();
+      if (e.key === 'Escape') { _closeSearch(); return; }
+      if (e.key === 'ArrowDown') { e.preventDefault(); _moverPaleta(1); return; }
+      if (e.key === 'ArrowUp') { e.preventDefault(); _moverPaleta(-1); return; }
+      if (e.key === 'Enter') { if (_lanzarActivo()) e.preventDefault(); }
     });
     return modal;
   }
@@ -242,13 +251,12 @@ const AppFeatures = (() => {
     const root = document.getElementById('global-search-results');
     if (!root || typeof GlobalSearchService === 'undefined') return;
     const q = (query || '').trim();
-    if (q.length < 2) {
-      root.innerHTML = `<p class="global-search-modal__hint">${_t('search.hint', null, 'Escribe al menos 2 caracteres. Atajo: / o Ctrl+K')}</p>`;
-      return;
-    }
     const results = GlobalSearchService.search(q);
-    const groups = ['courses', 'lessons', 'quizzes', 'notes', 'projects', 'guided', 'help'];
+    /* Las acciones van primero: una paleta se abre para hacer algo, y lo que
+       se busca suele estar debajo de lo que se quiere lanzar. */
+    const groups = ['commands', 'courses', 'lessons', 'quizzes', 'notes', 'projects', 'guided', 'help'];
     const typeMap = {
+      commands: 'command',
       courses: 'course', lessons: 'lesson', quizzes: 'quiz', help: 'help',
       notes: 'note', projects: 'project', guided: 'guided',
     };
@@ -258,7 +266,9 @@ const AppFeatures = (() => {
       if (!items?.length) return;
       html += `<div class="global-search-group"><h3 class="global-search-group__title">${GlobalSearchService.groupLabel(typeMap[g])}</h3><ul role="list">`;
       items.forEach(item => {
-        html += `<li class="global-search-item" data-search-item tabindex="0" role="listitem">
+        /* `option` y no `listitem`: dentro de un `listbox` es lo que el lector
+           de pantalla sabe anunciar como elegible. */
+        html += `<li class="global-search-item" data-search-item tabindex="-1" role="option" aria-selected="false">
           <span class="global-search-item__title">${item.title}</span>
           <span class="global-search-item__sub">${item.subtitle || ''}</span>
         </li>`;
@@ -276,7 +286,52 @@ const AppFeatures = (() => {
       el.addEventListener('keydown', ev => {
         if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); go(); }
       });
+      el.addEventListener('mousemove', () => _marcarActivo(i));
     });
+
+    _paletaItems = [...root.querySelectorAll('[data-search-item]')];
+    _paletaAcciones = flat;
+    _marcarActivo(_paletaItems.length ? 0 : -1);
+  }
+
+  /* ── Navegación por teclado de la paleta ─────────────────────────────────
+   * Sin esto hay que ir con el tabulador por cada resultado: en una paleta se
+   * espera bajar con las flechas sin soltar la escritura, y que Enter lance lo
+   * que esté resaltado. El foco se queda en el campo y la selección viaja por
+   * `aria-activedescendant`, que es lo que un lector de pantalla anuncia. */
+  let _paletaItems = [];
+  let _paletaAcciones = [];
+  let _paletaIdx = -1;
+
+  function _marcarActivo(i) {
+    _paletaIdx = i;
+    _paletaItems.forEach((el, n) => {
+      const activo = n === i;
+      el.classList.toggle('is-activo', activo);
+      el.setAttribute('aria-selected', String(activo));
+      if (activo && !el.id) el.id = `gs-item-${n}`;
+      if (activo) el.scrollIntoView({ block: 'nearest' });
+    });
+    const input = document.getElementById('global-search-input');
+    const activo = i >= 0 ? _paletaItems[i] : null;
+    if (input) {
+      if (activo) input.setAttribute('aria-activedescendant', activo.id);
+      else input.removeAttribute('aria-activedescendant');
+    }
+  }
+
+  function _moverPaleta(delta) {
+    if (!_paletaItems.length) return;
+    const n = _paletaItems.length;
+    _marcarActivo(((_paletaIdx + delta) % n + n) % n);
+  }
+
+  function _lanzarActivo() {
+    const item = _paletaAcciones[_paletaIdx];
+    if (!item) return false;
+    _closeSearch();
+    _navigateItem(item);
+    return true;
   }
 
   function _openSearch(prefill = '') {
@@ -299,7 +354,11 @@ const AppFeatures = (() => {
 
   function _bindGlobalSearch() {
     document.addEventListener('keydown', e => {
-      if ((e.key === '/' && !/input|textarea/i.test(e.target.tagName)) || (e.ctrlKey && e.key === 'k')) {
+      /* `metaKey` además de `ctrlKey`: en un Mac el atajo es Cmd+K, y sin esto
+         la paleta era inalcanzable por teclado en esas máquinas. */
+      const atajo = (e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K');
+      const barra = e.key === '/' && !/input|textarea/i.test(e.target.tagName);
+      if (atajo || barra) {
         e.preventDefault();
         _openSearch();
       }

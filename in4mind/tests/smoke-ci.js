@@ -1152,6 +1152,55 @@ for (const [file, endpoint] of [
     assert('cards: singular has its own strings',
       /cardsDueOne/.test(tut) && /cardsNextOne/.test(tut));
 
+    /* ── Paleta de comandos ────────────────────────────────────────────── */
+    const af = readCode('src/js/controllers/AppFeatures.js');
+    const gs = readCode('src/js/services/GlobalSearchService.js');
+    const ai = readCode('src/js/controllers/AIChatController.js');
+
+    /* Sólo miraba `ctrlKey`, así que en un Mac la paleta era inalcanzable. */
+    assert('palette: Cmd+K works too', /e\.ctrlKey \|\| e\.metaKey/.test(af));
+    /* Se extiende el buscador global en vez de montar un segundo overlay que
+     * compita por el mismo atajo. */
+    assert('palette: it extends the existing search', /GlobalSearchService/.test(af));
+    assert('palette: arrows and Enter drive it',
+      ['ArrowDown', 'ArrowUp', '_lanzarActivo'].every(k => af.includes(k)));
+    /* El foco se queda en el campo: la selección se anuncia por aquí. */
+    assert('palette: the selection is announced', af.includes('aria-activedescendant'));
+    assert('palette: listbox and option roles',
+      af.includes('role="listbox"') && af.includes('role="option"'));
+    /* Una paleta se abre para hacer algo, no para leer resultados. */
+    assert('palette: actions come first', /\['commands', 'courses'/.test(af));
+    /* Si no enseña nada hasta escribir dos letras, hay que saber de antemano
+     * qué contiene. */
+    assert('palette: commands show on an empty query',
+      /commands: _commandResults\(q\)[\s\S]{0,200}courses: \[\]/.test(gs));
+    /* Enviar sola la pregunta gastaría una llamada a la IA que nadie pidió. */
+    assert('palette: the handed-over question is not auto-sent',
+      /\$input\.value = pregunta/.test(ai) && !/pregunta[\s\S]{0,120}_sendMessage/.test(ai));
+
+    /* ── Mapa de actividad ─────────────────────────────────────────────── */
+    const hm = readCode('src/js/components/ActivityHeatmap.js');
+    const hs = readCode('src/js/services/ActivityHeatmapService.js');
+
+    assert('heatmap: supabase completions are the base', hs.includes('completed_at'));
+    /* Una lección contada por la nube y por el registro local es una. */
+    assert('heatmap: cloud and local are merged without doubling',
+      /claves\.has\(clave\)/.test(hs));
+    /* Dos copias del baremo se despegarían al primer ajuste. */
+    assert('heatmap: xp comes from the one that keeps score',
+      hs.includes('xpFor') && gam.includes('xpFor'));
+    /* Los datos locales están en el dispositivo: decir «inicia sesión» sería
+     * mentir sobre lo que se puede mostrar. */
+    assert('heatmap: it still draws without a session', /if \(!userId\) return \[\];/.test(hs));
+    assert('heatmap: the tooltip carries Infy celebrating', hm.includes('GESTOS.SUCCESS'));
+    /* Abrir un tooltip sobre un hueco para decir «0 XP» interrumpe sin aportar. */
+    assert('heatmap: empty days get no tooltip', /if \(!d\.total\) return;/.test(hm));
+    /* Con `innerWidth` a 0 el recorte daba un izquierdo negativo. */
+    assert('heatmap: the tooltip never lands off-screen',
+      /Math\.max\(8, Math\.min\(centrado/.test(hm));
+    assert('heatmap: reachable without a mouse',
+      hm.includes("'focus'") && hm.includes("'blur'"));
+
     /* ── Lectura en voz alta ───────────────────────────────────────────── */
     /* Chrome corta las locuciones largas a los ~15 s; por eso se trocea. */
     assert('reader: long text is chunked', /MAX_TROZO/.test(rd) && /function trocear/.test(rd));

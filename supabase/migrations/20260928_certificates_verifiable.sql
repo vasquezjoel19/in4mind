@@ -1,16 +1,35 @@
--- IN4MIND — Certificados verificables: dueño y hash criptográfico
+-- IN4MIND — Certificados verificables: tabla, dueño y hash criptográfico
 --
--- La tabla `cert_verifications` ya existía y tiene certificados emitidos, con
--- QR impresos que apuntan a `verify.html?id=<code>`. Por eso se amplía en vez
--- de crear una tabla nueva en paralelo: dos tablas partirían los datos en dos
--- y dejarían sin validar todos los códigos ya repartidos.
+-- Esta migración se escribió dando por hecho que `cert_verifications` ya
+-- existía y sólo había que ampliarla. No es así en este proyecto: la tabla no
+-- está creada, y un `alter table` sobre algo que no existe falla —el
+-- `if not exists` de abajo se refiere a la COLUMNA, no a la tabla—. Por eso
+-- ahora la crea primero y después la amplía, de modo que sirva tanto para un
+-- proyecto vacío como para uno que ya la tuviera de antes.
 --
--- Equivalencias con los nombres que se pidieron:
---   id          -> `code`      (identificador legible, el que va en el QR)
---   hash        -> `hash`      (UUID v4, nuevo: prueba criptográfica)
---   user_id     -> `user_id`   (nuevo: vincula el certificado a su dueño)
---   course_id   -> `ref_id`    (ya existía)
---   issued_at   -> `earned_at` (ya existía)
+-- Equivalencias con los nombres que se pidieron en el encargo:
+--   id          -> `code`       (identificador legible, el que va en el QR)
+--   hash        -> `hash`       (UUID v4: la prueba criptográfica)
+--   user_id     -> `user_id`    (vincula el certificado a su dueño)
+--   course_id   -> `ref_id`     (curso o ruta que se certifica)
+--   issued_at   -> `earned_at`  (cuándo se obtuvo)
+--
+-- Es idempotente: se puede volver a lanzar sin romper nada.
+
+-- ── Tabla ───────────────────────────────────────────────────────────────────
+
+create table if not exists public.cert_verifications (
+  -- `code` es la clave: es lo que lleva impreso el QR y por lo que entra la
+  -- verificación, y es también el `onConflict` que usa el cliente al reemitir.
+  code         text primary key,
+  course_title text,
+  ref_id       text,
+  user_name    text,
+  earned_at    timestamptz not null default now(),
+  pct          numeric,
+  project_url  text,
+  path_id      text
+);
 
 -- ── Columnas nuevas ─────────────────────────────────────────────────────────
 
@@ -53,9 +72,9 @@ create policy cert_verifications_public_read
   to anon, authenticated
   using (true);
 
-/* Escribir, solo la persona autenticada y sobre su propia fila. Antes la tabla
-   aceptaba inserciones sin restricción: cualquiera podía fabricarse un
-   certificado llamando a la API REST con la clave anónima, que es pública. */
+/* Escribir, solo la persona autenticada y sobre su propia fila. Sin esto,
+   cualquiera podría fabricarse un certificado llamando a la API REST con la
+   clave anónima, que es pública. */
 drop policy if exists cert_verifications_insert_own on public.cert_verifications;
 create policy cert_verifications_insert_own
   on public.cert_verifications

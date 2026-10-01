@@ -74,11 +74,14 @@ const ActivityHeatmapService = (() => {
     try {
       const { data } = await sb
         .from('cert_verifications')
-        .select('code, course, earned_at')
+        // La columna se llama `course_title`; pidiendo `course` PostgREST
+        // devolvía 400 y el catch de abajo lo convertía en «sin certificados»,
+        // así que nunca aparecía ninguno en el mapa.
+        .select('code, course_title, earned_at')
         .eq('user_id', userId)
         .gte('earned_at', desdeIso);
       for (const f of data || []) {
-        filas.push({ at: f.earned_at, tipo: 'cert', titulo: f.course, clave: `c:${f.code}` });
+        filas.push({ at: f.earned_at, tipo: 'cert', titulo: f.course_title, clave: `c:${f.code}` });
       }
     } catch { /* idem */ }
 

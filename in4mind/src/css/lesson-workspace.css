@@ -630,3 +630,92 @@ html[data-theme="dark"] .lesson-w3 .lesson-w3__nav-check {
   /* Lo que el checkpoint desvela aparece, pero sin deslizarse. */
   .is-revelado { animation: none; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TRANSICIONES DE VISTA ENTRE PESTAÑAS
+   El spec nombraba `.lesson-title-container`, `.workspace-tab-content` y
+   `.infy-companion-card`; aquí esos elementos son `.lw-head`, `.lw-panel` y
+   `.lw-infy`. Se aplican los nombres de transición a los que existen en vez de
+   duplicar clases vacías sólo para que coincidan los selectores.
+
+   `tab-content` NO se declara aquí: el nombre tiene que ser único en el
+   documento y hay cuatro paneles, así que lo pone el controlador sobre el que
+   queda visible y lo quita de los demás.
+   ═════════════════════════════════════════════════════════════════════════ */
+
+.lw-head { view-transition-name: lesson-title; }
+.lw-infy { view-transition-name: infy-card; }
+
+/* El título no se mueve entre pestañas: que el navegador lo trate como el
+   mismo elemento evita que parpadee al recortar la captura. */
+::view-transition-old(lesson-title),
+::view-transition-new(lesson-title) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* ── Contenido de pestaña ──────────────────────────────────────────────── */
+@keyframes lw-vt-entra-dcha {
+  from { opacity: 0; transform: translateX(26px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes lw-vt-sale-izda {
+  from { opacity: 1; transform: none; }
+  to   { opacity: 0; transform: translateX(-26px); }
+}
+
+@keyframes lw-vt-entra-izda {
+  from { opacity: 0; transform: translateX(-26px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes lw-vt-sale-dcha {
+  from { opacity: 1; transform: none; }
+  to   { opacity: 0; transform: translateX(26px); }
+}
+
+::view-transition-old(tab-content) {
+  animation: lw-vt-sale-izda .22s cubic-bezier(.4, 0, 1, 1) both;
+}
+
+::view-transition-new(tab-content) {
+  animation: lw-vt-entra-dcha .26s cubic-bezier(0, 0, .2, 1) both;
+}
+
+/* Hacia atrás se desliza al revés: si no, volver se siente como avanzar. */
+html[data-lw-dir="atras"] ::view-transition-old(tab-content) {
+  animation-name: lw-vt-sale-dcha;
+}
+
+html[data-lw-dir="atras"] ::view-transition-new(tab-content) {
+  animation-name: lw-vt-entra-izda;
+}
+
+/* ── Tarjeta de Infy ───────────────────────────────────────────────────── */
+/* Cruce suave con un punto de escala: cambia de gesto sin dar un salto. */
+@keyframes lw-vt-infy-sale {
+  to { opacity: 0; transform: scale(.94); }
+}
+
+@keyframes lw-vt-infy-entra {
+  from { opacity: 0; transform: scale(1.04); }
+}
+
+::view-transition-old(infy-card) { animation: lw-vt-infy-sale .18s ease both; }
+::view-transition-new(infy-card) { animation: lw-vt-infy-entra .24s ease both; }
+
+/* ── Respaldo sin View Transitions ─────────────────────────────────────── */
+/* Lo que el controlador aplica cuando `document.startViewTransition` no
+   existe: la misma idea en 200 ms, sin capturas ni pseudoelementos. */
+.fade-in-slide {
+  animation: lw-vt-entra-dcha .2s cubic-bezier(0, 0, .2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Nada se desliza ni se cruza: el cambio es instantáneo. */
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) { animation: none !important; }
+  .fade-in-slide { animation: none; }
+}

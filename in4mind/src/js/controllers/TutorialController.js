@@ -1206,6 +1206,8 @@ const TutorialController = (() => {
    */
   function _cerrarSandboxes() {
     _cerrarCheckpoint();
+    // Al salir ya no hay «siguiente lección» que adelantar.
+    if (typeof LessonPrefetch !== 'undefined') LessonPrefetch.olvidar();
     /* El cronómetro NO se para aquí: esta función también corre al pasar de
        una lección a otra, y pararlo ahí lo apagaría justo después de que
        `_showLesson` lo encendiera. Se para al salir de la vista. */
@@ -1278,29 +1280,71 @@ const TutorialController = (() => {
       }
       return;
     }
-    for (const t of LWTABS) {
-      const boton = document.querySelector(`[data-lwtab="${t}"]`);
-      const panel = document.getElementById(`lwpanel-${t}`);
-      const activo = t === nombre;
-      if (boton) {
-        boton.classList.toggle('is-active', activo);
-        boton.setAttribute('aria-selected', String(activo));
-        boton.tabIndex = activo ? 0 : -1;
+    const anterior = document.querySelector('.lw-tabs__tab.is-active')?.dataset.lwtab;
+    const haciaDelante = LWTABS.indexOf(nombre) >= LWTABS.indexOf(anterior ?? nombre);
+
+    /* Sólo el cambio visual va dentro de la transición. Lo de después —medir
+       CodeMirror, armar la baraja— es trabajo que alargaría la animación si se
+       colase aquí, y el navegador mantiene la página congelada mientras tanto. */
+    const aplicar = () => {
+      for (const t of LWTABS) {
+        const boton = document.querySelector(`[data-lwtab="${t}"]`);
+        const panel = document.getElementById(`lwpanel-${t}`);
+        const activo = t === nombre;
+        if (boton) {
+          boton.classList.toggle('is-active', activo);
+          boton.setAttribute('aria-selected', String(activo));
+          boton.tabIndex = activo ? 0 : -1;
+        }
+        if (panel) {
+          panel.classList.toggle('is-active', activo);
+          panel.hidden = !activo;
+          /* `view-transition-name` tiene que ser ÚNICO en el documento: los
+             cuatro paneles con el mismo nombre abortan la transición entera.
+             Por eso se pone sólo en el que queda visible y se quita del resto. */
+          panel.style.viewTransitionName = activo ? 'tab-content' : '';
+        }
       }
-      if (panel) {
-        panel.classList.toggle('is-active', activo);
-        panel.hidden = !activo;
+    };
+
+    const despues = () => {
+      /* CodeMirror mide su alto al crearse: si nació en un panel oculto se
+         queda en cero y aparece como una franja vacía hasta que alguien lo
+         toca. */
+      if (nombre === 'practica' && typeof CodeSandbox !== 'undefined' && CodeSandbox.refresh) {
+        document.querySelectorAll('#lesson-practica [data-sandbox]').forEach(el => CodeSandbox.refresh(el));
       }
+      // La baraja se arma al abrirla: antes no hay nada que mostrar.
+      if (nombre === 'flashcards') _montarFlashcards();
+    };
+
+    const raiz = document.documentElement;
+    const quieto = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (quieto || typeof document.startViewTransition !== 'function') {
+      aplicar();
+      /* Sin API nativa queda el respaldo de CSS: una clase de 200 ms sobre el
+         panel entrante. Con movimiento reducido no se pone nada. */
+      if (!quieto) {
+        const panel = document.getElementById(`lwpanel-${nombre}`);
+        if (panel) {
+          panel.classList.remove('fade-in-slide');
+          void panel.offsetWidth;           // reinicia la animación
+          panel.classList.add('fade-in-slide');
+          setTimeout(() => panel.classList.remove('fade-in-slide'), 260);
+        }
+      }
+      despues();
+      return;
     }
 
-    /* CodeMirror mide su alto al crearse: si nació en un panel oculto se queda
-       en cero y aparece como una franja vacía hasta que alguien lo toca. */
-    if (nombre === 'practica' && typeof CodeSandbox !== 'undefined' && CodeSandbox.refresh) {
-      document.querySelectorAll('#lesson-practica [data-sandbox]').forEach(el => CodeSandbox.refresh(el));
-    }
-
-    // La baraja se arma al abrirla: antes no hay nada que mostrar.
-    if (nombre === 'flashcards') _montarFlashcards();
+    // La dirección decide hacia qué lado se desliza: atrás no es lo mismo que adelante.
+    raiz.dataset.lwDir = haciaDelante ? 'adelante' : 'atras';
+    const transicion = document.startViewTransition(aplicar);
+    transicion.finished
+      .catch(() => {})                       // una transición interrumpida no es un error
+      .finally(() => { delete raiz.dataset.lwDir; });
+    transicion.updateCallbackDone.then(despues).catch(despues);
   }
 
   function _ligarPestanas() {
@@ -2366,6 +2410,16 @@ const TutorialController = (() => {
     /* El auto-arranque de CodeSandbox sólo corre en DOMContentLoaded, y este
        artículo se pinta mucho después y otra vez por cada lección. */
     if (sandbox && typeof CodeSandbox !== 'undefined') CodeSandbox.init();
+
+    /* Mientras lee esta lección se va trayendo lo que necesitará la siguiente.
+       No el contenido —ese ya viene en el bundle— sino el editor y el ejecutor
+       del sandbox, que son ocho ficheros en serie la primera vez. */
+    if (typeof LessonPrefetch !== 'undefined') {
+      const siguiente = _currentLessons[idx + 1] || null;
+      const ejecutable = typeof LessonExamples !== 'undefined'
+        && Boolean(LessonExamples.sandboxSeed?.(siguiente, _currentCourse?.id));
+      LessonPrefetch.siguienteLeccion(siguiente, ejecutable);
+    }
 
     _pintarProgresoModulo();
     _pintarMapaCalor();

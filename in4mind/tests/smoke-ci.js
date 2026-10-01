@@ -1279,6 +1279,45 @@ for (const [file, endpoint] of [
     assert('archive: the synchronous summary stays synchronous',
       !gam.includes('async function getSummary'));
 
+    /* ── Transiciones de vista y precarga ──────────────────────────────── */
+    const pf = readCode('src/js/services/LessonPrefetch.js');
+
+    assert('view transition: the tab swap is wrapped',
+      /document\.startViewTransition\(aplicar\)/.test(tut));
+    assert('view transition: there is a fallback path',
+      /typeof document\.startViewTransition !== 'function'/.test(tut) && tut.includes('fade-in-slide'));
+    assert('view transition: the fallback lasts 200ms',
+      /\.fade-in-slide \{[\s\S]{0,120}\.2s/.test(lwCss));
+    /* Cuatro paneles con el mismo nombre abortan la transición entera: el
+     * nombre va sólo en el que queda visible. */
+    assert('view transition: only the visible panel is named',
+      /viewTransitionName = activo \? 'tab-content' : ''/.test(tut));
+    /* El brief nombraba clases que no existen aquí; los nombres se ponen sobre
+     * los elementos reales en vez de duplicar selectores vacíos. */
+    assert('view transition: names sit on the real elements',
+      lwCss.includes('view-transition-name: lesson-title')
+      && lwCss.includes('view-transition-name: infy-card'));
+    assert('view transition: going back slides the other way',
+      tut.includes('lwDir') && lwCss.includes('data-lw-dir="atras"'));
+    /* Medir CodeMirror dentro del callback alargaría la animación con la
+     * página congelada. */
+    assert('view transition: heavy work happens after',
+      /updateCallbackDone\.then\(despues\)/.test(tut));
+    assert('view transition: reduced motion turns it off',
+      /prefers-reduced-motion[\s\S]{0,300}view-transition-group/.test(lwCss));
+
+    assert('prefetch: it waits for idle time', pf.includes('requestIdleCallback'));
+    /* Quien pide ahorro de datos no quiere que adivinemos por él. */
+    assert('prefetch: it honours save-data', /saveData\) return false/.test(pf));
+    assert('prefetch: it asks at low priority', pf.includes("priority: 'low'"));
+    assert('prefetch: it never fetches the same thing twice', pf.includes('_hecho'));
+    /* Pedir la miniatura de una lección que quizá no se abra le cuenta a un
+     * tercero por dónde va el alumno. */
+    assert('prefetch: nothing is fetched from third parties',
+      !/youtube/i.test(pf));
+    assert('prefetch: it stops when the lesson is left',
+      /LessonPrefetch\.olvidar\(\)/.test(tut));
+
     /* ── Lectura en voz alta ───────────────────────────────────────────── */
     /* Chrome corta las locuciones largas a los ~15 s; por eso se trocea. */
     assert('reader: long text is chunked', /MAX_TROZO/.test(rd) && /function trocear/.test(rd));
